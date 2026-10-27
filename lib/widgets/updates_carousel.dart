@@ -8,39 +8,49 @@ import 'package:url_launcher/url_launcher.dart';
 import '../config/app_timeouts.dart';
 import '../config/app_limits.dart';
 import '../data/announcement_fields.dart';
-import '../data/collections.dart';
 import '../services/announcement_service.dart';
-import '../services/updates_last_known.dart';
+import '../services/updates_store.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
-import '../utils/merged_query_stream.dart';
 import '../utils/updates_selection.dart';
 import 'auth_footer.dart';
 import 'announcement_poster.dart';
 import 'update_slide.dart';
 import 'updates_parts.dart';
 
-/// Places the Updates area, or nothing (null) when there is nothing to show.
-typedef UpdatesLayoutBuilder = Widget Function(BuildContext context, Widget? updates);
+/// Places the Updates area: the slides, the skeleton or the calm panel.
+typedef UpdatesLayoutBuilder = Widget Function(BuildContext context, Widget updates);
 
-/// The login page's Updates (AN2, the owner's approved design): reads
-/// public_announcements ONCE through a cached stream made in initState, picks
-/// what to show ([UpdatesSelection]) for the current language, and hands the
-/// area to [builder] - or null while loading, offline, on an error, or when
-/// nothing is left to show, so the page draws no Updates area at all and
-/// never an endless spinner.
+/// The login page's Updates (AN2, the owner's approved design). AN6: reads
+/// the app's one [UpdatesStore] (started at app start, with the device's
+/// last-known copy) instead of a stream of its own, picks what to show for
+/// the current language, and ALWAYS hands [builder] an area: a skeleton
+/// while nothing is known, the slides, or a calm panel when there are none,
+/// all in the same layout, so the page never jumps when the answer comes.
 class UpdatesCarousel extends StatefulWidget {
-  const UpdatesCarousel({super.key, required this.firestore, required this.builder, this.launcher = launchUrl, this.imageFor});
+  const UpdatesCarousel({
+    super.key,
+    this.firestore,
+    this.store,
+    required this.builder,
+    this.launcher = launchUrl,
+    this.imageFor,
+  });
 
-  final FirebaseFirestore firestore;
+  /// Firestore for the store's one subscription (the app's; a fake in tests).
+  final FirebaseFirestore? firestore;
+
+  /// The app's store unless given (tests).
+  final UpdatesStore? store;
+
   final UpdatesLayoutBuilder builder;
   final AuthFooterLauncher launcher;
 
   /// A poster's image from its URL: NetworkImage in the app, a fake in tests.
   final ImageProvider Function(String url)? imageFor;
 
-  /// For tests: the frame kept while the first answer is pending (G6).
+  /// For tests: the frame kept while nothing is known yet (G6).
   static const skeletonKey = Key('updatesSkeleton');
 
   /// For tests: the calm panel shown when there are no updates (AN6).
@@ -51,52 +61,42 @@ class UpdatesCarousel extends StatefulWidget {
 }
 
 class _UpdatesCarouselState extends State<UpdatesCarousel> {
-  late final Stream<List<Announcement>> _announcements;
+  UpdatesStore get _store => widget.store ?? UpdatesStore.instance;
+  String? _language;
 
   @override
   void initState() {
     super.initState();
-    // Created once: a new stream on every build would reset the builder and
-    // read the collection again (the dashboard's DASH-1 problem).
-    _announcements = shareLatest(() {
-      try {
-        return widget.firestore
-            .collection(Collections.publicAnnouncements)
-            .orderBy(AnnouncementFields.timestamp, descending: true)
-            .snapshots()
-            .map((s) => [for (final d in s.docs) Announcement.fromMap(d.id, d.data())]);
-      } catch (e, st) {
-        return Stream<List<Announcement>>.error(e, st);
-      }
-    });
+    // Already running since app start; this only makes sure (one
+    // subscription, whoever asks).
+    _store.start(widget.firestore);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final language = Localizations.localeOf(context).languageCode;
+    if (language != _language) {
+      _language = language;
+      _store.warmFor(language);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<List<Announcement>>(
-      stream: _announcements,
-      builder: (context, snapshot) {
-        final lastKnown = UpdatesLastKnown.instance;
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData && !snapshot.hasError) {
-          // G6: still waiting for the first answer. If the last read on
-          // this device had Updates, keep their frame from the first frame
-          // so the page does not jump when they come; otherwise nothing.
-          return widget.builder(
-            context,
-            lastKnown.hadUpdates == true ? const UpdatesSkeleton(key: UpdatesCarousel.skeletonKey) : null,
-          );
+    return ListenableBuilder(
+      listenable: _store,
+      builder: (context, _) {
+        final slides = _store.slidesFor(Localizations.localeOf(context).languageCode);
+        final Widget updates;
+        if (slides == null) {
+          updates = const UpdatesSkeleton(key: UpdatesCarousel.skeletonKey);
+        } else if (slides.isEmpty) {
+          updates = const UpdatesEmpty(key: UpdatesCarousel.emptyKey);
+        } else {
+          updates = UpdatesSlides(slides: slides, launcher: widget.launcher, imageFor: widget.imageFor);
         }
-        final all = snapshot.hasError ? null : snapshot.data;
-        final slides =
-            all == null
-                ? const <Announcement>[]
-                : UpdatesSelection.pick(all, languageCode: Localizations.localeOf(context).languageCode);
-        // Remembered for the next visit and launch; an error keeps the last.
-        if (all != null) lastKnown.record(slides.isNotEmpty);
-        return widget.builder(
-          context,
-          slides.isEmpty ? null : UpdatesSlides(slides: slides, launcher: widget.launcher, imageFor: widget.imageFor),
-        );
+        return widget.builder(context, updates);
       },
     );
   }

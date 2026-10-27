@@ -23,7 +23,7 @@ import 'l10n/l10n.dart';
 import 'services/auth_service.dart';
 import 'services/membership_service.dart';
 import 'services/support_contact_store.dart';
-import 'services/updates_last_known.dart';
+import 'services/updates_store.dart';
 import 'constants/facility_types.dart';
 
 import 'providers/product_provider.dart';
@@ -62,11 +62,13 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  // G6: the device's last-known support contact and Updates state, so the
-  // sign-in footer and the Updates area are right on the first frame
+  // AN6: the Updates' one subscription starts now, in parallel with the
+  // auth check, so the login page usually has them on its first frame.
+  UpdatesStore.instance.start();
+  // G6, AN6: the device's last-known support contact and Updates, so the
+  // sign-in footer and the Updates card are right on the first frame
   // (neither throws; a missing copy is simply not used).
-  await SupportContactStore.instance.restore();
-  await UpdatesLastKnown.instance.restore();
+  await Future.wait([SupportContactStore.instance.restore(), UpdatesStore.instance.restore()]);
 
   runApp(
     MultiProvider(

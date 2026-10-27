@@ -23,7 +23,8 @@ class UpdatesCard extends StatelessWidget {
   /// The login page's two-column layout (AuthCardLayout.isWide).
   final bool wide;
 
-  /// What UpdatesCarousel hands the page: the slides or the skeleton.
+  /// What UpdatesCarousel hands the page: the slides, the skeleton or (AN6)
+  /// the calm panel.
   final Widget child;
 
   @override

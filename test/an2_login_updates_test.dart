@@ -20,6 +20,8 @@ import 'package:vetbiz_pro/widgets/updates_carousel.dart';
 // replaced by the shared Updates widget; with nothing to show there is no
 // Updates area at all and, on wide windows, the sign-in form stands alone in
 // the middle of the card.
+// AN6 (owner): the Updates card is always there (a calm panel when there
+// is nothing).
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -68,17 +70,21 @@ void main() {
         ...data,
       });
 
-  testWidgets('no announcements: no Updates area, no old empty state; the form is centred alone on a wide window', (tester) async {
+  // AN6 (owner): changed from "no Updates area; the form centred alone": the
+  // Updates card is always there, with a calm panel when there is nothing.
+  testWidgets('no announcements: the calm panel in the Updates card, no old empty state; the form in the right card on a wide window', (tester) async {
     await pump(tester, FakeFirebaseFirestore());
     expect(find.byType(UpdatesSlides), findsNothing);
-    expect(find.text(_en.updates_label), findsNothing);
+    expect(find.byKey(UpdatesCarousel.emptyKey), findsOneWidget);
+    expect(find.text(_en.updates_label), findsOneWidget);
     for (final gone in ['Announcements', 'No announcements', "You're all caught up!"]) {
       expect(find.text(gone), findsNothing, reason: gone);
     }
     final card = tester.getRect(find.byKey(AuthCard.surfaceKey));
     final email = tester.getRect(find.byType(TextField).first);
-    expect(email.center.dx, closeTo(card.center.dx, 2));
+    expect(email.center.dx, greaterThan(card.center.dx));
   });
+
 
   testWidgets('with an update: the Updates label, the shared widget; no Announcements title, icon or chevron', (tester) async {
     final db = FakeFirebaseFirestore();

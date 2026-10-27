@@ -6,7 +6,6 @@ import 'package:vetbiz_pro/config/app_info.dart';
 import 'package:vetbiz_pro/config/app_limits.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/screens/login_screen.dart';
-import 'package:vetbiz_pro/services/updates_last_known.dart';
 import 'package:vetbiz_pro/theme/app_colors.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/widgets/auth_card.dart';
@@ -20,8 +19,9 @@ import 'helpers/login_harness.dart';
 // card of their own (welcome note, label, the 16:9 frame, the controls at its
 // bottom) beside the login card, both the same height with their headings on
 // one line; on phones the welcome note is not shown and the cards stack; with
-// nothing to show the login card stands centred alone; no grey panel behind
-// the login card; a softer page frame shadow.
+// nothing to show the login card stands centred alone (AN6: no longer; the
+// card shows a calm panel); no grey panel behind the login card; a softer
+// page frame shadow.
 const _skip = false;
 // Unskipped with its commit.
 const _skipShadow = false;
@@ -81,13 +81,22 @@ void main() {
   }
 
   for (final width in [1200.0, 1024.0, 768.0, 390.0]) {
-    testWidgets('$width: no updates, no Updates card; the login card centred alone', (tester) async {
+    // AN6 (owner): changed from "no Updates card; the login card centred
+    // alone": the card is always there, with the calm panel in its frame.
+    testWidgets('$width: no updates, the Updates card with the calm panel beside or below the login card', (tester) async {
       await pumpLogin(tester, FakeFirebaseFirestore(), width: width, height: 2400);
-      expect(find.byKey(UpdatesCard.surfaceKey), findsNothing);
-      expect(find.byKey(UpdatesCard.welcomeKey), findsNothing);
-      expect(_rect(tester, LoginScreen.loginCardKey).center.dx, closeTo(_rect(tester, AuthCard.surfaceKey).center.dx, 1));
+      expect(find.byKey(UpdatesCard.surfaceKey), findsOneWidget);
+      expect(find.byKey(UpdatesCarousel.emptyKey), findsOneWidget);
+      expect(find.text(_en.updates_empty), findsOneWidget);
+      expect(find.byKey(UpdatesCard.welcomeKey), width > 1000 ? findsOneWidget : findsNothing);
+      if (width > 1000) {
+        expect(_rect(tester, UpdatesCard.surfaceKey).height, closeTo(_rect(tester, LoginScreen.loginCardKey).height, 1));
+      } else {
+        expect(_rect(tester, UpdatesCard.surfaceKey).top, greaterThan(_rect(tester, LoginScreen.loginCardKey).bottom));
+      }
     }, skip: _skip);
   }
+
 
   for (final width in [360.0, 390.0, 768.0, 1024.0, 1200.0]) {
     testWidgets('$width: the slide frame stays 16:9', (tester) async {
@@ -123,8 +132,9 @@ void main() {
     expect(shadow.color.a, closeTo(c.shadow.a * 0.2, 0.01));
   }, skip: _skipShadow);
 
-  testWidgets('wide, the last-known state had Updates: the whole left card is kept from the first frame, nothing moves', (tester) async {
-    UpdatesLastKnown.instance.record(true);
+  // AN6: no last-known state needed any more (UpdatesLastKnown retired):
+  // the whole left card is there from the first frame whatever is known.
+  testWidgets('wide, nothing known yet: the whole left card is kept from the first frame, nothing moves', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1), settle: false);
     expect(find.byKey(UpdatesCarousel.skeletonKey), findsOneWidget);
     expect(find.byKey(UpdatesCard.welcomeKey), findsOneWidget);

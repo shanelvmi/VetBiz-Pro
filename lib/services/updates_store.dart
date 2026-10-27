@@ -136,7 +136,8 @@ class UpdatesStore extends ChangeNotifier {
     try {
       _subscription = _subscribe(_db).listen(_onAnswer, onError: _onError);
     } catch (e) {
-      _onError(e);
+      // Told after this call, never while a page is being built.
+      scheduleMicrotask(() => _onError(e));
     }
   }
 

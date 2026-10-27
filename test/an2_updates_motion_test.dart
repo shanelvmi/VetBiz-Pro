@@ -16,6 +16,8 @@ import 'helpers/updates_harness.dart';
 // windows; the next poster preloaded. The feed: read once, nothing drawn
 // when there is nothing (or an error), the audience by language, urgent
 // ones take over, five at most. No overflow anywhere.
+// AN6 (owner): with nothing to show (or an error with nothing known) the
+// calm panel is drawn.
 
 void main() {
   setUp(() => UpdatesSlides.debugTimerStarts = 0);
@@ -147,7 +149,7 @@ void main() {
               return UpdatesCarousel(
                 firestore: firestore ?? db,
                 imageFor: goodImage,
-                builder: (context, updates) => updates ?? const Text('nothing', key: Key('nothing')),
+                builder: (context, updates) => updates,
               );
             },
           ),
@@ -162,19 +164,20 @@ void main() {
       }
     }
 
-    testWidgets('no documents: the Updates area is not drawn at all', (tester) async {
+    // AN6: the calm panel (was: nothing drawn at all).
+    testWidgets('no documents: the calm panel, never a spinner', (tester) async {
       await pumpFeed(tester);
-      expect(find.byKey(const Key('nothing')), findsOneWidget);
-      expect(find.text(enL10n.updates_label), findsNothing);
+      expect(find.byKey(UpdatesCarousel.emptyKey), findsOneWidget);
+      expect(find.text(enL10n.updates_empty), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
-    testWidgets('the audience filter in each language; none for this language draws nothing', (tester) async {
+    testWidgets('the audience filter in each language; none for this language shows the calm panel (AN6)', (tester) async {
       await add('en', {'audience': 'en'});
       await pumpFeed(tester);
       expect(find.text('Title en'), findsOneWidget);
       await pumpFeed(tester, locale: const Locale('sw'));
-      expect(find.byKey(const Key('nothing')), findsOneWidget);
+      expect(find.byKey(UpdatesCarousel.emptyKey), findsOneWidget);
       await add('sw', {'audience': 'sw'});
       await pumpFeed(tester, locale: const Locale('sw'));
       expect(find.text('Title sw'), findsOneWidget);
@@ -191,12 +194,12 @@ void main() {
       await add('u', {'urgent': true});
       await pumpFeed(tester);
       expect(find.text('Title u'), findsOneWidget);
-      expect(find.bySemanticsLabel(RegExp('Update 1 of')), findsNothing); // one slide: no dots
+      expect(find.bySemanticsLabel(RegExp('Slide 1 of')), findsNothing); // one slide: no dots
     });
 
-    testWidgets('an error draws nothing, never an endless spinner', (tester) async {
+    testWidgets('an error with nothing known shows the calm panel (AN6: was nothing), never an endless spinner', (tester) async {
       await pumpFeed(tester, firestore: FailingFirestore());
-      expect(find.byKey(const Key('nothing')), findsOneWidget);
+      expect(find.byKey(UpdatesCarousel.emptyKey), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 

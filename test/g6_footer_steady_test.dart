@@ -16,7 +16,6 @@ import 'package:vetbiz_pro/screens/login_screen.dart';
 import 'package:vetbiz_pro/screens/register_screen.dart';
 import 'package:vetbiz_pro/services/auth_service.dart';
 import 'package:vetbiz_pro/services/support_contact_store.dart';
-import 'package:vetbiz_pro/services/updates_last_known.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
@@ -170,9 +169,11 @@ void main() {
       return db;
     }
 
+    // AN6: the Updates card is always drawn (UpdatesLastKnown retired): a
+    // skeleton from the first frame when nothing is known, then the slides
+    // or the calm panel, in the same height.
     for (final width in [1200.0, 390.0]) {
-      testWidgets('$width: kept from the first frame when the last-known state says there were updates', (tester) async {
-        UpdatesLastKnown.instance.record(true);
+      testWidgets('$width: kept from the first frame, nothing known yet; the slides arrive without moving the footer', (tester) async {
         await pumpPage(tester, _Page.login, await withUpdate(), width: width);
         expect(find.byKey(UpdatesCarousel.skeletonKey), findsOneWidget);
         final before = footerTop(tester);
@@ -183,23 +184,23 @@ void main() {
       }, skip: _skip);
     }
 
-    for (final had in [false, null]) {
-      testWidgets('nothing kept when the last-known state is $had', (tester) async {
-        if (had != null) UpdatesLastKnown.instance.record(had);
-        await pumpPage(tester, _Page.login, await dbWith(null), width: 390);
-        expect(find.byKey(UpdatesCarousel.skeletonKey), findsNothing);
-        await answer(tester);
-        expect(find.byType(UpdatesSlides), findsNothing);
-      }, skip: _skip);
-    }
-
-    testWidgets('the answer is remembered for the next visit', (tester) async {
-      await pumpPage(tester, _Page.login, await withUpdate(), width: 390);
-      await answer(tester);
-      expect(UpdatesLastKnown.instance.hadUpdates, isTrue);
+    testWidgets('no updates: the skeleton, then the calm panel, the footer unmoved', (tester) async {
       await pumpPage(tester, _Page.login, await dbWith(null), width: 390);
+      expect(find.byKey(UpdatesCarousel.skeletonKey), findsOneWidget);
+      final before = footerTop(tester);
       await answer(tester);
-      expect(UpdatesLastKnown.instance.hadUpdates, isFalse);
+      expect(find.byType(UpdatesSlides), findsNothing);
+      expect(find.byKey(UpdatesCarousel.emptyKey), findsOneWidget);
+      expect(footerTop(tester), before);
+    }, skip: _skip);
+
+    testWidgets('the answer is remembered for the next visit: its first frame has the slides', (tester) async {
+      final db = await withUpdate();
+      await pumpPage(tester, _Page.login, db, width: 390);
+      await answer(tester);
+      await pumpPage(tester, _Page.login, db, width: 390);
+      expect(find.byKey(UpdatesCarousel.skeletonKey), findsNothing);
+      expect(find.byType(UpdatesSlides), findsOneWidget);
     }, skip: _skip);
   });
 }

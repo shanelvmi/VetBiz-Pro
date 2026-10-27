@@ -740,13 +740,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // AN4 (owner): two cards, no grey panel behind the login card (it used
   // to lift the card off a tinted panel; the card's own shadow does that
-  // on the frame now).
-  Widget _buildBody(AuthCardLayout layout, Widget? updates) {
-    final card = updates == null ? null : UpdatesCard(wide: layout.isWide, child: updates);
+  // on the frame now). AN6: the Updates card is always there, on every
+  // width, from the first frame (skeleton, slides or the calm panel, all
+  // the same height), so nothing appears late or moves when they arrive.
+  Widget _buildBody(AuthCardLayout layout, Widget updates) {
+    final card = UpdatesCard(wide: layout.isWide, child: updates);
     if (layout.isWide) {
-      if (card == null) {
-        return Row(children: [const Spacer(), Expanded(flex: 2, child: _loginForm()), const Spacer()]);
-      }
       // Side by side at the taller card's natural height, both stretched to
       // it: the Updates card's controls go to its bottom, the slide frame
       // keeps its 16:9 shape. Nothing below measures itself with a
@@ -771,7 +770,8 @@ class _LoginScreenState extends State<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _loginForm(),
-        if (card != null) ...[const SizedBox(height: AuthPanelMetrics.stackGap), card],
+        const SizedBox(height: AuthPanelMetrics.stackGap),
+        card,
       ],
     );
   }
@@ -792,9 +792,8 @@ class _LoginScreenState extends State<LoginScreen> {
           // padding and radius are Register's too (AuthCard). The secondary
           // details (brand, help, legal, version) are in the footer below it
           // (G3).
-          // The Updates (AN2) decide whether there is a left card: with
-          // nothing to show there is no Updates card at all and the login
-          // card stands alone in the middle of the frame.
+          // The Updates (AN2) come from the app's one store (AN6) and always
+          // fill the left card: slides, a skeleton or a calm panel.
           UpdatesCarousel(
             firestore: _db,
             builder: (context, updates) => AuthCard(

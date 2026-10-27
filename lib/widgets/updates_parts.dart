@@ -171,8 +171,8 @@ class UpdatesLabel extends StatelessWidget {
   }
 }
 
-/// G6: the Updates area while their first answer is pending, when the last
-/// read on this device had some (UpdatesLastKnown): the label row and the
+/// G6, AN6: the Updates area while nothing is known yet (no answer, and no
+/// copy from an earlier visit on this device): the label row and the
 /// empty 16:9 frame, as tall as one slide, so the page does not jump when
 /// they arrive. Nothing to read in it. AN4: in the wide card it also keeps
 /// the controls' line at the bottom, as the slides do.
@@ -199,6 +199,48 @@ class UpdatesSkeleton extends StatelessWidget {
           if (wide) ...[const Spacer(), const SizedBox(height: kMinInteractiveDimension)],
         ],
       ),
+    );
+  }
+}
+
+/// AN6: the Updates area when the answer is that there is nothing to show
+/// in this language: a calm sentence in the same 16:9 frame, no chips, no
+/// controls, so the card keeps its place and its height.
+class UpdatesEmpty extends StatelessWidget {
+  const UpdatesEmpty({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = UpdatesPlacement.wideOf(context);
+    return Column(
+      mainAxisSize: wide ? MainAxisSize.max : MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const UpdatesLabel(showChips: false, urgent: false, isNew: false),
+        const SizedBox(height: AppSpacing.s6),
+        AspectRatio(
+          aspectRatio: AppLimits.posterAspectRatio,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.r16),
+            child: ColoredBox(
+              color: context.colors.surfaceMuted,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.s16),
+                  child: Text(
+                    context.l10n.updates_empty,
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (wide) ...[const Spacer(), const SizedBox(height: kMinInteractiveDimension)],
+      ],
     );
   }
 }

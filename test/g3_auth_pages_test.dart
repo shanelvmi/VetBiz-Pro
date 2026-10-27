@@ -101,12 +101,14 @@ void main() {
       expect(find.text(_en.login_signInTitle), findsOneWidget);
     });
 
-    // AN2: the Announcements card became the Updates, drawn only when there
-    // is one to show (none in this empty database; an2_login_updates_test).
-    testWidgets('keeps Remember me, Forgot password and Create an account; no Updates area with nothing to show', (tester) async {
+    // AN2: the Announcements card became the Updates. AN6 (owner): the
+    // Updates card is always there, with a calm panel in this empty database
+    // (was: no Updates area; an2_login_updates_test).
+    testWidgets('keeps Remember me, Forgot password and Create an account; the calm Updates panel with nothing to show', (tester) async {
       await pump(tester, login());
       expect(find.text('Announcements'), findsNothing);
-      expect(find.text(_en.updates_label), findsNothing);
+      expect(find.text(_en.updates_label), findsOneWidget);
+      expect(find.text(_en.updates_empty), findsOneWidget);
       expect(find.text(_en.login_rememberMe), findsOneWidget);
       expect(find.text(_en.login_forgotPassword), findsOneWidget);
       expect(find.textContaining(_en.login_register, findRichText: true), findsOneWidget);
