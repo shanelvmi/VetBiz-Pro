@@ -193,6 +193,12 @@ class AuthPanelMetrics {
   static const double iconCircle = 42;
   static const double iconCircleBorder = 1.4;
   static const double iconCircleGlow = 14;
+  static const double iconCircleGlowAlpha = AppAlpha.a50;
+
+  /// Dark (AN5): a smaller, fainter glow, so the light ring does not haze
+  /// the icon on the dark card. Light keeps the two above.
+  static const double iconCircleGlowDark = 6;
+  static const double iconCircleGlowAlphaDark = AppAlpha.a15;
   static const double headingGap = AppSpacing.s14;
 
   /// Between a heading and its subtitle (the welcome sentence, the sign-in

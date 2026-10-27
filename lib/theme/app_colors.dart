@@ -107,6 +107,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.chart4ChipLabel,
     required this.authFooterFill,
     required this.authFooterMutedText,
+    required this.authPanelIcon,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -355,6 +356,14 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color authFooterFill;
   final Color authFooterMutedText;
 
+  // The icon in the soft circle beside each signed-out card heading (the
+  // lock, the paw; AuthPanelHeading). Light = primary, so light does not
+  // change; dark = textStrong, as the dark primary on the circle (the glow
+  // at 20% over the card) measured 3.09 to 3.39 and looked blurred. White
+  // reads 9.6 to 11.1 there; brandTealGlow, 5.4 to 6.6, but it is the ring
+  // and halo colour too (AN5).
+  final Color authPanelIcon;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -456,6 +465,7 @@ class AppColors extends ThemeExtension<AppColors> {
         chart4ChipLabel: Colors.purple,
         authFooterFill: ThemeDerivation.quickActionTintPrimary(theme.primary),
         authFooterMutedText: ThemeDerivation.textMuted(ThemeDerivation.quickActionTintPrimary(theme.primary)),
+        authPanelIcon: theme.primary,
       );
   }
 
@@ -558,6 +568,7 @@ class AppColors extends ThemeExtension<AppColors> {
       chart4ChipLabel: DarkDerivation.chipLabel(mark(light.chart4), theme.primary),
       authFooterFill: surface,
       authFooterMutedText: DarkDerivation.lift(Colors.grey.shade500, 4.5, surfaceMuted),
+      authPanelIcon: Colors.white,
     );
   }
 
@@ -652,6 +663,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? chart4ChipLabel,
     Color? authFooterFill,
     Color? authFooterMutedText,
+    Color? authPanelIcon,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -743,6 +755,7 @@ class AppColors extends ThemeExtension<AppColors> {
         chart4ChipLabel: chart4ChipLabel ?? this.chart4ChipLabel,
         authFooterFill: authFooterFill ?? this.authFooterFill,
         authFooterMutedText: authFooterMutedText ?? this.authFooterMutedText,
+        authPanelIcon: authPanelIcon ?? this.authPanelIcon,
       );
 
   @override
@@ -839,6 +852,7 @@ class AppColors extends ThemeExtension<AppColors> {
       chart4ChipLabel: l(chart4ChipLabel, other.chart4ChipLabel),
       authFooterFill: l(authFooterFill, other.authFooterFill),
       authFooterMutedText: l(authFooterMutedText, other.authFooterMutedText),
+      authPanelIcon: l(authPanelIcon, other.authPanelIcon),
     );
   }
 }

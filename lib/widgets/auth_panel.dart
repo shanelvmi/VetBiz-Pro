@@ -46,6 +46,7 @@ class AuthPanelHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glow = context.colors.brandTealGlow;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     final row = Row(
       children: [
         Container(
@@ -55,9 +56,13 @@ class AuthPanelHeading extends StatelessWidget {
             color: glow.withValues(alpha: AppAlpha.a20),
             shape: BoxShape.circle,
             border: Border.all(color: glow.withValues(alpha: AppAlpha.a70), width: AuthPanelMetrics.iconCircleBorder),
-            boxShadow: [BoxShadow(color: glow.withValues(alpha: AppAlpha.a50), blurRadius: AuthPanelMetrics.iconCircleGlow)],
+            boxShadow: [
+              dark
+                  ? BoxShadow(color: glow.withValues(alpha: AuthPanelMetrics.iconCircleGlowAlphaDark), blurRadius: AuthPanelMetrics.iconCircleGlowDark)
+                  : BoxShadow(color: glow.withValues(alpha: AuthPanelMetrics.iconCircleGlowAlpha), blurRadius: AuthPanelMetrics.iconCircleGlow),
+            ],
           ),
-          child: Icon(icon, color: context.colors.primary, size: AppIconSize.i20),
+          child: Icon(icon, color: context.colors.authPanelIcon, size: AppIconSize.i20),
         ),
         const SizedBox(width: AuthPanelMetrics.headingGap),
         Expanded(
