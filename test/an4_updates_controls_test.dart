@@ -27,7 +27,8 @@ import 'helpers/updates_harness.dart';
 // footer's brand column without the description sentence.
 // Unskipped with their commits.
 const _skipWideLabel = false;
-const _skipFooter = false;
+// The second AN5 correction: skipped until the footer commit.
+const _skipFooter = true;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -143,15 +144,15 @@ void main() {
   // The footer's heights before AN4 (G6): 170 at 1200 (the link columns are
   // taller than the brand column there), 432 at 768, 499 at 390 and 360.
   for (final (width, before) in [(1200.0, 170.0), (768.0, 432.0), (390.0, 499.0), (360.0, 499.0)]) {
-    testWidgets('$width: the footer\'s brand column is the mark, the name and (AN5) the audience line; the rest of the footer no taller (shorter on phones)', (tester) async {
+    testWidgets('$width: the footer\'s brand column is the mark, the name and (AN5) the description line; the rest of the footer no taller (shorter on phones)', (tester) async {
       final height = await pumpFooter(tester, width);
       final brand = find.byKey(AuthFooter.brandKey);
       expect(find.descendant(of: brand, matching: find.text(AppInfo.name)), findsOneWidget);
       expect(find.descendant(of: brand, matching: find.text(AppInfo.logoMark)), findsOneWidget);
       expect(find.descendant(of: brand, matching: find.byType(Text)), findsNWidgets(3));
       expect(find.text(_oldTagline), findsNothing);
-      expect(find.descendant(of: brand, matching: find.text(_en.authFooter_audience)), findsOneWidget);
-      // AN5: all but what the audience line adds to the brand column (its
+      expect(find.descendant(of: brand, matching: find.text(_en.authFooter_description)), findsOneWidget);
+      // AN5: all but what the description line adds to the brand column (its
       // mark row was the whole column in AN4).
       final rest = height - (tester.getSize(brand).height - AuthFooterMetrics.markSize);
       if (width >= 1200) {

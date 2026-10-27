@@ -45,8 +45,8 @@ void main() {
   Rect linkRect(WidgetTester tester, String text) => tester.getRect(find.ancestor(of: find.text(text), matching: find.byType(HoverLink)).first);
   double bandHeight(WidgetTester tester) => tester.getSize(find.byKey(AuthFooter.bandKey)).height;
   double lastLinkBottom(WidgetTester tester) => textLinks.map((t) => linkRect(tester, t).bottom).reduce((a, b) => a > b ? a : b);
-  // AN5: how far the brand column (now with its audience line, three lines
-  // in the square test font, two with real fonts at 1200) reaches below the
+  // AN5: how far the brand column (now with its description line, two lines
+  // at most at 1200 since the second AN5 correction) reaches below the
   // last link; 0 when the links are the tallest column.
   double brandOverhang(WidgetTester tester) {
     final over = tester.getRect(find.byKey(AuthFooter.brandKey)).bottom - lastLinkBottom(tester);
