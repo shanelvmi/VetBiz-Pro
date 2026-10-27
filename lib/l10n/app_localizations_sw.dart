@@ -4928,9 +4928,6 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
-  String get login_welcomeBack => 'Karibu tena';
-
-  @override
   String get login_signInTitle => 'Ingia kwenye akaunti yako';
 
   @override

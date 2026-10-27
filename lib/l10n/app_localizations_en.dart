@@ -4900,9 +4900,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get login_welcomeBack => 'Welcome back';
-
-  @override
   String get login_signInTitle => 'Sign in to your account';
 
   @override

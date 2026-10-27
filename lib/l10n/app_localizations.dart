@@ -8454,12 +8454,6 @@ abstract class AppLocalizations {
   /// **'© 2026 {appName}. All rights reserved.'**
   String login_copyright(String appName);
 
-  /// Login form title.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome back'**
-  String get login_welcomeBack;
-
   /// Sign-in card: its heading, beside the Updates card's welcome heading on wide windows (AN5; was Welcome back).
   ///
   /// In en, this message translates to:
