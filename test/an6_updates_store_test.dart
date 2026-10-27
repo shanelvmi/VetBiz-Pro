@@ -18,7 +18,7 @@ import 'package:vetbiz_pro/widgets/announcement_poster.dart';
 // back); a failed read keeps the last-known list; the audience, urgent and
 // five-slide rules applied per language when read; the first, next and
 // previous posters warmed once per URL.
-const _skip = true;
+const _skip = false;
 
 class _Feed {
   int subscribes = 0;
