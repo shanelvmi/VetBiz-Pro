@@ -3778,6 +3778,8 @@
   "@authFooter_legal": {"x-review":"draft"},
   "authFooter_audience": "Kwa agrovet, kliniki za mifugo, hospitali za mifugo na huduma za kutembelea nchini Tanzania.",
   "@authFooter_audience": {"x-review":"draft"},
+  "authFooter_description": "Mauzo, bidhaa, wateja, madeni na huduma za mifugo kwa agrovet, kliniki za mifugo, hospitali za mifugo na huduma za kutembelea.",
+  "@authFooter_description": {"x-review":"draft"},
   "authFooter_helpContact": "Msaada na mawasiliano",
   "@authFooter_helpContact": {"x-review":"draft"},
   "social_facebook": "Facebook",
