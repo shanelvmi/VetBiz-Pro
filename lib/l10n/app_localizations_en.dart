@@ -6749,6 +6749,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'For agrovets, vet clinics, vet hospitals and ambulatory services in Tanzania.';
 
   @override
+  String get authFooter_description =>
+      'Sales, stock, clients, debts and veterinary services for agrovets, vet clinics, vet hospitals and ambulatory services.';
+
+  @override
   String get authFooter_helpContact => 'Help and contact';
 
   @override

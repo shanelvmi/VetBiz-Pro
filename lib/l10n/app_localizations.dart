@@ -11454,6 +11454,12 @@ abstract class AppLocalizations {
   /// **'For agrovets, vet clinics, vet hospitals and ambulatory services in Tanzania.'**
   String get authFooter_audience;
 
+  /// Sign-in and register footer: the line under the mark and the app name in the brand column (AN5, the owner's sentence). Not the welcome note's sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales, stock, clients, debts and veterinary services for agrovets, vet clinics, vet hospitals and ambulatory services.'**
+  String get authFooter_description;
+
   /// Sign-in footer, Support column: opens the same Help dialog as the dashboard.
   ///
   /// In en, this message translates to:
