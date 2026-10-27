@@ -7071,5 +7071,5 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get updates_welcomeLine =>
-      'Mauzo, bidhaa, wateja na madeni kwa agrovet na kliniki za mifugo.';
+      'Fuatilia habari na taarifa zetu za hivi punde.';
 }

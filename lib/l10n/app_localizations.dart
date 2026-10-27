@@ -11922,10 +11922,10 @@ abstract class AppLocalizations {
   /// **'Welcome to {appName}'**
   String updates_welcomeTitle(String appName);
 
-  /// Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; it was the sign-in footer's line under the app name).
+  /// Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; AN5: the owner's line about the Updates).
   ///
   /// In en, this message translates to:
-  /// **'Sales, stock, clients and debts for agrovets and vet clinics.'**
+  /// **'Track our latest news and notices.'**
   String get updates_welcomeLine;
 }
 

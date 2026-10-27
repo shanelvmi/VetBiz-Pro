@@ -7027,6 +7027,5 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get updates_welcomeLine =>
-      'Sales, stock, clients and debts for agrovets and vet clinics.';
+  String get updates_welcomeLine => 'Track our latest news and notices.';
 }
