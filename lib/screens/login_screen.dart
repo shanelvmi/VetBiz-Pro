@@ -10,6 +10,7 @@ import '../services/auth_service.dart';
 import '../services/support_contact_store.dart';
 import '../widgets/updates_carousel.dart';
 import '../widgets/updates_card.dart';
+import '../widgets/auth_entrance.dart';
 import '../widgets/password_field_guard.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
@@ -57,7 +58,7 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   late final AuthService _authService = widget.authService ?? AuthService();
   FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
   final TextEditingController emailController = TextEditingController();
@@ -129,9 +130,47 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) setState(() {});
   }
 
+  // AN6: the header and the two cards enter together, once per page (a cold
+  // load, after signing out), and again when the page shows after the one
+  // above it (Register) goes back - never on a rebuild, a resize, or a
+  // theme or language change, and not at all under reduced motion.
+  late final AnimationController _entrance = AnimationController(vsync: this, duration: AuthEntrance.total);
+  bool _entered = false;
+  Animation<double>? _coveredBy;
+
+  void _enter() {
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _entrance.value = 1;
+    } else {
+      _entrance.forward(from: 0);
+    }
+  }
+
+  // The page above this one is going back: enter while it leaves.
+  void _onCoverChanged(AnimationStatus status) {
+    if (status == AnimationStatus.reverse && mounted) _enter();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_entered) {
+      _entered = true;
+      _enter();
+    }
+    final cover = ModalRoute.of(context)?.secondaryAnimation;
+    if (cover != _coveredBy) {
+      _coveredBy?.removeStatusListener(_onCoverChanged);
+      _coveredBy = cover?..addStatusListener(_onCoverChanged);
+    }
+  }
+
   @override
   void dispose() {
+    _coveredBy?.removeStatusListener(_onCoverChanged);
+    _entrance.dispose();
     emailController.dispose();
+
     _password.dispose();
     _errorTimer?.cancel();
     super.dispose();
@@ -743,6 +782,7 @@ class _LoginScreenState extends State<LoginScreen> {
   // on the frame now). AN6: the Updates card is always there, on every
   // width, from the first frame (skeleton, slides or the calm panel, all
   // the same height), so nothing appears late or moves when they arrive.
+  // The two cards enter with the header, the second a little after.
   Widget _buildBody(AuthCardLayout layout, Widget updates) {
     final card = UpdatesCard(wide: layout.isWide, child: updates);
     if (layout.isWide) {
@@ -755,9 +795,11 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(child: card),
+            Expanded(child: AuthEntrance(animation: _entrance, child: card)),
             const SizedBox(width: AuthPanelMetrics.gap),
-            Expanded(child: _loginForm()),
+            Expanded(
+              child: AuthEntrance(animation: _entrance, delay: AppMotion.authEntranceStagger, child: _loginForm()),
+            ),
           ],
         ),
       );
@@ -769,9 +811,9 @@ class _LoginScreenState extends State<LoginScreen> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _loginForm(),
+        AuthEntrance(animation: _entrance, child: _loginForm()),
         const SizedBox(height: AuthPanelMetrics.stackGap),
-        card,
+        AuthEntrance(animation: _entrance, delay: AppMotion.authEntranceStagger, child: card),
       ],
     );
   }
@@ -797,7 +839,7 @@ class _LoginScreenState extends State<LoginScreen> {
           UpdatesCarousel(
             firestore: _db,
             builder: (context, updates) => AuthCard(
-              header: _buildHeader(),
+              header: AuthEntrance(animation: _entrance, child: _buildHeader()),
               below: const AuthFooter(),
               bodyBuilder: (context, layout) => _buildBody(layout, updates),
             ),

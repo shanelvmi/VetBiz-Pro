@@ -21,7 +21,7 @@ import 'helpers/updates_harness.dart' show textUpdate;
 // there are none), and nothing moves when the answer arrives; the header and
 // the two cards enter together once per page, never on a rebuild or a
 // resize, and not at all under reduced motion.
-const _skip = true;
+const _skip = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
