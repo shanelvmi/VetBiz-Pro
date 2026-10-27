@@ -41,4 +41,19 @@ class AppMotion {
   /// text can be read (owner decision after D8). Types already longer keep
   /// their own time.
   static const Duration toastDetailed = Duration(seconds: 6);
+
+  /// The login page's Updates (AN6): one slide sliding to the next (or to
+  /// the one a dot or a key chose), with Curves.easeOutCubic.
+  static const Duration updatesSlide = slowest;
+
+  /// The soft parallax of that slide: the outgoing slide travels this share
+  /// of the incoming one's distance.
+  static const double updatesOutgoingTravel = 0.7;
+
+  /// The signed-out page's entrance (AN6): the header and the two cards fade
+  /// in and rise [authEntranceRise] px together, once per page, the second
+  /// card [authEntranceStagger] after the first, with Curves.easeOutCubic.
+  static const Duration authEntrance = Duration(milliseconds: 350);
+  static const Duration authEntranceStagger = Duration(milliseconds: 40);
+  static const double authEntranceRise = 12;
 }

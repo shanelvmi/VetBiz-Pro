@@ -72,6 +72,14 @@ class UpdatesDots extends StatelessWidget {
   final bool reduceMotion;
   final ValueChanged<int> onSelect;
 
+  /// For tests (AN6): dot [i]'s visible dot or pill, its tap area, the
+  /// pill's timer fill, the focusable group and its ring.
+  static Key dotKey(int i) => ValueKey<String>('updatesDot$i');
+  static Key slotKey(int i) => ValueKey<String>('updatesDotSlot$i');
+  static const pillFillKey = Key('updatesPillFill');
+  static const groupKey = Key('updatesDotsGroup');
+  static const focusRingKey = Key('updatesDotsFocusRing');
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;

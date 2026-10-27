@@ -229,6 +229,22 @@ class UpdatesMetrics {
   static const double dot = AppSpacing.s8;
   static const double dotSelected = AppSpacing.s12;
 
+  /// AN6: the active dot is a pill this wide (as tall as a dot), filling
+  /// over the slide's time.
+  static const double pill = AppSpacing.s28;
+
+  /// AN6: each dot's tap area is at least this wide (and [controlsRow] tall)
+  /// around the visible dot; the owner may tune it.
+  static const double dotSlot = AppSpacing.s24;
+
+  /// AN6: the controls row under the frame (Material's 48 px touch target),
+  /// kept this tall with one slide, none, or while loading, so nothing moves
+  /// when the answer arrives.
+  static const double controlsRow = 48;
+
+  /// AN6: the focus ring around the dots when the keyboard is on them.
+  static const double focusRing = 2;
+
   /// Wide: between the welcome note and the Updates label.
   static const double welcomeGap = AppSpacing.s28;
 }

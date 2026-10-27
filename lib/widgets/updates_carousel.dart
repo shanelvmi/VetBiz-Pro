@@ -43,6 +43,9 @@ class UpdatesCarousel extends StatefulWidget {
   /// For tests: the frame kept while the first answer is pending (G6).
   static const skeletonKey = Key('updatesSkeleton');
 
+  /// For tests: the calm panel shown when there are no updates (AN6).
+  static const emptyKey = Key('updatesEmpty');
+
   @override
   State<UpdatesCarousel> createState() => _UpdatesCarouselState();
 }

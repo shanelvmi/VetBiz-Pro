@@ -55,6 +55,7 @@ Future<void> pumpLogin(
   Locale locale = const Locale('en'),
   bool longWelcome = false,
   bool settle = true,
+  bool reduceMotion = false,
 }) async {
   tester.view.physicalSize = Size(width, height);
   tester.view.devicePixelRatio = 1;
@@ -74,6 +75,7 @@ Future<void> pumpLogin(
       supportedLocales: AppLocalizations.supportedLocales,
       locale: locale,
       theme: AppTheme.build(theme, brightness),
+      builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion), child: child!),
       // A new route each time, as navigating does.
       home: KeyedSubtree(key: UniqueKey(), child: LoginScreen(authService: _NoAuth(), firestore: db)),
     ),

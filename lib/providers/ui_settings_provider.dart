@@ -14,7 +14,9 @@ import '../theme/app_palette.dart';
 class UiSettingsProvider with ChangeNotifier {
   static const String _layoutFixedKey = 'ui_layout_fixed';
   static const String _colorThemeKey = 'ui_color_theme';
-  static const String _languageKey = 'ui_language';
+  /// Public for UpdatesStore (AN6), which warms the posters for the saved
+  /// language before this provider has loaded.
+  static const String languageKey = 'ui_language';
   static const String _themeModeKey = 'ui_theme_mode';
 
   bool _layoutFixed = false;
@@ -61,7 +63,7 @@ class UiSettingsProvider with ChangeNotifier {
       }
       // Likewise only a language the app has texts for; anything else
       // (a code from an older or newer build) leaves the default.
-      final language = prefs.getString(_languageKey);
+      final language = prefs.getString(languageKey);
       if (AppDefaults.supportedLanguages.contains(language)) {
         _languageCode = language!;
         L10n.setLocale(locale);
@@ -98,7 +100,7 @@ class UiSettingsProvider with ChangeNotifier {
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_languageKey, code);
+      await prefs.setString(languageKey, code);
     } catch (e) {
       debugPrint('[UI SETTINGS] could not save language: $e');
     }
