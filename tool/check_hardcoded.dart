@@ -28,6 +28,9 @@ class GuardRule {
   /// exclusions in [isExcluded]).
   final List<String> alsoExcludes;
 
+  /// When not empty, the only folders this rule looks in.
+  final List<String> onlyIn;
+
   /// For a value that can sit on the line after its opener: a line ending
   /// in [opensAtLineEnd] makes the next line be tested with [continues]
   /// (one count at most), as well as with [patterns].
@@ -35,7 +38,12 @@ class GuardRule {
   final RegExp? continues;
 
   const GuardRule(this.id, this.description, this.patterns,
-      {this.accept, this.enabled = true, this.alsoExcludes = const [], this.opensAtLineEnd, this.continues});
+      {this.accept,
+      this.enabled = true,
+      this.alsoExcludes = const [],
+      this.onlyIn = const [],
+      this.opensAtLineEnd,
+      this.continues});
 
   bool _hits(RegExp p, String line) => p.allMatches(line).any((m) => accept == null || accept!(m));
 
