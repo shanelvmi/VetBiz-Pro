@@ -46,6 +46,9 @@ class AddPaymentScreen extends StatefulWidget {
   // which shows that debt's own "Amount owed" line instead.
   final double? totalOwed;
 
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
+  final FirebaseFirestore? firestore;
+
   const AddPaymentScreen({
     super.key,
     this.preselectedClient,
@@ -56,6 +59,7 @@ class AddPaymentScreen extends StatefulWidget {
     this.debtorClients,
     this.debtorBalances,
     this.totalOwed,
+    this.firestore,
   });
 
   @override

@@ -32,7 +32,10 @@ import '../../l10n/l10n.dart';
 import '../../widgets/printable_theme.dart';
 
 class ClientsScreen extends StatefulWidget {
-  const ClientsScreen({super.key});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
+  final FirebaseFirestore? firestore;
+
+  const ClientsScreen({super.key, this.firestore});
 
   @override
   State<ClientsScreen> createState() => _ClientsScreenState();

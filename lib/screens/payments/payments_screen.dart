@@ -49,7 +49,10 @@ class PaymentsScreen extends StatefulWidget {
   final String? initialClientId;
   final String? initialClientName;
 
-  const PaymentsScreen({super.key, this.initialClientId, this.initialClientName});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
+  final FirebaseFirestore? firestore;
+
+  const PaymentsScreen({super.key, this.initialClientId, this.initialClientName, this.firestore});
 
   @override
   State<PaymentsScreen> createState() => _PaymentsScreenState();

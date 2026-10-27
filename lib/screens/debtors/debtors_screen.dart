@@ -32,7 +32,10 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 
 class DebtorsScreen extends StatefulWidget {
-  const DebtorsScreen({super.key});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
+  final FirebaseFirestore? firestore;
+
+  const DebtorsScreen({super.key, this.firestore});
 
   @override
   State<DebtorsScreen> createState() => _DebtorsScreenState();

@@ -30,7 +30,10 @@ import '../../l10n/l10n.dart';
 
 class ProductsScreen extends StatefulWidget {
   final String? initialSearchQuery;
-  const ProductsScreen({super.key, this.initialSearchQuery});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
+  final FirebaseFirestore? firestore;
+
+  const ProductsScreen({super.key, this.initialSearchQuery, this.firestore});
 
   @override
   State<ProductsScreen> createState() => _ProductsScreenState();

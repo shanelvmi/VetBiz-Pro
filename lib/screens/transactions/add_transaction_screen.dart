@@ -27,7 +27,14 @@ class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
   final bool isModal;
 
-  const AddTransactionScreen({super.key, this.transaction, this.isModal = false});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
+  final FirebaseFirestore? firestore;
+
+  /// Null: a new AuthService (the app's own sign-in). Tests pass a fake (PH2a),
+  /// as LoginScreen.authService.
+  final AuthService? authService;
+
+  const AddTransactionScreen({super.key, this.transaction, this.isModal = false, this.firestore, this.authService});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();

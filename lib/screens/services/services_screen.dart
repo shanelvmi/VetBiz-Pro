@@ -32,7 +32,10 @@ import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
 
 class ServicesScreen extends StatefulWidget {
-  const ServicesScreen({super.key});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
+  final FirebaseFirestore? firestore;
+
+  const ServicesScreen({super.key, this.firestore});
 
   @override
   State<ServicesScreen> createState() => _ServicesScreenState();

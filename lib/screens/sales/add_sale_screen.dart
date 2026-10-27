@@ -39,7 +39,10 @@ import '../../l10n/l10n.dart';
 class AddSaleScreen extends StatefulWidget {
   final bool isModal;
   final Product? prefilledProduct;
-  const AddSaleScreen({super.key, this.isModal = false, this.prefilledProduct});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
+  final FirebaseFirestore? firestore;
+
+  const AddSaleScreen({super.key, this.isModal = false, this.prefilledProduct, this.firestore});
 
   @override
   State<AddSaleScreen> createState() => _AddSaleScreenState();
