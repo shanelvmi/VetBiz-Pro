@@ -144,4 +144,4 @@ With the phone signal above, both keep today's layout (D1). Owner decision: keep
 5. On "All details": also the chart and Recent Activity, below the rows (recommended)?
 6. Labels: keep "Record Visit" and "Record Payment" (recommended, unchanged English) or the owner's "Record service" and "Take payment"; "Expenses" for the Transactions screen?
 
-OWNER DECISION: PENDING
+OWNER DECISION: APPROVED. Answers: 1 back on Home leaves the app or page as the phone normally does, after fixing the root so that a signed-in stack holds only the dashboard and sign-out replaces it with the login (fall back to doing nothing only if that proves risky); 2 keep the periods; 3 the Stock tab opens Products and the tab is LABELLED "Products" (Stock Store stays in Go to and More); 4 Owed is everything owed now; 5 All details also shows the chart and Recent Activity below the rows; 6 keep the existing English labels Record Visit and Record Payment, and keep the label "Transactions" (not Expenses) for the Transactions screen, with the quick action Add expense keeping its name.

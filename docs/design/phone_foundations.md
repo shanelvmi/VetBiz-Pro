@@ -154,4 +154,4 @@ Each is a HARD STOP with before and after screenshots and the owner's phone and 
 4. The web page's description and iOS title (risk 10): "VetBiz Pro" and a one-line description, before the first link is shared?
 5. Order: PH2 to PH4 before any list (recommended: the first thing a customer sees is the home), or the money lists first?
 
-OWNER DECISION: PENDING
+OWNER DECISION: APPROVED. Answers: 1 minimum text 14 px on phones (secondary 12, badges smaller); 2 row details on a phone open as a full page; 3 the installed app may turn to landscape (manifest orientation any); 4 yes, set the web page title to "VetBiz Pro" and a one-line plain description ("Records for agrovets and veterinary centres.") and the iOS title, in the first batch, before the first link is shared; 5 PH2 to PH4 before any list. Launch scope: PH2 to PH6; PH7 to PH9 continue during the pilot.
