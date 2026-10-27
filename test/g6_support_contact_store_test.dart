@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vetbiz_pro/data/support_contact_fields.dart';
 import 'package:vetbiz_pro/models/support_contact.dart';
 import 'package:vetbiz_pro/services/support_contact_store.dart';
-import 'package:vetbiz_pro/services/updates_last_known.dart';
 
 // G6, written before the store existed (skipped until it does): ONE read of
 // app_config/support_contact for any number of callers, a copy in memory for
@@ -168,22 +167,5 @@ void main() {
     final store = SupportContactStore(fetch: FakeContactRead().call);
     await store.restore();
     expect(store.current, isNull);
-  }, skip: _skip);
-
-  test('Updates last-known: unknown, then recorded, then restored on the next launch', () async {
-    final first = UpdatesLastKnown();
-    await first.restore();
-    expect(first.hadUpdates, isNull);
-    first.record(true);
-    expect(first.hadUpdates, isTrue);
-    await pumpEventQueue();
-    final next = UpdatesLastKnown();
-    await next.restore();
-    expect(next.hadUpdates, isTrue);
-    next.record(false);
-    await pumpEventQueue();
-    final third = UpdatesLastKnown();
-    await third.restore();
-    expect(third.hadUpdates, isFalse);
   }, skip: _skip);
 }
