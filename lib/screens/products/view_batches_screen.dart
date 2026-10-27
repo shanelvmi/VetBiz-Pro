@@ -15,9 +15,8 @@ import '../../config/money.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
-import '../../theme/app_motion.dart';
-import '../../theme/app_breakpoints.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/app_sheet.dart';
 
 /// Full management view for one product's stock - every batch on file,
 /// with a way to correct or top up any of them directly, plus a clear
@@ -563,53 +562,9 @@ Future<void> showViewBatchesScreen(
   required Product product,
   MoveToStockAction moveToStockAction = MoveToStockAction.moveToStock,
 }) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
-
-  if (!isWideScreen) {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ViewBatchesScreen(product: product, moveToStockAction: moveToStockAction)),
-    );
-    return;
-  }
-
-  await showGeneralDialog(
-    context: context,
-    barrierDismissible: true,
+  await showAdaptiveForm(
+    context,
     barrierLabel: context.l10n.products_viewBatches,
-    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
-    transitionDuration: AppMotion.normal,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final screenSize = MediaQuery.of(context).size;
-      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
-      // Never shorter than 480px, fixed - 88% of screen height
-      // comfortably exceeds that on most windows, but this guarantees
-      // it even on a smaller one.
-      final modalHeight = (screenSize.height * 0.88) < 480 ? 480.0 : screenSize.height * 0.88;
-      return Center(
-        child: SizedBox(
-          width: modalWidth,
-          height: modalHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.r16),
-            child: Material(
-              child: ViewBatchesScreen(product: product, isModal: true, moveToStockAction: moveToStockAction),
-            ),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
+    builder: (isModal) => ViewBatchesScreen(product: product, isModal: isModal, moveToStockAction: moveToStockAction),
   );
 }

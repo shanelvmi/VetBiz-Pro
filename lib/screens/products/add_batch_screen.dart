@@ -14,10 +14,9 @@ import '../../data/data_keys.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
-import '../../theme/app_breakpoints.dart';
-import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/app_sheet.dart';
 
 /// Records a new delivery of an existing product as its own batch - a
 /// separate batch number, expiry, and quantity, never overwriting an
@@ -234,53 +233,9 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 /// push on mobile, a large, centered, dismissable modal on
 /// desktop/tablet-width screens.
 Future<void> showAddBatchScreen(BuildContext context, {required Product product}) async {
-  final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
-
-  if (!isWideScreen) {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => AddBatchScreen(product: product)),
-    );
-    return;
-  }
-
-  await showGeneralDialog(
-    context: context,
-    barrierDismissible: true,
+  await showAdaptiveForm(
+    context,
     barrierLabel: context.l10n.batch_addBatch,
-    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
-    transitionDuration: AppMotion.normal,
-    pageBuilder: (context, animation, secondaryAnimation) {
-      final screenSize = MediaQuery.of(context).size;
-      final modalWidth = (screenSize.width * 0.60).clamp(0, 940).toDouble();
-      // Never shorter than 480px, fixed - 88% of screen height
-      // comfortably exceeds that on most windows, but this guarantees
-      // it even on a smaller one.
-      final modalHeight = (screenSize.height * 0.88) < 480 ? 480.0 : screenSize.height * 0.88;
-      return Center(
-        child: SizedBox(
-          width: modalWidth,
-          height: modalHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.r16),
-            child: Material(
-              child: AddBatchScreen(product: product, isModal: true),
-            ),
-          ),
-        ),
-      );
-    },
-    transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-      return FadeTransition(
-        opacity: curved,
-        child: SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 0.03), end: Offset.zero).animate(curved),
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-            child: child,
-          ),
-        ),
-      );
-    },
+    builder: (isModal) => AddBatchScreen(product: product, isModal: isModal),
   );
 }
