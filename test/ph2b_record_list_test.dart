@@ -7,7 +7,7 @@ import 'package:vetbiz_pro/widgets/record_list.dart';
 import 'helpers/screen_size_matrix.dart';
 
 // PH2b S5: RecordList alone (no screen uses it yet; PH5 moves the lists).
-const _skip = true;
+const _skip = false;
 
 class _Rec {
   final String name;
