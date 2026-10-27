@@ -248,9 +248,11 @@ class AuthFooterMetrics {
   /// The brand mark beside the app name, and its letters.
   static const double markSize = 32;
 
-  /// AN5: the audience line under the mark and the name wraps to at most
-  /// this many lines in the brand column.
-  static const int audienceMaxLines = 3;
+  /// AN5: the description line under the mark and the name wraps to at
+  /// most this many lines in the brand column; two on a wide window, so the
+  /// link columns still set the footer's height there.
+  static const int descriptionMaxLines = 4;
+  static const int descriptionMaxLinesWide = 2;
 
   /// The social network icons inside their 48 px targets.
   static const double socialIconSize = AppIconSize.i18;

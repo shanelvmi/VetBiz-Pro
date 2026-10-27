@@ -23,8 +23,8 @@ import 'helpers/login_harness.dart';
 // two on a wide window, not the welcome sentence; the owner's sentence since
 // the second AN5 correction); no overflow on the login page.
 const _skip = false;
-// The second AN5 correction (the owner's sentence): unskipped with the footer commit.
-const _skipFooter = true;
+// The second AN5 correction (the owner's sentence): unskipped with its footer commit.
+const _skipFooter = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
