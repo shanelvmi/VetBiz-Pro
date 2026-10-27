@@ -3776,8 +3776,6 @@
   "@authFooter_support": {"description":"Sign-in footer: heading of the Support column."},
   "authFooter_legal": "Legal",
   "@authFooter_legal": {"description":"Sign-in footer: heading of the Legal column (Privacy Policy, Terms of Service)."},
-  "authFooter_audience": "For agrovets, vet clinics, vet hospitals and ambulatory services in Tanzania.",
-  "@authFooter_audience": {"description":"Sign-in and register footer: the line under the mark and the app name in the brand column (AN5). Not the welcome note's sentence."},
   "authFooter_description": "Sales, stock, clients, debts and veterinary services for agrovets, vet clinics, vet hospitals and ambulatory services.",
   "@authFooter_description": {"description":"Sign-in and register footer: the line under the mark and the app name in the brand column (AN5, the owner's sentence). Not the welcome note's sentence."},
   "authFooter_helpContact": "Help and contact",
