@@ -1887,7 +1887,7 @@
   "register_consentRequired": ["Weka alama kwenye kisanduku ili ukubali kabla ya kufungua akaunti yako.","Register wizard step 5: under the checkbox when Create account is pressed unticked.","draft"],
   "authFooter_support": ["Msaada","Sign-in footer: heading of the Support column.","draft"],
   "authFooter_legal": ["Kisheria","Sign-in footer: heading of the Legal column (Privacy Policy, Terms of Service).","draft"],
-  "authFooter_audience": ["Kwa agrovet, kliniki za mifugo, hospitali za mifugo na huduma za kutembelea nchini Tanzania.","Sign-in and register footer: the line under the mark and the app name in the brand column (AN5). Not the welcome note's sentence.","draft"],
+  "authFooter_description": ["Mauzo, bidhaa, wateja, madeni na huduma za mifugo kwa agrovet, kliniki za mifugo, hospitali za mifugo na huduma za kutembelea.","Sign-in and register footer: the line under the mark and the app name in the brand column (AN5, the owner's sentence). Not the welcome note's sentence.","draft"],
   "authFooter_helpContact": ["Msaada na mawasiliano","Sign-in footer, Support column: opens the same Help dialog as the dashboard.","draft"],
   "social_facebook": ["Facebook","Sign-in footer: tooltip and screen-reader name of the Facebook icon. A brand name.","draft"],
   "social_instagram": ["Instagram","Sign-in footer: tooltip and screen-reader name of the Instagram icon. A brand name.","draft"],
