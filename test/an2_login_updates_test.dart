@@ -21,7 +21,7 @@ import 'package:vetbiz_pro/widgets/updates_carousel.dart';
 // Updates area at all and, on wide windows, the sign-in form stands alone in
 // the middle of the card.
 // AN6 (owner): the Updates card is always there (a calm panel when there
-// is nothing).
+// is nothing), and the frame is a PageView.
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -97,7 +97,9 @@ void main() {
       expect(find.text('Announcements'), findsNothing);
       expect(find.byIcon(Icons.chevron_right), findsNothing);
       expect(find.byIcon(Icons.campaign_outlined), findsNothing);
-      expect(find.byType(PageView), findsNothing);
+      // AN6: one PageView, the Updates frame's own (was: none at all).
+      expect(find.byType(PageView), findsOneWidget);
+      expect(find.descendant(of: find.byKey(UpdatesSlides.frameKey), matching: find.byType(PageView)), findsOneWidget);
     }
   });
 

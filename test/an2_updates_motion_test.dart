@@ -18,7 +18,7 @@ import 'helpers/updates_harness.dart';
 // windows; the next poster preloaded. The feed: read once, nothing drawn
 // when there is nothing (or an error), the audience by language, urgent
 // ones take over, five at most. No overflow anywhere.
-// AN6 (owner): the dots are 24 x 48 px, no arrows
+// AN6 (owner): several slide (no fade), the dots are 24 x 48 px, no arrows
 // (their test removed; test/an6_updates_slider_test.dart), and with nothing
 // to show (or an error with nothing known) the calm panel is drawn.
 
@@ -44,7 +44,8 @@ void main() {
       expect(find.byIcon(Icons.arrow_forward), findsNothing); // AN6: was the Next tooltip (arrows retired)
     });
 
-    testWidgets('several advance every 7 seconds with a fade, and wrap around', (tester) async {
+    // AN6: a slide in a PageView (was a fade), and the wrap goes forward.
+    testWidgets('several advance every 7 seconds with a slide, and wrap around', (tester) async {
       await pumpSlides(tester, [textUpdate('1'), textUpdate('2')]);
       expect(find.text('Title 1'), findsOneWidget);
       await tester.pump(AppTimeouts.updatesAdvance);
@@ -54,7 +55,7 @@ void main() {
       await tester.pump(AppTimeouts.updatesAdvance);
       await settleSlide(tester);
       expect(find.text('Title 1'), findsOneWidget);
-      expect(find.byType(FadeTransition), findsWidgets);
+      expect(find.byType(PageView), findsOneWidget); // AN6: was FadeTransition
     });
 
     testWidgets('pause while the pointer hovers; go on when it leaves', (tester) async {

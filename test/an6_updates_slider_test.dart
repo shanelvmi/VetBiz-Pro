@@ -24,7 +24,7 @@ import 'helpers/updates_harness.dart';
 // that slides in from the right, follows the finger and the mouse, loops
 // forward, goes in a tapped dot's direction, answers the Left and Right
 // keys; one slide: no dots, the same row height; 3:1 in every theme.
-const _skip = true;
+const _skip = false;
 
 final _three = [textUpdate('1'), textUpdate('2'), textUpdate('3')];
 
@@ -32,8 +32,18 @@ double _fill(WidgetTester tester) => tester.widget<FractionallySizedBox>(find.by
 
 Rect _title(WidgetTester tester, String id) => tester.getRect(find.text('Title $id'));
 
+/// Frame by frame until both slides are in view (the slide has started).
+Future<void> _untilBoth(WidgetTester tester, String a, String b) async {
+  for (var i = 0; i < 30; i++) {
+    await tester.pump(const Duration(milliseconds: 16));
+    if (find.text('Title $a').evaluate().isNotEmpty && find.text('Title $b').evaluate().isNotEmpty) return;
+  }
+  fail('Title $a and Title $b were never in view together');
+}
+
 Future<void> _settleSlide(WidgetTester tester) async {
   await tester.pump();
+  await tester.pump(AppMotion.updatesSlide);
   await tester.pump(AppMotion.updatesSlide);
   await tester.pump();
 }
@@ -117,11 +127,9 @@ void main() {
     await pumpSlides(tester, _three);
     for (final (from, to) in [('1', '2'), ('2', '3'), ('3', '1')]) {
       await tester.pump(AppTimeouts.updatesAdvance);
-      await tester.pump();
-      await tester.pump(AppMotion.updatesSlide * 0.5);
+      await _untilBoth(tester, from, to);
       expect(_title(tester, to).center.dx, greaterThan(_title(tester, from).center.dx), reason: '$to comes from the right of $from');
-      await tester.pump(AppMotion.updatesSlide);
-      await tester.pump();
+      await _settleSlide(tester);
       expect(find.text('Title $to'), findsOneWidget);
       expect(find.text('Title $from'), findsNothing);
     }
@@ -131,8 +139,8 @@ void main() {
     await pumpSlides(tester, _three);
     final start1 = _title(tester, '1').center.dx;
     await tester.pump(AppTimeouts.updatesAdvance);
-    await tester.pump();
-    await tester.pump(AppMotion.updatesSlide * 0.3);
+    await _untilBoth(tester, '1', '2');
+    await tester.pump(AppMotion.updatesSlide * 0.1);
     final out = start1 - _title(tester, '1').center.dx;
     final incoming = (start1 + frame(tester).width) - _title(tester, '2').center.dx;
     expect(out / incoming, closeTo(AppMotion.updatesOutgoingTravel, 0.05));
@@ -140,18 +148,22 @@ void main() {
 
   testWidgets('a dot slides in the direction of that dot: a later one from the right, an earlier one from the left', (tester) async {
     await pumpSlides(tester, _three);
-    await tester.tap(find.byKey(UpdatesDots.slotKey(2)));
-    await tester.pump();
-    await tester.pump(AppMotion.updatesSlide * 0.5);
-    expect(_title(tester, '3').center.dx, greaterThan(_title(tester, '1').center.dx));
+    await tester.tap(find.byKey(UpdatesDots.slotKey(1)));
+    await _untilBoth(tester, '1', '2');
+    expect(_title(tester, '2').center.dx, greaterThan(_title(tester, '1').center.dx), reason: 'from the right');
     await _settleSlide(tester);
-    expect(find.text('Title 3'), findsOneWidget);
+    expect(find.text('Title 2'), findsOneWidget);
     await tester.tap(find.byKey(UpdatesDots.slotKey(0)));
-    await tester.pump();
-    await tester.pump(AppMotion.updatesSlide * 0.5);
-    expect(_title(tester, '1').center.dx, lessThan(_title(tester, '3').center.dx), reason: 'from the left');
+    await _untilBoth(tester, '2', '1');
+    expect(_title(tester, '1').center.dx, lessThan(_title(tester, '2').center.dx), reason: 'from the left');
     await _settleSlide(tester);
     expect(find.text('Title 1'), findsOneWidget);
+    // Two dots ahead: it passes the one between, still from the right.
+    await tester.tap(find.byKey(UpdatesDots.slotKey(2)));
+    await _untilBoth(tester, '1', '2');
+    expect(_title(tester, '2').center.dx, greaterThan(_title(tester, '1').center.dx));
+    await _settleSlide(tester);
+    expect(find.text('Title 3'), findsOneWidget);
   }, skip: _skip);
 
   for (final kind in [PointerDeviceKind.mouse, PointerDeviceKind.touch]) {

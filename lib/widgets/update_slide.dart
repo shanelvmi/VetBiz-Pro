@@ -4,6 +4,7 @@ import '../data/announcement_fields.dart';
 import '../l10n/l10n.dart';
 import '../services/announcement_service.dart';
 import '../theme/app_dimens.dart';
+import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 import 'announcement_message.dart';
@@ -31,9 +32,23 @@ class UpdateSlide extends StatelessWidget {
       image: image,
       fit: BoxFit.cover,
       semanticLabel: announcement.title,
-      frameBuilder:
-          (context, child, frame, wasSynchronouslyLoaded) =>
-              frame == null && !wasSynchronouslyLoaded ? ColoredBox(color: context.colors.surfaceMuted) : child,
+      // AN6: a poster already in the cache (warmed by UpdatesStore) shows at
+      // once; one still loading fades in over its placeholder when decoded
+      // (no fade under reduced motion).
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded) return child;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            ColoredBox(color: context.colors.surfaceMuted),
+            AnimatedOpacity(
+              opacity: frame == null ? 0 : 1,
+              duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : AppMotion.normal,
+              child: child,
+            ),
+          ],
+        );
+      },
       errorBuilder: (context, error, stack) => _TitlePanel(title: announcement.title),
     );
   }

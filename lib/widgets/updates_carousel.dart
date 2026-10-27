@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_timeouts.dart';
@@ -98,12 +99,17 @@ class _UpdatesCarouselState extends State<UpdatesCarousel> {
 }
 
 /// The Updates area for [slides] (at least one): the quiet label, ONE fixed
-/// 16:9 frame, the optional link button below, and with several slides a
-/// gentle fade every [AppTimeouts.updatesAdvance], dots and swipe (AN6: no
-/// arrows; the timer is the active pill's fill). The timer lives here, made
-/// and disposed with this State, never in a builder. It pauses while the pointer hovers, a finger
-/// touches or focus is inside, and never runs when the system asks for less
-/// motion. Roles, tokens and named limits only, so a later restyle is here.
+/// 16:9 frame, the optional link button below, and with several slides the
+/// dots. AN6: the frame is a horizontal PageView that follows the finger
+/// and the mouse; the next slide slides in from the right with a soft
+/// parallax, auto-advance always moves forward and loops from the last to
+/// the first in the same direction (an effectively endless page list), a
+/// dot slides in its own direction, and Left and Right move when the
+/// keyboard is on the carousel. The active dot's pill fills over
+/// [AppTimeouts.updatesAdvance] (the timer, made and disposed with this
+/// State, never in a builder); it pauses where it is while the pointer
+/// hovers, a finger touches or focus is inside, and never runs under
+/// reduced motion, where every change is instant.
 class UpdatesSlides extends StatefulWidget {
   const UpdatesSlides({super.key, required this.slides, this.launcher = launchUrl, this.imageFor, this.now});
 
@@ -128,17 +134,26 @@ class UpdatesSlides extends StatefulWidget {
 }
 
 class _UpdatesSlidesState extends State<UpdatesSlides> with SingleTickerProviderStateMixin {
-  // AN6: the timer is the active pill's fill, paused where it is.
+  // Laps of the slides before the first page: far more than anyone swipes
+  // back, so the list is endless both ways and the loop never jumps.
+  static const int _laps = 10000;
+
+  late PageController _pages;
   late final AnimationController _fill = AnimationController(vsync: this, duration: AppTimeouts.updatesAdvance)
     ..addStatusListener(_onFill);
-  int _index = 0;
+  final FocusNode _dotsFocus = FocusNode(debugLabel: 'updatesDots');
+  int _page = 0;
   bool _hovering = false;
   bool _touching = false;
   bool _focused = false;
   bool _reduceMotion = false;
 
   List<Announcement> get _slides => widget.slides;
-  Announcement get _current => _slides[_index];
+  int get _count => _slides.length;
+  bool get _several => _count > 1;
+  int get _index => _page % _count;
+
+  int _firstPage(int index) => _several ? _count * _laps + index : 0;
 
   ImageProvider? _imageOf(Announcement a) {
     final url = a.imageUrl;
@@ -147,27 +162,45 @@ class _UpdatesSlidesState extends State<UpdatesSlides> with SingleTickerProvider
   }
 
   @override
+  void initState() {
+    super.initState();
+    _page = _firstPage(0);
+    _pages = PageController(initialPage: _page);
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _reduceMotion = MediaQuery.disableAnimationsOf(context);
     _syncFill();
-    _preloadNext();
+    _preloadAround();
   }
 
   @override
   void didUpdateWidget(UpdatesSlides old) {
     super.didUpdateWidget(old);
-    if (_index >= _slides.length) _index = 0;
+    if (old.slides.length != _count) {
+      // A new count changes every page's slide: start a new page list at
+      // the slide shown (or the first), and let the old one go after this
+      // frame, once the new PageView holds the new controller.
+      final previous = _pages;
+      _page = _firstPage(old.slides.isEmpty ? 0 : (_page % old.slides.length) % _count);
+      _pages = PageController(initialPage: _page);
+      WidgetsBinding.instance.addPostFrameCallback((_) => previous.dispose());
+      _fill.reset();
+    }
     _syncFill();
   }
 
   @override
   void dispose() {
     _fill.dispose();
+    _pages.dispose();
+    _dotsFocus.dispose();
     super.dispose();
   }
 
-  bool get _shouldRun => _slides.length > 1 && !_reduceMotion && !_hovering && !_touching && !_focused;
+  bool get _shouldRun => _several && !_reduceMotion && !_hovering && !_touching && !_focused;
 
   /// Runs the timer from where it is when it should run; stops it where it
   /// is when it should not. A rebuild never starts a new one.
@@ -183,23 +216,35 @@ class _UpdatesSlidesState extends State<UpdatesSlides> with SingleTickerProvider
   }
 
   void _onFill(AnimationStatus status) {
-    if (status == AnimationStatus.completed) _show(_index + 1);
+    if (status == AnimationStatus.completed) _go(_page + 1);
   }
 
-  /// The next poster's image is fetched before its turn.
-  void _preloadNext() {
-    if (_slides.length < 2) return;
-    final next = _imageOf(_slides[(_index + 1) % _slides.length]);
-    if (next != null) precacheImage(next, context, onError: (_, _) {});
+  /// Moves to [page]: forward when it is after the current one, back when
+  /// before; instantly under reduced motion.
+  void _go(int page) {
+    if (!mounted || !_several || !_pages.hasClients) return;
+    if (_reduceMotion) {
+      _pages.jumpToPage(page);
+    } else {
+      _pages.animateToPage(page, duration: AppMotion.updatesSlide, curve: Curves.easeOutCubic);
+    }
   }
 
-  void _show(int index) {
-    if (!mounted) return;
-    setState(() => _index = index % _slides.length);
-    _preloadNext();
+  void _onPageChanged(int page) {
+    setState(() => _page = page);
     // Every new slide, chosen or not, gets a full turn.
     _fill.reset();
     _syncFill();
+    _preloadAround();
+  }
+
+  /// The posters before and after this one are fetched before their turn.
+  void _preloadAround() {
+    if (!_several) return;
+    for (final i in {(_index + 1) % _count, (_index - 1 + _count) % _count}) {
+      final image = _imageOf(_slides[i]);
+      if (image != null) precacheImage(image, context, onError: (_, _) {});
+    }
   }
 
   void _setPause({bool? hovering, bool? touching, bool? focused}) {
@@ -209,32 +254,57 @@ class _UpdatesSlidesState extends State<UpdatesSlides> with SingleTickerProvider
     _syncFill();
   }
 
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (!_several || event is KeyUpEvent) return KeyEventResult.ignored;
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      _go(_page + 1);
+      return KeyEventResult.handled;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      _go(_page - 1);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  /// The soft parallax: the slide on the left of the two in view (the
+  /// outgoing one when moving forward) travels only
+  /// [AppMotion.updatesOutgoingTravel] of the way, under the one coming in.
+  Widget _slideAt(BuildContext context, int page) {
+    final a = _slides[page % _count];
+    final slide = UpdateSlide(
+      announcement: a,
+      isNew: UpdatesSelection.isNew(a, (widget.now ?? DateTime.now)()),
+      image: _imageOf(a),
+    );
+    if (!_several || _reduceMotion) return slide;
+    return AnimatedBuilder(
+      animation: _pages,
+      child: slide,
+      builder: (context, child) {
+        final position = _pages.hasClients && _pages.position.haveDimensions ? _pages.page! : _page.toDouble();
+        final offset = page - position;
+        if (offset >= 0 || offset <= -1) return child!;
+        return FractionalTranslation(translation: Offset(-offset * (1 - AppMotion.updatesOutgoingTravel), 0), child: child);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final current = _current;
+    final current = _slides[_index];
     final isNew = UpdatesSelection.isNew(current, (widget.now ?? DateTime.now)());
     final isPoster = current.kind == AnnouncementKind.poster;
     final link = AnnouncementLinkButton.addressOf(current);
     // The link's line is kept for every slide once any has a link, so the
     // area does not jump as they change.
     final anyLink = _slides.any((a) => AnnouncementLinkButton.addressOf(a) != null);
-    final several = _slides.length > 1;
-    // AN4, AN6: the shared layout keeps the controls' line even for one
-    // slide (nothing drawn on it), at the card's bottom in the wide card.
-    final controls =
-        several
-            ? UpdatesDots(
-              count: _slides.length,
-              index: _index,
-              progress: _reduceMotion ? kAlwaysCompleteAnimation : _fill,
-              reduceMotion: _reduceMotion,
-              onSelect: _show,
-            )
-            : null;
+
     return Focus(
       canRequestFocus: false,
       skipTraversal: true,
       onFocusChange: (focused) => _setPause(focused: focused),
+      onKeyEvent: _onKey,
       child: MouseRegion(
         onEnter: (_) => _setPause(hovering: true),
         onExit: (_) => _setPause(hovering: false),
@@ -251,18 +321,26 @@ class _UpdatesSlidesState extends State<UpdatesSlides> with SingleTickerProvider
           child: UpdatesFrameLayout(
             label: UpdatesLabel(showChips: isPoster, urgent: current.urgent, isNew: isNew),
             frameKey: UpdatesSlides.frameKey,
-            frame: GestureDetector(
-              onHorizontalDragEnd:
-                  several
-                      ? (d) {
-                        final v = d.primaryVelocity ?? 0;
-                        if (v.abs() < kMinFlingVelocity) return;
-                        _show(v < 0 ? _index + 1 : _index - 1 + _slides.length);
-                      }
-                      : null,
-              child: AnimatedSwitcher(
-                duration: _reduceMotion ? Duration.zero : AppMotion.slowest,
-                child: UpdateSlide(key: ValueKey(current.id), announcement: current, isNew: isNew, image: _imageOf(current)),
+            // Dragged by finger, mouse, trackpad or pen: the web's default
+            // leaves the mouse out.
+            frame: ScrollConfiguration(
+              behavior: ScrollConfiguration.of(context).copyWith(
+                scrollbars: false,
+                dragDevices: const {
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.mouse,
+                  PointerDeviceKind.trackpad,
+                  PointerDeviceKind.stylus,
+                  PointerDeviceKind.invertedStylus,
+                },
+              ),
+              child: PageView.builder(
+                key: ObjectKey(_pages),
+                controller: _pages,
+                physics: _several ? null : const NeverScrollableScrollPhysics(),
+                itemCount: _several ? null : 1,
+                onPageChanged: _several ? _onPageChanged : null,
+                itemBuilder: _slideAt,
               ),
             ),
             link:
@@ -274,7 +352,17 @@ class _UpdatesSlidesState extends State<UpdatesSlides> with SingleTickerProvider
                       alignment: AlignmentDirectional.centerStart,
                       child: AnnouncementLinkButton(key: UpdatesSlides.linkKey, announcement: current, launcher: widget.launcher),
                     ),
-            controls: controls,
+            controls:
+                _several
+                    ? UpdatesDots(
+                      count: _count,
+                      index: _index,
+                      progress: _reduceMotion ? kAlwaysCompleteAnimation : _fill,
+                      reduceMotion: _reduceMotion,
+                      focusNode: _dotsFocus,
+                      onSelect: (i) => _go(_page + i - _index),
+                    )
+                    : null,
           ),
         ),
       ),
