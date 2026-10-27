@@ -10,7 +10,7 @@ import 'package:vetbiz_pro/widgets/app_sheet.dart';
 // PH2b S4 and S8: showAppSheet alone (no screen uses it yet: the "+" sheet
 // in PH3 and the row details in PH5 will), AdaptiveFormSize's presets, and
 // the bottom safe-area helper.
-const _skip = true;
+const _skip = false;
 
 const _home = Key('home');
 const _content = Key('content');

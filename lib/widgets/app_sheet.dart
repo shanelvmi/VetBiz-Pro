@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/l10n.dart';
+import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
+import '../theme/app_layout.dart';
+import '../theme/app_motion.dart';
+import '../theme/app_text.dart';
+import '../theme/theme_context.dart';
+import 'app_safe_area.dart';
 
 // PH2b S4 (docs/design/phone_foundations.md): one sheet helper and one form
 // helper instead of a copy per screen.
@@ -71,27 +78,165 @@ class AdaptiveFormSize {
 
   /// The modal's size in a [window].
   Size resolve(Size window) {
-    throw UnimplementedError();
+    final width = (window.width * widthFactor).clamp(0, maxWidth).toDouble();
+    var height = window.height * heightFactor;
+    if (minHeight != null && height < minHeight!) height = minHeight!;
+    if (maxHeight != null) height = height.clamp(0, maxHeight!).toDouble();
+    return Size(width, height);
   }
 }
 
-/// Opens a form: a full page below AppBreakpoints.medium, a centred modal
-/// of [size] from it. (PH2b stub.)
+/// Opens a form (or a page that behaves like one): a full page below
+/// [AppBreakpoints.medium], a centred modal of [size] at that width and
+/// wider. [builder] gets `isModal`. Returns what the form pops with.
 Future<T?> showAdaptiveForm<T>(
   BuildContext context, {
   required String barrierLabel,
   required Widget Function(bool isModal) builder,
   AdaptiveFormSize size = AdaptiveFormSize.form,
 }) {
-  throw UnimplementedError();
+  if (context.screenWidth < AppBreakpoints.medium) {
+    return Navigator.of(context).push<T>(MaterialPageRoute(builder: (_) => builder(false)));
+  }
+
+  return showGeneralDialog<T>(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: barrierLabel,
+    barrierColor: context.colors.scrim.withValues(alpha: AppAlpha.a50),
+    transitionDuration: AppMotion.normal,
+    pageBuilder: (context, animation, secondaryAnimation) {
+      final box = size.resolve(MediaQuery.of(context).size);
+      return Center(
+        child: SizedBox(
+          width: box.width,
+          height: box.height,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.r16),
+            child: Material(child: builder(true)),
+          ),
+        ),
+      );
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: AdaptiveFormMetrics.enterOffset, end: Offset.zero).animate(curved),
+          child: ScaleTransition(
+            scale: Tween<double>(begin: AdaptiveFormMetrics.enterScale, end: 1.0).animate(curved),
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
 }
 
-/// A bottom sheet (or a full page) on phones, a dialog elsewhere. (PH2b stub.)
+/// Opens [builder]'s content where it suits the window:
+/// - a phone: a bottom sheet (rounded top, drag handle, at most 92% of the
+///   height, scrolls, rises above the keyboard, clear of the home
+///   indicator); with [fullPage] (forms) a full page with a back arrow;
+/// - a tablet or a computer: a dialog at most 560 wide and 88% high.
+/// Returns what the content pops with.
 Future<T?> showAppSheet<T>(
   BuildContext context, {
   String? title,
   required WidgetBuilder builder,
   bool fullPage = false,
 }) {
-  throw UnimplementedError();
+  if (!AppLayout.isPhone(context)) {
+    return showDialog<T>(
+      context: context,
+      builder: (context) => Dialog(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: AppSizes.dialogLg,
+            maxHeight: MediaQuery.sizeOf(context).height * AppSheetMetrics.dialogMaxHeightFactor,
+          ),
+          child: _SheetContent(title: title, builder: builder, showClose: true),
+        ),
+      ),
+    );
+  }
+
+  if (fullPage) {
+    return Navigator.of(context).push<T>(MaterialPageRoute(
+      builder: (context) => Scaffold(
+        appBar: AppBar(title: title == null ? null : Text(title)),
+        body: SingleChildScrollView(
+          padding: EdgeInsets.only(bottom: AppSafeArea.bottomOf(context)),
+          child: builder(context),
+        ),
+      ),
+    ));
+  }
+
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r16)),
+    ),
+    constraints: BoxConstraints(
+      maxHeight: MediaQuery.sizeOf(context).height * AppSheetMetrics.sheetMaxHeightFactor,
+    ),
+    builder: (context) => Padding(
+      // Above the keyboard when a field inside has focus.
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: _SheetContent(title: title, builder: builder, showClose: false),
+    ),
+  );
+}
+
+/// The title (and a Close button in a dialog) over the scrolling content.
+class _SheetContent extends StatelessWidget {
+  final String? title;
+  final WidgetBuilder builder;
+  final bool showClose;
+
+  const _SheetContent({required this.title, required this.builder, required this.showClose});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (title != null || showClose)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s8, AppSpacing.s8, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title ?? '',
+                    style: const TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.semibold),
+                  ),
+                ),
+                if (showClose)
+                  IconButton(
+                    tooltip: context.l10n.common_close,
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+              ],
+            ),
+          ),
+        Flexible(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.s16,
+              AppSpacing.s8,
+              AppSpacing.s16,
+              AppSpacing.s16 + AppSafeArea.bottomOf(context),
+            ),
+            child: builder(context),
+          ),
+        ),
+      ],
+    );
+  }
 }
