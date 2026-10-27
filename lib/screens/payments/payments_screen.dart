@@ -59,6 +59,9 @@ class PaymentsScreen extends StatefulWidget {
 }
 
 class _PaymentsScreenState extends State<PaymentsScreen> {
+  // Null widget.firestore: the app's own Firestore (PH2a seam).
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
 
   String _searchQuery = '';
   late final TextEditingController _searchController;
@@ -195,7 +198,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     if (uniqueIds.isEmpty) return;
 
     try {
-      final futures = uniqueIds.map((id) => FirebaseFirestore.instance.collection(Collections.users).doc(id).get());
+      final futures = uniqueIds.map((id) => _db.collection(Collections.users).doc(id).get());
       final docs = await Future.wait(futures);
       if (!mounted) return;
       setState(() {
@@ -220,7 +223,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         } else if (e.type == 'service' && e.serviceId != null) {
           return _formattedReceiptWithNotes(facilityId, Collections.services, e.serviceId!, 'SV', 'description');
         } else if (e.type == 'debt_repayment' && e.debtId != null) {
-          final debtDoc = await FirebaseFirestore.instance
+          final debtDoc = await _db
               .collection(Collections.facilities)
               .doc(facilityId)
               .collection(Collections.debts)
@@ -245,7 +248,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   Future<(String?, String?)> _formattedReceiptWithNotes(
       String facilityId, String collection, String docId, String prefix, String notesField) async {
     final doc =
-        await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(collection).doc(docId).get();
+        await _db.collection(Collections.facilities).doc(facilityId).collection(collection).doc(docId).get();
     final data = doc.data();
     final receiptNumber = (data?['receiptNumber'] as num?)?.toInt();
     final reference = receiptNumber == null ? null : '$prefix-${receiptNumber.toString().padLeft(6, '0')}';
@@ -259,7 +262,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     if (e.type == 'sale' && e.saleId != null) return ('sales', e.saleId!);
     if (e.type == 'service' && e.serviceId != null) return ('services', e.serviceId!);
     if (e.type == 'debt_repayment' && e.debtId != null) {
-      final debtDoc = await FirebaseFirestore.instance
+      final debtDoc = await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.debts)
@@ -284,7 +287,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     }
     final (collection, docId) = target;
     final doc =
-        await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(collection).doc(docId).get();
+        await _db.collection(Collections.facilities).doc(facilityId).collection(collection).doc(docId).get();
     if (doc.data() == null) return;
     if (!mounted) return;
     if (collection == Collections.sales) {
@@ -298,7 +301,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
 
   Future<(double, int)> _fetchPaymentsSum(String facilityId, DateTime start, DateTime end) async {
-    final snap = await FirebaseFirestore.instance
+    final snap = await _db
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.payments)
@@ -343,7 +346,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         _fetchPaymentsSum(facilityId, monthStart, now),
         _fetchPaymentsSum(facilityId, lastMonthStart, lastMonthEnd),
       ]);
-      final snapshotDoc = await FirebaseFirestore.instance
+      final snapshotDoc = await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.dailySnapshots)

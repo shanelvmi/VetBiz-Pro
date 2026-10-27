@@ -40,6 +40,9 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
+  // Null widget.firestore: the app's own Firestore (PH2a seam).
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
   final GlobalKey _bellKey = GlobalKey();
 
 
@@ -96,7 +99,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     AppFeedback.info(L10n.current.products_smartDefaultsRunning);
 
     try {
-      final facilityDoc = await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).get();
+      final facilityDoc = await _db.collection(Collections.facilities).doc(facilityId).get();
       final restockFrequency = facilityDoc.data()?['restockFrequency'] as String? ??
           UsageCalculatorService.defaultRestockFrequency;
 

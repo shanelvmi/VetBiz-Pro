@@ -41,6 +41,9 @@ class AddTransactionScreen extends StatefulWidget {
 }
 
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
+  // Null widget.firestore: the app's own Firestore (PH2a seam).
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
   bool _isSaving = false;
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
@@ -50,14 +53,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? paymentMethod;
 
 
-  final AuthService _authService = AuthService();
+  late final AuthService _authService = widget.authService ?? AuthService();
 
 
   Future<String?> _fetchCurrentUserFullName() async {
     final user = _authService.getCurrentUser();
     if (user == null) return null;
 
-    final doc = await FirebaseFirestore.instance.collection(Collections.users).doc(user.uid).get();
+    final doc = await _db.collection(Collections.users).doc(user.uid).get();
     if (!doc.exists) return null;
 
     final data = doc.data();

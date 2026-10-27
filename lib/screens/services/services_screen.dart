@@ -42,6 +42,9 @@ class ServicesScreen extends StatefulWidget {
 }
 
 class _ServicesScreenState extends State<ServicesScreen> {
+  // Null widget.firestore: the app's own Firestore (PH2a seam).
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
 
 
   String _searchQuery = '';
@@ -127,7 +130,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
     setState(() => _isSummaryLoading = true);
     try {
       final cutoff = DateTime.now().subtract(AppRanges.defaultListRange);
-      final snap = await FirebaseFirestore.instance
+      final snap = await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.services)

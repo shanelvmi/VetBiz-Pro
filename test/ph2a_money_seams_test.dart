@@ -32,7 +32,7 @@ import 'helpers/screen_size_matrix.dart';
 // PH2a seams for the money screens (phone_foundations.md section 10): each
 // takes an optional firestore (and Add Transaction an authService), as
 // LoginScreen does, so the size matrix can build them in PH5 and PH6.
-const _skip = true;
+const _skip = false;
 
 /// No one signed in; nothing else is called while a screen only builds.
 class _NoAuth implements AuthService {
@@ -101,15 +101,54 @@ const _files = {
   'lib/screens/transactions/add_transaction_screen.dart': 1,
 };
 
+/// Pumps [screen] at 390x844 and returns every error's first line, instead
+/// of failing on the first.
+Future<List<String>> _pumpCollecting(WidgetTester tester, Widget screen, Widget Function(Widget) wrap) async {
+  final errors = <String>[];
+  final previous = FlutterError.onError;
+  FlutterError.onError = (details) => errors.add(details.exceptionAsString().split('\n').first);
+  try {
+    await pumpAtSize(tester, screen: screen, size: const Size(390, 844), wrap: wrap);
+  } finally {
+    FlutterError.onError = previous;
+  }
+  return errors;
+}
+
+/// The screens that overflow at 390x844 today, with where: the phone layouts
+/// of PH5 (the lists) and PH6 (the forms) fix them; PH2a does not.
+const Map<String, String> _overflowsToday = {
+  'Debtors': 'Rows overflow at debtors_screen.dart:509 (435 px), :756 (89) and :809 (163); PH5',
+  'Payments': 'Rows overflow at payments_screen.dart:821 (463 px), :570 and :617 (35), Columns at :556 and :603 (28 to 45 down), the AppBar at :949 (1); PH5',
+  'Record Payment': 'a Row overflows at add_payment_screen.dart:546 (36 px); PH6',
+  'Add Sale': 'a Row overflows at add_sale_screen.dart:940 (44 px); PH6',
+  'Clients': 'Rows overflow at clients_screen.dart:236 (15 px) and :1026 (163); PH5',
+  'Services': 'Rows overflow at services_screen.dart:459 (507 px) and :736 (175); PH5',
+  'Products': 'a Row overflows at products_screen.dart:863 (66 px), a Column at :261 (4 down); PH5',
+  'Add Transaction': 'a Row overflows at add_transaction_screen.dart:565 (142 px); PH6',
+};
+
 void main() {
   for (final e in _screens.entries) {
-    testWidgets('${e.key} builds on a fake Firestore at 390x844 with no exception', (tester) async {
+    // The seam: the screen builds and reads the fake, with no Firebase or
+    // other error. A RenderFlex overflow is a layout problem, not the seam's:
+    // the next test holds those.
+    testWidgets('${e.key} builds on a fake Firestore at 390x844 (the seam is used)', (tester) async {
+      final fs = newFakeFirestore();
+      final wrap = await _providers(tester, fs);
+      final errors = await _pumpCollecting(tester, e.value(fs), wrap);
+      final others = errors.where((m) => !m.contains('RenderFlex overflowed')).toList();
+      expect(others, isEmpty, reason: e.key);
+      expect(find.byWidgetPredicate((w) => w.runtimeType == e.value(fs).runtimeType), findsOneWidget);
+    }, skip: _skip);
+
+    final overflow = _overflowsToday[e.key];
+    testWidgets('${e.key} at 390x844 with no exception${overflow == null ? '' : ' (skipped: $overflow)'}', (tester) async {
       final fs = newFakeFirestore();
       final wrap = await _providers(tester, fs);
       await pumpAtSize(tester, screen: e.value(fs), size: const Size(390, 844), wrap: wrap);
       await checkCase(tester, phone: false, where: e.key);
-      expect(find.byWidgetPredicate((w) => w.runtimeType == e.value(fs).runtimeType), findsOneWidget);
-    }, skip: _skip);
+    }, skip: _skip || overflow != null);
   }
 
   test('with nothing passed, each screen uses FirebaseFirestore.instance (and Add Transaction a new AuthService)', () {

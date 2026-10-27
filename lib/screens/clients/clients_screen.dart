@@ -42,6 +42,9 @@ class ClientsScreen extends StatefulWidget {
 }
 
 class _ClientsScreenState extends State<ClientsScreen> {
+  // Null widget.firestore: the app's own Firestore (PH2a seam).
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
 
   static const List<String> _clientTypes = ['All', ...kClientTypes];
 
@@ -423,7 +426,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
       final facilityId = _facilityId;
       if (facilityId == null) return (0, 0.0);
       try {
-        final snap = await FirebaseFirestore.instance
+        final snap = await _db
             .collection(Collections.facilities)
             .doc(facilityId)
             .collection(Collections.payments)

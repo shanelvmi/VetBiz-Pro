@@ -42,6 +42,9 @@ class DebtorsScreen extends StatefulWidget {
 }
 
 class _DebtorsScreenState extends State<DebtorsScreen> {
+  // Null widget.firestore: the app's own Firestore (PH2a seam).
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
 
 
   String _searchQuery = '';
@@ -155,7 +158,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       final now = DateTime.now();
       final monthStart = DateTime(now.year, now.month, 1);
 
-      final snap = await FirebaseFirestore.instance
+      final snap = await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.payments)
@@ -405,7 +408,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   Future<List<Client>> _fetchAllDebtorClients() async {
     final facilityId = _facilityId;
     if (facilityId == null) return [];
-    final snap = await FirebaseFirestore.instance
+    final snap = await _db
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.clients)
@@ -851,7 +854,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       final facilityId = _facilityId;
       _detailsDebtsFuture = facilityId == null
           ? Future.value(<Debt>[])
-          : FirebaseFirestore.instance
+          : _db
               .collection(Collections.facilities)
               .doc(facilityId)
               .collection(Collections.debts)
@@ -1183,7 +1186,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       if (facilityId == null) return null;
       try {
         if (debt.source == 'Sale' && debt.saleId != null) {
-          final doc = await FirebaseFirestore.instance
+          final doc = await _db
               .collection(Collections.facilities)
               .doc(facilityId)
               .collection(Collections.sales)
@@ -1191,7 +1194,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               .get();
           return (doc.data()?['receiptNumber'] as num?)?.toInt();
         } else if (debt.source == 'Service' && debt.serviceId != null) {
-          final doc = await FirebaseFirestore.instance
+          final doc = await _db
               .collection(Collections.facilities)
               .doc(facilityId)
               .collection(Collections.services)
@@ -1242,7 +1245,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     return _notesFutureByClient.putIfAbsent(clientId, () async {
       final facilityId = _facilityId;
       if (facilityId == null) return [];
-      final doc = await FirebaseFirestore.instance
+      final doc = await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.clients)
@@ -1326,7 +1329,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     if (facilityId == null) return;
 
     try {
-      await FirebaseFirestore.instance
+      await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.clients)

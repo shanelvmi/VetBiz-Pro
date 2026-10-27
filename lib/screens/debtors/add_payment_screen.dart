@@ -67,6 +67,9 @@ class AddPaymentScreen extends StatefulWidget {
 }
 
 class _AddPaymentScreenState extends State<AddPaymentScreen> {
+  // Null widget.firestore: the app's own Firestore (PH2a seam).
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
   bool _isSaving = false;
   Client? selectedClient;
   // The picker's own text box, captured so validation can see what was typed.
@@ -190,7 +193,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       }
 
       final debtRef = widget.debtDocId != null
-          ? FirebaseFirestore.instance
+          ? _db
               .collection(Collections.facilities)
               .doc(facilityId)
               .collection(Collections.debts)
@@ -212,7 +215,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       }
 
       if (saleId != null) {
-        final saleSnap = await FirebaseFirestore.instance
+        final saleSnap = await _db
             .collection(Collections.facilities)
             .doc(facilityId)
             .collection(Collections.sales)
@@ -224,7 +227,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       }
 
       if (serviceId != null) {
-        final serviceSnap = await FirebaseFirestore.instance
+        final serviceSnap = await _db
             .collection(Collections.facilities)
             .doc(facilityId)
             .collection(Collections.services)
@@ -235,7 +238,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         }
       }
 
-      final clientRef = FirebaseFirestore.instance
+      final clientRef = _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.clients)
@@ -259,7 +262,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
             final rawThis = thisDebtDoc.data()?['timestamp'];
             final thisDebtTimestamp = rawThis is Timestamp ? rawThis.toDate() : null;
             if (thisDebtTimestamp != null && thisDebtTimestamp.isAtSameMomentAs(currentOldest)) {
-              final remainingSnap = await FirebaseFirestore.instance
+              final remainingSnap = await _db
                   .collection(Collections.facilities)
                   .doc(facilityId)
                   .collection(Collections.debts)
@@ -276,9 +279,9 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
         }
       }
 
-      final batch = FirebaseFirestore.instance.batch();
+      final batch = _db.batch();
 
-      final paymentRef = FirebaseFirestore.instance
+      final paymentRef = _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.payments)
@@ -350,7 +353,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
 
       if (sale != null) {
         final updatedSale = sale.applyPayment(amount);
-        final saleRef = FirebaseFirestore.instance
+        final saleRef = _db
             .collection(Collections.facilities)
             .doc(facilityId)
             .collection(Collections.sales)
@@ -363,7 +366,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
           totalPaid: service.totalPaid + amount,
           updatedAt: DateTime.now(),
         );
-        final serviceRef = FirebaseFirestore.instance
+        final serviceRef = _db
             .collection(Collections.facilities)
             .doc(facilityId)
             .collection(Collections.services)

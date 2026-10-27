@@ -49,6 +49,9 @@ class AddSaleScreen extends StatefulWidget {
 }
 
 class _AddSaleScreenState extends State<AddSaleScreen> {
+  // Null widget.firestore: the app's own Firestore (PH2a seam).
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
   bool _isSaving = false;
   // Set synchronously on the first tap, so a double-click cannot start a
   // second save during the awaits before _isSaving is set.
@@ -580,7 +583,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     final expiredPortion = <(String, String, int)>[];
 
     for (final item in items) {
-      final batchesRef = FirebaseFirestore.instance
+      final batchesRef = _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.products)
@@ -737,7 +740,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       if (user != null) {
         try {
           final userDoc =
-              await FirebaseFirestore.instance.collection(Collections.users).doc(user.uid).get();
+              await _db.collection(Collections.users).doc(user.uid).get();
           if (userDoc.exists) {
             soldByName = userDoc.data()?['fullName'] ?? 'Unknown';
           }
