@@ -7061,7 +7061,7 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String updates_slideOf(int index, int count) {
-    return 'Taarifa $index kati ya $count';
+    return 'Slaidi $index kati ya $count';
   }
 
   @override
@@ -7072,4 +7072,7 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get updates_welcomeLine =>
       'Fuatilia habari na taarifa zetu za hivi punde.';
+
+  @override
+  String get updates_empty => 'Hakuna jipya kwa sasa. Rudi baadaye.';
 }

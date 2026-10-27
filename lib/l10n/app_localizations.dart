@@ -11910,10 +11910,10 @@ abstract class AppLocalizations {
   /// **'Next update'**
   String get updates_next;
 
-  /// Screen-reader label of a dot under the login updates.
+  /// Screen-reader label of a dot under the login updates (AN6: the owner's wording, was Update {index} of {count}).
   ///
   /// In en, this message translates to:
-  /// **'Update {index} of {count}'**
+  /// **'Slide {index} of {count}'**
   String updates_slideOf(int index, int count);
 
   /// Login page, wide windows: the heading of the welcome note at the top of the Updates card, beside the sign-in card's Welcome back (AN4).
@@ -11927,6 +11927,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Track our latest news and notices.'**
   String get updates_welcomeLine;
+
+  /// Login page: the calm panel in the Updates slide frame when there are no updates for this language (AN6).
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing new right now. Check back soon.'**
+  String get updates_empty;
 }
 
 class _AppLocalizationsDelegate

@@ -7018,7 +7018,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String updates_slideOf(int index, int count) {
-    return 'Update $index of $count';
+    return 'Slide $index of $count';
   }
 
   @override
@@ -7028,4 +7028,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updates_welcomeLine => 'Track our latest news and notices.';
+
+  @override
+  String get updates_empty => 'Nothing new right now. Check back soon.';
 }
