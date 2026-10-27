@@ -25,6 +25,8 @@ import 'helpers/updates_harness.dart';
 // controls that read at 3:1 or more on the card in every theme, Light and
 // Dark, with larger dots (the selected one larger and another colour); the
 // footer's brand column without the description sentence.
+// AN6 (owner): no arrows; the selected dot is a pill whose fill is the
+// other colour; the dots' tap areas are 24 x 48 px.
 // Unskipped with their commits.
 const _skipWideLabel = false;
 // The second AN5 correction: unskipped with its footer commit.
@@ -77,13 +79,9 @@ void main() {
 
   for (final theme in AppColorTheme.all) {
     for (final brightness in Brightness.values) {
-      testWidgets('${theme.id} ${brightness.name}: the arrows and both dots read at 3:1 or more on the card', (tester) async {
+      testWidgets('${theme.id} ${brightness.name}: the dots read at 3:1 or more on the card (AN6: no arrows)', (tester) async {
         await pumpCard(tester, [textUpdate('1'), textUpdate('2'), textUpdate('3')], theme, brightness);
         final card = AppColors.fromTheme(theme, brightness: brightness).surface;
-        for (final icon in [Icons.arrow_back, Icons.arrow_forward]) {
-          final color = tester.widget<Icon>(find.byIcon(icon)).color!;
-          expect(ColorMath.contrast(color, card), greaterThanOrEqualTo(3), reason: '$icon');
-        }
         final dots = tester
             .widgetList<AnimatedContainer>(find.descendant(of: find.byType(UpdatesDots), matching: find.byType(AnimatedContainer)))
             .toList();
@@ -96,7 +94,7 @@ void main() {
     }
   }
 
-  testWidgets('the dots: about 8 px, the selected one larger and another colour; 48 px targets; Semantics labels', (tester) async {
+  testWidgets('the dots: about 8 px, the selected one larger (a pill) and filled in another colour; 24 x 48 px targets (AN6); Semantics labels', (tester) async {
     await pumpCard(tester, [textUpdate('1'), textUpdate('2'), textUpdate('3')], AppColorTheme.pasture, Brightness.light);
     final sizes = [
       for (final e in find.descendant(of: find.byType(UpdatesDots), matching: find.byType(AnimatedContainer)).evaluate())
@@ -109,16 +107,18 @@ void main() {
     expect(sizes[1].width, closeTo(8, 0.5));
     expect(sizes[2].width, closeTo(8, 0.5));
     expect(sizes[0].width, greaterThanOrEqualTo(sizes[1].width + 3), reason: 'the selected one is larger');
-    expect(colors[0], isNot(colors[1]), reason: 'and another colour');
-    for (final icon in [Icons.arrow_back, Icons.arrow_forward]) {
-      expect(tester.getSize(find.ancestor(of: find.byIcon(icon), matching: find.byType(IconButton))).width, greaterThanOrEqualTo(48));
-    }
+    // AN6: the pill's track is the dots' colour; its timer fill is primary
+    // (was: the selected dot itself primary). No arrows (were 48 px).
+    expect(colors[0], colors[1]);
+    final fill = tester.widget<ColoredBox>(find.descendant(of: find.byKey(UpdatesDots.pillFillKey), matching: find.byType(ColoredBox)));
+    expect(fill.color, isNot(colors[1]), reason: 'and filled in another colour');
+    expect(find.byType(IconButton), findsNothing);
     for (final s in find.descendant(of: find.byType(UpdatesDots), matching: find.byType(InkResponse)).evaluate()) {
-      expect(tester.getSize(find.byWidget(s.widget)).width, greaterThanOrEqualTo(48));
+      final size = tester.getSize(find.byWidget(s.widget));
+      expect(size.width, greaterThanOrEqualTo(UpdatesMetrics.dotSlot)); // AN6: was 48
+      expect(size.height, greaterThanOrEqualTo(48));
     }
     expect(find.bySemanticsLabel(_en.updates_slideOf(2, 3)), findsOneWidget);
-    expect(find.byTooltip(_en.updates_previous), findsOneWidget);
-    expect(find.byTooltip(_en.updates_next), findsOneWidget);
   }, skip: false);
 
   testWidgets('one update: no dots and no arrows', (tester) async {

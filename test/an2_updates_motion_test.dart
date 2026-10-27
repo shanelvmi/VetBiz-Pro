@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vetbiz_pro/config/app_timeouts.dart';
 import 'package:vetbiz_pro/data/collections.dart';
+import 'package:vetbiz_pro/theme/app_dimens.dart';
+import 'package:vetbiz_pro/theme/app_motion.dart';
 import 'package:vetbiz_pro/widgets/updates_carousel.dart';
 
 import 'helpers/updates_harness.dart';
@@ -16,8 +18,18 @@ import 'helpers/updates_harness.dart';
 // windows; the next poster preloaded. The feed: read once, nothing drawn
 // when there is nothing (or an error), the audience by language, urgent
 // ones take over, five at most. No overflow anywhere.
-// AN6 (owner): with nothing to show (or an error with nothing known) the
-// calm panel is drawn.
+// AN6 (owner): the dots are 24 x 48 px, no arrows
+// (their test removed; test/an6_updates_slider_test.dart), and with nothing
+// to show (or an error with nothing known) the calm panel is drawn.
+
+// AN6: the timer is a running fill now, so it never settles: pump through.
+Future<void> settleSlide(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(AppMotion.updatesSlide);
+  await tester.pump(AppMotion.updatesSlide);
+  await tester.pump(AppMotion.updatesSlide);
+  await tester.pump();
+}
 
 void main() {
   setUp(() => UpdatesSlides.debugTimerStarts = 0);
@@ -29,18 +41,18 @@ void main() {
       expect(find.text('Title 1'), findsOneWidget);
       expect(UpdatesSlides.debugTimerStarts, 0);
       expect(find.bySemanticsLabel(enL10n.updates_slideOf(1, 1)), findsNothing);
-      expect(find.byTooltip(enL10n.updates_next), findsNothing);
+      expect(find.byIcon(Icons.arrow_forward), findsNothing); // AN6: was the Next tooltip (arrows retired)
     });
 
     testWidgets('several advance every 7 seconds with a fade, and wrap around', (tester) async {
       await pumpSlides(tester, [textUpdate('1'), textUpdate('2')]);
       expect(find.text('Title 1'), findsOneWidget);
       await tester.pump(AppTimeouts.updatesAdvance);
-      await tester.pumpAndSettle();
+      await settleSlide(tester);
       expect(find.text('Title 2'), findsOneWidget);
       expect(find.text('Title 1'), findsNothing);
       await tester.pump(AppTimeouts.updatesAdvance);
-      await tester.pumpAndSettle();
+      await settleSlide(tester);
       expect(find.text('Title 1'), findsOneWidget);
       expect(find.byType(FadeTransition), findsWidgets);
     });
@@ -52,11 +64,12 @@ void main() {
       addTearDown(mouse.removePointer);
       await mouse.moveTo(frame(tester).center);
       await tester.pump(AppTimeouts.updatesAdvance * 3);
-      await tester.pumpAndSettle();
+      await settleSlide(tester);
       expect(find.text('Title 1'), findsOneWidget);
       await mouse.moveTo(Offset.zero);
+      await tester.pump(); // AN6: the resumed timer starts on this frame
       await tester.pump(AppTimeouts.updatesAdvance);
-      await tester.pumpAndSettle();
+      await settleSlide(tester);
       expect(find.text('Title 2'), findsOneWidget);
     });
 
@@ -66,8 +79,9 @@ void main() {
       await tester.pump(AppTimeouts.updatesAdvance * 3);
       expect(find.text('Title 1'), findsOneWidget);
       await finger.up();
+      await tester.pump(); // AN6: the resumed timer starts on this frame
       await tester.pump(AppTimeouts.updatesAdvance);
-      await tester.pumpAndSettle();
+      await settleSlide(tester);
       expect(find.text('Title 2'), findsOneWidget);
     });
 
@@ -81,28 +95,16 @@ void main() {
       expect(find.text('Title 2'), findsOneWidget);
     });
 
-    testWidgets('dots: 48 px hit areas, a tap shows that slide; a swipe moves on', (tester) async {
+    testWidgets('dots:  24 x 48 px hit areas (AN6: was 48 x 48), a tap shows that slide; a swipe moves on', (tester) async {
       await pumpSlides(tester, [textUpdate('1'), textUpdate('2'), textUpdate('3')], width: 390);
       final dot = find.bySemanticsLabel(enL10n.updates_slideOf(3, 3));
-      expect(tester.getSize(dot).width, greaterThanOrEqualTo(kMinInteractiveDimension));
+      expect(tester.getSize(dot).width, greaterThanOrEqualTo(UpdatesMetrics.dotSlot)); // AN6: was kMinInteractiveDimension
       expect(tester.getSize(dot).height, greaterThanOrEqualTo(kMinInteractiveDimension));
       await tester.tap(dot);
-      await tester.pumpAndSettle();
+      await settleSlide(tester);
       expect(find.text('Title 3'), findsOneWidget);
       await tester.fling(find.byKey(UpdatesSlides.frameKey), const Offset(-200, 0), 1000);
-      await tester.pumpAndSettle();
-      expect(find.text('Title 1'), findsOneWidget);
-    });
-
-    testWidgets('arrows on a wide window only', (tester) async {
-      await pumpSlides(tester, [textUpdate('1'), textUpdate('2')], width: 390);
-      expect(find.byTooltip(enL10n.updates_next), findsNothing);
-      await pumpSlides(tester, [textUpdate('1'), textUpdate('2')], width: 1200);
-      await tester.tap(find.byTooltip(enL10n.updates_next));
-      await tester.pumpAndSettle();
-      expect(find.text('Title 2'), findsOneWidget);
-      await tester.tap(find.byTooltip(enL10n.updates_previous));
-      await tester.pumpAndSettle();
+      await settleSlide(tester);
       expect(find.text('Title 1'), findsOneWidget);
     });
 

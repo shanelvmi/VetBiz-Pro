@@ -52,26 +52,34 @@ class UpdateChip extends StatelessWidget {
   }
 }
 
-/// The Updates' dots, with 48 px hit areas, and arrows when [arrows] (wide
-/// windows). AN4: arrows and dots in textMuted (3:1 or more on the card in
-/// every theme, Light and Dark; textDisabled was 1.9:1), the selected dot
-/// larger as well as primary, so the state is not colour alone. [onSelect] gets the slide to show,
-/// possibly past either end; the caller wraps it.
+/// AN6 (the owner's design): the Updates' dots, a compact centred row of
+/// small 8 px dots; the active one a 28 px pill that fills over the slide's
+/// time ([progress]: the carousel's timer, paused with it; full under
+/// reduced motion). No arrows. Each dot is a button for taps and screen
+/// readers ("Slide n of total", selected) with a tap area of at least
+/// [UpdatesMetrics.dotSlot] by [UpdatesMetrics.controlsRow]. The keyboard
+/// reaches the row as ONE stop ([focusNode], the carousel moves on Left and
+/// Right), shown by a ring. Dots and track in textMuted, the fill in
+/// primary: 3:1 or more on the card in every theme, Light and Dark (AN4's
+/// check), and the active one is wider, so the state is not colour alone.
+/// [onSelect] gets the dot's index.
 class UpdatesDots extends StatelessWidget {
   const UpdatesDots({
     super.key,
     required this.count,
     required this.index,
-    required this.arrows,
+    required this.progress,
     required this.reduceMotion,
     required this.onSelect,
+    this.focusNode,
   });
 
   final int count;
   final int index;
-  final bool arrows;
+  final Animation<double> progress;
   final bool reduceMotion;
   final ValueChanged<int> onSelect;
+  final FocusNode? focusNode;
 
   /// For tests (AN6): dot [i]'s visible dot or pill, its tap area, the
   /// pill's timer fill, the focusable group and its ring.
@@ -84,48 +92,86 @@ class UpdatesDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final colors = context.colors;
+    final duration = reduceMotion ? Duration.zero : AppMotion.normal;
+    // The tap area's extra width around the visible dot (or pill), half on
+    // each side.
+    const inset = (UpdatesMetrics.dotSlot - UpdatesMetrics.dot) / 2;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (arrows)
-          IconButton(
-            tooltip: l10n.updates_previous,
-            onPressed: () => onSelect(index - 1 + count),
-            icon: Icon(Icons.arrow_back, size: AppIconSize.i18, color: context.colors.textMuted),
-          ),
-        for (var i = 0; i < count; i++)
-          Semantics(
-            button: true,
-            selected: i == index,
-            label: l10n.updates_slideOf(i + 1, count),
-            excludeSemantics: true,
-            child: InkResponse(
-              onTap: () => onSelect(i),
-              radius: kMinInteractiveDimension / 2,
-              child: SizedBox.square(
-                dimension: kMinInteractiveDimension,
-                child: Center(
-                  child: AnimatedContainer(
-                    duration: reduceMotion ? Duration.zero : AppMotion.fast,
-                    width: i == index ? UpdatesMetrics.dotSelected : UpdatesMetrics.dot,
-                    height: i == index ? UpdatesMetrics.dotSelected : UpdatesMetrics.dot,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: i == index ? context.colors.primary : context.colors.textMuted,
-                    ),
-                  ),
+    return Center(
+      child: Focus(
+        key: groupKey,
+        focusNode: focusNode,
+        child: Builder(
+          builder: (context) {
+            final focused = Focus.of(context).hasFocus;
+            return DecoratedBox(
+              key: focusRingKey,
+              // Painted over the dots, so the ring takes no room.
+              position: DecorationPosition.foreground,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.r16),
+                border: Border.all(
+                  color: focused ? colors.primary : colors.primary.withValues(alpha: 0),
+                  width: UpdatesMetrics.focusRing,
                 ),
               ),
-            ),
-          ),
-        if (arrows)
-          IconButton(
-            tooltip: l10n.updates_next,
-            onPressed: () => onSelect(index + 1),
-            icon: Icon(Icons.arrow_forward, size: AppIconSize.i18, color: context.colors.textMuted),
-          ),
-      ],
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i < count; i++)
+                    Semantics(
+                      button: true,
+                      selected: i == index,
+                      label: l10n.updates_slideOf(i + 1, count),
+                      excludeSemantics: true,
+                      child: InkResponse(
+                        // The group is the keyboard's one stop, not each dot.
+                        canRequestFocus: false,
+                        onTap: () => onSelect(i),
+                        radius: UpdatesMetrics.dotSlot,
+                        child: SizedBox(
+                          key: slotKey(i),
+                          height: UpdatesMetrics.controlsRow,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: inset),
+                            child: Center(
+                              child: AnimatedContainer(
+                                key: dotKey(i),
+                                duration: duration,
+                                width: i == index ? UpdatesMetrics.pill : UpdatesMetrics.dot,
+                                height: UpdatesMetrics.dot,
+                                clipBehavior: Clip.antiAlias,
+                                decoration: BoxDecoration(
+                                  color: colors.textMuted,
+                                  borderRadius: BorderRadius.circular(UpdatesMetrics.dot / 2),
+                                ),
+                                child:
+                                    i == index
+                                        ? AnimatedBuilder(
+                                          animation: progress,
+                                          builder:
+                                              (context, _) => FractionallySizedBox(
+                                                key: pillFillKey,
+                                                alignment: AlignmentDirectional.centerStart,
+                                                widthFactor: progress.value,
+                                                heightFactor: 1,
+                                                child: ColoredBox(color: colors.primary),
+                                              ),
+                                        )
+                                        : null,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +7,6 @@ import '../config/app_timeouts.dart';
 import '../data/announcement_fields.dart';
 import '../services/announcement_service.dart';
 import '../services/updates_store.dart';
-import '../theme/app_breakpoints.dart';
 import '../theme/app_motion.dart';
 import '../utils/updates_selection.dart';
 import 'auth_footer.dart';
@@ -102,9 +99,9 @@ class _UpdatesCarouselState extends State<UpdatesCarousel> {
 
 /// The Updates area for [slides] (at least one): the quiet label, ONE fixed
 /// 16:9 frame, the optional link button below, and with several slides a
-/// gentle fade every [AppTimeouts.updatesAdvance], dots, swipe and (on wide
-/// windows) arrows. The timer lives here, made and cancelled with this
-/// State, never in a builder. It pauses while the pointer hovers, a finger
+/// gentle fade every [AppTimeouts.updatesAdvance], dots and swipe (AN6: no
+/// arrows; the timer is the active pill's fill). The timer lives here, made
+/// and disposed with this State, never in a builder. It pauses while the pointer hovers, a finger
 /// touches or focus is inside, and never runs when the system asks for less
 /// motion. Roles, tokens and named limits only, so a later restyle is here.
 class UpdatesSlides extends StatefulWidget {
@@ -121,7 +118,8 @@ class UpdatesSlides extends StatefulWidget {
   static const labelRowKey = UpdatesLabel.rowKey;
   static const linkKey = Key('updatesLink');
 
-  /// How many auto-advance timers were started (tests: none on a rebuild).
+  /// How many times the timer was started from rest (tests: none on a
+  /// rebuild, none under reduced motion).
   @visibleForTesting
   static int debugTimerStarts = 0;
 
@@ -129,8 +127,10 @@ class UpdatesSlides extends StatefulWidget {
   State<UpdatesSlides> createState() => _UpdatesSlidesState();
 }
 
-class _UpdatesSlidesState extends State<UpdatesSlides> {
-  Timer? _timer;
+class _UpdatesSlidesState extends State<UpdatesSlides> with SingleTickerProviderStateMixin {
+  // AN6: the timer is the active pill's fill, paused where it is.
+  late final AnimationController _fill = AnimationController(vsync: this, duration: AppTimeouts.updatesAdvance)
+    ..addStatusListener(_onFill);
   int _index = 0;
   bool _hovering = false;
   bool _touching = false;
@@ -150,7 +150,7 @@ class _UpdatesSlidesState extends State<UpdatesSlides> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _reduceMotion = MediaQuery.disableAnimationsOf(context);
-    _syncTimer();
+    _syncFill();
     _preloadNext();
   }
 
@@ -158,28 +158,32 @@ class _UpdatesSlidesState extends State<UpdatesSlides> {
   void didUpdateWidget(UpdatesSlides old) {
     super.didUpdateWidget(old);
     if (_index >= _slides.length) _index = 0;
-    _syncTimer();
+    _syncFill();
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _fill.dispose();
     super.dispose();
   }
 
   bool get _shouldRun => _slides.length > 1 && !_reduceMotion && !_hovering && !_touching && !_focused;
 
-  /// Starts the timer when it should run and is not running; stops it when
-  /// it should not. A rebuild never makes a new one.
-  void _syncTimer({bool restart = false}) {
-    if (restart || !_shouldRun) {
-      _timer?.cancel();
-      _timer = null;
+  /// Runs the timer from where it is when it should run; stops it where it
+  /// is when it should not. A rebuild never starts a new one.
+  void _syncFill() {
+    if (!_shouldRun) {
+      if (_fill.isAnimating) _fill.stop();
+      return;
     }
-    if (_shouldRun && _timer == null) {
+    if (!_fill.isAnimating && _fill.status != AnimationStatus.completed) {
       UpdatesSlides.debugTimerStarts++;
-      _timer = Timer.periodic(AppTimeouts.updatesAdvance, (_) => _show(_index + 1, byPerson: false));
+      _fill.forward();
     }
+  }
+
+  void _onFill(AnimationStatus status) {
+    if (status == AnimationStatus.completed) _show(_index + 1);
   }
 
   /// The next poster's image is fetched before its turn.
@@ -189,19 +193,20 @@ class _UpdatesSlidesState extends State<UpdatesSlides> {
     if (next != null) precacheImage(next, context, onError: (_, _) {});
   }
 
-  void _show(int index, {bool byPerson = true}) {
+  void _show(int index) {
     if (!mounted) return;
     setState(() => _index = index % _slides.length);
     _preloadNext();
-    // A person's choice gets a full turn before the next slide.
-    if (byPerson) _syncTimer(restart: true);
+    // Every new slide, chosen or not, gets a full turn.
+    _fill.reset();
+    _syncFill();
   }
 
   void _setPause({bool? hovering, bool? touching, bool? focused}) {
     _hovering = hovering ?? _hovering;
     _touching = touching ?? _touching;
     _focused = focused ?? _focused;
-    _syncTimer();
+    _syncFill();
   }
 
   @override
@@ -214,12 +219,18 @@ class _UpdatesSlidesState extends State<UpdatesSlides> {
     // area does not jump as they change.
     final anyLink = _slides.any((a) => AnnouncementLinkButton.addressOf(a) != null);
     final several = _slides.length > 1;
-    final wide = MediaQuery.sizeOf(context).width > AppBreakpoints.twoPane;
     // AN4, AN6: the shared layout keeps the controls' line even for one
     // slide (nothing drawn on it), at the card's bottom in the wide card.
     final controls =
-        several ? UpdatesDots(count: _slides.length, index: _index, arrows: wide, reduceMotion: _reduceMotion, onSelect: _show) : null;
-
+        several
+            ? UpdatesDots(
+              count: _slides.length,
+              index: _index,
+              progress: _reduceMotion ? kAlwaysCompleteAnimation : _fill,
+              reduceMotion: _reduceMotion,
+              onSelect: _show,
+            )
+            : null;
     return Focus(
       canRequestFocus: false,
       skipTraversal: true,
