@@ -1966,5 +1966,5 @@
   "updates_next": ["Taarifa inayofuata","Arrow button and its tooltip: show the next login update.","draft"],
   "updates_slideOf": ["Taarifa {index} kati ya {count}","Screen-reader label of a dot under the login updates.","draft"],
   "updates_welcomeTitle": ["Karibu {appName}","Login page, wide windows: the heading of the welcome note at the top of the Updates card, beside the sign-in card's Welcome back (AN4).","draft"],
-  "updates_welcomeLine": ["Mauzo, bidhaa, wateja na madeni kwa agrovet na kliniki za mifugo.","Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; it was the sign-in footer's line under the app name).","draft"]
+  "updates_welcomeLine": ["Fuatilia habari na taarifa zetu za hivi punde.","Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; AN5: the owner's line about the Updates).","draft"]
 }
