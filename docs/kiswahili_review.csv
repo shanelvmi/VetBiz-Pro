@@ -1392,7 +1392,8 @@ common_editProfile,Edit Profile,Hariri Wasifu,Edit Profile screen title.,draft
 auth_switchToDarkMode,Switch to dark mode,Badilisha kwenda Hali ya Giza,Tooltip of the moon button in the Login and Register top bar: it turns Dark Mode on.,draft
 auth_switchToLightMode,Switch to light mode,Badilisha kwenda Hali ya Mwanga,Tooltip of the sun button in the Login and Register top bar: it turns Dark Mode off (Light).,draft
 login_copyright,© 2026 {appName}. All rights reserved.,© 2026 {appName}. Haki zote zimehifadhiwa.,Login footer.,draft
-login_welcomeBack,Welcome back,Karibu tena,Login form title.,draft
+login_signInTitle,Sign in to your account,Ingia kwenye akaunti yako,"Sign-in card: its heading, beside the Updates card's welcome heading on wide windows (AN5; was Welcome back).",draft
+login_signInSubtitle,Use your email and password.,Tumia barua pepe na nenosiri lako.,"Sign-in card: the line under its heading, on the line of the Updates card's welcome sentence (AN5).",draft
 login_emailHint,Enter your email,Weka barua pepe yako,Login email field hint.,draft
 login_passwordHint,Enter your password,Weka nenosiri lako,Login password field hint.,draft
 login_rememberMe,Remember Me,Nikumbuke,Login checkbox: keep the email for next time.,draft
@@ -1892,6 +1893,7 @@ register_consent,I agree to the {terms} and the {privacy}.,Ninakubali {terms} na
 register_consentRequired,Tick the box to agree before you create your account.,Weka alama kwenye kisanduku ili ukubali kabla ya kufungua akaunti yako.,Register wizard step 5: under the checkbox when Create account is pressed unticked.,draft
 authFooter_support,Support,Msaada,Sign-in footer: heading of the Support column.,draft
 authFooter_legal,Legal,Kisheria,"Sign-in footer: heading of the Legal column (Privacy Policy, Terms of Service).",draft
+authFooter_audience,"For agrovets, vet clinics, vet hospitals and ambulatory services in Tanzania.","Kwa agrovet, kliniki za mifugo, hospitali za mifugo na huduma za kutembelea nchini Tanzania.",Sign-in and register footer: the line under the mark and the app name in the brand column (AN5). Not the welcome note's sentence.,draft
 authFooter_helpContact,Help and contact,Msaada na mawasiliano,"Sign-in footer, Support column: opens the same Help dialog as the dashboard.",draft
 social_facebook,Facebook,Facebook,Sign-in footer: tooltip and screen-reader name of the Facebook icon. A brand name.,draft
 social_instagram,Instagram,Instagram,Sign-in footer: tooltip and screen-reader name of the Instagram icon. A brand name.,draft
