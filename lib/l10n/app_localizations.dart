@@ -11448,12 +11448,6 @@ abstract class AppLocalizations {
   /// **'Legal'**
   String get authFooter_legal;
 
-  /// Sign-in and register footer: the line under the mark and the app name in the brand column (AN5). Not the welcome note's sentence.
-  ///
-  /// In en, this message translates to:
-  /// **'For agrovets, vet clinics, vet hospitals and ambulatory services in Tanzania.'**
-  String get authFooter_audience;
-
   /// Sign-in and register footer: the line under the mark and the app name in the brand column (AN5, the owner's sentence). Not the welcome note's sentence.
   ///
   /// In en, this message translates to:

@@ -6787,10 +6787,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get authFooter_legal => 'Kisheria';
 
   @override
-  String get authFooter_audience =>
-      'Kwa agrovet, kliniki za mifugo, hospitali za mifugo na huduma za kutembelea nchini Tanzania.';
-
-  @override
   String get authFooter_description =>
       'Mauzo, bidhaa, wateja, madeni na huduma za mifugo kwa agrovet, kliniki za mifugo, hospitali za mifugo na huduma za kutembelea.';
 
