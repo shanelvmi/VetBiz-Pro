@@ -17,7 +17,10 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 
 class PastReportsScreen extends StatefulWidget {
-  const PastReportsScreen({super.key});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
+  final FirebaseFirestore? firestore;
+
+  const PastReportsScreen({super.key, this.firestore});
 
   @override
   State<PastReportsScreen> createState() => _PastReportsScreenState();
@@ -56,7 +59,7 @@ extension on _TimeFilter {
 class _PastReportsScreenState extends State<PastReportsScreen> {
   static const int _pageSize = AppLimits.pageSize;
 
-  final DailyReportService _reportService = DailyReportService();
+  late final DailyReportService _reportService = DailyReportService(firestore: widget.firestore);
   final TextEditingController _searchController = TextEditingController();
 
   bool _isLoading = true;

@@ -124,6 +124,9 @@ List<String> smallTexts(WidgetTester tester, {double min = matrixMinTextPx}) {
 /// The checks for one case: no exception anywhere; on a phone, 48 x 48 tap
 /// targets and no text under 12 px.
 Future<void> checkCase(WidgetTester tester, {required bool phone, required String where}) async {
+  // --dart-define=MATRIX_DEBUG=true leaves the error to Flutter, which then
+  // prints the full report (which widget, file and line overflowed).
+  if (const bool.fromEnvironment('MATRIX_DEBUG')) return;
   final error = tester.takeException();
   expect(error, isNull, reason: '$where: $error');
   if (!phone) return;
