@@ -3930,10 +3930,12 @@
   "@updates_previous": {"x-review":"draft"},
   "updates_next": "Taarifa inayofuata",
   "@updates_next": {"x-review":"draft"},
-  "updates_slideOf": "Taarifa {index} kati ya {count}",
+  "updates_slideOf": "Slaidi {index} kati ya {count}",
   "@updates_slideOf": {"x-review":"draft"},
   "updates_welcomeTitle": "Karibu {appName}",
   "@updates_welcomeTitle": {"x-review":"draft"},
   "updates_welcomeLine": "Fuatilia habari na taarifa zetu za hivi punde.",
-  "@updates_welcomeLine": {"x-review":"draft"}
+  "@updates_welcomeLine": {"x-review":"draft"},
+  "updates_empty": "Hakuna jipya kwa sasa. Rudi baadaye.",
+  "@updates_empty": {"x-review":"draft"}
 }
