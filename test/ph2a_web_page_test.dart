@@ -9,7 +9,7 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 // PH2a: the web page's own texts and the installed app's manifest
 // (docs/design/phone_foundations.md risk 10, S10, and the owner's answers 3
 // and 4). Seen when the link is shared, saved to a home screen or installed.
-const _skip = true;
+const _skip = false;
 
 const _name = AppInfo.name;
 const _description = 'Records for agrovets and veterinary centres.';

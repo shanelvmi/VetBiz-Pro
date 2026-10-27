@@ -1,12 +1,12 @@
 {
-    "name": "vetbiz_pro",
-    "short_name": "vetbiz_pro",
+    "name": "VetBiz Pro",
+    "short_name": "VetBiz Pro",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#FDFDF9",
+    "theme_color": "#2F5D62",
+    "description": "Records for agrovets and veterinary centres.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
