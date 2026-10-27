@@ -67,6 +67,7 @@ import '../../config/app_info.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_tap_target.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_motion.dart';
@@ -1753,7 +1754,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           if (!Provider.of<UiSettingsProvider>(context).layoutFixed)
             IconButton(
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+              constraints: AppTapTarget.iconConstraints(context),
               icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: context.colors.textPrimary, size: AppIconSize.i22),
               tooltip: _isDrawerCollapsed ? context.l10n.dashboard_expandMenu : context.l10n.dashboard_collapseMenu,
               onPressed: _toggleDrawerCollapsed,

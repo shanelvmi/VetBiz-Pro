@@ -460,7 +460,6 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 icon: Icon(Icons.add, color: context.colors.onPrimary),
                 tooltip: context.l10n.services_addNewClient,
                 padding: const EdgeInsets.all(AppSpacing.s10),
-                constraints: const BoxConstraints(),
                 style: ButtonStyle(
                   shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10))),
                   backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {

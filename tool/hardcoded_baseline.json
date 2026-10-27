@@ -246,6 +246,54 @@
       "file": "lib/services/role_change_service.dart",
       "lineContains": "",
       "reason": "out of scope for step 2F (docs/PHASE2_LOCALISATION_SPEC.md 2.8): the operator console's role change; it writes notification titles and messages that are stored and shown as stored"
+    },
+    {
+      "rule": "R12",
+      "file": "lib/screens/platform_admin/",
+      "lineContains": "",
+      "reason": "the operator console is not for customers (phone_foundations.md section 9: LATER, PH9 if wanted)"
+    },
+    {
+      "rule": "R12",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "BoxConstraints(minWidth: 28, minHeight: 28)",
+      "reason": "out of PH scope (phone_foundations.md: login is already phone-ready): the error banner dismiss button; on touch the theme pads it, but compact density gives 40 (LATER)"
+    },
+    {
+      "rule": "R12",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "visualDensity: VisualDensity.compact",
+      "reason": "out of PH scope: the same error banner dismiss button (LATER)"
+    },
+    {
+      "rule": "R12",
+      "file": "lib/screens/login_screen.dart",
+      "lineContains": "materialTapTargetSize: MaterialTapTargetSize.shrinkWrap",
+      "reason": "out of PH scope: the Remember me checkbox in a 20 px box (its label is not tappable); a 48 px target there would move the login card (LATER)"
+    },
+    {
+      "rule": "R12",
+      "file": "lib/screens/register_screen.dart",
+      "lineContains": "BoxConstraints(minWidth: 30, minHeight: 30)",
+      "reason": "out of PH scope (register and the wizard are already phone-ready): the error banner dismiss button (LATER)"
+    },
+    {
+      "rule": "R12",
+      "file": "lib/screens/register_screen.dart",
+      "lineContains": "visualDensity: VisualDensity.compact",
+      "reason": "out of PH scope: the same error banner dismiss button (LATER)"
+    },
+    {
+      "rule": "R12",
+      "file": "lib/screens/dashboard/notifications_screen.dart",
+      "lineContains": "visualDensity: VisualDensity.compact",
+      "reason": "out of PH scope (the notifications screen is already phone-ready): the clear-date-range button inside the date chip (LATER)"
+    },
+    {
+      "rule": "R12",
+      "file": "lib/screens/subscription/subscription_screen.dart",
+      "lineContains": "materialTapTargetSize: MaterialTapTargetSize.shrinkWrap",
+      "reason": "a status Chip with no onPressed: not a tap target; shrinkWrap only keeps its look"
     }
   ],
   "counts": {
@@ -259,6 +307,7 @@
     "R8": {},
     "R9": {},
     "R10": {},
-    "R11": {}
+    "R11": {},
+    "R12": {}
   }
 }

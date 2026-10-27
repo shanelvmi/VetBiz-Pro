@@ -122,7 +122,30 @@ final List<GuardRule> guardRules = [
     [RegExp(r'\bshowSnackBar\('), RegExp(r'\bSnackBar\('), RegExp(r'ScaffoldMessenger\.of')],
     alsoExcludes: ['lib/ui/feedback/'],
   ),
+  // PH2a S2 (docs/design/phone_foundations.md): a screen may not shrink a tap
+  // target below 48 itself; AppTapTarget (lib/theme) keeps it compact with a
+  // mouse and 48 on touch. No ratchet: the baseline is zero, and each
+  // exception is an allowlist entry with its reason.
+  GuardRule(
+    'R12',
+    'shrunk tap target',
+    [
+      RegExp(r'constraints:\s*(?:const\s+)?BoxConstraints\(\s*\)'),
+      RegExp(r'BoxConstraints\([^)]*?\bmin(?:Width|Height):\s*(?<n>\d+(?:\.\d+)?)'),
+      RegExp(r'\bVisualDensity\.compact\b'),
+      RegExp(r'\bMaterialTapTargetSize\.shrinkWrap\b'),
+    ],
+    accept: _shrinksBelowMinimum,
+    onlyIn: ['lib/screens/'],
+  ),
 ];
+
+/// R12: a minWidth or minHeight counts only below 48 (the touch minimum,
+/// AppSizes.minTapTarget); every other R12 pattern always shrinks.
+bool _shrinksBelowMinimum(RegExpMatch m) {
+  final n = m.groupNames.contains('n') ? m.namedGroup('n') : null;
+  return n == null || double.parse(n) < 48;
+}
 
 /// Folders allowed to hold raw values, and generated files.
 bool isExcluded(String path) {
@@ -180,6 +203,7 @@ Map<String, Map<String, int>> scan(Directory root, {List<AllowEntry> allowlist =
       opened = {for (final r in guardRules) if (r.opens(line)) r.id};
       for (final rule in guardRules) {
         if (rule.alsoExcludes.any(rel.startsWith)) continue;
+        if (rule.onlyIn.isNotEmpty && !rule.onlyIn.any(rel.startsWith)) continue;
         final allowed = allowlist.any((a) => a.rule == rule.id && a.covers(rel) && line.contains(a.lineContains));
         if (allowed) continue;
         var n = rule.count(line, afterOpener: openedBefore.contains(rule.id));

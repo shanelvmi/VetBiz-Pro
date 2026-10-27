@@ -30,6 +30,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_tap_target.dart';
 import '../../theme/app_motion.dart';
 import '../../l10n/l10n.dart';
 
@@ -325,7 +326,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                                 IconButton(
                                   icon: Icon(Icons.close, color: context.colors.onBrandSurface, size: AppIconSize.i20),
                                   padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
+                                  constraints: AppTapTarget.iconConstraints(dialogContext),
                                   onPressed: () => Navigator.pop(dialogContext),
                                 ),
                               ],
@@ -1218,7 +1219,6 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           icon: Icon(Icons.add, color: context.colors.onPrimary),
           tooltip: context.l10n.services_addNewClient,
           padding: const EdgeInsets.all(AppSpacing.s10),
-          constraints: const BoxConstraints(),
           style: ButtonStyle(
             shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10))),
             backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -1278,8 +1278,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               child: Radio<bool>(
                 value: true,
                 activeColor: context.colors.primary,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: AppTapTarget.size(context),
+                visualDensity: AppTapTarget.density(context),
               ),
             ),
           ],
@@ -1509,12 +1509,12 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   ),
                 ),
                 SizedBox(
-                  width: 32,
+                  width: AppTapTarget.extent(context, 32),
                   child: IconButton(
                     icon: const Icon(Icons.delete_outline, size: AppIconSize.i18),
                     color: context.colors.danger,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                    constraints: AppTapTarget.iconConstraints(context),
                     onPressed: () => _removeItemAt(index),
                   ),
                 ),

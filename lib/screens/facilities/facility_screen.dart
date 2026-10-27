@@ -39,6 +39,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_tap_target.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/friendly_error.dart';
 import '../../l10n/l10n.dart';
@@ -734,7 +735,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
                         minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        tapTargetSize: AppTapTarget.size(context),
                       ),
                       onPressed: isSaving
                           ? null
@@ -1761,7 +1762,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                     IconButton(
                       icon: const Icon(Icons.copy, size: AppIconSize.i16),
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                      constraints: AppTapTarget.iconConstraints(context),
                       onPressed: () {
                         Clipboard.setData(ClipboardData(text: (details?[FacilityCodes.field] as String?) ?? ''));
                         AppFeedback.success(L10n.current.invite_copied);
@@ -1783,7 +1784,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       IconButton(
                         icon: const Icon(Icons.copy, size: AppIconSize.i16),
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                        constraints: AppTapTarget.iconConstraints(context),
                         onPressed: () {
                           Clipboard.setData(ClipboardData(text: details!['licenseNo'] as String));
                           AppFeedback.success(L10n.current.invite_copied);

@@ -111,10 +111,14 @@ class AppSizes {
   static const double pageMax = 1440;
 
   /// Feedback toasts (lib/ui/feedback): the card's width on wider screens,
-  /// the round icon badge, and the smallest height of a toast button.
+  /// the round icon badge.
   static const double toastMax = 400;
   static const double toastIcon = 28;
-  static const double minTapTarget = 40;
+
+  /// The smallest tap target: a toast button, and every small button on
+  /// touch (AppTapTarget, lib/theme/app_tap_target.dart). 48 since PH2a
+  /// (it was 40, below the 48 x 48 touch minimum).
+  static const double minTapTarget = 48;
 
   /// The round button in the signed-out screens' top bar (the theme
   /// toggle): the circle you see, inside Material's 48 px touch target.

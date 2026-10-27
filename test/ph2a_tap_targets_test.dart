@@ -9,11 +9,13 @@ import '../tool/check_hardcoded.dart';
 
 // PH2a S2: tap targets at least 48 x 48 on touch
 // (docs/design/phone_foundations.md S2 and risk 7).
-const _skip = true;
+const _skip = false;
 
 /// Pumps [child] under a theme for [platform] and returns its size.
 Future<Size> _sizeOn(WidgetTester tester, TargetPlatform platform, Widget Function(BuildContext) child) async {
+  // A fresh app per platform: MaterialApp animates from one theme to the next.
   await tester.pumpWidget(MaterialApp(
+    key: ValueKey(platform),
     theme: ThemeData(platform: platform),
     home: Scaffold(
       body: Center(
@@ -92,7 +94,7 @@ void main() {
       expect(r.count('visualDensity: VisualDensity.compact,'), 1);
       expect(r.count('materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,'), 1);
       expect(r.count('tapTargetSize: MaterialTapTargetSize.shrinkWrap,'), 1);
-      expect(r.count('constraints: const BoxConstraints(minWidth: 28, minHeight: 28),'), 2);
+      expect(r.count('constraints: const BoxConstraints(minWidth: 28, minHeight: 28),'), 1, reason: 'one box, counted once');
     }, skip: _skip);
 
     test('leaves alone what does not shrink a target', () {
