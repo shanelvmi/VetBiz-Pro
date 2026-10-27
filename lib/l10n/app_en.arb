@@ -2778,8 +2778,6 @@
   "@auth_switchToLightMode": {"description":"Tooltip of the sun button in the Login and Register top bar: it turns Dark Mode off (Light)."},
   "login_copyright": "© 2026 {appName}. All rights reserved.",
   "@login_copyright": {"description":"Login footer.","placeholders":{"appName":{"type":"String"}}},
-  "login_welcomeBack": "Welcome back",
-  "@login_welcomeBack": {"description":"Login form title."},
   "login_signInTitle": "Sign in to your account",
   "@login_signInTitle": {"description":"Sign-in card: its heading, beside the Updates card's welcome heading on wide windows (AN5; was Welcome back)."},
   "login_signInSubtitle": "Use your email and password.",

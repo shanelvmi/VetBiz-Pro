@@ -2778,8 +2778,6 @@
   "@auth_switchToLightMode": {"x-review":"draft"},
   "login_copyright": "© 2026 {appName}. Haki zote zimehifadhiwa.",
   "@login_copyright": {"x-review":"draft"},
-  "login_welcomeBack": "Karibu tena",
-  "@login_welcomeBack": {"x-review":"draft"},
   "login_signInTitle": "Ingia kwenye akaunti yako",
   "@login_signInTitle": {"x-review":"draft"},
   "login_signInSubtitle": "Tumia barua pepe na nenosiri lako.",
