@@ -16,7 +16,7 @@ import 'helpers/screen_size_matrix.dart';
 // scroll); wide windows are unchanged. The printed output is not drawn
 // through this scale (the RepaintBoundary inside it is captured at its own
 // 400 px).
-const _skip = true;
+const _skip = false;
 
 final _items = [
   for (var i = 1; i <= 12; i++)

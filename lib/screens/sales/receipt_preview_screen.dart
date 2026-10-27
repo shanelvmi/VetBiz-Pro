@@ -248,21 +248,27 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
           final thermalReceipt = Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.s24),
-              child: RepaintBoundary(
-                key: _receiptKey,
-                child: PrintableTheme(
-                  builder: (context) => _buildReceiptCard(
-                    context: context,
-                    sale: sale,
-                    balance: balance,
-                    facilityName: facilityName,
-                    logoUrl: logoUrl,
-                    facilityPhone: facilityPhone,
-                    facilityEmail: facilityEmail,
-                    facilityAddress: facilityAddress,
-                    facilityTagline: facilityTagline,
-                    facilityTin: facilityTin,
-                    statusText: statusText,
+              // Scaled down to fit a phone (PH2b S7): the 400 px receipt and
+              // its padding are wider than 360. Outside the RepaintBoundary,
+              // so a shared or printed image is still captured at 400 px.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: RepaintBoundary(
+                  key: _receiptKey,
+                  child: PrintableTheme(
+                    builder: (context) => _buildReceiptCard(
+                      context: context,
+                      sale: sale,
+                      balance: balance,
+                      facilityName: facilityName,
+                      logoUrl: logoUrl,
+                      facilityPhone: facilityPhone,
+                      facilityEmail: facilityEmail,
+                      facilityAddress: facilityAddress,
+                      facilityTagline: facilityTagline,
+                      facilityTin: facilityTin,
+                      statusText: statusText,
+                    ),
                   ),
                 ),
               ),
