@@ -3934,6 +3934,6 @@
   "@updates_slideOf": {"description":"Screen-reader label of a dot under the login updates.","placeholders":{"index":{"type":"int"},"count":{"type":"int"}}},
   "updates_welcomeTitle": "Welcome to {appName}",
   "@updates_welcomeTitle": {"description":"Login page, wide windows: the heading of the welcome note at the top of the Updates card, beside the sign-in card's Welcome back (AN4).","placeholders":{"appName":{"type":"String"}}},
-  "updates_welcomeLine": "Sales, stock, clients and debts for agrovets and vet clinics.",
-  "@updates_welcomeLine": {"description":"Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; it was the sign-in footer's line under the app name)."}
+  "updates_welcomeLine": "Track our latest news and notices.",
+  "@updates_welcomeLine": {"description":"Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; AN5: the owner's line about the Updates)."}
 }

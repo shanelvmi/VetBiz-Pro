@@ -3934,6 +3934,6 @@
   "@updates_slideOf": {"x-review":"draft"},
   "updates_welcomeTitle": "Karibu {appName}",
   "@updates_welcomeTitle": {"x-review":"draft"},
-  "updates_welcomeLine": "Mauzo, bidhaa, wateja na madeni kwa agrovet na kliniki za mifugo.",
+  "updates_welcomeLine": "Fuatilia habari na taarifa zetu za hivi punde.",
   "@updates_welcomeLine": {"x-review":"draft"}
 }
