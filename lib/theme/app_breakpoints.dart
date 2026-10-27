@@ -23,6 +23,12 @@ class AppBreakpoints {
   /// The dashboard sidebar shows (dashboard_screen.dart:1113, 2469, 2843).
   static const double expanded = 1024;
 
+  /// A window shorter than this, while narrower than [expanded], is a phone
+  /// turned sideways (an 844 x 390 phone in landscape stays a phone; a short
+  /// 1200 x 550 desktop window does not). Read through AppLayout
+  /// (lib/theme/app_layout.dart), not directly.
+  static const double phoneLandscapeHeight = 500;
+
   // One-offs, exact.
 
   /// Above this screen width a confirm dialog is a fixed 340 wide
@@ -80,6 +86,17 @@ class AppBreakpoints {
   /// The loading illustration shrinks (vetbiz_loading_indicator.dart:162), and
   /// the overview grid drops to one column (overview_tab.dart:178).
   static const double smallPhone = 420;
+
+  /// Below this window height the dashboard sidebar never collapses: it is
+  /// the slide-in drawer there (dashboard_screen.dart, _buildDrawerContent).
+  static const double sidebarMinHeight = 600;
+
+  /// The dashboard card grid: 3 columns above this grid width, 2 below
+  /// (dashboard_screen.dart, the summary grid).
+  static const double dashboardGridThree = 700;
+
+  /// The dashboard card grid: 4 columns above this grid width.
+  static const double dashboardGridFour = 1200;
 
   /// A summary card's own width (not the screen) below which it uses its
   /// smaller avatar and text (summary_card.dart:173).
