@@ -6,12 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_timeouts.dart';
-import '../config/app_limits.dart';
 import '../data/announcement_fields.dart';
 import '../services/announcement_service.dart';
 import '../services/updates_store.dart';
 import '../theme/app_breakpoints.dart';
-import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
 import '../utils/updates_selection.dart';
 import 'auth_footer.dart';
@@ -217,10 +215,8 @@ class _UpdatesSlidesState extends State<UpdatesSlides> {
     final anyLink = _slides.any((a) => AnnouncementLinkButton.addressOf(a) != null);
     final several = _slides.length > 1;
     final wide = MediaQuery.sizeOf(context).width > AppBreakpoints.twoPane;
-    // AN4: in the wide card (UpdatesCard) the area fills the card's height
-    // and the controls sit at its bottom, on a line kept even for one slide
-    // (nothing drawn on it), so the card is as tall with one as with several.
-    final inCard = UpdatesPlacement.wideOf(context);
+    // AN4, AN6: the shared layout keeps the controls' line even for one
+    // slide (nothing drawn on it), at the card's bottom in the wide card.
     final controls =
         several ? UpdatesDots(count: _slides.length, index: _index, arrows: wide, reduceMotion: _reduceMotion, onSelect: _show) : null;
 
@@ -241,62 +237,33 @@ class _UpdatesSlidesState extends State<UpdatesSlides> {
           onPointerCancel: (e) {
             if (e.kind == PointerDeviceKind.touch) _setPause(touching: false);
           },
-          child: Column(
-            mainAxisSize: inCard ? MainAxisSize.max : MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              UpdatesLabel(showChips: isPoster, urgent: current.urgent, isNew: isNew),
-              const SizedBox(height: AppSpacing.s6),
-              GestureDetector(
-                onHorizontalDragEnd:
-                    several
-                        ? (d) {
-                          final v = d.primaryVelocity ?? 0;
-                          if (v.abs() < kMinFlingVelocity) return;
-                          _show(v < 0 ? _index + 1 : _index - 1 + _slides.length);
-                        }
-                        : null,
-                child: AspectRatio(
-                  key: UpdatesSlides.frameKey,
-                  aspectRatio: AppLimits.posterAspectRatio,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.r16),
-                    child: AnimatedSwitcher(
-                      duration: _reduceMotion ? Duration.zero : AppMotion.slowest,
-                      child: UpdateSlide(
-                        key: ValueKey(current.id),
-                        announcement: current,
-                        isNew: isNew,
-                        image: _imageOf(current),
-                      ),
-                    ),
-                  ),
-                ),
+          child: UpdatesFrameLayout(
+            label: UpdatesLabel(showChips: isPoster, urgent: current.urgent, isNew: isNew),
+            frameKey: UpdatesSlides.frameKey,
+            frame: GestureDetector(
+              onHorizontalDragEnd:
+                  several
+                      ? (d) {
+                        final v = d.primaryVelocity ?? 0;
+                        if (v.abs() < kMinFlingVelocity) return;
+                        _show(v < 0 ? _index + 1 : _index - 1 + _slides.length);
+                      }
+                      : null,
+              child: AnimatedSwitcher(
+                duration: _reduceMotion ? Duration.zero : AppMotion.slowest,
+                child: UpdateSlide(key: ValueKey(current.id), announcement: current, isNew: isNew, image: _imageOf(current)),
               ),
-              if (inCard) const Spacer(),
-              if (anyLink)
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.s6),
-                  child: SizedBox(
-                    height: kMinInteractiveDimension,
-                    child:
-                        link == null
-                            ? null
-                            : Align(
-                              alignment: AlignmentDirectional.centerStart,
-                              child: AnnouncementLinkButton(
-                                key: UpdatesSlides.linkKey,
-                                announcement: current,
-                                launcher: widget.launcher,
-                              ),
-                            ),
-                  ),
-                ),
-              if (inCard)
-                SizedBox(height: kMinInteractiveDimension, child: controls)
-              else if (controls != null)
-                controls,
-            ],
+            ),
+            link:
+                !anyLink
+                    ? null
+                    : link == null
+                    ? const SizedBox.shrink()
+                    : Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: AnnouncementLinkButton(key: UpdatesSlides.linkKey, announcement: current, launcher: widget.launcher),
+                    ),
+            controls: controls,
           ),
         ),
       ),

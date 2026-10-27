@@ -8,7 +8,8 @@ import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 
 // The small parts of the login page's Updates (AN2), shared by the slide and
-// the carousel: the chip, the label row and the dots. Roles and tokens only.
+// the carousel: the chip, the label row, the dots, the one layout of the
+// area and its loading and empty states (AN6). Roles and tokens only.
 
 /// AN4: where the Updates sit. [wide]: in the left card beside the login
 /// card (UpdatesCard), at that card's height: the label larger, the controls
@@ -171,33 +172,88 @@ class UpdatesLabel extends StatelessWidget {
   }
 }
 
-/// G6, AN6: the Updates area while nothing is known yet (no answer, and no
-/// copy from an earlier visit on this device): the label row and the
-/// empty 16:9 frame, as tall as one slide, so the page does not jump when
-/// they arrive. Nothing to read in it. AN4: in the wide card it also keeps
-/// the controls' line at the bottom, as the slides do.
-class UpdatesSkeleton extends StatelessWidget {
-  const UpdatesSkeleton({super.key});
+/// AN6: the one layout of the Updates area, for the slides, the skeleton and
+/// the calm panel alike, so the card is the same height in all three and
+/// nothing moves when the answer arrives: the label row, the 16:9 frame,
+/// the link's line ([link]; null when no slide has a link), and the
+/// controls row, always [UpdatesMetrics.controlsRow] tall (empty with one
+/// slide or none). In the wide card (UpdatesCard) it fills the card's height
+/// and the link and controls sit at its bottom (AN4).
+class UpdatesFrameLayout extends StatelessWidget {
+  const UpdatesFrameLayout({super.key, required this.label, required this.frame, this.frameKey, this.link, this.controls});
+
+  final Widget label;
+  final Widget frame;
+  final Key? frameKey;
+  final Widget? link;
+  final Widget? controls;
 
   @override
   Widget build(BuildContext context) {
-    final wide = UpdatesPlacement.wideOf(context);
-    return ExcludeSemantics(
-      child: Column(
-        mainAxisSize: wide ? MainAxisSize.max : MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const UpdatesLabel(showChips: false, urgent: false, isNew: false),
-          const SizedBox(height: AppSpacing.s6),
-          AspectRatio(
-            aspectRatio: AppLimits.posterAspectRatio,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.r16),
-              child: ColoredBox(color: context.colors.surfaceMuted),
-            ),
+    final inCard = UpdatesPlacement.wideOf(context);
+    final link = this.link;
+    return Column(
+      mainAxisSize: inCard ? MainAxisSize.max : MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        label,
+        const SizedBox(height: AppSpacing.s6),
+        AspectRatio(
+          key: frameKey,
+          aspectRatio: AppLimits.posterAspectRatio,
+          child: ClipRRect(borderRadius: BorderRadius.circular(AppRadius.r16), child: frame),
+        ),
+        if (inCard) const Spacer(),
+        if (link != null)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.s6),
+            child: SizedBox(height: kMinInteractiveDimension, child: link),
           ),
-          if (wide) ...[const Spacer(), const SizedBox(height: kMinInteractiveDimension)],
-        ],
+        SizedBox(height: UpdatesMetrics.controlsRow, child: controls),
+      ],
+    );
+  }
+}
+
+/// G6, AN6: the Updates area while nothing is known yet (no answer, and no
+/// copy from an earlier visit on this device): the label row and a soft
+/// placeholder in the 16:9 frame, gently pulsing (still under reduced
+/// motion), in the same layout as the slides. Nothing to read in it.
+class UpdatesSkeleton extends StatefulWidget {
+  const UpdatesSkeleton({super.key});
+
+  @override
+  State<UpdatesSkeleton> createState() => _UpdatesSkeletonState();
+}
+
+class _UpdatesSkeletonState extends State<UpdatesSkeleton> with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(vsync: this, duration: AppMotion.loop);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pulse.value = 1;
+    } else if (!_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: UpdatesFrameLayout(
+        label: const UpdatesLabel(showChips: false, urgent: false, isNew: false),
+        frame: FadeTransition(
+          opacity: _pulse.drive(Tween(begin: AppAlpha.a50, end: 1)),
+          child: ColoredBox(color: context.colors.surfaceMuted),
+        ),
       ),
     );
   }
@@ -211,36 +267,23 @@ class UpdatesEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final wide = UpdatesPlacement.wideOf(context);
-    return Column(
-      mainAxisSize: wide ? MainAxisSize.max : MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const UpdatesLabel(showChips: false, urgent: false, isNew: false),
-        const SizedBox(height: AppSpacing.s6),
-        AspectRatio(
-          aspectRatio: AppLimits.posterAspectRatio,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.r16),
-            child: ColoredBox(
-              color: context.colors.surfaceMuted,
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.s16),
-                  child: Text(
-                    context.l10n.updates_empty,
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary),
-                  ),
-                ),
-              ),
+    return UpdatesFrameLayout(
+      label: const UpdatesLabel(showChips: false, urgent: false, isNew: false),
+      frame: ColoredBox(
+        color: context.colors.surfaceMuted,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.s16),
+            child: Text(
+              context.l10n.updates_empty,
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary),
             ),
           ),
         ),
-        if (wide) ...[const Spacer(), const SizedBox(height: kMinInteractiveDimension)],
-      ],
+      ),
     );
   }
 }
