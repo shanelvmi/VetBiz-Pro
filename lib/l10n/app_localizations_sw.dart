@@ -7054,12 +7054,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get updates_readMore => 'Soma zaidi';
 
   @override
-  String get updates_previous => 'Taarifa iliyotangulia';
-
-  @override
-  String get updates_next => 'Taarifa inayofuata';
-
-  @override
   String updates_slideOf(int index, int count) {
     return 'Slaidi $index kati ya $count';
   }

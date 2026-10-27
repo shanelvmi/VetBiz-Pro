@@ -7011,12 +7011,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updates_readMore => 'Read more';
 
   @override
-  String get updates_previous => 'Previous update';
-
-  @override
-  String get updates_next => 'Next update';
-
-  @override
   String updates_slideOf(int index, int count) {
     return 'Slide $index of $count';
   }

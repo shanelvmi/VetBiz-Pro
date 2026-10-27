@@ -11898,18 +11898,6 @@ abstract class AppLocalizations {
   /// **'Read more'**
   String get updates_readMore;
 
-  /// Arrow button and its tooltip: show the previous login update.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous update'**
-  String get updates_previous;
-
-  /// Arrow button and its tooltip: show the next login update.
-  ///
-  /// In en, this message translates to:
-  /// **'Next update'**
-  String get updates_next;
-
   /// Screen-reader label of a dot under the login updates (AN6: the owner's wording, was Update {index} of {count}).
   ///
   /// In en, this message translates to:
