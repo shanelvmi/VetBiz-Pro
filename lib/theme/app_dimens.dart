@@ -4,6 +4,8 @@
 /// near-duplicates is a separate, reviewed step (2R).
 library;
 
+import 'dart:ui' show Offset;
+
 /// Padding, margins and gaps (`EdgeInsets`, `SizedBox` up to 32).
 class AppSpacing {
   AppSpacing._();
@@ -409,4 +411,48 @@ class WizardMetrics {
 
   /// Terms checkbox: between the box and the sentence, and above the error.
   static const double consentGap = AppSpacing.s4;
+}
+
+/// The forms and pages that open as a full page below
+/// AppBreakpoints.medium and as a centred modal from it (showAdaptiveForm,
+/// lib/widgets/app_sheet.dart). The exact numbers of the 14 copies it
+/// replaced (PH2b); AdaptiveFormSize combines them per screen.
+class AdaptiveFormMetrics {
+  AdaptiveFormMetrics._();
+
+  /// Most forms: 60% of the window wide, at most 940; 88% high.
+  static const double widthFactor = 0.60;
+  static const double maxWidth = 940;
+  static const double heightFactor = 0.88;
+
+  /// Never shorter (the forms holding the fixed 480 px Browse Products).
+  static const double minHeight = 480;
+
+  /// Never taller (Add Client, Add Service, Add Transaction).
+  static const double cappedMaxHeight = 820;
+
+  /// The full report and the report review: 72% wide, 90% high.
+  static const double reportWidthFactor = 0.72;
+  static const double reportFullMaxWidth = 1100;
+  static const double reportReviewMaxWidth = 900;
+  static const double reportHeightFactor = 0.9;
+
+  /// The activity log: 85% of the window both ways.
+  static const double activityFactor = 0.85;
+
+  /// The modal rises 3% of its height and grows from 96% as it fades in.
+  static const Offset enterOffset = Offset(0, 0.03);
+  static const double enterScale = 0.96;
+}
+
+/// showAppSheet (lib/widgets/app_sheet.dart): a bottom sheet on phones, a
+/// dialog (AppSizes.dialogLg wide at most) on tablets and computers.
+class AppSheetMetrics {
+  AppSheetMetrics._();
+
+  /// The sheet never covers more of a phone's height than this.
+  static const double sheetMaxHeightFactor = 0.92;
+
+  /// The dialog never covers more of the window's height than this.
+  static const double dialogMaxHeightFactor = 0.88;
 }
