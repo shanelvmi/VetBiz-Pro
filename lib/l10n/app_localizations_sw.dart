@@ -7094,4 +7094,8 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get shell_nobodyOwes => 'Hakuna anayedaiwa kwa sasa.';
+
+  @override
+  String get error_screenFailed =>
+      'Kuna tatizo kwenye skrini hii. Rudi nyuma ujaribu tena.';
 }

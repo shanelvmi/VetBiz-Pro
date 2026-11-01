@@ -7049,4 +7049,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shell_nobodyOwes => 'Nobody owes money right now.';
+
+  @override
+  String get error_screenFailed =>
+      'Something went wrong on this screen. Go back and try again.';
 }

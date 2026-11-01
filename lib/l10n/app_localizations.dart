@@ -11969,6 +11969,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nobody owes money right now.'**
   String get shell_nobodyOwes;
+
+  /// Release builds only (FX1): the small card shown in place of a part of a screen that failed to draw, instead of Flutter's grey box.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong on this screen. Go back and try again.'**
+  String get error_screenFailed;
 }
 
 class _AppLocalizationsDelegate
