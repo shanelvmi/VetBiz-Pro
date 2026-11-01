@@ -29,6 +29,11 @@ import '../sales/sales_screen.dart';
 import 'more_screen.dart';
 import 'phone_shell.dart';
 import 'record_sheet.dart';
+import 'all_details_screen.dart';
+import 'needs_attention.dart';
+import 'phone_home.dart';
+import '../../theme/app_layout.dart';
+import '../products/stock_alerts_screen.dart';
 import '../transactions/transactions_screen.dart';
 import '../reports/view_reports_screen.dart';
 import '../facilities/facility_screen.dart';
@@ -568,6 +573,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     _urgentWatchSub?.cancel();
     _pendingWatchSub?.cancel();
     _periodTotalsSub?.cancel();
+    _changes.dispose();
     _bellFeed?.dispose();
     super.dispose();
   }
@@ -607,6 +613,55 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
   String? _lastLoadedFilter;
   StreamSubscription<DashboardPeriodTotals>? _periodTotalsSub;
+
+  // PH4: All details is a pushed route, so it does not rebuild with this
+  // state; it listens to this instead (setState below pings it).
+  final _DashboardChanges _changes = _DashboardChanges();
+
+  // PH4: the phone loads only what Home shows (dashboardLoadsFor); true until
+  // the rest has loaded, so a window widened to a tablet catches up.
+  bool _phoneLoadsOnly = false;
+
+  // The day the period totals were subscribed for: a return to Home after
+  // midnight subscribes again (the range would be yesterday's).
+  DateTime? _periodTotalsDay;
+
+  // The phone top bar's user document, made once (S9).
+  late final Stream<DocumentSnapshot> _userDocStream = userDoc.snapshots();
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _changes.ping();
+  }
+
+  DateTime _today() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  void _runLoads(String facilityId, Set<DashboardLoad> loads) {
+    if (loads.contains(DashboardLoad.periodTotals)) _loadPeriodTotals(facilityId);
+    if (loads.contains(DashboardLoad.previousPeriod)) _loadPreviousPeriodTotals(facilityId);
+    if (loads.contains(DashboardLoad.previousSnapshot)) _loadPreviousSnapshot(facilityId);
+    if (loads.contains(DashboardLoad.todayGlance)) _loadTodayGlance(facilityId);
+    if (loads.contains(DashboardLoad.chart)) _loadChartData(facilityId);
+    // recentActivity: the feed's own cached stream, made when it is built.
+  }
+
+  /// After a form, a pushed screen or a tab switch brings Home back. On a
+  /// phone the period totals are live, so nothing is read again (unless the
+  /// day changed); elsewhere, today's refresh.
+  void _returnToHome() {
+    final facilityId = _lastLoadedFacilityId;
+    if (!mounted || facilityId == null) return;
+    if (!AppLayout.isPhone(context)) {
+      _refreshDashboardData();
+      return;
+    }
+    _runLoads(facilityId, dashboardLoadsFor(DashboardMoment.returnToHome, phone: true));
+    if (_periodTotalsDay != _today()) _loadPeriodTotals(facilityId);
+  }
 
   // The immediately-preceding equivalent period's totals, for the
   // dashboard's trend indicators - a one-time fetch, not a live stream,
@@ -752,6 +807,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     if (!_hasLoadedDashboardOnce) setState(() => _isPeriodLoading = true);
 
     final (start, end) = _dateRangeForFilter(selectedFilter);
+    _periodTotalsDay = _today();
 
     // Cancel whatever was watching before - a stale subscription from
     // the previous facility/filter would otherwise keep emitting into
@@ -1084,12 +1140,18 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       _hasLoadedDashboardOnce = _lastLoadedFacilityId == currentFacilityId;
       _lastLoadedFacilityId = currentFacilityId;
       _lastLoadedFilter = selectedFilter;
+      // PH4: a phone loads only what Home shows; tablets and computers all
+      // five, as before.
+      final phone = AppLayout.isPhone(context);
+      _phoneLoadsOnly = phone;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _loadPeriodTotals(currentFacilityId);
-        _loadPreviousPeriodTotals(currentFacilityId);
-        _loadPreviousSnapshot(currentFacilityId);
-        _loadTodayGlance(currentFacilityId);
-        _loadChartData(currentFacilityId);
+        _runLoads(currentFacilityId, dashboardLoadsFor(DashboardMoment.periodChanged, phone: phone));
+      });
+    } else if (_phoneLoadsOnly && !AppLayout.isPhone(context)) {
+      // Widened past a phone: the cards' trends, the glance and the chart.
+      _phoneLoadsOnly = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _refreshDashboardData();
       });
     }
 
@@ -1491,13 +1553,33 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             ],
           );
 
-        // PH3: phones get the shell (Home is this same body for now; PH4
-        // replaces it); tablets and computers keep exactly today's layout.
+        // PH3: phones get the shell; PH4: its Home is the phone home, which
+        // reads nothing itself (the figures below come from this state's
+        // period totals and the app-level providers). Tablets and computers
+        // keep exactly today's layout.
+        final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
         return PhoneOrWide(
           phone: (_) => PhoneShell(
-            homeAppBar: appBar,
+            homeAppBar: _buildPhoneHomeAppBar(context),
             endDrawer: endDrawer,
-            home: (_) => body,
+            home: (homeContext) => PhoneHome(
+              figures: PhoneHomeFigures.from(_periodTotals,
+                  owed: debtProvider.totalOutstanding(), loading: _isPeriodLoading),
+              isAdmin: isAdmin,
+              period: selectedFilter,
+              onPeriodChanged: (val) => setState(() => selectedFilter = val),
+              attention: attentionCountsFor(
+                products: productProvider.products,
+                debts: debtProvider.debts,
+                overdueDays: facilityProvider.debtOverdueDays,
+              ),
+              onAllDetails: _openAllDetails,
+              onQuickAction: (action) => runRecordAction(homeContext, action, onDone: _returnToHome),
+              onViewAll: () => showRecordSheet(homeContext, all: true, isAdmin: isAdmin, onDone: _returnToHome),
+              onGoTo: (item) => _goTo(homeContext, item),
+              onAttention: (target) => _openAttention(homeContext, target),
+              overlay: _buildSubscriptionBanner(context),
+            ),
             sales: (_) => const SalesScreen(asTab: true),
             products: (_) => const ProductsScreen(asTab: true),
             more: (context) => FutureBuilder<bool>(
@@ -1505,14 +1587,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               builder: (context, snapshot) => MoreScreen(
                 isAdmin: Provider.of<UserRoleProvider>(context).isAdmin,
                 isPlatformAdmin: snapshot.data == true,
-                onReturned: _refreshDashboardData,
+                onReturned: _returnToHome,
               ),
             ),
-            onRecord: () => showRecordSheet(context, onDone: _refreshDashboardData),
-            // As after a module pushed from the drawer returns: Home's
-            // one-time reads (trends, glance, chart) catch up.
+            onRecord: () => showRecordSheet(context, onDone: _returnToHome),
             onTabChanged: (tab) {
-              if (tab == PhoneTab.home) _refreshDashboardData();
+              if (tab == PhoneTab.home) _returnToHome();
             },
           ),
           wide: (_) => Scaffold(
@@ -1746,11 +1826,113 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     );
   }
 
-  Widget _buildRecentActivityFeed() {
+  // --------------------- PH4: THE PHONE HOME ---------------------
+
+  /// Home's top bar on a phone: the avatar (the profile drawer), a small
+  /// greeting over the name with its title, the bell and Help.
+  PreferredSizeWidget _buildPhoneHomeAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: context.colors.surface,
+      elevation: AppElevation.e1,
+      automaticallyImplyLeading: false,
+      titleSpacing: AppSpacing.s8,
+      title: StreamBuilder<DocumentSnapshot>(
+        stream: _userDocStream,
+        builder: (context, snapshot) {
+          final data = _profileData(snapshot);
+          return PhoneHomeTopBar(
+            greeting: greetingTime(),
+            name: (data['fullName'] ?? '').toString(),
+            avatarUrl: data['avatarUrl'] as String?,
+            onAvatar: () => Scaffold.of(context).openEndDrawer(),
+          );
+        },
+      ),
+      actions: [
+        _buildAlertsBell(context),
+        IconButton(
+          icon: Icon(Icons.help_outline, color: context.colors.textPrimary, size: AppIconSize.i22),
+          tooltip: context.l10n.dashboard_help,
+          onPressed: () => showSupportContactDialog(context),
+        ),
+        const SizedBox(width: AppSpacing.s4),
+      ],
+    );
+  }
+
+  Future<void> _goTo(BuildContext context, GoToItem item) async {
+    final more = goToMoreItem(item);
+    if (more == null) {
+      // Products is a tab: switching keeps its place.
+      PhoneShell.selectTab(context, PhoneTab.products);
+      return;
+    }
+    await openMoreItem(context, more);
+    _returnToHome();
+  }
+
+  Future<void> _openAttention(BuildContext context, AttentionTarget target) async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => target == AttentionTarget.debtors ? DebtorsScreen() : const StockAlertsScreen(),
+    ));
+    _returnToHome();
+  }
+
+  /// All details: the chart and Recent Activity load now, not on Home.
+  Future<void> _openAllDetails() async {
+    final facilityId = _lastLoadedFacilityId;
+    if (facilityId != null) _runLoads(facilityId, dashboardLoadsFor(DashboardMoment.allDetailsOpened, phone: true));
+    final products = Provider.of<ProductProvider>(context, listen: false);
+    final debts = Provider.of<DebtProvider>(context, listen: false);
+    final clients = Provider.of<ClientProvider>(context, listen: false);
+    final role = Provider.of<UserRoleProvider>(context, listen: false);
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => AllDetailsScreen(
+        changes: Listenable.merge([_changes, products, debts, clients, role]),
+        figures: () => AllDetailsFigures(
+          totals: _periodTotals,
+          productValue: products.totalProductValue,
+          outstanding: debts.totalOutstanding(),
+          clients: clients.clients.length,
+          loading: _isPeriodLoading,
+        ),
+        isAdmin: () => role.isAdmin,
+        period: () => selectedFilter,
+        onPeriodChanged: (val) => setState(() => selectedFilter = val),
+        onOpen: _openDetailsTarget,
+        chart: (_) => _buildSalesRevenueChart(),
+        feed: (_) => _buildRecentActivityFeed(key: const ValueKey('all-details-feed'), isAdmin: role.isAdmin),
+      ),
+    ));
+    _returnToHome();
+  }
+
+  /// A row of All details opens the list its figure comes from.
+  Future<void> _openDetailsTarget(DetailsTarget target) async {
+    final more = switch (target) {
+      DetailsTarget.payments => MoreItem.payments,
+      DetailsTarget.reports => MoreItem.reports,
+      DetailsTarget.transactions => MoreItem.transactions,
+      DetailsTarget.debtors => MoreItem.debtors,
+      DetailsTarget.clients => MoreItem.clients,
+      DetailsTarget.services => MoreItem.services,
+      DetailsTarget.products || DetailsTarget.sales => null,
+    };
+    if (more != null) return openMoreItem(context, more);
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => target == DetailsTarget.products ? const ProductsScreen() : const SalesScreen(),
+    ));
+  }
+
+  // [key] and [isAdmin]: All details (PH4) builds its own copy from its page,
+  // where this state's context may not listen to a provider.
+  Widget _buildRecentActivityFeed({Key? key, bool? isAdmin}) {
     final facilityId = _lastLoadedFacilityId;
     return RecentActivityFeed(
-      key: _recentActivityFeedKey,
-      stream: facilityId == null ? null : _recentActivityStreamFor(facilityId, Provider.of<UserRoleProvider>(context).isAdmin),
+      key: key ?? _recentActivityFeedKey,
+      stream: facilityId == null
+          ? null
+          : _recentActivityStreamFor(facilityId, isAdmin ?? Provider.of<UserRoleProvider>(context).isAdmin),
       // A new stream (the cached one may have failed).
       onRetry: () => setState(() => _recentActivityStream = null),
     );
@@ -2672,4 +2854,9 @@ Widget _buildDrawerContent() {
     );
   }
 
+}
+
+/// PH4: pinged on every dashboard setState, for the All details page.
+class _DashboardChanges extends ChangeNotifier {
+  void ping() => notifyListeners();
 }
