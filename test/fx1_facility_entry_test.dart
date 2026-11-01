@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/fields.dart';
 import 'package:vetbiz_pro/models/facility_entry.dart';
 
-const _skip = true;
+const _skip = false;
 
 void main() {
   test('safeString: a String stays, a number or a bool becomes text, anything else null', () {
