@@ -16,6 +16,7 @@ import '../screens/dashboard/dashboard_screen.dart';
 import '../config/app_timeouts.dart';
 import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
+import '../theme/app_layout.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
@@ -67,7 +68,18 @@ Future<void> activateFacilityAndGoToDashboard({
   );
   facilityProvider.listenToFacility(facility[Fields.facilityId]);
 
-  productProvider.fetchProducts(facility[Fields.facilityId]);
+  // PH4b: on a phone the products are a live listener from here on, so the
+  // home's Needs attention strip hears a sale's stock change without
+  // Products or Stock Store being opened first (they used to be one get,
+  // live only once one of those screens had opened). Its first answer reads
+  // what the get read; afterwards only changed products. Tablets and
+  // computers keep the one get. resetAllUserProviders above (and on every
+  // sign-out) cancels it through ProductProvider.clear.
+  if (AppLayout.isPhone(context)) {
+    productProvider.listenToProducts(facility[Fields.facilityId]);
+  } else {
+    productProvider.fetchProducts(facility[Fields.facilityId]);
+  }
   saleProvider.init(facility[Fields.facilityId]);
   clientProvider.listenToClients(facility[Fields.facilityId]);
   serviceProvider.listenToServices(facility[Fields.facilityId]);

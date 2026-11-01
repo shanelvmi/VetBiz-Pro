@@ -37,7 +37,7 @@ import 'package:vetbiz_pro/utils/navigator_key.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/fake_firestore.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _phone = Size(390, 844);
 const _tablet = Size(1024, 768);
