@@ -1,18 +1,52 @@
 import '../../l10n/l10n.dart';
 import '../../services/dashboard_summary_service.dart';
 
-// PH4 stub: the API the tests are written against; implemented next.
-
+/// The dashboard's period choices. Stored and compared in English (the
+/// dashboard's selectedFilter); only [dashboardPeriodLabel] is shown.
 const dashboardPeriods = ['Today', 'This Week', 'This Month', 'This Year'];
 
-String dashboardPeriodLabel(AppLocalizations l, String period) => throw UnimplementedError();
+String dashboardPeriodLabel(AppLocalizations l, String period) => switch (period) {
+      'This Week' => l.payments_thisWeek,
+      'This Month' => l.payments_thisMonth,
+      'This Year' => l.export_thisYear,
+      _ => l.common_today,
+    };
 
+/// PH4: what the dashboard loads at each moment. Tablets and computers keep
+/// today's loads; on a phone, Home shows only the live period totals and the
+/// app-level providers, and the rest loads when All details opens
+/// (phone_shell.md section 2).
 enum DashboardLoad { periodTotals, previousPeriod, previousSnapshot, todayGlance, chart, recentActivity }
 
 enum DashboardMoment { coldOpen, periodChanged, returnToHome, allDetailsOpened }
 
-Set<DashboardLoad> dashboardLoadsFor(DashboardMoment moment, {required bool phone}) => throw UnimplementedError();
+Set<DashboardLoad> dashboardLoadsFor(DashboardMoment moment, {required bool phone}) {
+  const refresh = {
+    DashboardLoad.periodTotals,
+    DashboardLoad.previousPeriod,
+    DashboardLoad.previousSnapshot,
+    DashboardLoad.todayGlance,
+    DashboardLoad.chart,
+  };
+  if (!phone) {
+    return switch (moment) {
+      // The Recent Activity feed's stream is cached: made once, on the first open.
+      DashboardMoment.coldOpen => {...refresh, DashboardLoad.recentActivity},
+      DashboardMoment.periodChanged || DashboardMoment.returnToHome => refresh,
+      DashboardMoment.allDetailsOpened => const {},
+    };
+  }
+  return switch (moment) {
+    DashboardMoment.coldOpen || DashboardMoment.periodChanged => const {DashboardLoad.periodTotals},
+    // The period totals are live: nothing to fetch again.
+    DashboardMoment.returnToHome => const {},
+    DashboardMoment.allDetailsOpened => const {DashboardLoad.chart, DashboardLoad.recentActivity},
+  };
+}
 
+/// The Today card's figures, as the old cards show them: Sales, Collected
+/// and Net profit from the period totals, Owed from DebtProvider's
+/// totalOutstanding (everything owed now, the Outstanding Payment card).
 class PhoneHomeFigures {
   final double sales;
   final double collected;
@@ -20,9 +54,21 @@ class PhoneHomeFigures {
   final double netProfit;
   final bool loading;
 
-  const PhoneHomeFigures(
-      {required this.sales, required this.collected, required this.owed, required this.netProfit, this.loading = false});
+  const PhoneHomeFigures({
+    required this.sales,
+    required this.collected,
+    required this.owed,
+    required this.netProfit,
+    this.loading = false,
+  });
 
   factory PhoneHomeFigures.from(DashboardPeriodTotals totals, {required double owed, bool loading = false}) =>
-      throw UnimplementedError();
+      PhoneHomeFigures(
+        sales: totals.totalSales,
+        collected: totals.totalCollected,
+        owed: owed,
+        netProfit: totals.netProfit,
+        loading: loading,
+      );
 }
+
