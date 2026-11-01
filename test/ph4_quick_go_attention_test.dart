@@ -9,7 +9,7 @@ import 'package:vetbiz_pro/screens/dashboard/record_sheet.dart';
 
 import 'helpers/phone_home_harness.dart';
 
-const _skip = true; // PH4: until the phone home is implemented
+const _skip = false;
 
 void main() {
   group('Quick access', () {

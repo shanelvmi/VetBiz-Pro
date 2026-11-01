@@ -13,7 +13,7 @@ import 'package:vetbiz_pro/services/dashboard_summary_service.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true; // PH4: until the phone home is implemented
+const _skip = false;
 
 void main() {
   group('the phone home at phone sizes', () {
