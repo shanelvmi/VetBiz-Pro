@@ -7069,4 +7069,29 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get updates_empty => 'Hakuna jipya kwa sasa. Rudi baadaye.';
+
+  @override
+  String get shell_tabHome => 'Nyumbani';
+
+  @override
+  String get shell_tabMore => 'Zaidi';
+
+  @override
+  String get shell_record => 'Rekodi';
+
+  @override
+  String get shell_recordSheetTitle => 'Ungependa kurekodi nini?';
+
+  @override
+  String get shell_recordPaymentHint =>
+      'Pokea malipo kutoka kwa mteja anayedaiwa';
+
+  @override
+  String get shell_addClientHint => 'Ongeza mteja mpya kwenye kumbukumbu zako';
+
+  @override
+  String get shell_findingDebtors => 'Inatafuta wanaodaiwa…';
+
+  @override
+  String get shell_nobodyOwes => 'Hakuna anayedaiwa kwa sasa.';
 }

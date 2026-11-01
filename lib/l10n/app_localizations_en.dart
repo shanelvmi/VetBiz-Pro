@@ -7025,4 +7025,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updates_empty => 'Nothing new right now. Check back soon.';
+
+  @override
+  String get shell_tabHome => 'Home';
+
+  @override
+  String get shell_tabMore => 'More';
+
+  @override
+  String get shell_record => 'Record';
+
+  @override
+  String get shell_recordSheetTitle => 'What would you like to record?';
+
+  @override
+  String get shell_recordPaymentHint => 'Take a payment from a client who owes';
+
+  @override
+  String get shell_addClientHint => 'Add a new client to your records';
+
+  @override
+  String get shell_findingDebtors => 'Finding who owes money…';
+
+  @override
+  String get shell_nobodyOwes => 'Nobody owes money right now.';
 }

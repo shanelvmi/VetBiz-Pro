@@ -11921,6 +11921,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nothing new right now. Check back soon.'**
   String get updates_empty;
+
+  /// Phone bottom bar (PH3): the first tab, the dashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get shell_tabHome;
+
+  /// Phone bottom bar (PH3): the last tab, and the title of the More page of round icons.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get shell_tabMore;
+
+  /// Phone bottom bar (PH3): screen-reader label of the central round + button that opens the record sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get shell_record;
+
+  /// Phone (PH3): title of the sheet the central + opens (Record Sale, Record Visit, Record Payment, Add Client).
+  ///
+  /// In en, this message translates to:
+  /// **'What would you like to record?'**
+  String get shell_recordSheetTitle;
+
+  /// Phone + sheet (PH3): the line under Record Payment.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a payment from a client who owes'**
+  String get shell_recordPaymentHint;
+
+  /// Phone + sheet (PH3): the line under Add Client.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a new client to your records'**
+  String get shell_addClientHint;
+
+  /// Phone + sheet (PH3): the line under Record Payment while the debtors load.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding who owes money…'**
+  String get shell_findingDebtors;
+
+  /// Phone + sheet (PH3): the line under Record Payment when no client owes anything, so there is no payment to take.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody owes money right now.'**
+  String get shell_nobodyOwes;
 }
 
 class _AppLocalizationsDelegate
