@@ -13,7 +13,8 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
+const _skipMore = true;
 
 const _rows = ['Record Sale', 'Record Visit', 'Record Payment', 'Add Client'];
 
@@ -61,6 +62,8 @@ Future<_Log> _openSheet(WidgetTester tester, {bool locked = false}) async {
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   final log = _Log();
+  // A fresh app each time: a sheet left open by the last call must not stay.
+  await tester.pumpWidget(const SizedBox());
   await tester.pumpWidget(_app(Scaffold(
     body: Builder(
       builder: (context) => TextButton(
@@ -165,7 +168,7 @@ void main() {
     ]);
     expect(moreItemsFor(isAdmin: true, isPlatformAdmin: true), [...admin, MoreItem.platformAdmin]);
     expect(moreItemsFor(isAdmin: false, isPlatformAdmin: true).last, MoreItem.platformAdmin);
-  }, skip: _skip);
+  }, skip: _skipMore);
 
   testWidgets('More as an assistant shows no admin label; a tap opens the item', (tester) async {
     final opened = <MoreItem>[];
@@ -179,23 +182,24 @@ void main() {
     await tester.tap(find.text('Stock Store'));
     await tester.pump();
     expect(opened, [MoreItem.stockStore]);
-  }, skip: _skip);
+  }, skip: _skipMore);
 
   testWidgets('More: four a row at 360 and 390', (tester) async {
     for (final width in [360.0, 390.0]) {
       tester.view.physicalSize = Size(width, 800);
       tester.view.devicePixelRatio = 1;
       await tester.pumpWidget(_app(MoreScreen(isAdmin: true, onOpen: (_, __) async {})));
-      final y = tester.getCenter(find.text('Clients')).dy;
-      final firstRow = ['Clients', 'Debtors', 'Services', 'Payments'].map((t) => tester.getCenter(find.text(t)).dy);
+      // Tops, not centres: a label may take one line or two.
+      final y = tester.getTopLeft(find.text('Clients')).dy;
+      final firstRow = ['Clients', 'Debtors', 'Services', 'Payments'].map((t) => tester.getTopLeft(find.text(t)).dy);
       expect(firstRow, everyElement(y));
-      expect(tester.getCenter(find.text('Transactions')).dy, greaterThan(y));
+      expect(tester.getTopLeft(find.text('Transactions')).dy, greaterThan(y));
     }
     tester.view.reset();
-  }, skip: _skip);
+  }, skip: _skipMore);
 
   final stub = {for (final s in matrixSizes) for (final l in MatrixLook.values) matrixCase(s, l): 'stub', matrixTextScaleCase: 'stub'};
   screenSizeMatrix('+ sheet', screen: () => const _SheetOpener(), skip: _skip ? stub : const {});
   screenSizeMatrix('More page (admin)',
-      screen: () => MoreScreen(isAdmin: true, isPlatformAdmin: true, onOpen: (_, __) async {}), skip: _skip ? stub : const {});
+      screen: () => MoreScreen(isAdmin: true, isPlatformAdmin: true, onOpen: (_, __) async {}), skip: _skipMore ? stub : const {});
 }
