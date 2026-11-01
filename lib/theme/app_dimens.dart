@@ -6,6 +6,8 @@ library;
 
 import 'dart:ui' show Offset;
 
+import 'app_text.dart' show AppFontSize;
+
 /// Padding, margins and gaps (`EdgeInsets`, `SizedBox` up to 32).
 class AppSpacing {
   AppSpacing._();
@@ -455,4 +457,53 @@ class AppSheetMetrics {
 
   /// The dialog never covers more of the window's height than this.
   static const double dialogMaxHeightFactor = 0.88;
+}
+
+/// The phone shell (PH3, docs/design/phone_shell.md section 3): the bottom
+/// bar, its raised "+", the "+" sheet and the More page. Every size lives
+/// here, so the owner's later style changes are made in one place; colours
+/// come from the context.colors roles.
+class PhoneShellMetrics {
+  PhoneShellMetrics._();
+
+  /// The bar, above the home indicator (AppSafeArea.bottomOf is added), and
+  /// its top border (borderStrong).
+  static const double barHeight = 64;
+  static const double barBorder = 1;
+
+  /// A bar item: icon, label (one line), and the pill behind the selected
+  /// item's icon (primary at 12%).
+  static const double barIcon = AppIconSize.i24;
+  static const double barLabel = AppFontSize.f12;
+  static const double barLabelGap = AppSpacing.s2;
+  static const double pillWidth = 56;
+  static const double pillHeight = 32;
+  static const double pillRadius = AppRadius.r16;
+  static const double pillAlpha = 0.12;
+
+  /// The central "+": a circle in accent, raised so [recordRaise] px sit
+  /// above the bar's top edge; the whole slot is its tap target.
+  static const double recordSize = 56;
+  static const double recordIcon = 28;
+  static const double recordRaise = 20;
+  static const double recordElevation = AppElevation.e6;
+
+  /// The "+" sheet's rows.
+  static const double sheetRowHeight = 64;
+  static const double sheetIconCircle = 40;
+  static const double sheetIcon = AppIconSize.i22;
+  static const double sheetLabel = AppFontSize.f16;
+  static const double sheetHint = AppFontSize.f13;
+  static const double sheetGap = AppSpacing.s12;
+  static const double sheetSpinner = AppIconSize.i20;
+
+  /// The More page: a grid of round icons, four a row on a phone.
+  static const int moreColumns = 4;
+  static const double moreCellWidth = 80;
+  static const double moreCellHeight = 100;
+  static const double moreCircle = 56;
+  static const double moreIcon = AppIconSize.i24;
+  static const double moreLabel = AppFontSize.f12;
+  static const double moreLabelGap = AppSpacing.s4;
+  static const double morePadding = AppSpacing.s16;
 }
