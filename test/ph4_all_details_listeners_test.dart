@@ -19,7 +19,7 @@ import 'package:vetbiz_pro/services/sales_summary_service.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true; // PH4: until All details and the loads are implemented
+const _skip = false;
 
 const _totals = DashboardPeriodTotals(
   totalSales: 12500,
