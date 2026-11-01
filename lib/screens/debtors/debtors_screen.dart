@@ -11,6 +11,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../models/client.dart';
+import '../../services/debtor_clients_service.dart';
 import '../../models/debt.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/client_provider.dart';
@@ -405,17 +406,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   /// debtor, not just whichever page the main list has loaded. A
   /// deliberate, infrequent action, so loading everyone once here is
   /// an acceptable trade-off, unlike the main browsing list itself.
-  Future<List<Client>> _fetchAllDebtorClients() async {
-    final facilityId = _facilityId;
-    if (facilityId == null) return [];
-    final snap = await _db
-        .collection(Collections.facilities)
-        .doc(facilityId)
-        .collection(Collections.clients)
-        .where('balance', isGreaterThan: 0)
-        .get();
-    return snap.docs.map((d) => Client.fromMap(d.id, d.data())).toList();
-  }
+  // The fetch itself is shared with the phone's "+" sheet (PH3).
+  Future<List<Client>> _fetchAllDebtorClients() => fetchAllDebtorClients(_db, _facilityId);
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(

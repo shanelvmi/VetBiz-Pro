@@ -23,7 +23,7 @@ import 'package:vetbiz_pro/services/debtor_clients_service.dart';
 import 'helpers/fake_firestore.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 class _NoAuth implements AuthService {
   @override
