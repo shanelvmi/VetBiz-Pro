@@ -53,6 +53,10 @@ class PhoneShell extends StatefulWidget {
 
   @override
   State<PhoneShell> createState() => _PhoneShellState();
+
+  /// PH4: switches the shell around [context] to [tab] (Go to's Products).
+  static void selectTab(BuildContext context, PhoneTab tab) =>
+      context.findAncestorStateOfType<_PhoneShellState>()?._select(tab);
 }
 
 class _PhoneShellState extends State<PhoneShell> {

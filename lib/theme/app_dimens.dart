@@ -507,3 +507,52 @@ class PhoneShellMetrics {
   static const double moreLabelGap = AppSpacing.s4;
   static const double morePadding = AppSpacing.s16;
 }
+
+/// PH4: the phone home and All details (docs/design/phone_shell.md D2, D4
+/// and section 3). Colours come from context.colors roles only.
+class PhoneHomeMetrics {
+  PhoneHomeMetrics._();
+
+  /// The greeting top bar: avatar, a small greeting over the name.
+  static const double avatar = 40;
+  static const double greeting = AppFontSize.f13;
+  static const double name = AppFontSize.f16;
+
+  /// The page: side padding, the gap between sections, section titles and
+  /// their "View all" / "All details" links (48 high).
+  static const double pagePadding = AppSpacing.s16;
+  static const double sectionGap = AppSpacing.s16;
+  static const double sectionTitle = AppFontSize.f15;
+  static const double linkHeight = 48;
+
+  /// The Today card: Sales large, then two or three small figures.
+  static const double cardPadding = AppSpacing.s16;
+  static const double cardRadius = AppRadius.r16;
+  static const double salesValue = AppFontSize.f28;
+  static const double statValue = AppFontSize.f15;
+  static const double label = AppFontSize.f12;
+  static const double statGap = AppSpacing.s8;
+  static const double chipHeight = 36;
+  static const double chipIcon = AppIconSize.i16;
+
+  /// Quick access: four tiles in a row.
+  static const double tileHeight = 92;
+  static const double tileGap = AppSpacing.s8;
+  static const double tileCircle = 44;
+  static const double tileIcon = AppIconSize.i22;
+
+  /// Go to: a sideways list of round shortcuts, faded at the edge.
+  static const double goToHeight = 104;
+  static const double goToItemWidth = 72;
+  static const double goToCircle = 56;
+  static const double goToIcon = AppIconSize.i24;
+  static const double goToFade = 32;
+
+  /// Needs attention and All details: rows 56 high.
+  static const double rowHeight = 56;
+  static const double rowIcon = AppIconSize.i22;
+  static const double rowLabel = AppFontSize.f14;
+  static const double rowValue = AppFontSize.f15;
+  static const double countChipPadding = AppSpacing.s8;
+  static const double circleAlpha = 0.12;
+}

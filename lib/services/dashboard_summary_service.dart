@@ -61,8 +61,13 @@ class DashboardPeriodTotals {
 /// figures - mirrors the same "read a handful of daily docs, not every
 /// raw record" approach used by SalesSummaryService.
 class DashboardSummaryService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final SalesSummaryService _salesSummaryService = SalesSummaryService();
+  final FirebaseFirestore _firestore;
+  final SalesSummaryService _salesSummaryService;
+
+  // [firestore] is for tests (PH4 counts the dashboard's reads on a fake).
+  DashboardSummaryService({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _salesSummaryService = SalesSummaryService(firestore: firestore);
 
   String _fmt(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
