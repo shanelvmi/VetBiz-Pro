@@ -3949,5 +3949,7 @@
   "shell_findingDebtors": "Finding who owes money…",
   "@shell_findingDebtors": {"description":"Phone + sheet (PH3): the line under Record Payment while the debtors load."},
   "shell_nobodyOwes": "Nobody owes money right now.",
-  "@shell_nobodyOwes": {"description":"Phone + sheet (PH3): the line under Record Payment when no client owes anything, so there is no payment to take."}
+  "@shell_nobodyOwes": {"description":"Phone + sheet (PH3): the line under Record Payment when no client owes anything, so there is no payment to take."},
+  "error_screenFailed": "Something went wrong on this screen. Go back and try again.",
+  "@error_screenFailed": {"description":"Release builds only (FX1): the small card shown in place of a part of a screen that failed to draw, instead of Flutter's grey box."}
 }

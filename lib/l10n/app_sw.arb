@@ -3949,5 +3949,7 @@
   "shell_findingDebtors": "Inatafuta wanaodaiwa…",
   "@shell_findingDebtors": {"x-review":"draft"},
   "shell_nobodyOwes": "Hakuna anayedaiwa kwa sasa.",
-  "@shell_nobodyOwes": {"x-review":"draft"}
+  "@shell_nobodyOwes": {"x-review":"draft"},
+  "error_screenFailed": "Kuna tatizo kwenye skrini hii. Rudi nyuma ujaribu tena.",
+  "@error_screenFailed": {"x-review":"draft"}
 }

@@ -1980,3 +1980,4 @@ shell_recordPaymentHint,Take a payment from a client who owes,Pokea malipo kutok
 shell_addClientHint,Add a new client to your records,Ongeza mteja mpya kwenye kumbukumbu zako,Phone + sheet (PH3): the line under Add Client.,draft
 shell_findingDebtors,Finding who owes money…,Inatafuta wanaodaiwa…,Phone + sheet (PH3): the line under Record Payment while the debtors load.,draft
 shell_nobodyOwes,Nobody owes money right now.,Hakuna anayedaiwa kwa sasa.,"Phone + sheet (PH3): the line under Record Payment when no client owes anything, so there is no payment to take.",draft
+error_screenFailed,Something went wrong on this screen. Go back and try again.,Kuna tatizo kwenye skrini hii. Rudi nyuma ujaribu tena.,"Release builds only (FX1): the small card shown in place of a part of a screen that failed to draw, instead of Flutter's grey box.",draft

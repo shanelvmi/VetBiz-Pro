@@ -1973,5 +1973,6 @@
   "shell_recordPaymentHint": ["Pokea malipo kutoka kwa mteja anayedaiwa","Phone + sheet (PH3): the line under Record Payment.","draft"],
   "shell_addClientHint": ["Ongeza mteja mpya kwenye kumbukumbu zako","Phone + sheet (PH3): the line under Add Client.","draft"],
   "shell_findingDebtors": ["Inatafuta wanaodaiwa…","Phone + sheet (PH3): the line under Record Payment while the debtors load.","draft"],
-  "shell_nobodyOwes": ["Hakuna anayedaiwa kwa sasa.","Phone + sheet (PH3): the line under Record Payment when no client owes anything, so there is no payment to take.","draft"]
+  "shell_nobodyOwes": ["Hakuna anayedaiwa kwa sasa.","Phone + sheet (PH3): the line under Record Payment when no client owes anything, so there is no payment to take.","draft"],
+  "error_screenFailed": ["Kuna tatizo kwenye skrini hii. Rudi nyuma ujaribu tena.","Release builds only (FX1): the small card shown in place of a part of a screen that failed to draw, instead of Flutter's grey box.","draft"]
 }
