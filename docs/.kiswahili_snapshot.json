@@ -1965,5 +1965,13 @@
   "updates_slideOf": ["Slaidi {index} kati ya {count}","Screen-reader label of a dot under the login updates (AN6: the owner's wording, was Update {index} of {count}).","draft"],
   "updates_welcomeTitle": ["Karibu {appName}","Login page, wide windows: the heading of the welcome note at the top of the Updates card, beside the sign-in card's Welcome back (AN4).","draft"],
   "updates_welcomeLine": ["Fuatilia habari na taarifa zetu za hivi punde.","Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; AN5: the owner's line about the Updates).","draft"],
-  "updates_empty": ["Hakuna jipya kwa sasa. Rudi baadaye.","Login page: the calm panel in the Updates slide frame when there are no updates for this language (AN6).","draft"]
+  "updates_empty": ["Hakuna jipya kwa sasa. Rudi baadaye.","Login page: the calm panel in the Updates slide frame when there are no updates for this language (AN6).","draft"],
+  "shell_tabHome": ["Nyumbani","Phone bottom bar (PH3): the first tab, the dashboard.","draft"],
+  "shell_tabMore": ["Zaidi","Phone bottom bar (PH3): the last tab, and the title of the More page of round icons.","draft"],
+  "shell_record": ["Rekodi","Phone bottom bar (PH3): screen-reader label of the central round + button that opens the record sheet.","draft"],
+  "shell_recordSheetTitle": ["Ungependa kurekodi nini?","Phone (PH3): title of the sheet the central + opens (Record Sale, Record Visit, Record Payment, Add Client).","draft"],
+  "shell_recordPaymentHint": ["Pokea malipo kutoka kwa mteja anayedaiwa","Phone + sheet (PH3): the line under Record Payment.","draft"],
+  "shell_addClientHint": ["Ongeza mteja mpya kwenye kumbukumbu zako","Phone + sheet (PH3): the line under Add Client.","draft"],
+  "shell_findingDebtors": ["Inatafuta wanaodaiwa…","Phone + sheet (PH3): the line under Record Payment while the debtors load.","draft"],
+  "shell_nobodyOwes": ["Hakuna anayedaiwa kwa sasa.","Phone + sheet (PH3): the line under Record Payment when no client owes anything, so there is no payment to take.","draft"]
 }

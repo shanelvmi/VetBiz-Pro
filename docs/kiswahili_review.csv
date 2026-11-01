@@ -1972,3 +1972,11 @@ updates_slideOf,Slide {index} of {count},Slaidi {index} kati ya {count},"Screen-
 updates_welcomeTitle,Welcome to {appName},Karibu {appName},"Login page, wide windows: the heading of the welcome note at the top of the Updates card, beside the sign-in card's Welcome back (AN4).",draft
 updates_welcomeLine,Track our latest news and notices.,Fuatilia habari na taarifa zetu za hivi punde.,"Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; AN5: the owner's line about the Updates).",draft
 updates_empty,Nothing new right now. Check back soon.,Hakuna jipya kwa sasa. Rudi baadaye.,Login page: the calm panel in the Updates slide frame when there are no updates for this language (AN6).,draft
+shell_tabHome,Home,Nyumbani,"Phone bottom bar (PH3): the first tab, the dashboard.",draft
+shell_tabMore,More,Zaidi,"Phone bottom bar (PH3): the last tab, and the title of the More page of round icons.",draft
+shell_record,Record,Rekodi,Phone bottom bar (PH3): screen-reader label of the central round + button that opens the record sheet.,draft
+shell_recordSheetTitle,What would you like to record?,Ungependa kurekodi nini?,"Phone (PH3): title of the sheet the central + opens (Record Sale, Record Visit, Record Payment, Add Client).",draft
+shell_recordPaymentHint,Take a payment from a client who owes,Pokea malipo kutoka kwa mteja anayedaiwa,Phone + sheet (PH3): the line under Record Payment.,draft
+shell_addClientHint,Add a new client to your records,Ongeza mteja mpya kwenye kumbukumbu zako,Phone + sheet (PH3): the line under Add Client.,draft
+shell_findingDebtors,Finding who owes money…,Inatafuta wanaodaiwa…,Phone + sheet (PH3): the line under Record Payment while the debtors load.,draft
+shell_nobodyOwes,Nobody owes money right now.,Hakuna anayedaiwa kwa sasa.,"Phone + sheet (PH3): the line under Record Payment when no client owes anything, so there is no payment to take.",draft

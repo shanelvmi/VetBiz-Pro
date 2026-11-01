@@ -3933,5 +3933,21 @@
   "updates_welcomeLine": "Track our latest news and notices.",
   "@updates_welcomeLine": {"description":"Login page, wide windows: the plain line under the welcome heading in the Updates card (AN4; AN5: the owner's line about the Updates)."},
   "updates_empty": "Nothing new right now. Check back soon.",
-  "@updates_empty": {"description":"Login page: the calm panel in the Updates slide frame when there are no updates for this language (AN6)."}
+  "@updates_empty": {"description":"Login page: the calm panel in the Updates slide frame when there are no updates for this language (AN6)."},
+  "shell_tabHome": "Home",
+  "@shell_tabHome": {"description":"Phone bottom bar (PH3): the first tab, the dashboard."},
+  "shell_tabMore": "More",
+  "@shell_tabMore": {"description":"Phone bottom bar (PH3): the last tab, and the title of the More page of round icons."},
+  "shell_record": "Record",
+  "@shell_record": {"description":"Phone bottom bar (PH3): screen-reader label of the central round + button that opens the record sheet."},
+  "shell_recordSheetTitle": "What would you like to record?",
+  "@shell_recordSheetTitle": {"description":"Phone (PH3): title of the sheet the central + opens (Record Sale, Record Visit, Record Payment, Add Client)."},
+  "shell_recordPaymentHint": "Take a payment from a client who owes",
+  "@shell_recordPaymentHint": {"description":"Phone + sheet (PH3): the line under Record Payment."},
+  "shell_addClientHint": "Add a new client to your records",
+  "@shell_addClientHint": {"description":"Phone + sheet (PH3): the line under Add Client."},
+  "shell_findingDebtors": "Finding who owes money…",
+  "@shell_findingDebtors": {"description":"Phone + sheet (PH3): the line under Record Payment while the debtors load."},
+  "shell_nobodyOwes": "Nobody owes money right now.",
+  "@shell_nobodyOwes": {"description":"Phone + sheet (PH3): the line under Record Payment when no client owes anything, so there is no payment to take."}
 }

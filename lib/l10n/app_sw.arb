@@ -3933,5 +3933,21 @@
   "updates_welcomeLine": "Fuatilia habari na taarifa zetu za hivi punde.",
   "@updates_welcomeLine": {"x-review":"draft"},
   "updates_empty": "Hakuna jipya kwa sasa. Rudi baadaye.",
-  "@updates_empty": {"x-review":"draft"}
+  "@updates_empty": {"x-review":"draft"},
+  "shell_tabHome": "Nyumbani",
+  "@shell_tabHome": {"x-review":"draft"},
+  "shell_tabMore": "Zaidi",
+  "@shell_tabMore": {"x-review":"draft"},
+  "shell_record": "Rekodi",
+  "@shell_record": {"x-review":"draft"},
+  "shell_recordSheetTitle": "Ungependa kurekodi nini?",
+  "@shell_recordSheetTitle": {"x-review":"draft"},
+  "shell_recordPaymentHint": "Pokea malipo kutoka kwa mteja anayedaiwa",
+  "@shell_recordPaymentHint": {"x-review":"draft"},
+  "shell_addClientHint": "Ongeza mteja mpya kwenye kumbukumbu zako",
+  "@shell_addClientHint": {"x-review":"draft"},
+  "shell_findingDebtors": "Inatafuta wanaodaiwa…",
+  "@shell_findingDebtors": {"x-review":"draft"},
+  "shell_nobodyOwes": "Hakuna anayedaiwa kwa sasa.",
+  "@shell_nobodyOwes": {"x-review":"draft"}
 }
