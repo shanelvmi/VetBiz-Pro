@@ -72,3 +72,20 @@ class PhoneHomeFigures {
       );
 }
 
+
+/// The eight dashboard figures, in the grid's order (the tablet and computer
+/// cards; on a phone, the rows of All details).
+enum DashboardFigure { productValue, sales, collected, netProfit, expenses, outstanding, clients, services }
+
+/// PH4b: the figures a role is shown, on the grid and in All details alike.
+/// Total Expenses is for admins only: with Sales and Collected it would let
+/// an assistant work out the Net Profit that is masked for them. A display
+/// rule only: the summaries stay readable by members under firestore.rules.
+List<DashboardFigure> dashboardFiguresFor({required bool isAdmin}) => [
+      for (final f in DashboardFigure.values)
+        if (isAdmin || f != DashboardFigure.expenses) f,
+    ];
+
+/// Whether [isAdmin]'s grid card or All details row for [figure] is drawn.
+bool dashboardShowsFigure(DashboardFigure figure, {required bool isAdmin}) =>
+    dashboardFiguresFor(isAdmin: isAdmin).contains(figure);

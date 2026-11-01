@@ -114,8 +114,9 @@ void main() {
       expect(find.text('*****'), findsOneWidget);
       expect(find.textContaining('Earned'), findsNothing);
       expect(find.textContaining('Pending'), findsNothing);
-      // Today's rule shows assistants Total Expenses (the card has no gate).
-      expect(find.text('Total Expenses (Today)'), findsOneWidget);
+      // PH4b (the owner's decision): no Total Expenses for assistants either
+      // (ph4b_expenses_rows_test.dart).
+      expect(find.text('Total Expenses (Today)'), findsNothing);
     }, skip: _skip);
 
     group('sizes and looks: no overflow, 48 px targets, no truncated title', () {

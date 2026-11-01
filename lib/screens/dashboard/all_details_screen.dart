@@ -6,6 +6,7 @@ import '../../services/dashboard_summary_service.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import 'more_screen.dart' show MoreItem;
 import 'phone_home.dart';
 
 /// The screen a row opens. Today's cards open nothing, so each row opens the
@@ -40,10 +41,11 @@ class DetailRow {
   const DetailRow(this.label, this.value, this.target, {this.earned, this.pending});
 }
 
-/// The eight cards as rows, with today's titles and today's role rule: an
+/// The eight cards as rows, with today's titles and the cards' role rule: an
 /// assistant's Net Profit is masked, with no Earned and Pending (the card
-/// masks the figure, its trend and its breakdown); every other row is shown
-/// to both roles, as the cards are.
+/// masks the figure, its trend and its breakdown), and Total Expenses is
+/// left out (PH4b, dashboardShowsFigure); every other row is shown to both
+/// roles, as the cards are.
 List<DetailRow> allDetailRows(AppLocalizations l, AllDetailsFigures f, {required bool isAdmin, required String period}) {
   final label = dashboardPeriodLabel(l, period);
   final t = f.totals;
@@ -60,12 +62,25 @@ List<DetailRow> allDetailRows(AppLocalizations l, AllDetailsFigures f, {required
             pending: (l.dashboard_profitPending, Money.format(t.totalUnrealizedProfit)),
           )
         : DetailRow(l.dashboard_netProfit(label), '*****', DetailsTarget.reports),
-    DetailRow(l.dashboard_totalExpenses(label), Money.format(t.totalExpenses), DetailsTarget.transactions),
+    if (dashboardShowsFigure(DashboardFigure.expenses, isAdmin: isAdmin))
+      DetailRow(l.dashboard_totalExpenses(label), Money.format(t.totalExpenses), DetailsTarget.transactions),
     DetailRow(l.dashboard_outstandingPayment, Money.format(f.outstanding), DetailsTarget.debtors),
     DetailRow(l.clients_total, '${f.clients}', DetailsTarget.clients),
     DetailRow(l.dashboard_completedServices(label), '${t.completedServicesCount}', DetailsTarget.services),
   ];
 }
+
+/// The More place a row opens; null for Products and Sales, which open their
+/// own screens (the bar's tabs). Every place is in both roles' More.
+MoreItem? detailsTargetMoreItem(DetailsTarget target) => switch (target) {
+      DetailsTarget.payments => MoreItem.payments,
+      DetailsTarget.reports => MoreItem.reports,
+      DetailsTarget.transactions => MoreItem.transactions,
+      DetailsTarget.debtors => MoreItem.debtors,
+      DetailsTarget.clients => MoreItem.clients,
+      DetailsTarget.services => MoreItem.services,
+      DetailsTarget.products || DetailsTarget.sales => null,
+    };
 
 /// PH4 (phone_shell.md D4): All details, a full page over the bar. The
 /// period chip, the eight figures as a full-width list (titles wrap, never

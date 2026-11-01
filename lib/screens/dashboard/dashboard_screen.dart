@@ -1428,6 +1428,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                               )
                                             : null,
                                       ),
+                                      // PH4b: admins only, as in All details
+                                      // (dashboardShowsFigure): with Sales and
+                                      // Collected it gives the masked Net Profit.
+                                      if (dashboardShowsFigure(DashboardFigure.expenses,
+                                          isAdmin: Provider.of<UserRoleProvider>(context).isAdmin))
                                       SummaryCard(
                                         title: context.l10n.dashboard_totalExpenses(_periodLabel(selectedFilter)),
                                         value: Money.format(_periodTotals.totalExpenses),
@@ -1909,15 +1914,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
   /// A row of All details opens the list its figure comes from.
   Future<void> _openDetailsTarget(DetailsTarget target) async {
-    final more = switch (target) {
-      DetailsTarget.payments => MoreItem.payments,
-      DetailsTarget.reports => MoreItem.reports,
-      DetailsTarget.transactions => MoreItem.transactions,
-      DetailsTarget.debtors => MoreItem.debtors,
-      DetailsTarget.clients => MoreItem.clients,
-      DetailsTarget.services => MoreItem.services,
-      DetailsTarget.products || DetailsTarget.sales => null,
-    };
+    final more = detailsTargetMoreItem(target);
     if (more != null) return openMoreItem(context, more);
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => target == DetailsTarget.products ? const ProductsScreen() : const SalesScreen(),
