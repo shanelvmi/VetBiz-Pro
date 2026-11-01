@@ -15,10 +15,6 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
 const _failsToday = {
-  'Select Facility: two Map<dynamic, dynamic> items as the web gives them',
-  'Select Facility: the arguments themselves a Map<dynamic, dynamic>',
-  'Select Facility: odd names, types and details',
-  'Select Facility: ids missing, a number or a map; a non-map item',
   'Facility picker at 390: two facilities',
   'Facility picker at 390: odd names, types and details',
   'Facility picker at 1200: odd names, types and details',

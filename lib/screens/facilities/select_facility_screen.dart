@@ -16,6 +16,7 @@ import '../../providers/user_role_provider.dart';
 import '../../utils/provider_reset.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
+import '../../models/facility_entry.dart';
 import '../../config/app_timeouts.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
@@ -33,7 +34,7 @@ class SelectFacilityScreen extends StatefulWidget {
 }
 
 class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
-  List<Map<String, dynamic>> facilities = [];
+  List<FacilityEntry> facilities = [];
   String? selectedFacilityId;
   bool isLoading = true;
   String? loadError;
@@ -56,11 +57,14 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
     });
 
     try {
-      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
-      final argFacilities = (args?['facilities'] as List?)?.cast<Map<String, dynamic>>();
-      role = args?[Fields.role] as String?;
+      // Read as untyped as they come (FX1): on the web the arguments and each
+      // facility can be a Map<dynamic, dynamic>, and the old casts threw.
+      final rawArgs = ModalRoute.of(context)?.settings.arguments;
+      final args = rawArgs is Map ? rawArgs : null;
+      final argFacilities = FacilityEntry.listFrom(args?['facilities']);
+      role = FacilityEntry.safeString(args?[Fields.role]);
 
-      if (argFacilities != null && argFacilities.isNotEmpty) {
+      if (argFacilities.isNotEmpty) {
         facilities = argFacilities;
       } else {
         final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -70,17 +74,9 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
               .doc(uid)
               .get()
               .timeout(AppTimeouts.facilityLoad);
-          role = userDoc.data()?[Fields.role] ?? role;
+          role = FacilityEntry.safeString(userDoc.data()?[Fields.role]) ?? role;
 
-          facilities = (userDoc.data()?['facilities'] as List<dynamic>?)
-                  ?.map((f) => {
-                        Fields.facilityId: f[Fields.facilityId],
-                        'facilityName': f['name'],
-                        'facilityType': f['type'],
-                        'facilityTypeDetail': f['typeDetail'],
-                      })
-                  .toList() ??
-              [];
+          facilities = FacilityEntry.listFrom(userDoc.data()?['facilities']);
         }
       }
 
@@ -98,7 +94,8 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
     }
   }
 
-  void _selectFacility(Map<String, dynamic> facility) {
+  void _selectFacility(FacilityEntry facility) {
+    final facilityId = facility.id!; // listFrom keeps only entries with an id
     final facilityProvider = context.read<FacilityProvider>();
     final productProvider = context.read<ProductProvider>();
     final saleProvider = context.read<SaleProvider>();
@@ -116,20 +113,20 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
 
     // Set selected facility
     facilityProvider.setFacility(
-      id: facility[Fields.facilityId],
-      name: facility['facilityName'],
-      type: facility['facilityType'],
-      typeDetail: facility['facilityTypeDetail'],
+      id: facilityId,
+      name: facility.name ?? '',
+      type: facility.type ?? '',
+      typeDetail: facility.typeDetail,
     );
 
     // Listen to real-time updates
-    productProvider.fetchProducts(facility[Fields.facilityId]); // fetch products immediately
-    saleProvider.init(facility[Fields.facilityId]); // real-time sales
-    clientProvider.listenToClients(facility[Fields.facilityId]); // real-time clients
-    serviceProvider.listenToServices(facility[Fields.facilityId]); // needed
-    transactionProvider.listenToTransactions(facility[Fields.facilityId]);
-    debtProvider.listenToDebts(facility[Fields.facilityId]);
-    subscriptionProvider.listenToFacility(facility[Fields.facilityId]);
+    productProvider.fetchProducts(facilityId); // fetch products immediately
+    saleProvider.init(facilityId); // real-time sales
+    clientProvider.listenToClients(facilityId); // real-time clients
+    serviceProvider.listenToServices(facilityId); // needed
+    transactionProvider.listenToTransactions(facilityId);
+    debtProvider.listenToDebts(facilityId);
+    subscriptionProvider.listenToFacility(facilityId);
     context.read<UserRoleProvider>().listenToCurrentUser();
 
 
@@ -139,10 +136,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
         '/dashboard',
         arguments: {
           Fields.role: role,
-          Fields.facilityId: facility[Fields.facilityId],
-          'facilityName': facility['facilityName'],
-          'facilityType': facility['facilityType'],
-          'facilityTypeDetail': facility['facilityTypeDetail'],
+          ...facility.toMap(),
         },
       );
     });
@@ -191,7 +185,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
               itemCount: facilities.length,
               itemBuilder: (context, index) {
                 final facility = facilities[index];
-                final id = facility[Fields.facilityId];
+                final id = facility.id;
                 return _HoverCard(
                   facility: facility,
                   isSelected: id == selectedFacilityId,
@@ -211,11 +205,8 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
               icon: const Icon(Icons.arrow_forward),
               label: Text(context.l10n.selectFacility_proceed),
               onPressed: () {
-                final facility = facilities.firstWhere(
-                  (f) => f[Fields.facilityId] == selectedFacilityId,
-                  orElse: () => {},
-                );
-                if (facility.isEmpty) return;
+                final facility = facilities.where((f) => f.id == selectedFacilityId).firstOrNull;
+                if (facility == null) return;
                 _selectFacility(facility);
               },
             ),
@@ -224,7 +215,7 @@ class _SelectFacilityScreenState extends State<SelectFacilityScreen> {
 }
 
 class _HoverCard extends StatefulWidget {
-  final Map<String, dynamic> facility;
+  final FacilityEntry facility;
   final VoidCallback onTap;
   final bool isSelected;
 
@@ -256,8 +247,8 @@ class _HoverCardState extends State<_HoverCard> {
 
   @override
   Widget build(BuildContext context) {
-    final name = widget.facility['facilityName'] ?? context.l10n.selectFacility_unnamed;
-    final type = widget.facility['facilityType'] ?? '';
+    final name = widget.facility.name ?? context.l10n.selectFacility_unnamed;
+    final type = widget.facility.type ?? '';
     final icon = _getFacilityIcon(type);
 
     return MouseRegion(
@@ -308,7 +299,7 @@ class _HoverCardState extends State<_HoverCard> {
                     ),
                     const SizedBox(height: AppSpacing.s4),
                     Text(
-                      context.l10n.facilityTypeDisplay(type, widget.facility['facilityTypeDetail'] as String?),
+                      context.l10n.facilityTypeDisplay(widget.facility.type, widget.facility.typeDetail),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
