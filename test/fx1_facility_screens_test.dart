@@ -14,13 +14,7 @@ import 'package:vetbiz_pro/screens/facilities/select_facility_screen.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
-const _failsToday = {
-  'Facility picker at 390: two facilities',
-  'Facility picker at 390: odd names, types and details',
-  'Facility picker at 1200: odd names, types and details',
-  'Facility picker at 390: web-shaped items (stored keys, Map<dynamic, dynamic>), one without an id',
-  'Facility picker at 1200: web-shaped items (stored keys, Map<dynamic, dynamic>), one without an id',
-};
+const _failsToday = <String>{};
 
 Map<dynamic, dynamic> _item(Object? id, Object? name, {Object? type = 'Agrovet', Object? typeDetail}) =>
     <dynamic, dynamic>{'facilityId': id, 'name': name, 'type': type, 'typeDetail': typeDetail};

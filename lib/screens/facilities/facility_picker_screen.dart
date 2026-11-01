@@ -12,6 +12,7 @@ import '../../widgets/vetbiz_loading_indicator.dart';
 import '../../data/collections.dart';
 import '../../data/facility_status.dart';
 import '../../data/fields.dart';
+import '../../models/facility_entry.dart';
 import '../../data/user_role.dart';
 import '../../config/app_info.dart';
 import '../../theme/app_text.dart';
@@ -34,7 +35,9 @@ import '../../l10n/l10n.dart';
 /// multi-facility Admins, well after the time-critical login decision
 /// has already been made.
 class FacilityPickerScreen extends StatefulWidget {
-  final List<Map<String, dynamic>> facilities;
+  /// The facilities as the user document lists them, or the in-app maps: read
+  /// through FacilityEntry (FX1), so an odd or web-shaped value never throws.
+  final List<Object?> facilities;
   final String? role;
 
   const FacilityPickerScreen({super.key, required this.facilities, this.role});
@@ -44,6 +47,7 @@ class FacilityPickerScreen extends StatefulWidget {
 }
 
 class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
+  late final List<FacilityEntry> _entries = FacilityEntry.listFrom(widget.facilities);
   bool _isLoading = true;
   final Map<String, Map<String, dynamic>> _detailsByFacility = {};
   final Map<String, int> _staffCountByFacility = {};
@@ -67,7 +71,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
       // Facility details (address, status, logoUrl) - one get per
       // facility, run in parallel rather than one at a time.
       final facilityDocs = await Future.wait(
-        widget.facilities.map((f) => firestore.collection(Collections.facilities).doc(f[Fields.facilityId] as String).get()),
+        _entries.map((f) => firestore.collection(Collections.facilities).doc(f.id).get()),
       );
       for (final doc in facilityDocs) {
         if (doc.exists) {
@@ -78,7 +82,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
       // Staff counts - one query across all facility IDs (Firestore
       // caps arrayContainsAny at 30 values), grouped client-side rather
       // than one query per facility.
-      final facilityIds = widget.facilities.map((f) => f[Fields.facilityId] as String).toList();
+      final facilityIds = [for (final f in _entries) f.id!];
       if (facilityIds.isNotEmpty) {
         final assistantsSnap = await firestore
             .collection(Collections.users)
@@ -86,7 +90,8 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
             .where('facilityIds', arrayContainsAny: facilityIds.take(30).toList())
             .get();
         for (final doc in assistantsSnap.docs) {
-          final docFacilityIds = (doc.data()['facilityIds'] as List?)?.cast<String>() ?? [];
+          final rawIds = doc.data()['facilityIds'];
+          final docFacilityIds = rawIds is List ? rawIds.whereType<String>() : const <String>[];
           for (final fid in docFacilityIds) {
             if (facilityIds.contains(fid)) {
               _staffCountByFacility[fid] = (_staffCountByFacility[fid] ?? 0) + 1;
@@ -99,9 +104,9 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
       if (uid != null) {
         final userDoc = await firestore.collection(Collections.users).doc(uid).get();
         final userData = userDoc.data();
-        _currentUserName = userData?['fullName'] as String? ?? '';
-        _currentUserAvatarUrl = userData?['avatarUrl'] as String?;
-        _defaultFacilityId = userData?['defaultFacilityId'] as String?;
+        _currentUserName = FacilityEntry.safeString(userData?['fullName']) ?? '';
+        _currentUserAvatarUrl = FacilityEntry.safeString(userData?['avatarUrl']);
+        _defaultFacilityId = FacilityEntry.safeString(userData?['defaultFacilityId']);
       }
     } catch (e) {
       // Non-fatal - the screen still works with just name/type per
@@ -119,16 +124,16 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     if (mounted) setState(() => _defaultFacilityId = facilityId);
   }
 
-  List<Map<String, dynamic>> get _filteredFacilities {
-    return widget.facilities.where((f) {
-      final name = (f['facilityName'] as String? ?? '').toLowerCase();
+  List<FacilityEntry> get _filteredFacilities {
+    return _entries.where((f) {
+      final name = (f.name ?? '').toLowerCase();
       // The type as shown (an Other facility's own words, RW2b2) is what a
       // search matches.
-      final type = context.l10n.facilityTypeDisplay(f['facilityType'] as String?, f['facilityTypeDetail'] as String?).toLowerCase();
-      final details = _detailsByFacility[f[Fields.facilityId]];
-      final address = (details?['address'] as String? ?? '').toLowerCase();
+      final type = context.l10n.facilityTypeDisplay(f.type, f.typeDetail).toLowerCase();
+      final details = _detailsByFacility[f.id];
+      final address = (FacilityEntry.safeString(details?['address']) ?? '').toLowerCase();
 
-      if (_typeFilter != null && f['facilityType'] != _typeFilter) return false;
+      if (_typeFilter != null && f.type != _typeFilter) return false;
 
       if (_searchQuery.trim().isNotEmpty) {
         final q = _searchQuery.trim().toLowerCase();
@@ -195,15 +200,25 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                 style: TextStyle(color: context.colors.brandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
           ),
           const SizedBox(width: AppSpacing.s10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(AppInfo.name, style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-              Text(context.l10n.facilityPicker_tagline, style: TextStyle(color: context.colors.onBrandSurfaceMuted, fontSize: AppFontSize.f10_5)),
-            ],
+          // Takes the room left (it was a Spacer), so on a phone the names
+          // shorten with an ellipsis instead of overflowing (FX1).
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppInfo.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                Text(context.l10n.facilityPicker_tagline,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: context.colors.onBrandSurfaceMuted, fontSize: AppFontSize.f10_5)),
+              ],
+            ),
           ),
-          const Spacer(),
-          PopupMenuButton<String>(
+          Flexible(
+            child: PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'logout') forceLogoutAndShowLogin();
             },
@@ -221,11 +236,16 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                   foregroundColor: context.colors.brandSurface,
                 ),
                 const SizedBox(width: AppSpacing.s8),
-                Text(_currentUserName.isEmpty ? context.l10n.dashboard_account : _currentUserName,
-                    style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+                Flexible(
+                  child: Text(_currentUserName.isEmpty ? context.l10n.dashboard_account : _currentUserName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+                ),
                 Icon(Icons.expand_more, color: context.colors.onBrandSurface, size: AppIconSize.i18),
               ],
             ),
+          ),
           ),
         ],
       ),
@@ -236,42 +256,44 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < AppBreakpoints.stackSections;
-        final textColumn = Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.s14),
-                decoration: BoxDecoration(
-                  color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.storefront_outlined, color: context.colors.primary, size: AppIconSize.i24),
+        final textRow = Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.s14),
+              decoration: BoxDecoration(
+                color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: AppSpacing.s16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(context.l10n.facilityPicker_title,
-                        style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.primary)),
-                    const SizedBox(height: AppSpacing.s6),
-                    Text(
-                      context.l10n.facilityPicker_intro,
-                      style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13_5),
-                    ),
-                  ],
-                ),
+              child: Icon(Icons.storefront_outlined, color: context.colors.primary, size: AppIconSize.i24),
+            ),
+            const SizedBox(width: AppSpacing.s16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(context.l10n.facilityPicker_title,
+                      style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.primary)),
+                  const SizedBox(height: AppSpacing.s6),
+                  Text(
+                    context.l10n.facilityPicker_intro,
+                    style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13_5),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         );
 
-        if (isNarrow) return textColumn;
+        // Narrow (phones): the Row alone. It used to return the Expanded below
+        // straight into this LayoutBuilder, which is not a Row or a Column: in a
+        // release build that threw (BoxParentData is not a FlexParentData) and
+        // the whole screen below the header was the grey error box (FX1).
+        if (isNarrow) return textRow;
 
         return Row(
           children: [
-            textColumn,
+            Expanded(child: textRow),
             const SizedBox(width: AppSpacing.s16),
             SizedBox(
               width: 110,
@@ -373,14 +395,14 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     );
   }
 
-  Widget _buildFacilityCard(Map<String, dynamic> facility) {
-    final facilityId = facility[Fields.facilityId] as String;
-    final name = facility['facilityName'] as String? ?? context.l10n.facilityPicker_unnamedFacility;
-    final type = facility['facilityType'] as String? ?? '';
+  Widget _buildFacilityCard(FacilityEntry facility) {
+    final facilityId = facility.id!; // listFrom keeps only entries with an id
+    final name = facility.name ?? context.l10n.facilityPicker_unnamedFacility;
+    final type = facility.type ?? '';
     final details = _detailsByFacility[facilityId];
-    final logoUrl = details?['logoUrl'] as String?;
-    final address = details?['address'] as String?;
-    final status = details?[Fields.status] as String? ?? FacilityStatus.active.key;
+    final logoUrl = FacilityEntry.safeString(details?['logoUrl']);
+    final address = FacilityEntry.safeString(details?['address']);
+    final status = FacilityEntry.safeString(details?[Fields.status]) ?? FacilityStatus.active.key;
     final staffCount = _staffCountByFacility[facilityId] ?? 0;
     final isDefault = facilityId == _defaultFacilityId;
 
@@ -422,7 +444,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                         children: [
                           Text(name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15), maxLines: 1, overflow: TextOverflow.ellipsis),
                           const SizedBox(height: AppSpacing.s4),
-                          FacilityTypeTag(type: type, typeDetail: facility['facilityTypeDetail'] as String?),
+                          FacilityTypeTag(type: type, typeDetail: facility.typeDetail),
                         ],
                       ),
                     ),
@@ -462,13 +484,13 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                       width: 150,
                       child: isDefault
                           ? ElevatedButton.icon(
-                              onPressed: () => activateFacilityAndGoToDashboard(context: context, facility: facility, role: widget.role),
+                              onPressed: () => activateFacilityAndGoToDashboard(context: context, facility: facility.toMap(), role: widget.role),
                               icon: const Icon(Icons.arrow_forward, size: AppIconSize.i16),
                               label: Text(context.l10n.facilityPicker_openFacility),
                               style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
                             )
                           : OutlinedButton.icon(
-                              onPressed: () => activateFacilityAndGoToDashboard(context: context, facility: facility, role: widget.role),
+                              onPressed: () => activateFacilityAndGoToDashboard(context: context, facility: facility.toMap(), role: widget.role),
                               icon: const Icon(Icons.arrow_forward, size: AppIconSize.i16),
                               label: Text(context.l10n.facilityPicker_openFacility),
                               style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
