@@ -171,7 +171,8 @@ class VetBizProApp extends StatelessWidget {
 // Extracted so both the initial read and any retry read (see
 // _decideScreen's empty-facilities handling below) share the exact
 // same parsing logic, rather than duplicating it.
-List<Map<String, dynamic>> _parseFacilities(Map<String, dynamic>? data) {
+@visibleForTesting
+List<Map<String, dynamic>> parseUserFacilities(Map<String, dynamic>? data) {
   final raw = (data?['facilities'] as List<dynamic>?) ?? [];
   return raw
       .whereType<Map>()
@@ -408,7 +409,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       // dead end, because removal leaves their status alone and their old
       // admin can no longer see them to reactivate them. They get through to
       // the screen that lets them join another facility with an invite code.
-      final facilitiesOnRecord = _parseFacilities(data);
+      final facilitiesOnRecord = parseUserFacilities(data);
       final removedAssistant = role == UserRole.assistant.key && facilitiesOnRecord.isEmpty;
 
       if (!isPlatformAdminAccount && !removedAssistant && status == UserStatus.deactivated.key) {
@@ -461,7 +462,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
             FirebaseFirestore.instance.collection(Collections.users).doc(uid),
             timeout: AppTimeouts.facilityListRetry,
           );
-          facilities = _parseFacilities(retryDoc.data());
+          facilities = parseUserFacilities(retryDoc.data());
         }
       }
 
