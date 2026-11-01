@@ -56,6 +56,7 @@ import 'theme/app_text.dart';
 import 'theme/app_dimens.dart';
 import 'theme/theme_context.dart';
 import 'theme/app_motion.dart';
+import 'models/facility_entry.dart';
 import 'widgets/signed_in_home_host.dart';
 
 void main() async {
@@ -172,19 +173,10 @@ class VetBizProApp extends StatelessWidget {
 // _decideScreen's empty-facilities handling below) share the exact
 // same parsing logic, rather than duplicating it.
 @visibleForTesting
-List<Map<String, dynamic>> parseUserFacilities(Map<String, dynamic>? data) {
-  final raw = (data?['facilities'] as List<dynamic>?) ?? [];
-  return raw
-      .whereType<Map>()
-      .map((f) => {
-            Fields.facilityId: f[Fields.facilityId],
-            'facilityName': f['name'] ?? '',
-            'facilityType': f['type'] ?? '',
-            'facilityTypeDetail': f['typeDetail'],
-          })
-      .where((f) => f[Fields.facilityId] != null)
-      .toList();
-}
+// Read through FacilityEntry (FX1): every value a String or null, never a raw
+// number or map that setFacility (String id, name, type) would throw on.
+List<Map<String, dynamic>> parseUserFacilities(Map<String, dynamic>? data) =>
+    [for (final entry in FacilityEntry.listFrom(data?['facilities'])) entry.toMap()];
 
 class AppEntryPoint extends StatefulWidget {
   const AppEntryPoint({super.key});

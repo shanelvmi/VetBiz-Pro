@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/fields.dart';
 import 'package:vetbiz_pro/main.dart';
 
-const _failsToday = true;
+const _failsToday = false;
 
 void main() {
   test('ordinary facilities: the in-app maps, as before', () {
