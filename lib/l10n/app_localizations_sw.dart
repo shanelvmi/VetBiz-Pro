@@ -7098,4 +7098,48 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get error_screenFailed =>
       'Kuna tatizo kwenye skrini hii. Rudi nyuma ujaribu tena.';
+
+  @override
+  String get home_owed => 'Inayodaiwa';
+
+  @override
+  String get home_netProfit => 'Faida halisi';
+
+  @override
+  String get home_allDetails => 'Maelezo yote';
+
+  @override
+  String get home_quickAccess => 'Njia za haraka';
+
+  @override
+  String get home_goTo => 'Nenda kwa';
+
+  @override
+  String get home_needsAttention => 'Inahitaji uangalizi';
+
+  @override
+  String get home_attentionStock => 'Stoo chache au imeisha';
+
+  @override
+  String get home_attentionExpiry => 'Muda umepita au unakaribia kuisha';
+
+  @override
+  String home_attentionDebts(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Wanadaiwa zaidi ya siku $days',
+      one: 'Wanadaiwa zaidi ya siku 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get home_addBatchHint => 'Chagua bidhaa, kisha ongeza stoo yake mpya';
+
+  @override
+  String get home_recordTransactionHint => 'Rekodi matumizi au mapato mengine';
+
+  @override
+  String get home_chooseProduct => 'Chagua bidhaa';
 }

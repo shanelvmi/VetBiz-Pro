@@ -7053,4 +7053,48 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get error_screenFailed =>
       'Something went wrong on this screen. Go back and try again.';
+
+  @override
+  String get home_owed => 'Owed';
+
+  @override
+  String get home_netProfit => 'Net profit';
+
+  @override
+  String get home_allDetails => 'All details';
+
+  @override
+  String get home_quickAccess => 'Quick access';
+
+  @override
+  String get home_goTo => 'Go to';
+
+  @override
+  String get home_needsAttention => 'Needs attention';
+
+  @override
+  String get home_attentionStock => 'Low or out of stock';
+
+  @override
+  String get home_attentionExpiry => 'Expired or expiring soon';
+
+  @override
+  String home_attentionDebts(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Owed for more than $days days',
+      one: 'Owed for more than 1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get home_addBatchHint => 'Choose a product, then add its new stock';
+
+  @override
+  String get home_recordTransactionHint => 'Record an expense or other income';
+
+  @override
+  String get home_chooseProduct => 'Choose a product';
 }

@@ -11975,6 +11975,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Something went wrong on this screen. Go back and try again.'**
   String get error_screenFailed;
+
+  /// Phone home (PH4), the Today card: everything clients owe now (the same total as Outstanding Payment).
+  ///
+  /// In en, this message translates to:
+  /// **'Owed'**
+  String get home_owed;
+
+  /// Phone home (PH4), the Today card: the period's net profit (admins only).
+  ///
+  /// In en, this message translates to:
+  /// **'Net profit'**
+  String get home_netProfit;
+
+  /// Phone home (PH4): the link under the Today card, and the title of the page listing every dashboard figure.
+  ///
+  /// In en, this message translates to:
+  /// **'All details'**
+  String get home_allDetails;
+
+  /// Phone home (PH4): title of the four big action tiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick access'**
+  String get home_quickAccess;
+
+  /// Phone home (PH4): title of the scrolling row of round shortcuts to screens.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to'**
+  String get home_goTo;
+
+  /// Phone home (PH4): title of the strip shown only when stock or debts need attention.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs attention'**
+  String get home_needsAttention;
+
+  /// Phone home (PH4), Needs attention: products running low or out of stock; a count follows in a chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Low or out of stock'**
+  String get home_attentionStock;
+
+  /// Phone home (PH4), Needs attention: products on hand that expired or expire within 30 days; a count follows in a chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired or expiring soon'**
+  String get home_attentionExpiry;
+
+  /// Phone home (PH4), Needs attention: clients whose oldest unpaid debt is older than the facility's overdue setting; a count of clients follows in a chip.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{Owed for more than 1 day} other{Owed for more than {days} days}}'**
+  String home_attentionDebts(int days);
+
+  /// Phone action sheet (PH4 View all): the line under Add New Batch.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a product, then add its new stock'**
+  String get home_addBatchHint;
+
+  /// Phone action sheet (PH4 View all): the line under Record Transaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Record an expense or other income'**
+  String get home_recordTransactionHint;
+
+  /// Phone (PH4): title of the list of products shown before Add New Batch.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a product'**
+  String get home_chooseProduct;
 }
 
 class _AppLocalizationsDelegate
