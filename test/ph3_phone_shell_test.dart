@@ -10,7 +10,7 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 /// How many times each fake tab was built (its initState).
 final _built = <String, int>{};
