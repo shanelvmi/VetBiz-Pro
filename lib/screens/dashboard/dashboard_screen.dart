@@ -26,6 +26,9 @@ import '../products/products_screen.dart';
 import '../clients/clients_screen.dart';
 import '../services/services_screen.dart';
 import '../sales/sales_screen.dart';
+import 'more_screen.dart';
+import 'phone_shell.dart';
+import 'record_sheet.dart';
 import '../transactions/transactions_screen.dart';
 import '../reports/view_reports_screen.dart';
 import '../facilities/facility_screen.dart';
@@ -329,6 +332,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // the "Platform Admin" nav item lives here now instead, so this
   // screen needs the same check.
   bool? _isPlatformAdminCache;
+
+  // Made once, for the phone's More page: a FutureBuilder given a new future
+  // on every build would blink its Platform Admin item.
+  late final Future<bool> _platformAdminFuture = _isPlatformAdmin();
 
   Future<bool> _isPlatformAdmin() async {
     if (_isPlatformAdminCache != null) return _isPlatformAdminCache!;
@@ -1104,9 +1111,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       builder: (context, constraints) {
         bool isLargeScreen = constraints.maxWidth >= AppBreakpoints.expanded;
 
-        return Scaffold(
-          backgroundColor: context.colors.background,
-          appBar: isLargeScreen ? null : AppBar(
+        // A phone's width is always below `expanded`, so the phone shell gets
+        // this same top bar (without the drawer, so without the hamburger).
+        final PreferredSizeWidget? appBar = isLargeScreen ? null : AppBar(
             backgroundColor: context.colors.surface,
             elevation: AppElevation.e1,
             centerTitle: false,
@@ -1157,10 +1164,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               const SizedBox(width: AppSpacing.s4),
               _buildProfileButton(),
             ],
-          ),
-          drawer: isLargeScreen ? null : Drawer(child: _buildDrawerContent()),
-          endDrawer: Drawer(child: _buildEndDrawerContent()),
-          body: Column(
+          );
+        final Widget endDrawer = Drawer(child: _buildEndDrawerContent());
+        final Widget body = Column(
             children: [
               Container(height: 1.2, width: double.infinity, color: context.colors.borderStrong),
               Expanded(
@@ -1483,6 +1489,38 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 ),
               ),
             ],
+          );
+
+        // PH3: phones get the shell (Home is this same body for now; PH4
+        // replaces it); tablets and computers keep exactly today's layout.
+        return PhoneOrWide(
+          phone: (_) => PhoneShell(
+            homeAppBar: appBar,
+            endDrawer: endDrawer,
+            home: (_) => body,
+            sales: (_) => const SalesScreen(asTab: true),
+            products: (_) => const ProductsScreen(asTab: true),
+            more: (context) => FutureBuilder<bool>(
+              future: _platformAdminFuture,
+              builder: (context, snapshot) => MoreScreen(
+                isAdmin: Provider.of<UserRoleProvider>(context).isAdmin,
+                isPlatformAdmin: snapshot.data == true,
+                onReturned: _refreshDashboardData,
+              ),
+            ),
+            onRecord: () => showRecordSheet(context, onDone: _refreshDashboardData),
+            // As after a module pushed from the drawer returns: Home's
+            // one-time reads (trends, glance, chart) catch up.
+            onTabChanged: (tab) {
+              if (tab == PhoneTab.home) _refreshDashboardData();
+            },
+          ),
+          wide: (_) => Scaffold(
+            backgroundColor: context.colors.background,
+            appBar: appBar,
+            drawer: isLargeScreen ? null : Drawer(child: _buildDrawerContent()),
+            endDrawer: endDrawer,
+            body: body,
           ),
         );
       },
