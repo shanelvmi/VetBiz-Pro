@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore;
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/sale.dart';
@@ -28,7 +29,14 @@ import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
 
 class SalesScreen extends StatefulWidget {
-  const SalesScreen({super.key});
+  /// A tab of the phone shell (PH3): its own AppBar with NO back arrow, which
+  /// would pop the whole shell.
+  final bool asTab;
+
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH3).
+  final FirebaseFirestore? firestore;
+
+  const SalesScreen({super.key, this.asTab = false, this.firestore});
 
   @override
   State<SalesScreen> createState() => _SalesScreenState();
@@ -54,7 +62,7 @@ class _SalesScreenState extends State<SalesScreen> {
   // meaningful number to headline. This instead reads the precomputed
   // daily summaries for a fixed, statable period (Last 30 Days), so the
   // figure means something concrete regardless of pagination or archiving.
-  final SalesSummaryService _summaryService = SalesSummaryService();
+  late final SalesSummaryService _summaryService = SalesSummaryService(firestore: widget.firestore);
   String? _facilityId;
   Map<String, double>? _rangeSummary;
   bool _isSummaryLoading = false;

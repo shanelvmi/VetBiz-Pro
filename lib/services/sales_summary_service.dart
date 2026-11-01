@@ -95,7 +95,10 @@ class DailyServiceSummary {
 /// document reads here (one per day that had activity) no matter how many
 /// individual sales happened - versus reading every sale ever made.
 class SalesSummaryService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firestore;
+
+  /// Null [firestore]: the app's own. Tests pass an in-memory one (PH3).
+  SalesSummaryService({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   String _fmt(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';

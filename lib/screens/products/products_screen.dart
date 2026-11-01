@@ -33,7 +33,11 @@ class ProductsScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
   final FirebaseFirestore? firestore;
 
-  const ProductsScreen({super.key, this.initialSearchQuery, this.firestore});
+  /// A tab of the phone shell (PH3): its own AppBar with NO back arrow, which
+  /// would pop the whole shell.
+  final bool asTab;
+
+  const ProductsScreen({super.key, this.initialSearchQuery, this.firestore, this.asTab = false});
 
   @override
   State<ProductsScreen> createState() => _ProductsScreenState();
