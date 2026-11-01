@@ -40,3 +40,13 @@ void Function(User?)? pushAuthUser;
 /// a stale answer.
 VoidCallback? reDecideAccount;
 
+
+/// Set by AppEntryPoint (its SignedInHomeHost, PH3): shows [home] as the one
+/// signed-in route, in place of pushing it. activateFacilityAndGoToDashboard
+/// calls it; null when AppEntryPoint is not mounted (a test's plain front
+/// door), and the dashboard is then pushed as before.
+void Function(Widget home)? showSignedInHome;
+
+/// Set by AppEntryPoint (its SignedInHomeHost, PH3): drops the signed-in home
+/// so AppEntryPoint's own screens show again (reDecideAccount uses it).
+VoidCallback? clearSignedInHome;

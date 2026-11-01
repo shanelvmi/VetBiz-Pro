@@ -24,8 +24,13 @@ import '../config/app_timeouts.dart';
 /// refresh (which remounts AppEntryPoint from scratch) fixed it. Popping
 /// back to the existing base route instead keeps AppEntryPoint alive
 /// the whole time, so it's still there to react to the next sign-in.
+/// The FirebaseAuth signed out of. Tests put a fake here (PH3): the real one
+/// needs a configured Firebase app.
+@visibleForTesting
+FirebaseAuth Function() logoutAuth = () => FirebaseAuth.instance;
+
 Future<void> forceLogoutAndShowLogin({String? message}) async {
-  final uidBeingSignedOut = FirebaseAuth.instance.currentUser?.uid;
+  final uidBeingSignedOut = logoutAuth().currentUser?.uid;
   debugPrint('[LOGOUT] Starting for uid=${uidBeingSignedOut ?? "none"}${message != null ? " (message: $message)" : ""}');
 
   final context = navigatorKey.currentContext;
@@ -51,7 +56,7 @@ Future<void> forceLogoutAndShowLogin({String? message}) async {
   pendingLoginMessage = message;
 
   try {
-    await FirebaseAuth.instance.signOut().timeout(AppTimeouts.signOut);
+    await logoutAuth().signOut().timeout(AppTimeouts.signOut);
     debugPrint('[LOGOUT] signOut() completed for uid=${uidBeingSignedOut ?? "none"}');
     if (pushAuthUser != null) {
       debugPrint('[LOGOUT] Pushing null directly to AppEntryPoint');
