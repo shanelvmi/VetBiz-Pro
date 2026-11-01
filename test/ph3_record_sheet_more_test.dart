@@ -14,7 +14,6 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'helpers/screen_size_matrix.dart';
 
 const _skip = false;
-const _skipMore = true;
 
 const _rows = ['Record Sale', 'Record Visit', 'Record Payment', 'Add Client'];
 
@@ -168,7 +167,7 @@ void main() {
     ]);
     expect(moreItemsFor(isAdmin: true, isPlatformAdmin: true), [...admin, MoreItem.platformAdmin]);
     expect(moreItemsFor(isAdmin: false, isPlatformAdmin: true).last, MoreItem.platformAdmin);
-  }, skip: _skipMore);
+  }, skip: _skip);
 
   testWidgets('More as an assistant shows no admin label; a tap opens the item', (tester) async {
     final opened = <MoreItem>[];
@@ -182,7 +181,7 @@ void main() {
     await tester.tap(find.text('Stock Store'));
     await tester.pump();
     expect(opened, [MoreItem.stockStore]);
-  }, skip: _skipMore);
+  }, skip: _skip);
 
   testWidgets('More: four a row at 360 and 390', (tester) async {
     for (final width in [360.0, 390.0]) {
@@ -196,10 +195,10 @@ void main() {
       expect(tester.getTopLeft(find.text('Transactions')).dy, greaterThan(y));
     }
     tester.view.reset();
-  }, skip: _skipMore);
+  }, skip: _skip);
 
   final stub = {for (final s in matrixSizes) for (final l in MatrixLook.values) matrixCase(s, l): 'stub', matrixTextScaleCase: 'stub'};
   screenSizeMatrix('+ sheet', screen: () => const _SheetOpener(), skip: _skip ? stub : const {});
   screenSizeMatrix('More page (admin)',
-      screen: () => MoreScreen(isAdmin: true, isPlatformAdmin: true, onOpen: (_, __) async {}), skip: _skipMore ? stub : const {});
+      screen: () => MoreScreen(isAdmin: true, isPlatformAdmin: true, onOpen: (_, __) async {}), skip: _skip ? stub : const {});
 }
