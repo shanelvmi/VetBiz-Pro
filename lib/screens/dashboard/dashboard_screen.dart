@@ -1051,11 +1051,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
     // If facility is not yet loaded, show loading indicator
     if (selectedFacility == null) {
-    // Facility is required; redirect back to login
-    Future.microtask(() {
-      if (!context.mounted) return;
-      Navigator.pushReplacementNamed(context, '/login');
-    });
+    // No facility: whoever cleared it (a sign-out, the front door deciding
+    // afresh, a facility being opened) is already showing what comes next.
+    // This used to replace the route with a login route of its own, which (now
+    // that the dashboard is AppEntryPoint's own content, PH3) would remove
+    // AppEntryPoint and leave a login nothing watches.
     return const SizedBox.shrink(); // Return empty widget temporarily
    }
 

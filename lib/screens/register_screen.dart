@@ -578,13 +578,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await FirebaseFirestore.instance.collection(Collections.users).doc(uid).update(updateData);
       if (mounted) {
         AppFeedback.success(L10n.current.register_profileUpdated);
-        if (widget.isModal) {
-          // Opened as a modal over the Dashboard, which follows the user's
-          // profile live - closing is all it takes to show the changes.
-          Navigator.of(context).pop(true);
-        } else {
-          Navigator.pushReplacementNamed(context, '/dashboard');
-        }
+        // Opened over the Dashboard (a modal, or a page on a phone), which
+        // follows the user's profile live - closing is all it takes to show
+        // the changes. The page used to be replaced by a second /dashboard
+        // route, so a phone had two dashboards and Back went to the old one.
+        Navigator.of(context).pop(true);
       }
       return;
     }
@@ -768,7 +766,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (widget.isModal) {
       Navigator.of(context).pop();
     } else if (widget.isUpdating) {
-      Navigator.pushReplacementNamed(context, '/dashboard');
+      // The Edit Profile page closes back to the Dashboard under it.
+      Navigator.of(context).pop();
     } else if (Navigator.canPop(context)) {
       // Pops back to whatever was underneath (AppEntryPoint, still showing
       // LoginScreen reactively) instead of destroying it - a previous

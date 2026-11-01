@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_motion.dart';
+import '../utils/navigator_key.dart';
+
 /// PH3 root fix (docs/design/phone_shell.md section 1, the owner's answer 1):
 /// AppEntryPoint, the app's first and only base route, SHOWS the signed-in
 /// home (the dashboard) itself instead of pushing it as a second route. So a
@@ -25,6 +28,57 @@ class SignedInHomeHost extends StatefulWidget {
 }
 
 class _SignedInHomeHostState extends State<SignedInHomeHost> {
+  Widget? _home;
+  // A new key for each home handed in, so opening a facility (or System
+  // Refresh) always starts a fresh dashboard, as the old pushed route did.
+  int _generation = 0;
+
   @override
-  Widget build(BuildContext context) => throw UnimplementedError();
+  void initState() {
+    super.initState();
+    showSignedInHome = _show;
+    clearSignedInHome = _clear;
+  }
+
+  @override
+  void didUpdateWidget(SignedInHomeHost oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Signed out, or another account: the old home must never show again.
+    if (oldWidget.signedInUid != widget.signedInUid) _home = null;
+  }
+
+  @override
+  void dispose() {
+    // Cleared, not left pointing at a State that is gone.
+    if (showSignedInHome == _show) showSignedInHome = null;
+    if (clearSignedInHome == _clear) clearSignedInHome = null;
+    super.dispose();
+  }
+
+  void _show(Widget home) {
+    if (!mounted || widget.signedInUid == null) return;
+    setState(() {
+      _home = home;
+      _generation++;
+    });
+  }
+
+  void _clear() {
+    if (!mounted || _home == null) return;
+    setState(() => _home = null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final home = widget.signedInUid == null ? null : _home;
+    // The same gentle fade the pushed dashboard route used to open with.
+    return AnimatedSwitcher(
+      duration: AppMotion.slower,
+      switchInCurve: Curves.easeOutCubic,
+      transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+      child: home == null
+          ? KeyedSubtree(key: const ValueKey('entry'), child: widget.child)
+          : KeyedSubtree(key: ValueKey('home$_generation'), child: home),
+    );
+  }
 }

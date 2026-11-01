@@ -56,6 +56,7 @@ import 'theme/app_text.dart';
 import 'theme/app_dimens.dart';
 import 'theme/theme_context.dart';
 import 'theme/app_motion.dart';
+import 'widgets/signed_in_home_host.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -251,6 +252,8 @@ class _AppEntryPointState extends State<AppEntryPoint> {
     reDecideAccount = () {
       if (!mounted) return;
       debugPrint('[AUTH] Asked to decide afresh for uid=${_currentUser?.uid ?? "none"}');
+      // The dashboard shown as the signed-in home goes too.
+      clearSignedInHome?.call();
       setState(() {
         _decidedForUid = null;
         _decideScreenFuture = null;
@@ -607,12 +610,19 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         // A plain fade rather than any sliding/scaling motion - this is
         // specifically about smoothing the loading-spinner-to-login-
         // screen-with-error transition, not adding a flashy animation.
-        return AnimatedSwitcher(
-          duration: AppMotion.normal,
-          switchInCurve: Curves.easeOut,
-          switchOutCurve: Curves.easeIn,
-          transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
-          child: KeyedSubtree(key: ValueKey(key), child: child),
+        // PH3 root fix: the dashboard is shown HERE, as this one route's
+        // content, not pushed over it (see SignedInHomeHost). Signing out
+        // (a null user) drops it and shows the login again, in this same
+        // route.
+        return SignedInHomeHost(
+          signedInUid: _currentUser?.uid,
+          child: AnimatedSwitcher(
+            duration: AppMotion.normal,
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
+            child: KeyedSubtree(key: ValueKey(key), child: child),
+          ),
         );
   }
 }

@@ -39,7 +39,7 @@ import 'package:vetbiz_pro/widgets/signed_in_home_host.dart';
 
 import 'helpers/fake_firestore.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _dashboard = 'DASHBOARD (stand-in)';
 const _login = 'LOGIN (stand-in)';

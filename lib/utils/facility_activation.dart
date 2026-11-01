@@ -104,6 +104,23 @@ Future<void> activateFacilityAndGoToDashboard({
   await Future.delayed(AppTimeouts.dashboardNavDelay);
 
   debugPrint('[NAV] Navigating to /dashboard for facility=${facility[Fields.facilityId]} role=$role');
+  final loader = _DashboardEntryLoader(facilityName: facility['facilityName'] as String?);
+  // PH3 root fix: AppEntryPoint SHOWS the dashboard as the one signed-in
+  // route (SignedInHomeHost), so Back on it has nothing to pop and leaves the
+  // app as the platform does, instead of uncovering the decision screen
+  // while still signed in. AppEntryPoint stays the base route, alive (the
+  // comment above still holds); every route above it is removed, as before.
+  final show = showSignedInHome;
+  if (show != null) {
+    show(loader);
+    try {
+      navState.popUntil((route) => route.isFirst);
+      debugPrint('[NAV] Dashboard shown as the signed-in home');
+    } catch (e, st) {
+      debugPrint('[NAV] popUntil after showing the dashboard failed: $e\n$st');
+    }
+    return;
+  }
   try {
     // pushAndRemoveUntil against a custom route (rather than
     // pushNamedAndRemoveUntil against the static named one) - this is
@@ -123,7 +140,7 @@ Future<void> activateFacilityAndGoToDashboard({
     navState.pushAndRemoveUntil(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            _DashboardEntryLoader(facilityName: facility['facilityName'] as String?),
+            loader,
         transitionDuration: AppMotion.slower,
         reverseTransitionDuration: AppMotion.slower,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {

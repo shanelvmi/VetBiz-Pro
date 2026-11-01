@@ -165,7 +165,11 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       await authService.logout();
 
       if (!mounted) return;
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      // Through the one sign-out path, which keeps AppEntryPoint as the base
+      // route (it shows the login and hears the next sign-in). The old
+      // pushNamedAndRemoveUntil to the login route (removing every route) removed it, so a
+      // second sign-in in the same session hung (force_logout.dart).
+      await forceLogoutAndShowLogin();
     } catch (e, st) {
       // FriendlyError shows a Functions error's own message, as before.
       AppFeedback.error(L10n.current.account_logoutAllFailed, error: e, stackTrace: st);
