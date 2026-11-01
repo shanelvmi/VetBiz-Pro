@@ -780,6 +780,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     return AppBar(
+      // A tab of the phone shell: no back arrow, it would pop the whole shell.
+      automaticallyImplyLeading: !widget.asTab,
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e1,

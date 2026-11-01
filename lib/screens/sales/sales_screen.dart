@@ -584,6 +584,8 @@ class _SalesScreenState extends State<SalesScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      // A tab of the phone shell: no back arrow, it would pop the whole shell.
+      automaticallyImplyLeading: !widget.asTab,
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e1,

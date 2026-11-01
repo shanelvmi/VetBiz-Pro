@@ -28,7 +28,7 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 
 import 'helpers/fake_firestore.dart';
 
-const _skip = true;
+const _skip = false;
 
 class _NoAuth implements AuthService {
   @override
