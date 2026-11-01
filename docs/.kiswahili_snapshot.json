@@ -1974,5 +1974,17 @@
   "shell_addClientHint": ["Ongeza mteja mpya kwenye kumbukumbu zako","Phone + sheet (PH3): the line under Add Client.","draft"],
   "shell_findingDebtors": ["Inatafuta wanaodaiwa…","Phone + sheet (PH3): the line under Record Payment while the debtors load.","draft"],
   "shell_nobodyOwes": ["Hakuna anayedaiwa kwa sasa.","Phone + sheet (PH3): the line under Record Payment when no client owes anything, so there is no payment to take.","draft"],
-  "error_screenFailed": ["Kuna tatizo kwenye skrini hii. Rudi nyuma ujaribu tena.","Release builds only (FX1): the small card shown in place of a part of a screen that failed to draw, instead of Flutter's grey box.","draft"]
+  "error_screenFailed": ["Kuna tatizo kwenye skrini hii. Rudi nyuma ujaribu tena.","Release builds only (FX1): the small card shown in place of a part of a screen that failed to draw, instead of Flutter's grey box.","draft"],
+  "home_owed": ["Inayodaiwa","Phone home (PH4), the Today card: everything clients owe now (the same total as Outstanding Payment).","draft"],
+  "home_netProfit": ["Faida halisi","Phone home (PH4), the Today card: the period's net profit (admins only).","draft"],
+  "home_allDetails": ["Maelezo yote","Phone home (PH4): the link under the Today card, and the title of the page listing every dashboard figure.","draft"],
+  "home_quickAccess": ["Njia za haraka","Phone home (PH4): title of the four big action tiles.","draft"],
+  "home_goTo": ["Nenda kwa","Phone home (PH4): title of the scrolling row of round shortcuts to screens.","draft"],
+  "home_needsAttention": ["Inahitaji uangalizi","Phone home (PH4): title of the strip shown only when stock or debts need attention.","draft"],
+  "home_attentionStock": ["Stoo chache au imeisha","Phone home (PH4), Needs attention: products running low or out of stock; a count follows in a chip.","draft"],
+  "home_attentionExpiry": ["Muda umepita au unakaribia kuisha","Phone home (PH4), Needs attention: products on hand that expired or expire within 30 days; a count follows in a chip.","draft"],
+  "home_attentionDebts": ["{days, plural, =1{Wanadaiwa zaidi ya siku 1} other{Wanadaiwa zaidi ya siku {days}}}","Phone home (PH4), Needs attention: clients whose oldest unpaid debt is older than the facility's overdue setting; a count of clients follows in a chip.","draft"],
+  "home_addBatchHint": ["Chagua bidhaa, kisha ongeza stoo yake mpya","Phone action sheet (PH4 View all): the line under Add New Batch.","draft"],
+  "home_recordTransactionHint": ["Rekodi matumizi au mapato mengine","Phone action sheet (PH4 View all): the line under Record Transaction.","draft"],
+  "home_chooseProduct": ["Chagua bidhaa","Phone (PH4): title of the list of products shown before Add New Batch.","draft"]
 }
