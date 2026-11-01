@@ -9,7 +9,7 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/utils/release_errors.dart';
 import 'package:vetbiz_pro/widgets/friendly_error_card.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _message = 'Something went wrong on this screen. Go back and try again.';
 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -57,10 +58,15 @@ import 'theme/app_dimens.dart';
 import 'theme/theme_context.dart';
 import 'theme/app_motion.dart';
 import 'models/facility_entry.dart';
+import 'utils/release_errors.dart';
 import 'widgets/signed_in_home_host.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // FX1: a release build shows a small friendly card where a part of a screen
+  // fails to build (not Flutter's grey box) and prints the error on one line;
+  // debug builds keep Flutter's own.
+  installReleaseErrorHandling(release: kReleaseMode);
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
