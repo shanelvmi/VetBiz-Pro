@@ -7200,4 +7200,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get phoneForm_discard => 'Discard';
+
+  @override
+  String phoneForm_saleSummary(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items, $amount',
+      one: '1 item, $amount',
+    );
+    return '$_temp0';
+  }
 }

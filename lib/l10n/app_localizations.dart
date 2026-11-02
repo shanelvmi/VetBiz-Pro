@@ -12128,6 +12128,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discard'**
   String get phoneForm_discard;
+
+  /// Add Sale on a phone (PH6): the line pinned above the buttons, and in Browse Products: how many items (units) the sale holds and its total.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item, {amount}} other{{count} items, {amount}}}'**
+  String phoneForm_saleSummary(int count, String amount);
 }
 
 class _AppLocalizationsDelegate

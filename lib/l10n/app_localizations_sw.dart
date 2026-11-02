@@ -7245,4 +7245,15 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get phoneForm_discard => 'Acha';
+
+  @override
+  String phoneForm_saleSummary(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'bidhaa $count, $amount',
+      one: 'bidhaa 1, $amount',
+    );
+    return '$_temp0';
+  }
 }
