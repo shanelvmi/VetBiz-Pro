@@ -13,7 +13,7 @@ import 'helpers/counting_firestore.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 Finder _key(String k) => find.byKey(ValueKey(k));
 
@@ -41,7 +41,7 @@ void main() {
       for (final size in ph5PhoneSizes) {
         for (final look in MatrixLook.values) {
           final where = '${e.key} ${matrixCase(size, look)}';
-          testWidgets(where, (tester) async {
+          ph5TestWidgets(where, (tester) async {
             await pumpPh5(tester, (fs) => build(fs), size: size.size, look: look, pushed: pushed, seed: _seed);
             await checkCase(tester, phone: true, where: '$where list');
             await tester.tap(_key('phoneList-row-$id'));
@@ -56,7 +56,7 @@ void main() {
   group('cost (R12), counted on the fake Firestore', () {
     for (final e in screens.entries) {
       final (build, pushed, id) = e.value;
-      testWidgets('${e.key}: a phone opens with the computer\'s listeners and reads; back from details reads nothing',
+      ph5TestWidgets('${e.key}: a phone opens with the computer\'s listeners and reads; back from details reads nothing',
           (tester) async {
         final counts = <String, (int, int, int)>{};
         for (final size in const [Size(1200, 800), Size(390, 844)]) {

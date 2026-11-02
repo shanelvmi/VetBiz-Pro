@@ -1087,7 +1087,7 @@ class _SalesScreenState extends State<SalesScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_invoiceNo(sale), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+                _wrapOnPhone(Text(_invoiceNo(sale), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18))),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
                   decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r12)),
@@ -1186,13 +1186,18 @@ class _SalesScreenState extends State<SalesScreen> {
     );
   }
 
+  /// On a phone (the details page, PH5a R7) the left text of a label and
+  /// value row may wrap instead of pushing the value off the page; the
+  /// side panel on wider windows is unchanged.
+  Widget _wrapOnPhone(Widget child) => AppLayout.isPhone(context) ? Flexible(child: child) : child;
+
   Widget _totalsRow(String label, String value, {bool bold = false, Color? color}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
+          _wrapOnPhone(Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
           Text(
             value,
             style: TextStyle(

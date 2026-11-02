@@ -1056,7 +1056,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(context.l10n.services_paymentInfo, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                      _wrapOnPhone(Text(context.l10n.services_paymentInfo, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5))),
                       Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
@@ -1122,13 +1122,18 @@ class _ServicesScreenState extends State<ServicesScreen> {
     );
   }
 
+  /// On a phone (the details page, PH5a R7) the left text of a label and
+  /// value row may wrap instead of pushing the value off the page; the
+  /// side panel on wider windows is unchanged.
+  Widget _wrapOnPhone(Widget child) => AppLayout.isPhone(context) ? Flexible(child: child) : child;
+
   Widget _totalsRow(String label, String value, {bool bold = false, Color? color}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
+          _wrapOnPhone(Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
           Text(
             value,
             style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color),

@@ -201,7 +201,12 @@ Future<Ph5App> pumpPh5(
       ChangeNotifierProvider.value(value: role),
       ChangeNotifierProvider(create: (_) => newClientProvider(fs)),
       ChangeNotifierProvider(create: (_) => newSaleProvider(fs)),
-      ChangeNotifierProvider(create: (_) => ServiceProvider(debtProvider: debts, firestore: fs, currentUserInfo: testUserInfo)),
+      ChangeNotifierProvider(create: (_) => ServiceProvider(
+          debtProvider: debts,
+          firestore: fs,
+          currentUserInfo: testUserInfo,
+          deletedBy: testDeletedBy,
+          isAdmin: () => admin)),
       ChangeNotifierProvider(create: (_) => TransactionProvider(firestore: fs, currentUserInfo: testUserInfo)),
       ChangeNotifierProvider(create: (_) => ProductProvider(firestore: fs, currentUserInfo: testUserInfo)),
       ChangeNotifierProvider(create: (_) => PaymentProvider(firestore: fs)),
