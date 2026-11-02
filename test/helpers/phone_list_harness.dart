@@ -165,6 +165,7 @@ Future<Ph5App> pumpPh5(
   Future<void> Function(FirebaseFirestore fs)? seed,
   bool settle = true,
   bool reduceMotion = false,
+  AuthService? auth,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -194,7 +195,7 @@ Future<Ph5App> pumpPh5(
   // first one's providers (and so its Firestore).
   await tester.pumpWidget(KeyedSubtree(key: UniqueKey(), child: MultiProvider(
     providers: [
-      Provider<AuthService>.value(value: _NoAuth()),
+      Provider<AuthService>.value(value: auth ?? _NoAuth()),
       ChangeNotifierProvider<FacilityProvider>.value(value: facility),
       ChangeNotifierProvider.value(value: ui),
       ChangeNotifierProvider.value(value: debts),

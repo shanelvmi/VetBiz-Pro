@@ -21,10 +21,19 @@ import 'ph5b_seed.dart';
 import 'phone_list_harness.dart';
 import 'screen_size_matrix.dart';
 
-/// The test user, signed in (Add Transaction reads their name).
+/// The test user, signed in (Record Payment saves their id; Add Transaction
+/// asks the users collection for their name).
+class Ph6User implements User {
+  @override
+  String get uid => testUserId;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class Ph6Auth implements AuthService {
   @override
-  User? getCurrentUser() => null;
+  User? getCurrentUser() => Ph6User();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -64,6 +73,7 @@ ProductBatch ph6Batch() => ProductBatch(
 
 Future<void> ph6Seed(dynamic fs) async {
   await ph5SeedClients(fs, [ph6Debtor, ph6Amina]);
+  await ph5SeedDebts(fs, [Ph5Debt('d1', 'c1', ph5When(45), matrixBigAmount), Ph5Debt('d2', 'c2', ph5When(10), 45000)]);
   await seedProduct(fs, id: 'p1', legacyQty: 40, buyPrice: 1000);
 }
 
@@ -124,7 +134,7 @@ Future<Ph5App> pumpPh6(
 }) async {
   final (build, _) = ph6Forms[name]!;
   final app = await pumpPh5(tester, (fs) => build(fs, isModal: size.width >= 900),
-      size: size, look: look, admin: admin, locked: locked, seed: ph6Seed);
+      size: size, look: look, admin: admin, locked: locked, seed: ph6Seed, auth: Ph6Auth());
   if (find.byKey(const ValueKey('ph6-open-dialog')).evaluate().isNotEmpty) {
     await tester.tap(find.byKey(const ValueKey('ph6-open-dialog')));
     await ph5Settle(tester);
