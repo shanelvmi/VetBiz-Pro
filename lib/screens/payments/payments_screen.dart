@@ -12,11 +12,13 @@ import '../../widgets/payment_method_selector.dart';
 import '../../models/sale.dart';
 import '../../models/service.dart';
 import '../../models/ledger_entry.dart';
+import '../../services/snapshot_ledger_controller.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../widgets/date_range_dialog.dart';
 import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';
 import '../../theme/app_dimens.dart';
+import '../../theme/app_layout.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
@@ -106,6 +108,17 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   final Map<String, Future<(String?, String?)>> _referenceFutureByKey = {};
   LedgerEntry? _selectedEntry;
 
+  // PH5b: the phone's details page is a route of its own, which this
+  // State's setState does not rebuild; the page listens to this instead (the
+  // recorded-by names arriving).
+  final ValueNotifier<int> _phoneRevision = ValueNotifier(0);
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _phoneRevision.value++;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -143,6 +156,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     _searchController.dispose();
     _searchDebounce?.cancel();
     _newRecordsCheckTimer?.cancel();
+    _phoneRevision.dispose();
     super.dispose();
   }
 
@@ -408,6 +422,45 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     await _openLedgerSession();
   }
 
+  /// "N new entries available - Refresh", above the list (both layouts).
+  Widget _buildNewEntriesBanner(SnapshotLedgerController<LedgerEntry> controller, {EdgeInsets? margin}) {
+    return Container(
+      width: double.infinity,
+      margin: margin,
+      color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
+      child: Row(
+        children: [
+          Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(
+            child: Text(
+              context.l10n.payments_newEntries(controller.newEntriesAvailable),
+              style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => controller.refreshSession(),
+            child: Text(context.l10n.common_refresh),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _onSearchChanged(String val) {
+    setState(() => _searchQuery = val.trim());
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(AppTimeouts.searchDebounce, _openLedgerSession);
+  }
+
+  void _clearSearch() {
+    _searchDebounce?.cancel();
+    setState(() => _searchQuery = '');
+    _searchController.clear();
+    _openLedgerSession();
+  }
+
   @override
   Widget build(BuildContext context) {
     final paymentProvider = Provider.of<PaymentProvider>(context);
@@ -449,28 +502,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                               const SizedBox(height: AppSpacing.s16),
                             ],
                             if (controller.newEntriesAvailable > 0)
-                              Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.only(bottom: AppSpacing.s12),
-                                color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
-                                    const SizedBox(width: AppSpacing.s8),
-                                    Expanded(
-                                      child: Text(
-                                        context.l10n.payments_newEntries(controller.newEntriesAvailable),
-                                        style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => controller.refreshSession(),
-                                      child: Text(context.l10n.common_refresh),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              _buildNewEntriesBanner(controller, margin: const EdgeInsets.only(bottom: AppSpacing.s12)),
                             _buildToolbarRow(total),
                             const SizedBox(height: AppSpacing.s16),
                             Expanded(
@@ -665,7 +697,10 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
-  Widget _buildDetailsPanel(LedgerEntry e) {
+  /// The side panel; [onPage], the body of the phone's details page (PH5b,
+  /// as PH5a R7): the same content without the title and close row (the
+  /// page's app bar has them).
+  Widget _buildDetailsPanel(LedgerEntry e, {bool onPage = false}) {
     final recordedBy = e.paidById != null ? _userNames[e.paidById] : null;
     return Container(
       decoration: BoxDecoration(
@@ -678,6 +713,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (!onPage)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -699,7 +735,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   Icon(Icons.check_circle, size: AppIconSize.i14, color: context.colors.successStrong),
                   const SizedBox(width: AppSpacing.s4),
                   Text(context.l10n.payments_received, style: TextStyle(
-                      fontSize: AppFontSize.f11_5, color: context.colors.successStrong, fontWeight: AppFontWeight.semibold)),
+                      fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.successStrong, fontWeight: AppFontWeight.semibold)),
                 ],
               ),
             ),
@@ -711,7 +747,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               decoration: BoxDecoration(
                   color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
               child: Text(e.description, style: TextStyle(
-                  fontSize: AppFontSize.f11_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
+                  fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
             ),
             const SizedBox(height: AppSpacing.s4),
             Row(
@@ -808,7 +844,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s4),
       child: Text(label, style: TextStyle(
-          fontSize: AppFontSize.f11_5, color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),
+          fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),
     );
   }
 
@@ -838,19 +874,10 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: AppIconSize.i18),
-                      onPressed: () {
-                        _searchDebounce?.cancel();
-                        setState(() => _searchQuery = '');
-                        _searchController.clear();
-                        _openLedgerSession();
-                      },
+                      onPressed: _clearSearch,
                     ),
             ),
-            onChanged: (val) {
-              setState(() => _searchQuery = val.trim());
-              _searchDebounce?.cancel();
-              _searchDebounce = Timer(AppTimeouts.searchDebounce, _openLedgerSession);
-            },
+            onChanged: _onSearchChanged,
           ),
         ),
         if (widget.initialClientId == null) ...[
@@ -979,6 +1006,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       ],
     );
   }
+
+  // ==================== PHONE (PH5b) ====================
+
+  /// Panel text under 12 px is 12 on a phone (S3); tablets keep theirs.
+  double _phoneMin(double size) =>
+      AppLayout.isPhone(context) && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
 
   Widget _buildDayGroup(String dayKey, List<LedgerEntry> entries, double dayTotal) {
     final date = DateTime.parse(dayKey);
