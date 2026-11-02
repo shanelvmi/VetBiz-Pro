@@ -24,6 +24,11 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
 import '../../utils/subscription_guard.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/field_message_slot.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/phone_discard_scope.dart';
+import '../../widgets/phone_form/picker_sheet.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -80,12 +85,46 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
   double amount = 0.0;
   String? paymentMethod;
   final _formKey = GlobalKey<FormState>();
+  // The amount as typed (PH6: the discard check reads it).
+  final TextEditingController _amountController = TextEditingController();
 
+  bool get _isPhone => AppLayout.isPhone(context);
+
+  /// PH6: something entered that leaving would lose.
+  bool get _isDirty =>
+      selectedClient?.id != widget.preselectedClient?.id || _amountController.text.isNotEmpty || paymentMethod != null;
 
   @override
   void initState() {
     super.initState();
     selectedClient = widget.preselectedClient;
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  /// The debtor's label, as the suggestion list shows it.
+  String _debtorLabel(Client c) {
+    final balance = widget.debtorBalances?[c.id];
+    if (balance == null) return c.name;
+    return '${Money.format(balance)} — ${c.name}';
+  }
+
+  /// PH6, a phone: the debtors as a picker sheet (search by name or phone).
+  Future<void> _pickDebtorPhone(FormFieldState<Client> fieldState) async {
+    final picked = await showPickerSheet<Client>(
+      context,
+      title: context.l10n.debtors_debtor,
+      searchHint: context.l10n.debtors_debtorSearchHint,
+      matches: (o, q) => o.value.phone.contains(q),
+      options: [for (final c in widget.debtorClients!) PickerOption(c, _debtorLabel(c))],
+    );
+    if (picked == null || !mounted) return;
+    setState(() => selectedClient = picked);
+    fieldState.didChange(picked);
   }
 
   // Same matching the suggestion list uses: name contains it, or phone does.
@@ -400,7 +439,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: context.colors.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
@@ -445,6 +484,37 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // PH6, a phone: a field that opens the debtors as a
+                        // sheet; its message replaces the helper in its line.
+                        if (_isPhone)
+                          TextField(
+                            readOnly: true,
+                            onTap: () => _pickDebtorPhone(fieldState),
+                            style: const TextStyle(fontSize: PhoneFormMetrics.body),
+                            decoration: InputDecoration(
+                              labelText: context.l10n.debtors_debtor,
+                              hintText: context.l10n.debtors_debtorSearchHint,
+                              // The helper, or the message in its place, in a
+                              // line as tall as the longest (G5).
+                              helper: FieldMessageSlot(
+                                message: fieldState.errorText ?? context.l10n.debtors_debtorHelper,
+                                reserve: [
+                                  context.l10n.debtors_debtorHelper,
+                                  context.l10n.debtors_errChooseDebtor,
+                                ],
+                                style: TextStyle(
+                                  fontSize: PhoneFormMetrics.error,
+                                  color: fieldState.errorText == null ? context.colors.textMuted : context.colors.danger,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(
+                                    color: fieldState.errorText == null ? context.colors.border : context.colors.danger),
+                              ),
+                              suffixIcon: const Icon(Icons.expand_more),
+                            ),
+                          )
+                        else
                         Autocomplete<Client>(
                           displayStringForOption: (c) {
                             final balance = widget.debtorBalances?[c.id];
@@ -498,10 +568,15 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
                 ),
               const SizedBox(height: AppSpacing.s12),
               TextFormField(
+                controller: _amountController,
                 decoration: InputDecoration(
                   labelText: context.l10n.debtors_paymentAmount,
                   border: const OutlineInputBorder(),
+                  // PH6, a phone: the line under the field is kept, so a
+                  // message does not move the form.
+                  helperText: _isPhone ? ' ' : null,
                 ),
+                textInputAction: _isPhone ? TextInputAction.done : null,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
                 validator: (val) {
@@ -531,8 +606,21 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: _buildFooter(),
+      bottomNavigationBar: _isPhone
+          ? FormActionBar(
+              primaryLabel: context.l10n.debtors_savePayment,
+              primaryIcon: Icons.payments_outlined,
+              onPrimary: _savePayment,
+              busy: _isSaving,
+              secondaryLabel: context.l10n.common_cancel,
+              onSecondary: () => Navigator.of(context).maybePop(),
+            )
+          : _buildFooter(),
     );
+    // PH6, a phone: leaving after typing asks; a tap outside a field closes
+    // the keyboard. Elsewhere today's form.
+    if (!_isPhone) return scaffold;
+    return PhoneDiscardScope(kind: 'payment', isDirty: () => _isDirty, child: closeKeyboardOnTapOutside(context, scaffold));
   }
 
   Widget _buildFooter() {

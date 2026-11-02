@@ -11,7 +11,7 @@ import 'helpers/ph6_forms.dart';
 import 'helpers/phone_list_harness.dart';
 
 /// The forms done so far: the others stay skipped until theirs is.
-const _done = <String>{'add-transaction'};
+const _done = <String>{'add-transaction', 'record-payment'};
 
 const _wide = Size(1200, 800);
 

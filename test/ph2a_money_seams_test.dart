@@ -120,7 +120,6 @@ Future<List<String>> _pumpCollecting(WidgetTester tester, Widget screen, Widget 
 const Map<String, String> _overflowsToday = {
   'Debtors': 'Rows overflow at debtors_screen.dart:509 (435 px), :756 (89) and :809 (163); PH5',
   'Payments': 'Rows overflow at payments_screen.dart:821 (463 px), :570 and :617 (35), Columns at :556 and :603 (28 to 45 down), the AppBar at :949 (1); PH5',
-  'Record Payment': 'a Row overflows at add_payment_screen.dart:546 (36 px); PH6',
   'Add Sale': 'a Row overflows at add_sale_screen.dart:940 (44 px); PH6',
   'Clients': 'Rows overflow at clients_screen.dart:236 (15 px) and :1026 (163); PH5',
   'Products': 'a Row overflows at products_screen.dart:863 (66 px), a Column at :261 (4 down); PH5',
