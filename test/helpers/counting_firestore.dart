@@ -24,6 +24,10 @@ class CountingFirestore implements FirebaseFirestore {
   /// PH5a: while set, every query get waits for it (a list's loading state).
   Completer<void>? holdGets;
 
+  /// PH5b: while set, every listener's answers wait for it (a live list's
+  /// loading state).
+  Completer<void>? holdListens;
+
   void resetCounts() {
     reads = 0;
     gets = 0;
@@ -54,9 +58,14 @@ class CountingFirestore implements FirebaseFirestore {
         listens++;
         listeners++;
         sub = open().listen((s) {
-          reads += billed(s, first);
-          first = false;
-          controller.add(s);
+          void deliver() {
+            reads += billed(s, first);
+            first = false;
+            controller.add(s);
+          }
+
+          final hold = holdListens;
+          hold == null || hold.isCompleted ? deliver() : hold.future.then((_) => deliver());
         }, onError: controller.addError);
       },
       onCancel: () async {
