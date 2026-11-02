@@ -49,6 +49,8 @@ void main() {
 
   test('payment statuses (Sale/Service toMap, Sales/Services filters)', () {
     expect(PaymentStatus.values, ['Paid', 'Partial', 'Unpaid']);
+    // PH5a: the phone list's quick chips, after "All".
+    expect(PaymentStatus.quickChipOrder, ['Unpaid', 'Partial', 'Paid']);
     // The old rule: totalPaid >= totalAmount ? 'Paid' : (totalPaid > 0 ? 'Partial' : 'Unpaid').
     expect(PaymentStatus.of(100, 100), 'Paid');
     expect(PaymentStatus.of(120, 100), 'Paid');

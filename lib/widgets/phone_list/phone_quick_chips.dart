@@ -25,17 +25,21 @@ class PhoneQuickChips extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: PhoneListMetrics.chipRowHeight,
-      child: ListView.separated(
+      // A handful of chips: all built (not lazily), so each is reachable.
+      child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: PhoneListMetrics.pagePadding),
-        itemCount: values.length,
-        separatorBuilder: (_, __) => const SizedBox(width: PhoneListMetrics.chipGap),
-        itemBuilder: (context, i) => Center(
-          child: ChoiceChip(
-            label: Text(label(values[i])),
-            selected: values[i] == selected,
-            onSelected: (_) => onSelected(values[i]),
-          ),
+        child: Row(
+          children: [
+            for (var i = 0; i < values.length; i++) ...[
+              if (i > 0) const SizedBox(width: PhoneListMetrics.chipGap),
+              ChoiceChip(
+                label: Text(label(values[i])),
+                selected: values[i] == selected,
+                onSelected: (_) => onSelected(values[i]),
+              ),
+            ],
+          ],
         ),
       ),
     );

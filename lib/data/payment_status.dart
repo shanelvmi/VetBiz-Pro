@@ -12,6 +12,10 @@ class PaymentStatus {
   /// In the order the status filters offer them.
   static const List<String> values = [paid, partial, unpaid];
 
+  /// PH5a: the quick chips of a phone list, after "All" (R3): what needs
+  /// attention first.
+  static const List<String> quickChipOrder = [unpaid, partial, paid];
+
   /// The status of [amountPaid] against [total]: the one rule the records and
   /// the screens use.
   static String of(num amountPaid, num total) => amountPaid >= total ? paid : (amountPaid > 0 ? partial : unpaid);
