@@ -3975,5 +3975,13 @@
   "home_recordTransactionHint": "Rekodi matumizi au mapato mengine",
   "@home_recordTransactionHint": {"x-review":"draft"},
   "home_chooseProduct": "Chagua bidhaa",
-  "@home_chooseProduct": {"x-review":"draft"}
+  "@home_chooseProduct": {"x-review":"draft"},
+  "phoneList_rowSemantics": "{name}, {amount}, {status}, {when}",
+  "@phoneList_rowSemantics": {"x-review":"draft"},
+  "phoneList_salesSummaryLine": "{count, plural, =1{{period}: mauzo 1, {amount}} other{{period}: mauzo {count}, {amount}}}",
+  "@phoneList_salesSummaryLine": {"x-review":"draft"},
+  "phoneList_servicesSummaryLine": "{count, plural, =1{{period}: huduma 1, {amount}} other{{period}: huduma {count}, {amount}}}",
+  "@phoneList_servicesSummaryLine": {"x-review":"draft"},
+  "phoneList_filtersOn": "Vichujio vimewekwa",
+  "@phoneList_filtersOn": {"x-review":"draft"}
 }

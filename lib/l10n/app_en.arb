@@ -3975,5 +3975,13 @@
   "home_recordTransactionHint": "Record an expense or other income",
   "@home_recordTransactionHint": {"description":"Phone action sheet (PH4 View all): the line under Record Transaction."},
   "home_chooseProduct": "Choose a product",
-  "@home_chooseProduct": {"description":"Phone (PH4): title of the list of products shown before Add New Batch."}
+  "@home_chooseProduct": {"description":"Phone (PH4): title of the list of products shown before Add New Batch."},
+  "phoneList_rowSemantics": "{name}, {amount}, {status}, {when}",
+  "@phoneList_rowSemantics": {"description":"Phone list (PH5a): what a screen reader says for a sale or service row: the client, the amount, the payment status and the date and time, for example 'Amina Juma, Tsh 45,000, Paid, 27 Oct 10:15'.","placeholders":{"name":{"type":"String"},"amount":{"type":"String"},"status":{"type":"String"},"when":{"type":"String"}}},
+  "phoneList_salesSummaryLine": "{count, plural, =1{{period}: 1 sale, {amount}} other{{period}: {count} sales, {amount}}}",
+  "@phoneList_salesSummaryLine": {"description":"Sales on a phone (PH5a): the one summary line under the filters, from the old cards' figures: the period (for example 'Last 30 days'), how many sales and their total.","placeholders":{"count":{"type":"int"},"period":{"type":"String"},"amount":{"type":"String"}}},
+  "phoneList_servicesSummaryLine": "{count, plural, =1{{period}: 1 service, {amount}} other{{period}: {count} services, {amount}}}",
+  "@phoneList_servicesSummaryLine": {"description":"Services on a phone (PH5a): the one summary line under the filters, from the old cards' figures: the period, how many services and the amount billed (paid plus outstanding).","placeholders":{"count":{"type":"int"},"period":{"type":"String"},"amount":{"type":"String"}}},
+  "phoneList_filtersOn": "Filters applied",
+  "@phoneList_filtersOn": {"description":"Phone list (PH5a): read by a screen reader on the Filter button when a filter is not at its default (the button shows a dot)."}
 }
