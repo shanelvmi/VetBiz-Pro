@@ -51,6 +51,10 @@ Set<String> _rowIds(WidgetTester tester) => {
         (e.widget.key as ValueKey<String>).value.substring('phoneList-row-'.length),
     };
 
+/// The skeleton's rows (keyed phoneList-skeletonRow-0 to -5).
+final _skeletonRows = find.byWidgetPredicate(
+    (w) => w.key is ValueKey<String> && (w.key as ValueKey<String>).value.startsWith('phoneList-skeletonRow-'));
+
 void main() {
   group('the app bar (R1)', () {
     testWidgets('opened from More: the back arrow, the title only, search, one overflow menu with Archive', (tester) async {
@@ -164,7 +168,7 @@ void main() {
       await _services(tester, settle: false);
       final skeleton = _key('phoneList-skeleton');
       expect(skeleton, findsOneWidget);
-      expect(find.descendant(of: skeleton, matching: _key('phoneList-skeletonRow')), findsNWidgets(6));
+      expect(find.descendant(of: skeleton, matching: _skeletonRows), findsNWidgets(6));
       expect(find.descendant(of: skeleton, matching: find.byType(FadeTransition)), findsWidgets);
       await _services(tester, settle: false, reduceMotion: true);
       expect(find.descendant(of: _key('phoneList-skeleton'), matching: find.byType(FadeTransition)), findsNothing);
