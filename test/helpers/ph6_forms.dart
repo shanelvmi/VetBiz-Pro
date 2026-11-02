@@ -131,10 +131,11 @@ Future<Ph5App> pumpPh6(
   MatrixLook look = MatrixLook.light,
   bool admin = true,
   bool locked = false,
+  bool pushed = false,
 }) async {
   final (build, _) = ph6Forms[name]!;
   final app = await pumpPh5(tester, (fs) => build(fs, isModal: size.width >= 900),
-      size: size, look: look, admin: admin, locked: locked, seed: ph6Seed, auth: Ph6Auth());
+      size: size, look: look, admin: admin, locked: locked, pushed: pushed, seed: ph6Seed, auth: Ph6Auth());
   if (find.byKey(const ValueKey('ph6-open-dialog')).evaluate().isNotEmpty) {
     await tester.tap(find.byKey(const ValueKey('ph6-open-dialog')));
     await ph5Settle(tester);
