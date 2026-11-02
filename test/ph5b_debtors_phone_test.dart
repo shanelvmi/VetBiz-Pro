@@ -153,7 +153,12 @@ void main() {
   ph5TestWidgets('rows: initials, the debtor and the amount owed, the oldest debt date and days, the status as text', (tester) async {
     await _debtors(tester);
     final row = ph5Key('phoneList-row-c1');
-    for (final t in ['AJ', 'Amina Juma', Money.format(45000), DateFormat('dd MMM yyyy').format(_clients.first.oldestDebt!), '45 days', 'Overdue']) {
+    for (final t in ['AJ', 'Amina Juma', Money.format(45000), DateFormat('dd MMM yyyy').format(_clients.first.oldestDebt!),
+      // The screen's rule (whole days since the oldest debt): 44 before
+      // 08:00, 45 after, as the seeded debt is at 08:00.
+      '${DateTime.now().difference(_clients.first.oldestDebt!).inDays} days',
+      'Overdue',
+    ]) {
       expect(find.descendant(of: row, matching: find.text(t)), findsOneWidget, reason: t);
     }
     expect(find.descendant(of: ph5Key('phoneList-row-c2'), matching: find.text('Current')), findsOneWidget);
