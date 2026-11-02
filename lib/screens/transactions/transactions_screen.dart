@@ -948,11 +948,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
       // Search filters what is loaded, still by date.
       grouped: true,
       tileBuilder: (context, tx, {required grouped}) => _transactionTile(tx),
-      // The live list keeps no loading or error state of its own: no rows
-      // yet while more may come is its first answer on the way.
+      // The live list keeps no loading state of its own: no rows yet while
+      // more may come is its first answer on the way. A failed listener
+      // shows its message with Retry (PH6 finding b).
       loading: transactionProvider.transactions.isEmpty && transactionProvider.hasMore,
-      error: null,
-      onRetry: () {},
+      error: transactionProvider.listenError,
+      onRetry: transactionProvider.retryListening,
       emptyIcon: Icons.receipt_long_outlined,
       emptyText: _filterType != null ? l10n.transactions_emptyForType(_typeLabel(_filterType!)) : l10n.transactions_empty,
       fab: record,

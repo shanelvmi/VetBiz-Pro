@@ -67,6 +67,11 @@ class TransactionProvider with ChangeNotifier {
   bool _isLoadingMore = false;
   bool get isLoadingMore => _isLoadingMore;
 
+  // PH6 finding (b): the live list's last error, so a phone can show it
+  // with Retry (it is still logged); cleared by the next answer.
+  Object? _listenError;
+  Object? get listenError => _listenError;
+
   /// ---------------------------------------------------
   /// CLEAR ALL DATA WHEN FACILITY CHANGES
   /// ---------------------------------------------------
@@ -187,6 +192,7 @@ class TransactionProvider with ChangeNotifier {
     _lastDocument = null;
     _hasMore = true;
     _subscription?.cancel();
+    _listenError = null;
 
     if (facilityId.isEmpty) return;
 
@@ -194,6 +200,7 @@ class TransactionProvider with ChangeNotifier {
         .limit(pageSize)
         .snapshots()
         .listen((snapshot) {
+      _listenError = null;
       _liveTransactions = snapshot.docs
           .map((doc) => TransactionModel.fromFirestore(doc.data(), doc.id))
           .toList();
@@ -209,7 +216,17 @@ class TransactionProvider with ChangeNotifier {
       notifyListeners();
     }, onError: (error) {
       debugPrint("Transaction listen error: $error");
+      _listenError = error;
+      notifyListeners();
     });
+  }
+
+  /// Retry after [listenError]: listens to the same facility again.
+  void retryListening() {
+    final facilityId = _facilityId;
+    if (facilityId == null) return;
+    _facilityId = null; // listenToTransactions skips the facility it already has
+    listenToTransactions(facilityId);
   }
 
   /// A transaction (or a service with its expense) went to Trash or came
