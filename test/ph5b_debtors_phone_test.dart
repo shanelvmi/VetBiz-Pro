@@ -17,12 +17,12 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _wide = Size(1200, 800);
 
-// Overdue after 30 days (the facility's default): Amina 15 days past it,
-// Neema 40 (the 31-60 range), Baraka not yet.
+// Overdue after 30 days (the facility's default); the ranges count the days
+// since the oldest debt: Amina 45 (31-60), Neema 70 (61 and more), Baraka 10.
 final _clients = [
   Ph5Client('c1', 'Amina Juma', ph5When(90), phone: '0712111111', balance: 45000, oldestDebt: ph5When(45)),
   Ph5Client('c2', 'Baraka Mushi', ph5When(90), balance: 12500, oldestDebt: ph5When(10)),
@@ -103,7 +103,7 @@ void main() {
     await ph5Settle(tester);
     final range = _tableNames(tester).toSet();
     expect(overdue, {'Neema Ally', 'Amina Juma'});
-    expect(range, {'Neema Ally'});
+    expect(range, {'Amina Juma'});
 
     await _debtors(tester);
     expect(_rowOrder(tester), ['Neema Ally', 'Amina Juma', 'Baraka Mushi']);

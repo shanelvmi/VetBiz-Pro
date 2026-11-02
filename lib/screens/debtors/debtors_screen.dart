@@ -30,6 +30,11 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_layout.dart';
+import '../../widgets/phone_list/phone_filter_sheet.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
+import '../../widgets/phone_list/record_tile.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 
@@ -231,6 +236,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   Widget build(BuildContext context) {
     final clientProvider = Provider.of<ClientProvider>(context);
     final overdueDays = Provider.of<FacilityProvider>(context).debtOverdueDays;
+    // PH5b: phones get the standard phone list (docs/design/phone_list_pattern.md).
+    if (AppLayout.isPhone(context)) return _buildPhone(clientProvider, overdueDays);
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -873,6 +880,12 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   // ==================== PHONE (PH5b) ====================
 
+  // docs/design/phone_list_pattern.md: the same session, filters, cards,
+  // panel and actions as the layout above, as the standard phone list. The
+  // list keeps today's order (largest balance first, by oldest debt under an
+  // overdue range, by name while searching), so it has no day headers (R5
+  // adapted); line 2 gives the oldest debt's date.
+
   /// On a phone's details page a label wraps beside a long amount or a
   /// Kiswahili button; the side panel keeps its rows as they were.
   Widget _wrapOnPhone(Widget child) => AppLayout.isPhone(context) ? Flexible(child: child) : child;
@@ -880,6 +893,144 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   /// Panel text under 12 px is 12 on a phone (S3); tablets keep theirs.
   double _phoneMin(double size) =>
       AppLayout.isPhone(context) && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
+
+  void _setPhoneFilters({String? status, String? overdueRange}) {
+    setState(() {
+      _statusFilter = status ?? _statusFilter;
+      _overdueRangeFilter = overdueRange ?? _overdueRangeFilter;
+    });
+    _openDebtorsListSession();
+  }
+
+  Future<void> _openFilterSheet(int overdueDays) async {
+    final l10n = context.l10n;
+    final applied = await showPhoneFilterSheet(context, fields: {
+      'status': PhoneFilterField(
+          title: l10n.common_status, options: _statusFilterOptions, label: _statusFilterLabel, defaultValue: 'All'),
+      'overdue': PhoneFilterField(
+          title: l10n.debtors_colOverdue,
+          options: _overdueRangeOptions,
+          label: (k) => _overdueRangeLabel(k, overdueDays),
+          defaultValue: 'All'),
+    }, values: {
+      'status': _statusFilter,
+      'overdue': _overdueRangeFilter,
+    });
+    if (applied == null || !mounted) return;
+    _setPhoneFilters(status: applied['status'], overdueRange: applied['overdue']);
+  }
+
+  /// Every card as a row; a card's second line goes under its label.
+  void _showSummary() {
+    showPhoneSummarySheet(context, period: context.l10n.debtors_title, rows: [
+      for (final (label, value, _, _, subtitle, _) in _metricsList()) ('$label\n$subtitle', value),
+    ]);
+  }
+
+  /// Pull to refresh (R8): the list starts over and the cards load again.
+  Future<void> _refresh() async {
+    _openDebtorsListSession(forceRefresh: true);
+    await Future.wait([_loadMetrics(), _loadPaidThisMonth()]);
+  }
+
+  Future<void> _openDetailsPage(_DebtorRow tapped) {
+    final controller = Provider.of<ClientProvider>(context, listen: false).debtorsListController;
+    return Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        key: const ValueKey('phoneList-details'),
+        appBar: AppBar(title: Text(context.l10n.debtors_detailsTitle)),
+        body: ListenableBuilder(
+          listenable: Listenable.merge([controller, _phoneRevision]),
+          builder: (context, _) {
+            // After a payment the list starts over: the debtor's fresh row
+            // while the list holds it, as the side panel shows.
+            Client? fresh;
+            for (final c in controller.loadedItems) {
+              if (c.id == tapped.clientId) fresh = c;
+            }
+            return _buildDebtorDetailsPanel(fresh == null ? tapped : _DebtorRow(fresh, tapped.overdueDays), onPage: true);
+          },
+        ),
+      ),
+    ));
+  }
+
+  Widget _debtorTile(_DebtorRow debtor) {
+    final l10n = context.l10n;
+    final oldest = debtor.client.oldestUnpaidDebtDate;
+    final since = oldest != null ? AppDateFormat.date.format(oldest) : '—';
+    final amount = Money.format(debtor.totalOwed);
+    final status = debtor.isOverdue ? l10n.debtors_overdue : l10n.debtors_current;
+    return RecordTile(
+      title: debtor.clientName,
+      amount: amount,
+      details: [since, if (debtor.isOverdue) l10n.debtors_daysCount(debtor.daysSinceOldestDebt)],
+      status: RecordStatus(status, debtor.isOverdue ? context.colors.danger : context.colors.success),
+      initialsOf: debtor.clientName,
+      colorSeed: debtor.clientName,
+      semanticsLabel: l10n.phoneList_rowSemantics(debtor.clientName, amount, status, since),
+      onTap: () => _openDetailsPage(debtor),
+    );
+  }
+
+  Widget _buildPhone(ClientProvider clientProvider, int overdueDays) {
+    final l10n = context.l10n;
+    final controller = clientProvider.debtorsListController;
+    final metrics = _metrics;
+    final recordPayment = PhoneListAction(label: l10n.debtors_recordPayment, icon: Icons.add, onPressed: _recordPayment);
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => PhoneListScaffold<_DebtorRow>(
+        title: l10n.debtors_title,
+        asTab: false,
+        menu: [
+          PhoneListMenuItem(label: l10n.common_export, icon: Icons.download_outlined, onSelected: _exportDebtors),
+        ],
+        searchController: _searchController,
+        searchHint: l10n.debtors_searchHint,
+        onSearchChanged: _onSearchChanged,
+        onSearchClosed: _clearSearch,
+        quickChips: PhoneQuickChips(
+          key: const ValueKey('phoneList-quickChips'),
+          values: _statusFilterOptions,
+          selected: _statusFilter,
+          label: _statusFilterLabel,
+          onSelected: (v) => _setPhoneFilters(status: v),
+        ),
+        filtersActive: _statusFilter != 'All' || _overdueRangeFilter != 'All',
+        onFilter: () => _openFilterSheet(overdueDays),
+        appliedFilters: [
+          if (_overdueRangeFilter != 'All')
+            PhoneAppliedFilter(
+                l10n.common_filterValue(l10n.debtors_colOverdue, _overdueRangeLabel(_overdueRangeFilter, overdueDays)),
+                () => _setPhoneFilters(overdueRange: 'All')),
+        ],
+        // The cards' figures (as the cards, 0 when they could not load).
+        summaryLine: metrics == null && _isMetricsLoading
+            ? null
+            : l10n.phoneList_debtorsSummaryLine(metrics?.totalDebtors ?? 0, Money.format(metrics?.totalOwed ?? 0)),
+        onSummary: _showSummary,
+        banner: controller.newRecordsAvailable > 0 ? _buildNewRecordsBanner(controller) : null,
+        items: [for (final c in controller.loadedItems) _DebtorRow(c, overdueDays)],
+        idOf: (d) => d.clientId,
+        dateOf: (d) => d.client.oldestUnpaidDebtDate ?? DateTime.now(),
+        amountOf: (d) => d.totalOwed,
+        grouped: false,
+        tileBuilder: (context, d, {required grouped}) => _debtorTile(d),
+        loading: controller.isLoading,
+        error: controller.error,
+        onRetry: controller.refreshSession,
+        emptyIcon: Icons.people_outline,
+        emptyText: _searchQuery.isEmpty ? l10n.debtors_emptyNone : l10n.debtors_emptySearch,
+        fab: recordPayment,
+        emptyAction: recordPayment,
+        hasMore: controller.hasNextPage,
+        loadingMore: controller.isLoading && controller.loadedItems.isNotEmpty,
+        onLoadMore: controller.goToNextPage,
+        onRefresh: _refresh,
+      ),
+    );
+  }
 
   // ==================== DEBTOR DETAILS PANEL ====================
 
