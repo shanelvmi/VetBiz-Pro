@@ -28,6 +28,10 @@ class CountingFirestore implements FirebaseFirestore {
   /// loading state).
   Completer<void>? holdListens;
 
+  /// PH6: while set, a new query listener answers with an error (a live
+  /// list's error state).
+  bool failListens = false;
+
   void resetCounts() {
     reads = 0;
     gets = 0;
@@ -57,6 +61,11 @@ class CountingFirestore implements FirebaseFirestore {
       onListen: () {
         listens++;
         listeners++;
+        if (query && failListens) {
+          sub = const Stream<Never>.empty().listen(null);
+          controller.addError(FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'));
+          return;
+        }
         sub = open().listen((s) {
           void deliver() {
             reads += billed(s, first);
