@@ -28,6 +28,11 @@ import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/phone_choice_field.dart';
+import '../../widgets/phone_form/phone_discard_scope.dart';
+import '../../widgets/phone_form/picker_sheet.dart';
 
 /// The client an Edit Service form starts with: the service's own, so an
 /// unchanged edit keeps it and saves without picking the client again; the
@@ -102,6 +107,31 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   final GlobalKey _clientFieldKey = GlobalKey();
   final GlobalKey _stackKey = GlobalKey();
 
+  // PH6 (phones only): leaving after typing asks first.
+  late final String _initialEntries;
+
+  bool get _isPhone => AppLayout.isPhone(context);
+
+  String get _entries => [
+        _clientTextController.text,
+        _nameController.text,
+        _descriptionController.text,
+        _selectedCategory,
+        _providedByController.text,
+        _serviceDate?.toIso8601String(),
+        _totalAmountController.text,
+        _totalPaidController.text,
+        _paymentMethod,
+        _transactionIdController.text,
+        for (final item in _itemsUsedControllers) '${item['name']!.text}=${item['price']!.text}',
+      ].join('\u0001');
+
+  /// A label: 14 on a phone (S3), as before elsewhere.
+  double get _labelSize => _isPhone ? PhoneFormMetrics.label : AppFontSize.f13;
+
+  /// Small text is 12 on a phone (S3), as before elsewhere.
+  double _small(double size) => _isPhone && size < PhoneFormMetrics.error ? PhoneFormMetrics.error : size;
+
   @override
   void initState() {
     super.initState();
@@ -164,6 +194,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         _itemsUsedProductIds.add(item['productId'] as String?);
       }
     }
+    _initialEntries = _entries;
   }
 
   @override
@@ -232,6 +263,9 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   InputDecoration _inputDecoration(String label) {
     return InputDecoration(
       labelText: label,
+      // PH6, a phone: the line under the field is kept, so a message does
+      // not move the form.
+      helperText: _isPhone ? ' ' : null,
       border: const OutlineInputBorder(),
       focusedBorder: OutlineInputBorder(
         borderSide: BorderSide(color: context.colors.primary, width: 2),
@@ -309,7 +343,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       (sum, item) => sum + _parseAmount(item['price']!.text),
     );
 
-    return Theme(
+    final form = Theme(
       data: Theme.of(context).copyWith(
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: context.colors.primary,
@@ -387,19 +421,71 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             );
           },
         ),
-        bottomNavigationBar: _buildFooter(isEditing, serviceProvider, facilityProvider),
+        bottomNavigationBar: _isPhone
+            ? FormActionBar(
+                primaryLabel: isEditing ? context.l10n.services_updateVisit : context.l10n.services_recordVisit,
+                primaryIcon: Icons.medical_services_outlined,
+                onPrimary: () => _saveService(isEditing, serviceProvider, facilityProvider),
+                busy: _isLoading,
+                secondaryLabel: context.l10n.common_cancel,
+                onSecondary: () => Navigator.of(context).maybePop(),
+              )
+            : _buildFooter(isEditing, serviceProvider, facilityProvider),
       ),
     );
+    // PH6, a phone: leaving after typing asks; a tap outside a field closes
+    // the keyboard. Elsewhere today's form.
+    if (!_isPhone) return form;
+    return PhoneDiscardScope(kind: 'visit', isDirty: () => _entries != _initialEntries, child: closeKeyboardOnTapOutside(context, form));
   }
 
   Widget _sectionHeader(IconData icon, String title) {
+    final text = Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary));
     return Row(
       children: [
         Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
         const SizedBox(width: AppSpacing.s8),
-        Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
+        // On a phone the title wraps (Kiswahili at 360); elsewhere as before.
+        if (_isPhone) Flexible(child: text) else text,
       ],
     );
+  }
+
+  // ==================== PHONE (PH6) ====================
+
+  /// The category on a phone: an outlined field with its label, as the
+  /// others on this form, that opens the categories as a picker sheet.
+  Widget _phoneCategoryField() {
+    return InkWell(
+      onTap: () async {
+        final picked = await showPickerSheet<String>(
+          context,
+          title: context.l10n.common_category,
+          selected: _selectedCategory,
+          options: [for (final c in _categories) PickerOption(c, context.l10n.serviceCategoryLabel(c), icon: serviceCategoryIcon(c))],
+        );
+        if (picked != null) setState(() => _selectedCategory = picked);
+      },
+      child: InputDecorator(
+        decoration: _inputDecoration(context.l10n.common_category).copyWith(suffixIcon: const Icon(Icons.expand_more)),
+        child: Text(
+          _selectedCategory == null ? '' : context.l10n.serviceCategoryLabel(_selectedCategory!),
+          style: const TextStyle(fontSize: PhoneFormMetrics.body),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickMethodPhone() async {
+    final picked = await showPickerSheet<String>(
+      context,
+      title: context.l10n.payments_method,
+      selected: _paymentMethod,
+      options: [
+        for (final m in kPaymentMethods) PickerOption(m, context.l10n.paymentMethodLabel(m), icon: iconForPaymentMethod(m)),
+      ],
+    );
+    if (picked != null) setState(() => _paymentMethod = picked);
   }
 
   Widget _buildClientInfoCard() {
@@ -415,7 +501,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         children: [
           _sectionHeader(Icons.person_outline, context.l10n.clients_infoSection),
           const SizedBox(height: AppSpacing.s12),
-          Text(context.l10n.services_selectClientRequired, style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.services_selectClientRequired, style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _labelSize)),
           const SizedBox(height: AppSpacing.s6),
           Row(
             key: _clientFieldKey,
@@ -430,7 +516,11 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     filled: true,
                     fillColor: context.colors.surface,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
+                    // PH6, a phone: at least 48 high, the message's line kept.
+                    contentPadding: _isPhone
+                        ? const EdgeInsets.symmetric(vertical: PhoneFormMetrics.fieldPaddingV, horizontal: PhoneFormMetrics.fieldPaddingH)
+                        : const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
+                    helperText: _isPhone ? ' ' : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppRadius.r10),
                       borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -526,6 +616,9 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               const SizedBox(height: AppSpacing.s10),
 
               // CATEGORY
+              if (_isPhone)
+                _phoneCategoryField()
+              else
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategory,
                 decoration: _inputDecoration(context.l10n.common_category),
@@ -538,34 +631,17 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
 
               const SizedBox(height: AppSpacing.s20),
 
-              // PROVIDED BY + DATE
+              // PROVIDED BY + DATE (one column on a phone, PH6)
+              if (_isPhone) ...[
+                _providedByField(),
+                const SizedBox(height: AppSpacing.s10),
+                _serviceDateField(),
+              ] else
               Row(
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _providedByController,
-                      decoration: _inputDecoration(context.l10n.services_providedBy),
-                      textCapitalization: TextCapitalization.sentences,
-                      inputFormatters: [SentenceCapitalizationFormatter()],
-                      validator: (v) =>
-                          v == null || v.trim().isEmpty
-                              ? context.l10n.services_errProvider
-                              : null,
-                    ),
-                  ),
+                  Expanded(child: _providedByField()),
                   const SizedBox(width: AppSpacing.s10),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _pickServiceDate(context),
-                      child: InputDecorator(
-                        decoration: _inputDecoration(context.l10n.services_serviceDate),
-                        child: Text(
-                          AppDateFormat.date.format(_serviceDate!),
-                          style: TextStyle(color: context.colors.primary),
-                        ),
-                      ),
-                    ),
-                  ),
+                  Expanded(child: _serviceDateField()),
                 ],
               ),
 
@@ -573,6 +649,29 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       ),
     );
   }
+
+  Widget _providedByField() => TextFormField(
+        controller: _providedByController,
+        decoration: _inputDecoration(context.l10n.services_providedBy),
+        textCapitalization: TextCapitalization.sentences,
+        inputFormatters: [SentenceCapitalizationFormatter()],
+        textInputAction: _isPhone ? TextInputAction.next : null,
+        validator: (v) =>
+            v == null || v.trim().isEmpty
+                ? context.l10n.services_errProvider
+                : null,
+      );
+
+  Widget _serviceDateField() => InkWell(
+        onTap: () => _pickServiceDate(context),
+        child: InputDecorator(
+          decoration: _inputDecoration(context.l10n.services_serviceDate),
+          child: Text(
+            AppDateFormat.date.format(_serviceDate!),
+            style: TextStyle(color: context.colors.primary),
+          ),
+        ),
+      );
 
   Widget _buildExpensesCard(double itemsTotal) {
     return Container(
@@ -589,6 +688,10 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // On a phone the title wraps beside Add Item (PH6).
+                  if (_isPhone)
+                    Flexible(child: Text(context.l10n.services_itemsUsed, style: TextStyle(fontWeight: AppFontWeight.bold)))
+                  else
                   Text(context.l10n.services_itemsUsed,
                       style: TextStyle(fontWeight: AppFontWeight.bold)),
                   TextButton.icon(
@@ -610,14 +713,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 var item = entry.value;
                 final matchedProductId = _itemsUsedProductIds[index];
 
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: Column(
+                final nameColumn = Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             TextFormField(
@@ -656,7 +752,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                     padding: const EdgeInsets.only(top: AppSpacing.s4, left: AppSpacing.s4),
                                     child: Text(
                                       context.l10n.services_noMatchingProduct,
-                                      style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
+                                      style: TextStyle(fontSize: _small(AppFontSize.f11), color: context.colors.textMuted),
                                     ),
                                   );
                                 }
@@ -675,7 +771,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                         title: Text(product.name),
                                         subtitle: Text(
                                           context.l10n.services_sellableQty('${product.sellableQty}', context.l10n.productUnitLabel(product.unit)),
-                                          style: const TextStyle(fontSize: AppFontSize.f11),
+                                          style: TextStyle(fontSize: _small(AppFontSize.f11)),
                                         ),
                                         onTap: () {
                                           item['name']!.text = product.name;
@@ -701,18 +797,14 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                                     const SizedBox(width: AppSpacing.s4),
                                     Text(
                                       context.l10n.services_inStockDeduct,
-                                      style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.successStrong),
+                                      style: TextStyle(fontSize: _small(AppFontSize.f11), color: context.colors.successStrong),
                                     ),
                                   ],
                                 ),
                               ),
                           ],
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.s6),
-                      Expanded(
-                        flex: 1,
-                        child: TextFormField(
+                        );
+                final price = TextFormField(
                           controller: item['price'],
                           decoration: _inputDecoration(context.l10n.products_price),
                           keyboardType: TextInputType.number,
@@ -720,17 +812,37 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                             FilteringTextInputFormatter.digitsOnly,
                             ThousandsSeparatorInputFormatter()
                           ],
+                          textInputAction: _isPhone ? TextInputAction.done : null,
                           validator: (v) =>
                               v == null || v.isEmpty ? context.l10n.services_errPrice : null,
-                        ),
-                      ),
-                      IconButton(
+                        );
+                final delete = IconButton(
                         icon:
                             Icon(Icons.delete, color: context.colors.dangerAccent),
                         onPressed: () => _removeItem(index),
-                      ),
-                    ],
-                  ),
+                      );
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
+                  // PH6, a phone: the name over the price and Delete, so a long
+                  // name and an 8-digit price fit at 360; elsewhere as before.
+                  child: _isPhone
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            nameColumn,
+                            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [Expanded(child: price), delete]),
+                          ],
+                        )
+                      : Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(flex: 2, child: nameColumn),
+                            const SizedBox(width: AppSpacing.s6),
+                            Expanded(flex: 1, child: price),
+                            delete,
+                          ],
+                        ),
                 );
               }),
 
@@ -766,7 +878,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
         children: [
           _sectionHeader(Icons.receipt_long_outlined, context.l10n.services_visitSummary),
           const SizedBox(height: AppSpacing.s14),
-          Text(context.l10n.services_totalAmountRequired(AppDefaults.currencySymbol), style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.services_totalAmountRequired(AppDefaults.currencySymbol), style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _labelSize)),
           const SizedBox(height: AppSpacing.s6),
           TextFormField(
             controller: _totalAmountController,
@@ -774,6 +886,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
             decoration: InputDecoration(
               hintText: '0.00',
+              helperText: _isPhone ? ' ' : null,
               filled: true,
               fillColor: context.colors.surface,
               isDense: true,
@@ -786,7 +899,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             validator: (v) => v == null || v.isEmpty ? context.l10n.services_errTotalAmount : null,
           ),
           const SizedBox(height: AppSpacing.s14),
-          Text(context.l10n.services_totalPaidRequired(AppDefaults.currencySymbol), style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.services_totalPaidRequired(AppDefaults.currencySymbol), style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _labelSize)),
           const SizedBox(height: AppSpacing.s6),
           TextFormField(
             controller: _totalPaidController,
@@ -794,6 +907,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
             decoration: InputDecoration(
               hintText: '0.00',
+              helperText: _isPhone ? ' ' : null,
               filled: true,
               fillColor: context.colors.surface,
               isDense: true,
@@ -823,10 +937,20 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                       Icon(Icons.credit_card_outlined, size: AppIconSize.i16, color: context.colors.primary),
                       const SizedBox(width: AppSpacing.s8),
                       Text(context.l10n.payments_method,
-                          style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13, color: context.colors.primary)),
+                          style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _labelSize, color: context.colors.primary)),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.s10),
+                  if (_isPhone)
+                    PhoneChoiceField(
+                      text: _paymentMethod == null
+                          ? context.l10n.transactions_selectMethod
+                          : context.l10n.paymentMethodLabel(_paymentMethod!),
+                      chosen: _paymentMethod != null,
+                      icon: iconForPaymentMethod(_paymentMethod ?? PaymentMethod.cash.key),
+                      onTap: _pickMethodPhone,
+                    )
+                  else
                   PopupMenuButton<String>(
                     initialValue: _paymentMethod,
                     onSelected: (method) => setState(() => _paymentMethod = method),
@@ -865,7 +989,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
             ),
             if (_paymentMethod != null && _paymentMethod != PaymentMethod.cash.key) ...[
               const SizedBox(height: AppSpacing.s14),
-              Text(context.l10n.services_transactionIdOptional, style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+              Text(context.l10n.services_transactionIdOptional, style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _labelSize)),
               const SizedBox(height: AppSpacing.s6),
               TextFormField(
                 controller: _transactionIdController,
