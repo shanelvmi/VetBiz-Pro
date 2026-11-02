@@ -12104,6 +12104,30 @@ abstract class AppLocalizations {
     String income,
     String expenses,
   );
+
+  /// Money forms on a phone (PH6): the question when someone leaves a form that holds entered data. kind is a fixed key (sale, payment, client, transaction, visit), never shown.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind, select, sale{Discard this sale?} payment{Discard this payment?} client{Discard this client?} transaction{Discard this transaction?} visit{Discard this visit?} other{Discard this form?}}'**
+  String phoneForm_discardTitle(String kind);
+
+  /// Money forms on a phone (PH6): under the discard question.
+  ///
+  /// In en, this message translates to:
+  /// **'What you entered will be lost.'**
+  String get phoneForm_discardBody;
+
+  /// Money forms on a phone (PH6): the answer that stays on the form.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get phoneForm_keepEditing;
+
+  /// Money forms on a phone (PH6): the answer that leaves the form and drops what was entered.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get phoneForm_discard;
 }
 
 class _AppLocalizationsDelegate

@@ -7178,4 +7178,26 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return '$period: income $income, expenses $expenses';
   }
+
+  @override
+  String phoneForm_discardTitle(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'sale': 'Discard this sale?',
+      'payment': 'Discard this payment?',
+      'client': 'Discard this client?',
+      'transaction': 'Discard this transaction?',
+      'visit': 'Discard this visit?',
+      'other': 'Discard this form?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get phoneForm_discardBody => 'What you entered will be lost.';
+
+  @override
+  String get phoneForm_keepEditing => 'Keep editing';
+
+  @override
+  String get phoneForm_discard => 'Discard';
 }

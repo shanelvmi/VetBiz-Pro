@@ -7223,4 +7223,26 @@ class AppLocalizationsSw extends AppLocalizations {
   ) {
     return '$period: mapato $income, matumizi $expenses';
   }
+
+  @override
+  String phoneForm_discardTitle(String kind) {
+    String _temp0 = intl.Intl.selectLogic(kind, {
+      'sale': 'Acha mauzo haya?',
+      'payment': 'Acha malipo haya?',
+      'client': 'Acha mteja huyu?',
+      'transaction': 'Acha muamala huu?',
+      'visit': 'Acha ziara hii?',
+      'other': 'Acha fomu hii?',
+    });
+    return '$_temp0';
+  }
+
+  @override
+  String get phoneForm_discardBody => 'Ulichoandika kitapotea.';
+
+  @override
+  String get phoneForm_keepEditing => 'Endelea kuandika';
+
+  @override
+  String get phoneForm_discard => 'Acha';
 }
