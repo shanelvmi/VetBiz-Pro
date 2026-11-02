@@ -3991,5 +3991,13 @@
   "phoneList_paymentsSummaryLine": "{count, plural, =1{1 payment, {amount}} other{{count} payments, {amount}}}",
   "@phoneList_paymentsSummaryLine": {"description":"Payments on a phone (PH5b): the one summary line under the chips: how many payments the list shows for the chosen days and their total.","placeholders":{"count":{"type":"int"},"amount":{"type":"String"}}},
   "phoneList_transactionsSummaryLine": "{period}: income {income}, expenses {expenses}",
-  "@phoneList_transactionsSummaryLine": {"description":"Transactions on a phone (PH5b): the one summary line under the chips, from the old cards: the period (two dates), the other income and the expenses in it.","placeholders":{"period":{"type":"String"},"income":{"type":"String"},"expenses":{"type":"String"}}}
+  "@phoneList_transactionsSummaryLine": {"description":"Transactions on a phone (PH5b): the one summary line under the chips, from the old cards: the period (two dates), the other income and the expenses in it.","placeholders":{"period":{"type":"String"},"income":{"type":"String"},"expenses":{"type":"String"}}},
+  "phoneForm_discardTitle": "{kind, select, sale{Discard this sale?} payment{Discard this payment?} client{Discard this client?} transaction{Discard this transaction?} visit{Discard this visit?} other{Discard this form?}}",
+  "@phoneForm_discardTitle": {"description":"Money forms on a phone (PH6): the question when someone leaves a form that holds entered data. kind is a fixed key (sale, payment, client, transaction, visit), never shown.","placeholders":{"kind":{"type":"String"}}},
+  "phoneForm_discardBody": "What you entered will be lost.",
+  "@phoneForm_discardBody": {"description":"Money forms on a phone (PH6): under the discard question."},
+  "phoneForm_keepEditing": "Keep editing",
+  "@phoneForm_keepEditing": {"description":"Money forms on a phone (PH6): the answer that stays on the form."},
+  "phoneForm_discard": "Discard",
+  "@phoneForm_discard": {"description":"Money forms on a phone (PH6): the answer that leaves the form and drops what was entered."}
 }
