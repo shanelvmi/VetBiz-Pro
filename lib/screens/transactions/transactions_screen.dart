@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -26,8 +27,11 @@ import '../../data/collections.dart';
 import '../../l10n/l10n.dart';
 
 class TransactionScreen extends StatefulWidget {
-  const TransactionScreen({super.key});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH5b, as
+  /// PH2a's seams).
+  final FirebaseFirestore? firestore;
 
+  const TransactionScreen({super.key, this.firestore});
 
   @override
   State<TransactionScreen> createState() => _TransactionScreenState();
@@ -45,7 +49,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
   // same as before, but is now a real selectable range - previously the
   // cards silently stayed fixed at 30 days even if the list below showed
   // much older transactions, so the two could quietly disagree.
-  final DashboardSummaryService _summaryService = DashboardSummaryService();
+  late final DashboardSummaryService _summaryService = DashboardSummaryService(firestore: widget.firestore);
   String? _facilityId;
   double _otherIncomeTotal = 0;
   double _expensesTotal = 0;
