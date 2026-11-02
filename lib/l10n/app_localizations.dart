@@ -12047,6 +12047,35 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose a product'**
   String get home_chooseProduct;
+
+  /// Phone list (PH5a): what a screen reader says for a sale or service row: the client, the amount, the payment status and the date and time, for example 'Amina Juma, Tsh 45,000, Paid, 27 Oct 10:15'.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {amount}, {status}, {when}'**
+  String phoneList_rowSemantics(
+    String name,
+    String amount,
+    String status,
+    String when,
+  );
+
+  /// Sales on a phone (PH5a): the one summary line under the filters, from the old cards' figures: the period (for example 'Last 30 days'), how many sales and their total.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{period}: 1 sale, {amount}} other{{period}: {count} sales, {amount}}}'**
+  String phoneList_salesSummaryLine(int count, String period, String amount);
+
+  /// Services on a phone (PH5a): the one summary line under the filters, from the old cards' figures: the period, how many services and the amount billed (paid plus outstanding).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{period}: 1 service, {amount}} other{{period}: {count} services, {amount}}}'**
+  String phoneList_servicesSummaryLine(int count, String period, String amount);
+
+  /// Phone list (PH5a): read by a screen reader on the Filter button when a filter is not at its default (the button shows a dot).
+  ///
+  /// In en, this message translates to:
+  /// **'Filters applied'**
+  String get phoneList_filtersOn;
 }
 
 class _AppLocalizationsDelegate

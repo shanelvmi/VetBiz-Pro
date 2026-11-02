@@ -7097,4 +7097,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get home_chooseProduct => 'Choose a product';
+
+  @override
+  String phoneList_rowSemantics(
+    String name,
+    String amount,
+    String status,
+    String when,
+  ) {
+    return '$name, $amount, $status, $when';
+  }
+
+  @override
+  String phoneList_salesSummaryLine(int count, String period, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$period: $count sales, $amount',
+      one: '$period: 1 sale, $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneList_servicesSummaryLine(
+    int count,
+    String period,
+    String amount,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$period: $count services, $amount',
+      one: '$period: 1 service, $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get phoneList_filtersOn => 'Filters applied';
 }

@@ -7142,4 +7142,43 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get home_chooseProduct => 'Chagua bidhaa';
+
+  @override
+  String phoneList_rowSemantics(
+    String name,
+    String amount,
+    String status,
+    String when,
+  ) {
+    return '$name, $amount, $status, $when';
+  }
+
+  @override
+  String phoneList_salesSummaryLine(int count, String period, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$period: mauzo $count, $amount',
+      one: '$period: mauzo 1, $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneList_servicesSummaryLine(
+    int count,
+    String period,
+    String amount,
+  ) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$period: huduma $count, $amount',
+      one: '$period: huduma 1, $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get phoneList_filtersOn => 'Vichujio vimewekwa';
 }
