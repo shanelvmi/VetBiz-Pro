@@ -1986,5 +1986,9 @@
   "home_attentionDebts": ["{days, plural, =1{Wanadaiwa zaidi ya siku 1} other{Wanadaiwa zaidi ya siku {days}}}","Phone home (PH4), Needs attention: clients whose oldest unpaid debt is older than the facility's overdue setting; a count of clients follows in a chip.","draft"],
   "home_addBatchHint": ["Chagua bidhaa, kisha ongeza stoo yake mpya","Phone action sheet (PH4 View all): the line under Add New Batch.","draft"],
   "home_recordTransactionHint": ["Rekodi matumizi au mapato mengine","Phone action sheet (PH4 View all): the line under Record Transaction.","draft"],
-  "home_chooseProduct": ["Chagua bidhaa","Phone (PH4): title of the list of products shown before Add New Batch.","draft"]
+  "home_chooseProduct": ["Chagua bidhaa","Phone (PH4): title of the list of products shown before Add New Batch.","draft"],
+  "phoneList_rowSemantics": ["{name}, {amount}, {status}, {when}","Phone list (PH5a): what a screen reader says for a sale or service row: the client, the amount, the payment status and the date and time, for example 'Amina Juma, Tsh 45,000, Paid, 27 Oct 10:15'.","draft"],
+  "phoneList_salesSummaryLine": ["{count, plural, =1{{period}: mauzo 1, {amount}} other{{period}: mauzo {count}, {amount}}}","Sales on a phone (PH5a): the one summary line under the filters, from the old cards' figures: the period (for example 'Last 30 days'), how many sales and their total.","draft"],
+  "phoneList_servicesSummaryLine": ["{count, plural, =1{{period}: huduma 1, {amount}} other{{period}: huduma {count}, {amount}}}","Services on a phone (PH5a): the one summary line under the filters, from the old cards' figures: the period, how many services and the amount billed (paid plus outstanding).","draft"],
+  "phoneList_filtersOn": ["Vichujio vimewekwa","Phone list (PH5a): read by a screen reader on the Filter button when a filter is not at its default (the button shows a dot).","draft"]
 }
