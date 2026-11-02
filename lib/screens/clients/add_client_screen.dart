@@ -15,6 +15,12 @@ import '../../l10n/l10n.dart';
 import '../../constants/crops.dart';
 import '../../widgets/app_sheet.dart';
 import '../../utils/subscription_guard.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/field_message_slot.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/phone_choice_field.dart';
+import '../../widgets/phone_form/phone_discard_scope.dart';
+import '../../widgets/phone_form/picker_sheet.dart';
 
 class AddClientScreen extends StatefulWidget {
   final Client? client; // null = add, not null = edit
@@ -62,6 +68,27 @@ class _AddClientScreenState extends State<AddClientScreen> {
 
   final List<String> vetPracticeTypes = kVetPracticeTypes;
 
+  // PH6 (phones only): leaving after typing asks first; the notes as typed
+  // (they are read on save only) count too.
+  String? _notesTyped;
+  late final String _initialEntries;
+
+  bool get _isPhone => AppLayout.isPhone(context);
+
+  String get _entries => [
+        _name,
+        _phone,
+        _address,
+        _notesTyped ?? _notes,
+        (_selectedTypes.toList()..sort()).join(','),
+        _farmerSubType,
+        _selectedCrops.join(','),
+        _selectedAnimals.join(','),
+        _vetPracticeType,
+        _businessName,
+        _status,
+      ].join('\u0001');
+
   @override
   void initState() {
     super.initState();
@@ -81,6 +108,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
       _status = c.status;
       _notes = c.notes;
     }
+    _initialEntries = _entries;
   }
 
   Future<void> _saveClient() async {
@@ -249,7 +277,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
   Widget build(BuildContext context) {
     final isEditing = widget.client != null;
 
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: context.colors.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
@@ -319,22 +347,127 @@ class _AddClientScreenState extends State<AddClientScreen> {
           );
         },
       ),
-      bottomNavigationBar: _buildFooter(isEditing),
+      bottomNavigationBar: _isPhone
+          ? FormActionBar(
+              primaryLabel: isEditing ? context.l10n.clients_update : context.l10n.clients_save,
+              primaryIcon: Icons.person_add_alt_outlined,
+              onPrimary: _saveClient,
+              busy: _isSaving,
+              secondaryLabel: context.l10n.common_cancel,
+              onSecondary: () => Navigator.of(context).maybePop(),
+            )
+          : _buildFooter(isEditing),
     );
+    // PH6, a phone: leaving after typing asks; a tap outside a field closes
+    // the keyboard. Elsewhere today's form.
+    if (!_isPhone) return scaffold;
+    return PhoneDiscardScope(
+        kind: 'client', isDirty: () => _entries != _initialEntries, child: closeKeyboardOnTapOutside(context, scaffold));
   }
 
   Widget _sectionHeader(IconData icon, String title) {
+    final text = Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary));
     return Row(
       children: [
         Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
         const SizedBox(width: AppSpacing.s8),
-        Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
+        // On a phone the title wraps (Kiswahili at 360); elsewhere as before.
+        if (_isPhone) Flexible(child: text) else text,
       ],
     );
   }
 
-  Widget _fieldLabel(String label) =>
-      Text(label, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13));
+  Widget _fieldLabel(String label) => Text(label,
+      style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _isPhone ? PhoneFormMetrics.label : AppFontSize.f13));
+
+  // ==================== PHONE (PH6) ====================
+
+  /// A single choice (farmer type, vet practice) as a picker sheet; [none]
+  /// is the empty choice, as the dropdown's first item.
+  Future<void> _pickPhone({
+    required String title,
+    required String? selected,
+    required List<String> values,
+    required String Function(String) label,
+    required ValueChanged<String?> onPicked,
+  }) async {
+    const none = '\u0000none';
+    final picked = await showPickerSheet<String>(
+      context,
+      title: title,
+      selected: selected ?? none,
+      options: [
+        PickerOption(none, context.l10n.common_none),
+        for (final v in values) PickerOption(v, label(v)),
+      ],
+    );
+    if (picked == null) return;
+    setState(() => onPicked(picked == none ? null : picked));
+  }
+
+  /// The grouped multi-select (crops, animals) as a sheet on a phone: the
+  /// same search and toggles, rows at least 56 high, Done to close.
+  Future<void> _showGroupedMultiSelectSheet({
+    required String title,
+    required Map<String, List<String>> groups,
+    required List<String> selected,
+    required String Function(String group) groupLabel,
+    required String Function(String item) itemLabel,
+  }) {
+    String query = '';
+    return showAppSheet<void>(
+      context,
+      title: title,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          final lowerQuery = query.trim().toLowerCase();
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                decoration: InputDecoration(
+                  hintText: context.l10n.common_searchEllipsis,
+                  prefixIcon: const Icon(Icons.search),
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (val) => setSheetState(() => query = val),
+              ),
+              for (final entry in groups.entries) ...[
+                if (entry.value.any((c) => c.toLowerCase().contains(lowerQuery) || itemLabel(c).toLowerCase().contains(lowerQuery)))
+                  Padding(
+                    padding: const EdgeInsets.only(top: PhoneFormMetrics.groupHeaderPaddingTop),
+                    child: Text(groupLabel(entry.key),
+                        style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: PhoneFormMetrics.label, color: context.colors.primary)),
+                  ),
+                for (final item in entry.value)
+                  if (item.toLowerCase().contains(lowerQuery) || itemLabel(item).toLowerCase().contains(lowerQuery))
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: PhoneFormMetrics.optionRow),
+                      child: CheckboxListTile(
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(itemLabel(item), style: const TextStyle(fontSize: PhoneFormMetrics.body)),
+                        value: selected.contains(item),
+                        activeColor: context.colors.primary,
+                        onChanged: (checked) => setSheetState(() => setState(() {
+                          checked == true ? selected.add(item) : selected.remove(item);
+                        })),
+                      ),
+                    ),
+              ],
+              const SizedBox(height: AppSpacing.s12),
+              FilledButton(
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(PhoneFormMetrics.buttonHeight)),
+                onPressed: () => Navigator.of(sheetContext).pop(),
+                child: Text(context.l10n.common_done),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   InputDecoration _fieldDecoration({String? hintText}) {
     final baseBorder = OutlineInputBorder(
@@ -346,7 +479,12 @@ class _AddClientScreenState extends State<AddClientScreen> {
       filled: true,
       fillColor: context.colors.surface,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
+      // PH6, a phone: at least 48 high, and the line under the field kept so
+      // a message does not move the form.
+      contentPadding: _isPhone
+          ? const EdgeInsets.symmetric(vertical: PhoneFormMetrics.fieldPaddingV, horizontal: PhoneFormMetrics.fieldPaddingH)
+          : const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
+      helperText: _isPhone ? ' ' : null,
       border: baseBorder,
       enabledBorder: baseBorder,
       focusedBorder: OutlineInputBorder(
@@ -406,6 +544,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
             inputFormatters: [SentenceCapitalizationFormatter()],
             validator: (value) =>
                 value == null || value.trim().isEmpty ? context.l10n.common_required : null,
+            textInputAction: _isPhone ? TextInputAction.next : null,
             onChanged: (value) => setState(() => _name = value),
             onSaved: (value) => _name = value!.trim(),
           ),
@@ -419,6 +558,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
             keyboardType: TextInputType.phone,
             validator: (value) =>
                 value == null || value.trim().isEmpty ? context.l10n.common_required : null,
+            textInputAction: _isPhone ? TextInputAction.next : null,
             onChanged: (value) => setState(() => _phone = value),
             onSaved: (value) => _phone = value!.trim(),
           ),
@@ -433,6 +573,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
             inputFormatters: [SentenceCapitalizationFormatter()],
             validator: (value) =>
                 value == null || value.trim().isEmpty ? context.l10n.common_required : null,
+            textInputAction: _isPhone ? TextInputAction.next : null,
             onChanged: (value) => setState(() => _address = value),
             onSaved: (value) => _address = value!.trim(),
           ),
@@ -447,6 +588,7 @@ class _AddClientScreenState extends State<AddClientScreen> {
             cursorColor: context.colors.primary,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
+            onChanged: (value) => _notesTyped = value,
             onSaved: (value) => _notes = value?.trim(),
           ),
           const SizedBox(height: AppSpacing.s4),
@@ -549,7 +691,15 @@ class _AddClientScreenState extends State<AddClientScreen> {
               ),
             ],
           ),
-          if (_typeError != null) ...[
+          // PH6, a phone: the message's line is always kept (G5).
+          if (_isPhone) ...[
+            const SizedBox(height: AppSpacing.s8),
+            FieldMessageSlot(
+              message: _typeError,
+              reserve: [context.l10n.clients_errSelectType],
+              style: TextStyle(color: context.colors.danger, fontSize: PhoneFormMetrics.error),
+            ),
+          ] else if (_typeError != null) ...[
             const SizedBox(height: AppSpacing.s8),
             Text(_typeError!, style: TextStyle(color: context.colors.danger, fontSize: AppFontSize.f12)),
           ],
@@ -722,6 +872,19 @@ class _AddClientScreenState extends State<AddClientScreen> {
           const SizedBox(height: AppSpacing.s12),
           _fieldLabel(context.l10n.clients_farmerType),
           const SizedBox(height: AppSpacing.s6),
+          if (_isPhone)
+            PhoneChoiceField(
+              text: _farmerSubType == null ? context.l10n.common_none : context.l10n.farmerSubTypeLabel(_farmerSubType!),
+              chosen: _farmerSubType != null,
+              onTap: () => _pickPhone(
+                title: context.l10n.clients_farmerType,
+                selected: _farmerSubType,
+                values: farmerSubTypes,
+                label: context.l10n.farmerSubTypeLabel,
+                onPicked: (v) => _farmerSubType = v,
+              ),
+            )
+          else
           DropdownButtonFormField<String?>(
             initialValue: _farmerSubType,
             decoration: _fieldDecoration(),
@@ -787,6 +950,10 @@ class _AddClientScreenState extends State<AddClientScreen> {
     required String Function(String group) groupLabel,
     required String Function(String item) itemLabel,
   }) async {
+    if (_isPhone) {
+      return _showGroupedMultiSelectSheet(
+          title: title, groups: groups, selected: selected, groupLabel: groupLabel, itemLabel: itemLabel);
+    }
     String query = '';
 
     await showDialog(
@@ -893,6 +1060,19 @@ class _AddClientScreenState extends State<AddClientScreen> {
           if (showVet) ...[
             _fieldLabel(context.l10n.clients_practiceType),
             const SizedBox(height: AppSpacing.s6),
+            if (_isPhone)
+              PhoneChoiceField(
+                text: _vetPracticeType == null ? context.l10n.common_none : context.l10n.vetPracticeTypeLabel(_vetPracticeType!),
+                chosen: _vetPracticeType != null,
+                onTap: () => _pickPhone(
+                  title: context.l10n.clients_practiceType,
+                  selected: _vetPracticeType,
+                  values: vetPracticeTypes,
+                  label: context.l10n.vetPracticeTypeLabel,
+                  onPicked: (v) => _vetPracticeType = v,
+                ),
+              )
+            else
             DropdownButtonFormField<String?>(
               initialValue: _vetPracticeType,
               decoration: _fieldDecoration(),
