@@ -31,6 +31,11 @@ import '../../config/app_date_format.dart';
 import '../../data/data_keys.dart';
 import '../../config/app_links.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/phone_list/phone_filter_sheet.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
+import '../../widgets/phone_list/record_tile.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -108,6 +113,10 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   final Map<String, Future<(String?, String?)>> _referenceFutureByKey = {};
   LedgerEntry? _selectedEntry;
 
+  // PH5b: the phone's chips (Today, Yesterday, All); null after Date Range
+  // chose other days.
+  String? _rangeChip;
+
   // PH5b: the phone's details page is a route of its own, which this
   // State's setState does not rebuild; the page listens to this instead (the
   // recorded-by names arriving).
@@ -131,10 +140,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       // past payments are actually visible, not just "did they pay today".
       _rangeStart = now.subtract(AppRanges.paymentsDefaultRange);
       _rangeEnd = now;
+      _rangeChip = 'All';
     } else {
       // Default view: today only.
       _rangeStart = DateTime(now.year, now.month, now.day);
       _rangeEnd = now;
+      _rangeChip = 'Today';
     }
 
     _openLedgerSession();
@@ -464,6 +475,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   @override
   Widget build(BuildContext context) {
     final paymentProvider = Provider.of<PaymentProvider>(context);
+    // PH5b: phones get the standard phone list (docs/design/phone_list_pattern.md).
+    if (AppLayout.isPhone(context)) return _buildPhone(paymentProvider);
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -1009,9 +1022,213 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   // ==================== PHONE (PH5b) ====================
 
+  // docs/design/phone_list_pattern.md: the same ledger session, filters,
+  // cards, panel and actions as the layout above, as the standard phone
+  // list. No floating button: payments are recorded from Active Debts. The
+  // ledger has no pages (it is bounded by its dates), so no Load more.
+
   /// Panel text under 12 px is 12 on a phone (S3); tablets keep theirs.
   double _phoneMin(double size) =>
       AppLayout.isPhone(context) && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
+
+  String _rangeChipLabel(String chip) => switch (chip) {
+        'Today' => context.l10n.common_today,
+        'Yesterday' => context.l10n.common_yesterday,
+        _ => context.l10n.common_all,
+      };
+
+  String _methodLabel(String v) => v == 'All' ? context.l10n.common_all : context.l10n.paymentMethodLabel(v);
+
+  String get _rangeText => '${AppDateFormat.date.format(_rangeStart)} - ${AppDateFormat.date.format(_rangeEnd)}';
+
+  /// The chips set the days as the app bar's date range does: Today from
+  /// midnight, Yesterday the whole day before, All the last year (the
+  /// one-client view's window, AppRanges.paymentsDefaultRange).
+  void _setRangeChip(String chip) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    setState(() {
+      _rangeChip = chip;
+      _rangeStart = switch (chip) {
+        'Today' => today,
+        'Yesterday' => today.subtract(AppRanges.day),
+        _ => now.subtract(AppRanges.paymentsDefaultRange),
+      };
+      _rangeEnd = chip == 'Yesterday' ? today.subtract(AppRanges.instant) : now;
+    });
+    _openLedgerSession();
+  }
+
+  /// Date Range (the overflow menu): today's dialog; other days than a
+  /// chip's leave no chip chosen.
+  Future<void> _pickDates() async {
+    final before = (_rangeStart, _rangeEnd);
+    await _showDateRangeDialog();
+    if (mounted && (_rangeStart, _rangeEnd) != before) setState(() => _rangeChip = null);
+  }
+
+  void _setPhoneFilters({String? type, String? method}) {
+    setState(() {
+      _selectedTypeFilter = type ?? _selectedTypeFilter;
+      if (method != null) _selectedMethodFilter = method == 'All' ? null : method;
+    });
+    _openLedgerSession();
+  }
+
+  Future<void> _openFilterSheet() async {
+    final l10n = context.l10n;
+    final applied = await showPhoneFilterSheet(context, fields: {
+      'type': PhoneFilterField(
+          title: l10n.common_type, options: [for (final t in _typeTabs) t.$1], label: _typeTabLabel, defaultValue: 'All'),
+      'method': PhoneFilterField(
+          title: l10n.common_method, options: ['All', ...kPaymentMethods], label: _methodLabel, defaultValue: 'All'),
+    }, values: {
+      'type': _selectedTypeFilter,
+      'method': _selectedMethodFilter ?? 'All',
+    });
+    if (applied == null || !mounted) return;
+    _setPhoneFilters(type: applied['type'], method: applied['method']);
+  }
+
+  /// A card's second line: its count, and its trend with the sign written.
+  String _cardDetail(String count, double? trend) =>
+      trend == null ? count : '$count · ${trend >= 0 ? '+' : '-'}${trend.abs().toStringAsFixed(1)}%';
+
+  /// Every card as a row (its count and trend under its label), then the
+  /// list's total; for one client, the total only (as the toolbar).
+  void _showSummary(double total) {
+    final l10n = context.l10n;
+    final outstandingTrend = (_previousOutstanding != null && _previousOutstanding != 0 && _outstandingAmount != null)
+        ? ((_outstandingAmount! - _previousOutstanding!) / _previousOutstanding!) * 100
+        : null;
+    (String, String) card(String title, _PaymentMetric? m) => (
+          '$title\n${_cardDetail(l10n.payments_paymentCount(m?.count ?? 0), m?.trendPercent)}',
+          Money.format(m?.amount ?? 0),
+        );
+    showPhoneSummarySheet(context, period: _rangeText, rows: [
+      if (widget.initialClientId == null) ...[
+        card(l10n.common_today, _todayMetric),
+        card(l10n.payments_thisWeek, _weekMetric),
+        card(l10n.payments_thisMonth, _monthMetric),
+        (
+          '${l10n.payments_outstanding}\n${_cardDetail(l10n.payments_debtCount(_outstandingCount ?? 0), outstandingTrend)}',
+          Money.format(_outstandingAmount ?? 0),
+        ),
+      ],
+      (l10n.common_total, Money.format(total)),
+    ]);
+  }
+
+  /// Pull to refresh (R8): the ledger starts over and the cards load again.
+  Future<void> _refresh() async {
+    await Future.wait([
+      _openLedgerSession(forceRefresh: true),
+      if (widget.initialClientId == null) _loadMetrics(),
+    ]);
+  }
+
+  Future<void> _openDetailsPage(LedgerEntry entry) {
+    return Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        key: const ValueKey('phoneList-details'),
+        appBar: AppBar(title: Text(context.l10n.payments_detailsTitle)),
+        body: ValueListenableBuilder<int>(
+          valueListenable: _phoneRevision,
+          builder: (context, _, _) => _buildDetailsPanel(entry, onPage: true),
+        ),
+      ),
+    ));
+  }
+
+  Widget _entryTile(LedgerEntry e, {required bool grouped}) {
+    final l10n = context.l10n;
+    final name = e.clientName ?? e.description;
+    final amount = Money.format(e.amount);
+    final source = e.type == 'other_income' ? l10n.payments_typeOtherIncome : e.description;
+    return RecordTile(
+      title: name,
+      amount: amount,
+      details: [
+        l10n.paymentMethodLabel(e.paymentMethod ?? '-'),
+        // While searching by name the list is not by day: the date too.
+        grouped ? AppDateFormat.time24.format(e.timestamp) : AppDateFormat.dateShortTime24.format(e.timestamp),
+      ],
+      status: RecordStatus(source, context.colors.primary),
+      // A client's initials; an entry with no client (other income) shows
+      // its kind's icon.
+      initialsOf: e.clientName,
+      icon: _iconFor(e.type),
+      colorSeed: name,
+      semanticsLabel: l10n.phoneList_rowSemantics(name, amount, source, AppDateFormat.dateShortTime24.format(e.timestamp)),
+      onTap: () => _openDetailsPage(e),
+    );
+  }
+
+  Widget _buildPhone(PaymentProvider paymentProvider) {
+    final l10n = context.l10n;
+    final controller = paymentProvider.ledgerController;
+    final forClient = widget.initialClientId != null;
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final entries = controller.entries;
+        final total = entries.fold<double>(0.0, (runningTotal, e) => runningTotal + e.amount);
+        final chip = _rangeChip;
+        return PhoneListScaffold<LedgerEntry>(
+          title: forClient ? l10n.payments_titleForClient(widget.initialClientName!) : l10n.payments_title,
+          asTab: false,
+          menu: [PhoneListMenuItem(label: l10n.export_dateRange, icon: Icons.date_range_outlined, onSelected: _pickDates)],
+          searchController: _searchController,
+          searchHint: l10n.payments_searchHint,
+          onSearchChanged: _onSearchChanged,
+          onSearchClosed: _clearSearch,
+          // One client's view starts with the client's name in the search:
+          // the bar keeps its title.
+          startSearching: forClient ? false : null,
+          quickChips: PhoneQuickChips(
+            key: const ValueKey('phoneList-quickChips'),
+            values: const ['Today', 'Yesterday', 'All'],
+            selected: chip ?? '',
+            label: _rangeChipLabel,
+            onSelected: _setRangeChip,
+          ),
+          filtersActive: _selectedTypeFilter != 'All' || _selectedMethodFilter != null,
+          // The toolbar has no type or method for one client.
+          onFilter: forClient ? null : _openFilterSheet,
+          appliedFilters: [
+            if (chip == null) PhoneAppliedFilter(_rangeText, () => _setRangeChip(forClient ? 'All' : 'Today')),
+            if (_selectedTypeFilter != 'All')
+              PhoneAppliedFilter(l10n.common_filterValue(l10n.common_type, _typeTabLabel(_selectedTypeFilter)),
+                  () => _setPhoneFilters(type: 'All')),
+            if (_selectedMethodFilter != null)
+              PhoneAppliedFilter(l10n.common_filterValue(l10n.common_method, _methodLabel(_selectedMethodFilter!)),
+                  () => _setPhoneFilters(method: 'All')),
+          ],
+          summaryLine: controller.isLoading && entries.isEmpty
+              ? null
+              : l10n.phoneList_paymentsSummaryLine(entries.length, Money.format(total)),
+          onSummary: () => _showSummary(total),
+          banner: controller.newEntriesAvailable > 0 ? _buildNewEntriesBanner(controller) : null,
+          items: entries,
+          idOf: (e) => e.sortId,
+          dateOf: (e) => e.timestamp,
+          amountOf: (e) => e.amount,
+          // Name search (not for one client) comes in name order.
+          grouped: forClient || _searchQuery.isEmpty,
+          tileBuilder: (context, e, {required grouped}) => _entryTile(e, grouped: grouped),
+          loading: controller.isLoading,
+          error: controller.error,
+          onRetry: controller.refreshSession,
+          emptyIcon: Icons.payments_outlined,
+          emptyText: l10n.payments_emptyPeriod,
+          hasMore: false,
+          loadingMore: false,
+          onLoadMore: () {},
+          onRefresh: _refresh,
+        );
+      },
+    );
+  }
 
   Widget _buildDayGroup(String dayKey, List<LedgerEntry> entries, double dayTotal) {
     final date = DateTime.parse(dayKey);

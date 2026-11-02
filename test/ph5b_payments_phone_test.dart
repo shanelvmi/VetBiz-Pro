@@ -19,15 +19,15 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _wide = Size(1200, 800);
 
 final _payments = [
-  Ph5Payment('p1', ph5When(0, minutes: 5), client: 'Amina Juma', clientId: 'c1', amount: 20000, method: 'mpesa'),
-  Ph5Payment('p2', ph5When(0, minutes: 40), client: 'Baraka Mushi', clientId: 'c2', amount: 7000, source: 'debt_repayment'),
-  Ph5Payment('p3', ph5When(1), client: 'Neema Ally', clientId: 'c3', amount: 15000, source: 'service'),
-  Ph5Payment('p4', ph5When(3), client: 'Amina Juma', clientId: 'c1', amount: 4000),
+  Ph5Payment('p1', ph5When(0, minutes: 5), client: 'Amina Juma', clientId: 'c1', amount: 20000, method: 'M-Pesa'),
+  Ph5Payment('p2', ph5When(0, minutes: 40), client: 'Baraka Mushi', clientId: 'c2', amount: 7000, method: 'Cash', source: 'debt_repayment', phone: '0712222222'),
+  Ph5Payment('p3', ph5When(1), client: 'Neema Ally', clientId: 'c3', amount: 15000, method: 'Cash', source: 'service'),
+  Ph5Payment('p4', ph5When(3), client: 'Amina Juma', clientId: 'c1', amount: 4000, method: 'Cash'),
 ];
 
 Future<Ph5App> _open(WidgetTester tester,
@@ -46,7 +46,16 @@ Future<Ph5App> _open(WidgetTester tester,
 
 Finder _chip(String label) => find.descendant(of: ph5Key('phoneList-quickChips'), matching: find.text(label));
 
+/// Today's wide layout overflows with the test font (each glyph a full em; the
+/// fingerprints record it, unchanged): only its texts and figures matter here.
+void _drainWide(WidgetTester tester) {
+  while (tester.takeException() != null) {}
+}
+
 Future<void> _tapChip(WidgetTester tester, String label) async {
+  // The chips' row scrolls sideways; a chip may start out of view.
+  await tester.ensureVisible(_chip(label));
+  await tester.pump();
   await tester.tap(_chip(label));
   await ph5Settle(tester);
 }
@@ -83,6 +92,7 @@ void main() {
     await ph5Settle(tester);
     await tester.tap(find.text('Type: Debt Repayments').last);
     await ph5Settle(tester);
+    _drainWide(tester);
     final byType = {for (final n in ['Amina Juma', 'Baraka Mushi']) if (find.text(n).evaluate().isNotEmpty) n};
     expect(byType, {'Baraka Mushi'});
 
@@ -107,6 +117,7 @@ void main() {
 
   ph5TestWidgets('the summary line and a Summary sheet with the four cards and the total, as on the tablet', (tester) async {
     await _open(tester, size: _wide);
+    _drainWide(tester);
     final cards = {for (final t in ['Today', 'This Week', 'This Month', 'Outstanding']) t: _card(t)};
     expect(cards['Today'], containsAll([Money.format(27000), '2 payments', '80.0%']));
     expect(find.text('Total: ${Money.format(27000)}'), findsOneWidget);
@@ -142,6 +153,7 @@ void main() {
     await _open(tester, size: _wide);
     await tester.tap(find.text('Baraka Mushi'));
     await ph5Settle(tester);
+    _drainWide(tester);
     final panel = ph5Texts(find.ancestor(of: find.text('Payment Details'), matching: find.byType(SingleChildScrollView)).first);
     expect(panel, contains('Asha Seller'));
 

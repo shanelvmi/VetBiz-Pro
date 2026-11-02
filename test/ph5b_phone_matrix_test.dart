@@ -21,7 +21,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
 // The screens done so far: the others stay skipped until theirs is.
-const _done = {'Clients', 'Debtors'};
+const _done = {'Clients', 'Debtors', 'Payments'};
 
 final _client = Ph5Client('c1', matrixLongClientName, ph5When(0, minutes: 5),
     types: ['Farmer', 'Vet', 'Wholesaler'], balance: matrixBigAmount, oldestDebt: ph5When(45));

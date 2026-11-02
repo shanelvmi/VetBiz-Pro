@@ -39,8 +39,10 @@ class Ph5Payment {
   final double amount;
   final String method;
   final String source;
+  final String? phone;
 
-  const Ph5Payment(this.id, this.when, {this.client, this.clientId, this.amount = 5000, this.method = 'cash', this.source = 'sale'});
+  const Ph5Payment(this.id, this.when,
+      {this.client, this.clientId, this.amount = 5000, this.method = 'cash', this.source = 'sale', this.phone});
 }
 
 class Ph5Tx {
@@ -98,6 +100,7 @@ Future<void> ph5SeedPayments(FirebaseFirestore fs, List<Ph5Payment> payments) as
       'clientId': p.clientId,
       'clientName': p.client,
       'clientNameLower': p.client?.toLowerCase(),
+      if (p.phone != null) 'clientPhone': p.phone,
       'paymentMethod': p.method,
       'paidById': testUserId,
     });
