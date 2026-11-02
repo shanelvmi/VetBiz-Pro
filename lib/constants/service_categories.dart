@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// The canonical list of service categories, shared between the Add/Edit
 /// Service form (where they're chosen from a dropdown) and the Services
 /// list screen (where they appear as filter chips). Defined once here so
@@ -14,3 +16,15 @@ const List<String> kServiceCategories = [
   'Preventive',
   'Other',
 ];
+
+/// PH5a: the icon a service's row leads with on a phone (R6). Unknown
+/// categories (old records) get the general one.
+IconData serviceCategoryIcon(String category) => switch (category) {
+      'Surgical' => Icons.healing_outlined,
+      'Treatment' => Icons.medication_outlined,
+      'Management' => Icons.assignment_outlined,
+      'Consultation' => Icons.forum_outlined,
+      'Diagnostics' => Icons.biotech_outlined,
+      'Preventive' => Icons.vaccines_outlined,
+      _ => Icons.medical_services_outlined,
+    };

@@ -26,6 +26,12 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_list/phone_filter_sheet.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
+import '../../widgets/phone_list/record_tile.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/restore_feedback.dart';
 import '../../l10n/l10n.dart';
@@ -190,6 +196,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
   @override
   Widget build(BuildContext context) {
     final serviceProvider = Provider.of<ServiceProvider>(context);
+    // PH5a: phones get the standard phone list; everything below is the
+    // tablet and computer layout, unchanged.
+    if (AppLayout.isPhone(context)) return _buildPhone(serviceProvider);
     final dateFormatter = AppDateFormat.dateTime24;
     final dateOnlyFormatter = AppDateFormat.date;
     final timeOnlyFormatter = AppDateFormat.time12;
@@ -226,28 +235,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                       final pageServices = controller.items;
                       return Column(
                         children: [
-                          if (controller.newRecordsAvailable > 0)
-                            Container(
-                              width: double.infinity,
-                              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
-                                  const SizedBox(width: AppSpacing.s8),
-                                  Expanded(
-                                    child: Text(
-                                      context.l10n.services_newRecords(controller.newRecordsAvailable),
-                                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => serviceProvider.servicesListController.refreshSession(),
-                                    child: Text(context.l10n.common_refresh),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          if (controller.newRecordsAvailable > 0) _buildNewRecordsBanner(controller),
                           Expanded(
                             child: controller.error != null && pageServices.isEmpty
                                 ? Center(child: FirestoreErrorView(error: controller.error))
@@ -394,14 +382,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
-            onPressed: () => navigateOrShowLockedDialog(
-              context,
-              const AddEditServiceScreen(),
-              onNavigate: () async {
-                await showAddEditServiceScreen(context);
-                if (mounted) _openServicesListSession(forceRefresh: true);
-              },
-            ),
+            onPressed: _recordVisit,
             icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: Text(context.l10n.services_recordVisit),
             style: ElevatedButton.styleFrom(
@@ -413,6 +394,54 @@ class _ServicesScreenState extends State<ServicesScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Record Visit, from the app bar, the phone's floating button and its
+  /// empty list: through the locked-facility guard, then the list starts over.
+  void _recordVisit() => navigateOrShowLockedDialog(
+        context,
+        const AddEditServiceScreen(),
+        onNavigate: () async {
+          await showAddEditServiceScreen(context);
+          if (mounted) _openServicesListSession(forceRefresh: true);
+        },
+      );
+
+  void _onSearchChanged(String val) {
+    setState(() => _searchQuery = val.trim());
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(AppTimeouts.searchDebounce, _openServicesListSession);
+  }
+
+  void _clearSearch() {
+    _searchDebounce?.cancel();
+    setState(() => _searchQuery = '');
+    _searchController.clear();
+    _openServicesListSession();
+  }
+
+  Widget _buildNewRecordsBanner(CursorPaginatedListController<Service> controller) {
+    return Container(
+      width: double.infinity,
+      color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
+      child: Row(
+        children: [
+          Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(
+            child: Text(
+              context.l10n.services_newRecords(controller.newRecordsAvailable),
+              style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => controller.refreshSession(),
+            child: Text(context.l10n.common_refresh),
+          ),
+        ],
+      ),
     );
   }
 
@@ -476,19 +505,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: AppIconSize.i18),
-                      onPressed: () {
-                        _searchDebounce?.cancel();
-                        setState(() => _searchQuery = '');
-                        _searchController.clear();
-                        _openServicesListSession();
-                      },
+                      onPressed: _clearSearch,
                     ),
             ),
-            onChanged: (val) {
-              setState(() => _searchQuery = val.trim());
-              _searchDebounce?.cancel();
-              _searchDebounce = Timer(AppTimeouts.searchDebounce, _openServicesListSession);
-            },
+            onChanged: _onSearchChanged,
           ),
         ),
         const SizedBox(width: AppSpacing.s10),
@@ -774,9 +794,163 @@ class _ServicesScreenState extends State<ServicesScreen> {
     );
   }
 
+  // ==================== PHONE (PH5a) ====================
+
+  // docs/design/phone_list_pattern.md: the same filters, session, summary,
+  // details and actions as the layout above, as the standard phone list.
+
+  String _statusLabel(String v) => v == 'All' ? context.l10n.common_all : context.l10n.paymentStatusLabel(v);
+
+  String _categoryLabel(String v) => v == 'All' ? context.l10n.common_all : context.l10n.serviceCategoryLabel(v);
+
+  void _setFilters({String? date, String? category, String? status}) {
+    setState(() {
+      _dateFilter = date ?? _dateFilter;
+      _selectedCategory = category ?? _selectedCategory;
+      _statusFilter = status ?? _statusFilter;
+    });
+    _openServicesListSession();
+  }
+
+  Future<void> _openFilterSheet() async {
+    final l10n = context.l10n;
+    final applied = await showPhoneFilterSheet(context, fields: {
+      'date': PhoneFilterField(
+          title: l10n.common_date, options: _dateFilterOptions, label: _dateFilterLabel, defaultValue: 'Last 30 days'),
+      'category': PhoneFilterField(
+          title: l10n.common_category, options: ['All', ...kServiceCategories], label: _categoryLabel, defaultValue: 'All'),
+      'status': PhoneFilterField(
+          title: l10n.common_status, options: _statusFilterOptions, label: _statusLabel, defaultValue: 'All'),
+    }, values: {
+      'date': _dateFilter,
+      'category': _selectedCategory,
+      'status': _statusFilter,
+    });
+    if (applied == null || !mounted) return;
+    _setFilters(date: applied['date'], category: applied['category'], status: applied['status']);
+  }
+
+  void _showSummary() {
+    final l10n = context.l10n;
+    final s = _rangeSummary ?? const {};
+    showPhoneSummarySheet(context, period: l10n.services_last30, rows: [
+      (l10n.services_totalServices, '${(s['count'] ?? 0).toInt()}'),
+      (l10n.services_paidAmount, Money.format(s['paidAmount'] ?? 0)),
+      (l10n.payments_outstanding, Money.format(s['outstanding'] ?? 0)),
+      (l10n.services_digitalPayments, Money.format(s['nonCashAmount'] ?? 0)),
+    ]);
+  }
+
+  /// Pull to refresh (R8): the list starts over and the summary reloads.
+  Future<void> _refresh() async {
+    _openServicesListSession(forceRefresh: true);
+    await _loadRangeSummary();
+  }
+
+  Future<void> _openDetailsPage(Service service) {
+    return Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        key: const ValueKey('phoneList-details'),
+        appBar: AppBar(title: Text(context.l10n.services_detailsTitle)),
+        body: _buildServiceDetailsPanel(service, AppDateFormat.date, AppDateFormat.time12,
+            onDeleted: () => Navigator.of(pageContext).pop()),
+      ),
+    ));
+  }
+
+  Widget _serviceTile(Service service, {required bool grouped}) {
+    final l10n = context.l10n;
+    final date = service.serviceDate ?? DateTime.now();
+    final client = service.clientName ?? l10n.common_walkIn;
+    final amount = Money.format(service.totalAmount);
+    final status = l10n.paymentStatusLabel(_getPaymentStatus(service.totalPaid, service.totalAmount));
+    return RecordTile(
+      title: client,
+      amount: amount,
+      details: [
+        l10n.serviceCategoryLabel(service.category),
+        // Search results are not grouped by day, so they give the date too.
+        grouped ? AppDateFormat.time24.format(date) : AppDateFormat.dateShortTime24.format(date),
+      ],
+      status: RecordStatus(status, _statusColor(service.totalPaid, service.totalAmount)),
+      icon: serviceCategoryIcon(service.category),
+      colorSeed: service.category,
+      semanticsLabel: l10n.phoneList_rowSemantics(client, amount, status, AppDateFormat.dateShortTime24.format(date)),
+      onTap: () => _openDetailsPage(service),
+    );
+  }
+
+  Widget _buildPhone(ServiceProvider serviceProvider) {
+    final l10n = context.l10n;
+    final controller = serviceProvider.servicesListController;
+    final summary = _rangeSummary;
+    final filtered = _searchQuery.isNotEmpty || _selectedCategory != 'All' || _dateFilter != 'Last 30 days' || _statusFilter != 'All';
+    final recordVisit = PhoneListAction(label: l10n.services_recordVisit, icon: Icons.add, onPressed: _recordVisit);
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => PhoneListScaffold<Service>(
+        title: l10n.common_serviceRecords,
+        asTab: false,
+        menu: [
+          PhoneListMenuItem(
+            label: l10n.services_archive,
+            icon: Icons.archive_outlined,
+            onSelected: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ServicesArchiveScreen())),
+          ),
+        ],
+        searchController: _searchController,
+        searchHint: l10n.services_searchHint,
+        onSearchChanged: _onSearchChanged,
+        onSearchClosed: _clearSearch,
+        quickChips: PhoneQuickChips(
+          key: const ValueKey('phoneList-quickChips'),
+          values: const ['All', ...PaymentStatus.quickChipOrder],
+          selected: _statusFilter,
+          label: _statusLabel,
+          onSelected: (v) => _setFilters(status: v),
+        ),
+        filtersActive: _selectedCategory != 'All' || _dateFilter != 'Last 30 days' || _statusFilter != 'All',
+        onFilter: _openFilterSheet,
+        appliedFilters: [
+          if (_dateFilter != 'Last 30 days')
+            PhoneAppliedFilter(l10n.common_filterValue(l10n.common_date, _dateFilterLabel(_dateFilter)),
+                () => _setFilters(date: 'Last 30 days')),
+          if (_selectedCategory != 'All')
+            PhoneAppliedFilter(l10n.common_filterValue(l10n.common_category, _categoryLabel(_selectedCategory)),
+                () => _setFilters(category: 'All')),
+        ],
+        summaryLine: summary == null
+            ? null
+            : l10n.phoneList_servicesSummaryLine((summary['count'] ?? 0).toInt(), l10n.services_last30,
+                Money.format((summary['paidAmount'] ?? 0) + (summary['outstanding'] ?? 0))),
+        onSummary: _showSummary,
+        banner: controller.newRecordsAvailable > 0 ? _buildNewRecordsBanner(controller) : null,
+        items: controller.loadedItems,
+        idOf: (s) => s.id,
+        dateOf: (s) => s.serviceDate ?? DateTime.now(),
+        amountOf: (s) => s.totalAmount,
+        grouped: _searchQuery.isEmpty,
+        tileBuilder: (context, s, {required grouped}) => _serviceTile(s, grouped: grouped),
+        loading: controller.isLoading,
+        error: controller.error,
+        onRetry: controller.refreshSession,
+        emptyIcon: Icons.medical_services_outlined,
+        emptyText: filtered ? l10n.services_emptyFiltered : l10n.services_empty,
+        fab: recordVisit,
+        emptyAction: recordVisit,
+        hasMore: controller.hasNextPage,
+        loadingMore: controller.isLoading && controller.loadedItems.isNotEmpty,
+        onLoadMore: controller.goToNextPage,
+        onRefresh: _refresh,
+      ),
+    );
+  }
+
   // ==================== SERVICE DETAILS PANEL ====================
 
-  Future<void> _confirmDeleteService(Service service) async {
+  /// [onDeleted]: the phone's details page closes itself once the service is
+  /// in Trash (PH5a R7), before Undo is offered.
+  Future<void> _confirmDeleteService(Service service, {VoidCallback? onDeleted}) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -807,6 +981,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
       await serviceProvider.deleteService(service.id);
       if (!mounted) return;
       if (_selectedService?.id == service.id) setState(() => _selectedService = null);
+      onDeleted?.call();
       // Undo is the Trash restore, which takes the stock again and
       // re-creates the debt, the balance and the expense (E2,
       // delete_restore.md). The list starts over by itself after the delete
@@ -821,7 +996,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
     }
   }
 
-  Widget _buildServiceDetailsPanel(Service service, DateFormat dateOnlyFormatter, DateFormat timeOnlyFormatter) {
+  /// The side panel; with [onDeleted], the body of the phone's details page
+  /// (PH5a R7): the same content without the title and close row (the
+  /// page's app bar has them).
+  Widget _buildServiceDetailsPanel(Service service, DateFormat dateOnlyFormatter, DateFormat timeOnlyFormatter,
+      {VoidCallback? onDeleted}) {
     final status = _getPaymentStatus(service.totalPaid, service.totalAmount);
     final statusColor = _statusColor(service.totalPaid, service.totalAmount);
     final serviceDate = service.serviceDate ?? DateTime.now();
@@ -835,6 +1014,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (onDeleted == null)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -927,7 +1107,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   const SizedBox(width: AppSpacing.s8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _confirmDeleteService(service),
+                      onPressed: () => _confirmDeleteService(service, onDeleted: onDeleted),
                       icon: Icon(Icons.delete_outline, size: AppIconSize.i16, color: context.colors.dangerSoft),
                       label: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft)),
                       style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.danger.withValues(alpha: AppAlpha.a50))),
@@ -970,7 +1150,11 @@ class _ServicesScreenState extends State<ServicesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(label,
+                    style: TextStyle(
+                        // At least 12 on a phone (S3; the details page, PH5a R7).
+                        fontSize: AppLayout.isPhone(context) ? PhoneListMetrics.detailLabel : AppFontSize.f11_5,
+                        color: context.colors.textMuted)),
                 Text(value, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
                 if (subtitle != null && subtitle.isNotEmpty)
                   Text(subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
