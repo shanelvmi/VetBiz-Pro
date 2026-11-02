@@ -29,6 +29,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_layout.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 
@@ -80,6 +81,17 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   // serviceId reference. Lazy-loaded and cached per debt id, since
   // this needs its own fetch of the original sale/service document.
   final Map<String, Future<int?>> _receiptNumberFutureByDebt = {};
+
+  // PH5b: the phone's details page is a route of its own, which this
+  // State's setState does not rebuild; the page listens to this instead (a
+  // note added, the debts read again after a payment).
+  final ValueNotifier<int> _phoneRevision = ValueNotifier(0);
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _phoneRevision.value++;
+  }
 
   // This client's own real, individual unpaid debt records - loaded
   // only once their details panel is opened, and only ever this one
@@ -147,6 +159,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     _searchController.dispose();
     _searchDebounce?.cancel();
     _newRecordsCheckTimer?.cancel();
+    _phoneRevision.dispose();
     super.dispose();
   }
 
@@ -188,6 +201,32 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     }
   }
 
+  /// "N new debtors available - Refresh", above the list (both layouts).
+  Widget _buildNewRecordsBanner(CursorPaginatedListController<Client> controller, {EdgeInsets? margin}) {
+    return Container(
+      width: double.infinity,
+      margin: margin,
+      color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
+      child: Row(
+        children: [
+          Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(
+            child: Text(
+              context.l10n.debtors_newRecords(controller.newRecordsAvailable),
+              style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => controller.refreshSession(),
+            child: Text(context.l10n.common_refresh),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final clientProvider = Provider.of<ClientProvider>(context);
@@ -227,28 +266,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                             child: _buildFiltersToolbar(),
                           ),
                           if (controller.newRecordsAvailable > 0)
-                            Container(
-                              width: double.infinity,
-                              margin: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
-                              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
-                                  const SizedBox(width: AppSpacing.s8),
-                                  Expanded(
-                                    child: Text(
-                                      context.l10n.debtors_newRecords(controller.newRecordsAvailable),
-                                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => controller.refreshSession(),
-                                    child: Text(context.l10n.common_refresh),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            _buildNewRecordsBanner(controller,
+                                margin: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0)),
                           Expanded(
                             child: controller.error != null && debtors.isEmpty
                                 ? Center(child: FirestoreErrorView(error: controller.error))
@@ -292,7 +311,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   // ==================== METRICS ROW ====================
 
-  Widget _buildMetricsRow() {
+  /// The four cards: label, value, icon, colour, second line, loading. The
+  /// phone's summary sheet shows the same (PH5b).
+  List<(String, String, IconData, Color, String, bool)> _metricsList() {
     final isPaidLoading = _paidThisMonth == null && _isPaidThisMonthLoading;
     final facilityMetrics = _metrics;
     final isMetricsLoading = facilityMetrics == null && _isMetricsLoading;
@@ -332,7 +353,11 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         isPaidLoading,
       ),
     ];
+    return metrics;
+  }
 
+  Widget _buildMetricsRow() {
+    final metrics = _metricsList();
     return LayoutBuilder(
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < AppBreakpoints.compact;
@@ -409,6 +434,26 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   // The fetch itself is shared with the phone's "+" sheet (PH3).
   Future<List<Client>> _fetchAllDebtorClients() => fetchAllDebtorClients(_db, _facilityId);
 
+  /// Record Payment (the app bar's button; the phone's floating one): asks
+  /// for the debtor first, from every debtor.
+  Future<void> _recordPayment() async {
+    final debtorClients = await _fetchAllDebtorClients();
+    if (!mounted) return;
+    final debtorBalances = {for (final c in debtorClients) c.id: c.balance};
+    final result = await showAddPaymentScreen(
+      context,
+      facilityId: _facilityId,
+      debtorClients: debtorClients,
+      debtorBalances: debtorBalances,
+    );
+    if (result == true && _facilityId != null && mounted) {
+      Provider.of<ClientProvider>(context, listen: false)
+          .debtorsListController
+          .refreshSession();
+      _loadMetrics();
+    }
+  }
+
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: context.colors.surface,
@@ -427,23 +472,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
-            onPressed: () async {
-              final debtorClients = await _fetchAllDebtorClients();
-              if (!mounted) return;
-              final debtorBalances = {for (final c in debtorClients) c.id: c.balance};
-              final result = await showAddPaymentScreen(
-                context,
-                facilityId: _facilityId,
-                debtorClients: debtorClients,
-                debtorBalances: debtorBalances,
-              );
-              if (result == true && _facilityId != null && mounted) {
-                Provider.of<ClientProvider>(context, listen: false)
-                    .debtorsListController
-                    .refreshSession();
-                _loadMetrics();
-              }
-            },
+            onPressed: _recordPayment,
             icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: Text(context.l10n.debtors_recordPayment),
             style: ElevatedButton.styleFrom(
@@ -490,6 +519,19 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         _ => context.l10n.common_all,
       };
 
+  void _onSearchChanged(String val) {
+    setState(() => _searchQuery = val.trim());
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(AppTimeouts.searchDebounce, _openDebtorsListSession);
+  }
+
+  void _clearSearch() {
+    _searchDebounce?.cancel();
+    setState(() => _searchQuery = '');
+    _searchController.clear();
+    _openDebtorsListSession();
+  }
+
   Widget _buildFiltersToolbar() {
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.r10),
@@ -518,19 +560,10 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: AppIconSize.i18),
-                      onPressed: () {
-                        _searchDebounce?.cancel();
-                        setState(() => _searchQuery = '');
-                        _searchController.clear();
-                        _openDebtorsListSession();
-                      },
+                      onPressed: _clearSearch,
                     ),
             ),
-            onChanged: (val) {
-              setState(() => _searchQuery = val.trim());
-              _searchDebounce?.cancel();
-              _searchDebounce = Timer(AppTimeouts.searchDebounce, _openDebtorsListSession);
-            },
+            onChanged: _onSearchChanged,
           ),
         ),
         const SizedBox(width: AppSpacing.s10),
@@ -838,6 +871,16 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     );
   }
 
+  // ==================== PHONE (PH5b) ====================
+
+  /// On a phone's details page a label wraps beside a long amount or a
+  /// Kiswahili button; the side panel keeps its rows as they were.
+  Widget _wrapOnPhone(Widget child) => AppLayout.isPhone(context) ? Flexible(child: child) : child;
+
+  /// Panel text under 12 px is 12 on a phone (S3); tablets keep theirs.
+  double _phoneMin(double size) =>
+      AppLayout.isPhone(context) && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
+
   // ==================== DEBTOR DETAILS PANEL ====================
 
   Future<List<Debt>> _getDetailsDebtsFuture(String clientId) {
@@ -870,7 +913,10 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     }
   }
 
-  Widget _buildDebtorDetailsPanel(_DebtorRow debtor) {
+  /// The side panel; [onPage], the body of the phone's details page (PH5b,
+  /// as PH5a R7): the same content without the title and close row (the
+  /// page's app bar has them).
+  Widget _buildDebtorDetailsPanel(_DebtorRow debtor, {bool onPage = false}) {
     final isOverdue = debtor.isOverdue;
 
     return Container(
@@ -880,6 +926,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (!onPage)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -989,7 +1036,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.l10n.common_notes, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                _wrapOnPhone(Text(context.l10n.common_notes, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5))),
                 TextButton.icon(
                   onPressed: () => _addNote(debtor),
                   icon: const Icon(Icons.add, size: AppIconSize.i16),
@@ -1031,7 +1078,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                           Text(note['text'] as String? ?? '', style: const TextStyle(fontSize: AppFontSize.f13)),
                           if (ts != null)
                             Text(AppDateFormat.dateTime12.format(ts.toDate()),
-                                style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint)),
+                                style: TextStyle(fontSize: _phoneMin(AppFontSize.f11), color: context.colors.textHint)),
                         ],
                       ),
                     );
@@ -1113,7 +1160,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
                   decoration: BoxDecoration(color: context.colors.danger.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
-                  child: Text(context.l10n.debtors_overdue, style: TextStyle(color: context.colors.danger, fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold)),
+                  child: Text(context.l10n.debtors_overdue, style: TextStyle(color: context.colors.danger, fontSize: _phoneMin(AppFontSize.f10_5), fontWeight: AppFontWeight.semibold)),
                 ),
             ],
           ),
@@ -1127,7 +1174,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(context.l10n.common_amount, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
+                  Text(context.l10n.common_amount, style: TextStyle(fontSize: _phoneMin(AppFontSize.f11), color: context.colors.textMuted)),
                   Text(Money.format(debt.amountOwed),
                       style: TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.bold, color: context.colors.danger)),
                 ],
@@ -1345,7 +1392,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
+          _wrapOnPhone(Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
           Text(
             value,
             style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color),
