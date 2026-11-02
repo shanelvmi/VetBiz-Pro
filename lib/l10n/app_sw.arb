@@ -3983,5 +3983,13 @@
   "phoneList_servicesSummaryLine": "{count, plural, =1{{period}: huduma 1, {amount}} other{{period}: huduma {count}, {amount}}}",
   "@phoneList_servicesSummaryLine": {"x-review":"draft"},
   "phoneList_filtersOn": "Vichujio vimewekwa",
-  "@phoneList_filtersOn": {"x-review":"draft"}
+  "@phoneList_filtersOn": {"x-review":"draft"},
+  "phoneList_clientsSummaryLine": "{count, plural, =1{mteja 1} other{wateja {count}}}",
+  "@phoneList_clientsSummaryLine": {"x-review":"draft"},
+  "phoneList_debtorsSummaryLine": "{count, plural, =1{mdaiwa 1, wanadaiwa {amount}} other{wadaiwa {count}, wanadaiwa {amount}}}",
+  "@phoneList_debtorsSummaryLine": {"x-review":"draft"},
+  "phoneList_paymentsSummaryLine": "{count, plural, =1{malipo 1, {amount}} other{malipo {count}, {amount}}}",
+  "@phoneList_paymentsSummaryLine": {"x-review":"draft"},
+  "phoneList_transactionsSummaryLine": "{period}: mapato {income}, matumizi {expenses}",
+  "@phoneList_transactionsSummaryLine": {"x-review":"draft"}
 }

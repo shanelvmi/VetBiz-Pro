@@ -3983,5 +3983,13 @@
   "phoneList_servicesSummaryLine": "{count, plural, =1{{period}: 1 service, {amount}} other{{period}: {count} services, {amount}}}",
   "@phoneList_servicesSummaryLine": {"description":"Services on a phone (PH5a): the one summary line under the filters, from the old cards' figures: the period, how many services and the amount billed (paid plus outstanding).","placeholders":{"count":{"type":"int"},"period":{"type":"String"},"amount":{"type":"String"}}},
   "phoneList_filtersOn": "Filters applied",
-  "@phoneList_filtersOn": {"description":"Phone list (PH5a): read by a screen reader on the Filter button when a filter is not at its default (the button shows a dot)."}
+  "@phoneList_filtersOn": {"description":"Phone list (PH5a): read by a screen reader on the Filter button when a filter is not at its default (the button shows a dot)."},
+  "phoneList_clientsSummaryLine": "{count, plural, =1{1 client} other{{count} clients}}",
+  "@phoneList_clientsSummaryLine": {"description":"Clients on a phone (PH5b): the one summary line under the filters: how many clients the facility has (the old Total Clients card).","placeholders":{"count":{"type":"int"}}},
+  "phoneList_debtorsSummaryLine": "{count, plural, =1{1 debtor, {amount} owed} other{{count} debtors, {amount} owed}}",
+  "@phoneList_debtorsSummaryLine": {"description":"Active Debts on a phone (PH5b): the one summary line under the filters, from the old cards: how many debtors and the total they owe.","placeholders":{"count":{"type":"int"},"amount":{"type":"String"}}},
+  "phoneList_paymentsSummaryLine": "{count, plural, =1{1 payment, {amount}} other{{count} payments, {amount}}}",
+  "@phoneList_paymentsSummaryLine": {"description":"Payments on a phone (PH5b): the one summary line under the chips: how many payments the list shows for the chosen days and their total.","placeholders":{"count":{"type":"int"},"amount":{"type":"String"}}},
+  "phoneList_transactionsSummaryLine": "{period}: income {income}, expenses {expenses}",
+  "@phoneList_transactionsSummaryLine": {"description":"Transactions on a phone (PH5b): the one summary line under the chips, from the old cards: the period (two dates), the other income and the expenses in it.","placeholders":{"period":{"type":"String"},"income":{"type":"String"},"expenses":{"type":"String"}}}
 }
