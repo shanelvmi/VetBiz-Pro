@@ -20,7 +20,8 @@ import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+// The screens done so far: the others stay skipped until theirs is.
+const _done = {'Clients'};
 
 final _client = Ph5Client('c1', matrixLongClientName, ph5When(0, minutes: 5),
     types: ['Farmer', 'Vet', 'Wholesaler'], balance: matrixBigAmount, oldestDebt: ph5When(45));
@@ -57,7 +58,7 @@ void main() {
             await tester.tap(ph5Key('phoneList-row-$id'));
             await ph5Settle(tester);
             await checkCase(tester, phone: true, where: '$where details');
-          }, skip: _skip);
+          }, skip: !_done.contains(e.key));
         }
       }
     });
@@ -78,7 +79,7 @@ void main() {
         await pumpPh5(tester, (fs) => e.value.$1(fs), pushed: true, seed: _seed);
         expect(find.bySemanticsLabel(e.value.$2), findsOneWidget);
         semantics.dispose();
-      }, skip: _skip);
+      }, skip: !_done.contains(e.key));
     }
   });
 
@@ -110,7 +111,7 @@ void main() {
         // ignore: avoid_print
         print('PH5b ${e.key} cold open (listeners, gets, reads): computer ${counts['1200']}, phone ${counts['390']}');
         expect(counts['390'], counts['1200']);
-      }, skip: _skip);
+      }, skip: !_done.contains(e.key));
     }
   });
 }

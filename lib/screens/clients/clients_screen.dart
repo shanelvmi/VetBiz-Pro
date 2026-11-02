@@ -25,10 +25,16 @@ import '../../config/app_links.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
+import '../../theme/app_layout.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/friendly_error.dart';
 import '../../constants/client_options.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/phone_list/phone_filter_sheet.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
+import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/printable_theme.dart';
 
 class ClientsScreen extends StatefulWidget {
@@ -63,6 +69,17 @@ class _ClientsScreenState extends State<ClientsScreen> {
   bool _isSharing = false;
   final Map<String, Future<(int, double)>> _clientStatsFutureById = {};
   String? _facilityId;
+
+  // PH5b: the phone's details page is a route of its own, which this
+  // State's setState does not rebuild; the page listens to this instead (the
+  // Save / Share button's spinner).
+  final ValueNotifier<int> _phoneRevision = ValueNotifier(0);
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _phoneRevision.value++;
+  }
 
   @override
   void didChangeDependencies() {
@@ -102,6 +119,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
     _searchController.dispose();
     _searchDebounce?.cancel();
     _newRecordsCheckTimer?.cancel();
+    _phoneRevision.dispose();
     super.dispose();
   }
 
@@ -121,7 +139,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
     _openClientsListSession();
   }
 
-  Widget _buildMetricsRow(List<Client> allClients) {
+  /// The cards' figures, from every client (ClientProvider.clients); the
+  /// phone's summary sheet shows the same (PH5b).
+  ({int newThisMonth, String mostActiveType, double mostActivePercent, Client? lastAdded}) _metrics(List<Client> allClients) {
     final now = DateTime.now();
     final newThisMonth = allClients
         .where((c) => c.createdAt != null && c.createdAt!.year == now.year && c.createdAt!.month == now.month)
@@ -147,6 +167,11 @@ class _ClientsScreenState extends State<ClientsScreen> {
       if (c.createdAt == null) continue;
       if (lastAdded == null || c.createdAt!.isAfter(lastAdded.createdAt!)) lastAdded = c;
     }
+    return (newThisMonth: newThisMonth, mostActiveType: mostActiveType, mostActivePercent: mostActivePercent, lastAdded: lastAdded);
+  }
+
+  Widget _buildMetricsRow(List<Client> allClients) {
+    final (:newThisMonth, :mostActiveType, :mostActivePercent, :lastAdded) = _metrics(allClients);
 
     return SizedBox(
       height: 96,
@@ -346,7 +371,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
     }
   }
 
-  Future<void> _confirmDelete(Client client) async {
+  /// [onDeleted]: the phone's details page closes itself once the client is
+  /// in Trash (PH5b, as PH5a R7), before Undo is offered.
+  Future<void> _confirmDelete(Client client, {VoidCallback? onDeleted}) async {
     // Read before the dialog: a confirmed delete must still go through,
     // in the facility the client was shown in.
     final facilityId =
@@ -391,6 +418,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
       try {
         await clientProvider.deleteClient(facilityId, client.id);
         if (mounted && _selectedClient?.id == client.id) setState(() => _selectedClient = null);
+        onDeleted?.call();
         // deleteClient moves the client to Trash (E3), so Undo puts them
         // back with the Trash screen's own restore.
         AppFeedback.undo(
@@ -484,7 +512,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
     }
   }
 
-  Widget _buildDetailsPanel(Client client) {
+  /// The side panel; [onPage], the body of the phone's details page (PH5b,
+  /// as PH5a R7): the same content without the title and close row (the
+  /// page's app bar has them).
+  Widget _buildDetailsPanel(Client client, {bool onPage = false}) {
     final types = client.types.isNotEmpty ? client.types : [kClientTypeOther];
     final latestNote = client.debtorNotes.isNotEmpty ? client.debtorNotes.last['text'] as String? : null;
 
@@ -499,6 +530,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (!onPage)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -577,7 +609,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     children: [
                       Icon(_iconForType(type), size: AppIconSize.i12, color: typeAccent),
                       const SizedBox(width: AppSpacing.s4),
-                      Text(context.l10n.clientTypeLabel(type), style: TextStyle(fontSize: AppFontSize.f11_5, color: typeAccent, fontWeight: AppFontWeight.semibold)),
+                      Text(context.l10n.clientTypeLabel(type), style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: typeAccent, fontWeight: AppFontWeight.semibold)),
                     ],
                   ),
                 );
@@ -600,7 +632,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
               child: Text(
                 context.l10n.clientStatusLabel(client.status),
                 style: TextStyle(
-                  fontSize: AppFontSize.f11_5,
+                  fontSize: _phoneMin(AppFontSize.f11_5),
                   color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted,
                   fontWeight: AppFontWeight.semibold,
                 ),
@@ -658,12 +690,39 @@ class _ClientsScreenState extends State<ClientsScreen> {
   Widget _detailLabel(BuildContext context, String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s4),
-      child: Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),
+      child: Text(label, style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),
+    );
+  }
+
+  /// "N new clients available - Refresh", above the list (both layouts).
+  Widget _buildNewRecordsBanner(CursorPaginatedListController<Client> controller) {
+    return Container(
+      width: double.infinity,
+      color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
+      child: Row(
+        children: [
+          Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(
+            child: Text(
+              context.l10n.clients_newRecords(controller.newRecordsAvailable),
+              style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => controller.refreshSession(),
+            child: Text(context.l10n.common_refresh),
+          ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // PH5b: phones get the standard phone list (docs/design/phone_list_pattern.md).
+    if (AppLayout.isPhone(context)) return _buildPhone();
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
@@ -704,28 +763,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                     final clients = controller.items;
                     return Column(
                       children: [
-                        if (controller.newRecordsAvailable > 0)
-                          Container(
-                            width: double.infinity,
-                            color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
-                            child: Row(
-                              children: [
-                                Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
-                                const SizedBox(width: AppSpacing.s8),
-                                Expanded(
-                                  child: Text(
-                                    context.l10n.clients_newRecords(controller.newRecordsAvailable),
-                                    style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () => controller.refreshSession(),
-                                  child: Text(context.l10n.common_refresh),
-                                ),
-                              ],
-                            ),
-                          ),
+                        if (controller.newRecordsAvailable > 0) _buildNewRecordsBanner(controller),
                         Expanded(
                           child: controller.error != null
                               ? Center(
@@ -953,6 +991,176 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
         ],
       ),
+      ),
+    );
+  }
+
+  // ==================== PHONE (PH5b) ====================
+
+  // docs/design/phone_list_pattern.md: the same session, filters, cards'
+  // figures, panel and actions as the layout above, as the standard phone
+  // list. The list is newest first by when a client joined, or in name order
+  // while searching, so it has no day headers (R5 adapted); line 2 gives the
+  // joined date.
+
+  String _phoneTypeLabel(String v) => v == 'All' ? context.l10n.common_all : context.l10n.clientTypeLabel(v);
+
+  String _phoneStatusLabel(String v) => v == 'All' ? context.l10n.common_all : context.l10n.clientStatusLabel(v);
+
+  /// Panel text under 12 px is 12 on a phone (S3); tablets keep theirs.
+  double _phoneMin(double size) =>
+      AppLayout.isPhone(context) && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
+
+  void _setPhoneFilters({String? type, String? status}) {
+    setState(() {
+      _selectedType = type ?? _selectedType;
+      _statusFilter = status ?? _statusFilter;
+    });
+    _openClientsListSession();
+  }
+
+  Future<void> _openFilterSheet() async {
+    final l10n = context.l10n;
+    final applied = await showPhoneFilterSheet(context, fields: {
+      'type': PhoneFilterField(title: l10n.common_type, options: _clientTypes, label: _phoneTypeLabel, defaultValue: 'All'),
+      'status': PhoneFilterField(
+          title: l10n.common_status, options: const ['All', ...kClientStatuses], label: _phoneStatusLabel, defaultValue: 'All'),
+    }, values: {
+      'type': _selectedType,
+      'status': _statusFilter,
+    });
+    if (applied == null || !mounted) return;
+    _setPhoneFilters(type: applied['type'], status: applied['status']);
+  }
+
+  /// Every card as a row; a card's second line goes under its label.
+  void _showSummary(List<Client> allClients) {
+    final l10n = context.l10n;
+    final m = _metrics(allClients);
+    final hasType = m.mostActiveType != '-';
+    showPhoneSummarySheet(context, period: l10n.clients_title, rows: [
+      ('${l10n.clients_total}\n${l10n.clients_allTime}', '${allClients.length}'),
+      (l10n.clients_newThisMonth, '${m.newThisMonth}'),
+      (
+        hasType
+            ? '${l10n.clients_mostActiveType}\n${l10n.clients_percentOfClients(m.mostActivePercent.toStringAsFixed(0))}'
+            : l10n.clients_mostActiveType,
+        hasType ? l10n.clientTypeLabel(m.mostActiveType) : m.mostActiveType,
+      ),
+      (
+        m.lastAdded?.createdAt != null
+            ? '${l10n.clients_lastAdded}\n${AppDateFormat.date.format(m.lastAdded!.createdAt!)}'
+            : l10n.clients_lastAdded,
+        m.lastAdded?.name ?? '-',
+      ),
+    ]);
+  }
+
+  Future<void> _openDetailsPage(Client client) {
+    final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
+    return Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        key: const ValueKey('phoneList-details'),
+        appBar: AppBar(
+          title: Text(context.l10n.clients_detailsTitle),
+          actions: [
+            // Today's row menu: Edit for everyone, Delete for admins.
+            IconButton(
+              tooltip: context.l10n.common_edit,
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => showAddClientScreen(context, client: client),
+            ),
+            if (isAdmin)
+              IconButton(
+                tooltip: context.l10n.common_delete,
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () => _confirmDelete(client, onDeleted: () => Navigator.of(pageContext).pop()),
+              ),
+          ],
+        ),
+        body: ValueListenableBuilder<int>(
+          valueListenable: _phoneRevision,
+          builder: (context, _, _) => _buildDetailsPanel(client, onPage: true),
+        ),
+      ),
+    ));
+  }
+
+  Widget _clientTile(Client client) {
+    final l10n = context.l10n;
+    final types = client.types.isNotEmpty ? client.types : [kClientTypeOther];
+    final typeLabels = types.map(l10n.clientTypeLabel).join(', ');
+    // The chip has a fixed width: the first type, and how many more (all of
+    // them are read out and on the details page).
+    final chip = types.length > 1 ? '${l10n.clientTypeLabel(types.first)} +${types.length - 1}' : typeLabels;
+    final joined = client.createdAt != null ? AppDateFormat.date.format(client.createdAt!) : '-';
+    return RecordTile(
+      title: client.name,
+      // No amount: a client row names the person (the balance is on Debtors).
+      amount: '',
+      details: [client.phone, joined],
+      status: RecordStatus(chip, _colorForType(types.first)),
+      initialsOf: client.name,
+      colorSeed: client.name,
+      semanticsLabel: l10n.phoneList_rowSemantics(client.name, client.phone, typeLabels, joined),
+      onTap: () => _openDetailsPage(client),
+    );
+  }
+
+  Widget _buildPhone() {
+    final l10n = context.l10n;
+    final provider = Provider.of<ClientProvider>(context);
+    final controller = provider.clientsListController;
+    final addClient = PhoneListAction(label: l10n.clients_add, icon: Icons.add, onPressed: () => showAddClientScreen(context));
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => PhoneListScaffold<Client>(
+        title: l10n.clients_title,
+        asTab: false,
+        // Nothing secondary on this screen: no overflow menu.
+        menu: const [],
+        searchController: _searchController,
+        searchHint: l10n.clients_searchHint,
+        onSearchChanged: _onSearchChanged,
+        onSearchClosed: () {
+          _searchController.clear();
+          _onSearchChanged('');
+        },
+        quickChips: PhoneQuickChips(
+          key: const ValueKey('phoneList-quickChips'),
+          values: const ['All', ...kClientStatuses],
+          selected: _statusFilter,
+          label: _phoneStatusLabel,
+          onSelected: (v) => _setPhoneFilters(status: v),
+        ),
+        filtersActive: _selectedType != 'All' || _statusFilter != 'All',
+        onFilter: _openFilterSheet,
+        appliedFilters: [
+          if (_selectedType != 'All')
+            PhoneAppliedFilter(l10n.common_filterValue(l10n.common_type, _phoneTypeLabel(_selectedType)),
+                () => _setPhoneFilters(type: 'All')),
+        ],
+        summaryLine: l10n.phoneList_clientsSummaryLine(provider.clients.length),
+        onSummary: () => _showSummary(provider.clients),
+        banner: controller.newRecordsAvailable > 0 ? _buildNewRecordsBanner(controller) : null,
+        items: controller.loadedItems,
+        idOf: (c) => c.id,
+        dateOf: (c) => c.createdAt ?? DateTime.now(),
+        amountOf: (_) => 0,
+        grouped: false,
+        tileBuilder: (context, c, {required grouped}) => _clientTile(c),
+        loading: controller.isLoading,
+        error: controller.error,
+        onRetry: controller.refreshSession,
+        emptyIcon: Icons.people_outline,
+        emptyText: _searchQuery.isNotEmpty ? l10n.clients_emptySearch(_searchQuery) : l10n.clients_empty,
+        fab: addClient,
+        emptyAction: addClient,
+        hasMore: controller.hasNextPage,
+        loadingMore: controller.isLoading && controller.loadedItems.isNotEmpty,
+        onLoadMore: controller.goToNextPage,
+        // Pull to refresh (R8): the list starts over, as after a restore.
+        onRefresh: () async => _openClientsListSession(forceRefresh: true),
       ),
     );
   }
