@@ -621,3 +621,39 @@ class PhoneListMetrics {
   /// R7 the details page's labels: at least 12 on a phone (S3).
   static const double detailLabel = AppFontSize.f12;
 }
+
+/// PH6 (docs/design/phone_foundations.md S6): the money forms on a phone.
+class PhoneFormMetrics {
+  PhoneFormMetrics._();
+
+  /// The pinned action bar: its padding, its buttons (at least 48 high) and
+  /// the gap between them, the divider above it.
+  static const double barPaddingH = AppSpacing.s16;
+  static const double barPaddingV = AppSpacing.s12;
+  static const double buttonHeight = 48;
+  static const double buttonGap = AppSpacing.s12;
+  static const double buttonRadius = AppRadius.r10;
+  static const double barDivider = 1;
+  static const double spinnerSize = AppIconSize.i18;
+  static const double spinnerStroke = 2;
+
+  /// The pinned summary line above the buttons (Add Sale's items and total).
+  static const double summary = AppFontSize.f14;
+  static const double summaryGap = AppSpacing.s8;
+
+  /// Fields: at least 48 high; labels and body text at least 14; the
+  /// reserved error line under a field.
+  static const double fieldMinHeight = 48;
+  static const double fieldPaddingV = AppSpacing.s14;
+  static const double fieldPaddingH = AppSpacing.s12;
+  static const double label = AppFontSize.f14;
+  static const double body = AppFontSize.f14;
+  static const double error = AppFontSize.f12;
+
+  /// Picker sheets: one option a row, 56 high, a check on the chosen one.
+  static const double optionRow = 56;
+  static const double optionCheck = AppIconSize.i20;
+  static const double optionIcon = AppIconSize.i20;
+  static const double optionGap = AppSpacing.s12;
+  static const double groupHeaderPaddingTop = AppSpacing.s12;
+}
