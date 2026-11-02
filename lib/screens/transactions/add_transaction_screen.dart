@@ -22,6 +22,7 @@ import '../../theme/app_layout.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../widgets/field_message_slot.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/phone_choice_field.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
 import '../../widgets/phone_form/picker_sheet.dart';
 import '../../l10n/l10n.dart';
@@ -298,39 +299,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         style: TextStyle(fontSize: PhoneFormMetrics.error, color: context.colors.danger),
       );
 
-  /// A picker's field on a phone: the chosen label (or the placeholder),
-  /// at least 48 high; a tap opens the picker's sheet.
-  Widget _phoneChoiceField({required String text, required bool chosen, IconData? icon, required VoidCallback onTap}) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.r10),
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        constraints: const BoxConstraints(minHeight: PhoneFormMetrics.fieldMinHeight),
-        padding: const EdgeInsets.symmetric(horizontal: PhoneFormMetrics.fieldPaddingH),
-        decoration: BoxDecoration(
-          color: context.colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.r10),
-          border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
-        ),
-        child: Row(
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
-              const SizedBox(width: AppSpacing.s10),
-            ],
-            Expanded(
-              child: Text(text,
-                  style: TextStyle(
-                      fontSize: PhoneFormMetrics.body, color: chosen ? context.colors.textPrimary : context.colors.textHint)),
-            ),
-            Icon(Icons.expand_more, size: AppIconSize.i18, color: context.colors.textMuted),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _pickTypePhone() async {
     final picked = await showPickerSheet<String>(
       context,
@@ -436,7 +404,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           _label(context.l10n.common_requiredLabel(context.l10n.common_type)),
           const SizedBox(height: AppSpacing.s6),
           if (_isPhone)
-            _phoneChoiceField(
+            PhoneChoiceField(
               text: _toTitleCase(context.l10n.transactionTypeLabel(type ?? '')),
               chosen: type != null,
               onTap: _pickTypePhone,
@@ -461,7 +429,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           _label(context.l10n.common_requiredLabel(context.l10n.common_category)),
           const SizedBox(height: AppSpacing.s6),
           if (_isPhone) ...[
-            _phoneChoiceField(
+            PhoneChoiceField(
               text: selectedCategory == null
                   ? context.l10n.transactions_selectCategory
                   : context.l10n.transactionCategoryLabel(selectedCategory!),
@@ -574,7 +542,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   ),
                   const SizedBox(height: AppSpacing.s10),
                   if (_isPhone) ...[
-                    _phoneChoiceField(
+                    PhoneChoiceField(
                       text: paymentMethod == null
                           ? context.l10n.transactions_selectMethod
                           : context.l10n.paymentMethodLabel(paymentMethod!),
