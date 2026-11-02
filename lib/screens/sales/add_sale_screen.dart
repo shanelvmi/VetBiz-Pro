@@ -290,6 +290,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   // change anything, so browsing never silently adds or stacks up
   // quantity by accident.
   Future<void> _showBrowseProductsDialog() async {
+    if (_isPhone) return _showBrowseProductsSheet();
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
     final allProducts = productProvider.sellableProducts;
     final categories = allProducts.map((p) => p.category).where((c) => c.isNotEmpty).toSet().toList()..sort();
@@ -1039,6 +1040,241 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
 
   // ==================== PHONE (PH6) ====================
 
+  /// Browse Products on a phone: a tall sheet instead of the 480 x 480
+  /// box: the search (and the category filter) at the top, a row a product
+  /// with its name, what is still available and its price, a 48 px add
+  /// button or stepper (the same increment and decrement as the dialog),
+  /// and the sale's items and total pinned at the bottom with Done.
+  Future<void> _showBrowseProductsSheet() async {
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    final allProducts = productProvider.sellableProducts;
+    final categories = allProducts.map((p) => p.category).where((c) => c.isNotEmpty).toSet().toList()..sort();
+    String query = '';
+    String? selectedCategory;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r16))),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) {
+          final filtered = allProducts.where((p) {
+            final q = query.trim().toLowerCase();
+            final matchesQuery = q.isEmpty ||
+                p.name.toLowerCase().contains(q) ||
+                p.category.toLowerCase().contains(q) ||
+                (p.batchNo?.toLowerCase().contains(q) ?? false);
+            return matchesQuery && (selectedCategory == null || p.category == selectedCategory);
+          }).toList();
+          return SizedBox(
+            height: MediaQuery.sizeOf(sheetContext).height * AppSheetMetrics.sheetMaxHeightFactor,
+            child: Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(sheetContext).bottom),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: PhoneFormMetrics.barPaddingH),
+                    child: Text(context.l10n.sales_browseProducts,
+                        style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(PhoneFormMetrics.barPaddingH),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: context.l10n.sales_browseFilterHint,
+                              prefixIcon: const Icon(Icons.search),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
+                            ),
+                            style: const TextStyle(fontSize: PhoneFormMetrics.body),
+                            onChanged: (val) => setSheetState(() => query = val),
+                          ),
+                        ),
+                        PopupMenuButton<String?>(
+                          initialValue: selectedCategory,
+                          tooltip: context.l10n.sales_filterByCategory,
+                          icon: Icon(Icons.filter_list,
+                              color: selectedCategory != null ? context.colors.primary : context.colors.textSecondary),
+                          onSelected: (category) => setSheetState(() => selectedCategory = category),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(value: null, child: Text(context.l10n.sales_allCategories)),
+                            ...categories.map((c) => PopupMenuItem(value: c, child: Text(context.l10n.productCategoryLabel(c)))),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? Center(child: Text(context.l10n.sales_noProductsFound))
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: PhoneFormMetrics.barPaddingH),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) => _browseRowPhone(filtered[index], setSheetState),
+                          ),
+                  ),
+                  Container(
+                    key: const ValueKey('browseProducts-cart'),
+                    decoration: BoxDecoration(
+                      color: context.colors.surface,
+                      border: Border(top: BorderSide(color: context.colors.divider, width: PhoneFormMetrics.barDivider)),
+                    ),
+                    padding: EdgeInsets.fromLTRB(
+                      PhoneFormMetrics.barPaddingH,
+                      PhoneFormMetrics.barPaddingV,
+                      PhoneFormMetrics.barPaddingH,
+                      PhoneFormMetrics.barPaddingV + MediaQuery.paddingOf(sheetContext).bottom,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(context.l10n.phoneForm_saleSummary(_totalItemCount, Money.format(totalAmount)),
+                              style: const TextStyle(fontSize: PhoneFormMetrics.summary, fontWeight: AppFontWeight.semibold)),
+                        ),
+                        FilledButton(
+                          style: FilledButton.styleFrom(minimumSize: const Size(0, PhoneFormMetrics.buttonHeight)),
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          child: Text(context.l10n.common_done),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _browseRowPhone(Product product, StateSetter setSheetState) {
+    final outOfStock = product.sellableQty <= 0;
+    final qtyInSale = _quantityInSale(product.id);
+    final remainingAvailable = product.sellableQty - qtyInSale;
+    final canAddMore = !outOfStock && remainingAvailable > 0;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s6),
+      child: Row(
+        children: [
+          ProductThumbnail.square(
+            imageUrl: product.imageUrl,
+            size: 44,
+            backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
+            iconColor: context.colors.primary,
+          ),
+          const SizedBox(width: AppSpacing.s12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(product.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: PhoneFormMetrics.body)),
+                Text(
+                  outOfStock
+                      ? context.l10n.sales_outOfStock
+                      : context.l10n.sales_availablePrice(
+                          remainingAvailable, context.l10n.productUnitLabel(product.unit), Money.unitPrice(product.sellPrice)),
+                  style: TextStyle(fontSize: AppFontSize.f12, color: outOfStock ? context.colors.danger : context.colors.textMuted),
+                ),
+              ],
+            ),
+          ),
+          if (!outOfStock && qtyInSale == 0)
+            IconButton(
+              tooltip: context.l10n.common_add,
+              icon: Icon(Icons.add_circle, color: context.colors.primary),
+              onPressed: () => _dialogIncrement(product, setSheetState),
+            )
+          else if (!outOfStock)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.remove_circle_outline, color: context.colors.textSoft),
+                  onPressed: () => _dialogDecrement(product, setSheetState),
+                ),
+                Text('$qtyInSale', style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: PhoneFormMetrics.body)),
+                IconButton(
+                  icon: Icon(Icons.add_circle, color: canAddMore ? context.colors.primary : context.colors.border),
+                  onPressed: canAddMore ? () => _dialogIncrement(product, setSheetState) : null,
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// The client on a phone: a sheet with the search at the top and one
+  /// 56 px row a client; choosing one is what the suggestion list did.
+  Future<void> _pickClientPhone() async {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    final clientProvider = Provider.of<ClientProvider>(context, listen: false);
+    List<Client> results = [];
+    Timer? debounce;
+    final picked = await showAppSheet<Client>(
+      context,
+      title: context.l10n.clients_client,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: context.l10n.services_clientSearchHint,
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
+              ),
+              style: const TextStyle(fontSize: PhoneFormMetrics.body),
+              onChanged: (val) {
+                debounce?.cancel();
+                final q = val.trim();
+                if (q.length < 2 || facilityId == null) return setSheetState(() => results = []);
+                debounce = Timer(AppTimeouts.clientPickerDebounce, () async {
+                  try {
+                    final found = await clientProvider.searchClientsByName(facilityId, q);
+                    if (sheetContext.mounted) setSheetState(() => results = found);
+                  } catch (e) {
+                    debugPrint('Client search error: $e');
+                  }
+                });
+              },
+            ),
+            for (final client in results)
+              InkWell(
+                onTap: () => Navigator.of(sheetContext).pop(client),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: PhoneFormMetrics.optionRow),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(client.name, style: const TextStyle(fontSize: PhoneFormMetrics.body)),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+    debounce?.cancel();
+    if (picked == null || !mounted) return;
+    setState(() {
+      selectedClient = picked;
+      clientController.text = picked.name;
+      isWalkIn = false;
+      totalPaid = 0;
+      totalPaidController.text = Money.decimal(totalPaid);
+    });
+  }
+
   Future<void> _pickMethodPhone() async {
     final picked = await showPickerSheet<String>(
       context,
@@ -1361,6 +1597,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         Expanded(
           child: TextField(
             controller: clientController,
+            // PH6, a phone: a field that opens the clients as a sheet.
+            readOnly: _isPhone,
             decoration: InputDecoration(
               hintText: context.l10n.services_clientSearchHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f14),
@@ -1376,10 +1614,12 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               ),
               prefixIcon: Icon(Icons.person_outline, color: context.colors.textSecondary),
             ),
-            onTap: () => setState(() {
+            onTap: _isPhone
+                ? _pickClientPhone
+                : () => setState(() {
               _showClientSuggestions = clientController.text.trim().length >= 2;
-            }),
-            onChanged: (val) {
+                  }),
+            onChanged: _isPhone ? null : (val) {
               setState(() {
                 selectedClient = null; // typing clears any prior selection
                 _showClientSuggestions = val.trim().length >= 2;

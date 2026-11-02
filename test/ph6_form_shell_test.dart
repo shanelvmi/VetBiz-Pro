@@ -14,7 +14,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
 /// The forms done so far: the others stay skipped until theirs is.
-const _done = <String>{'add-transaction', 'record-payment', 'add-client', 'record-visit'};
+const _done = <String>{'add-transaction', 'record-payment', 'add-client', 'record-visit', 'add-sale'};
 
 /// Each form: its discard kind, its primary button, a field to type in.
 const _forms = {
@@ -65,6 +65,7 @@ void main() {
           'client' => 'Discard this client?',
           'transaction' => 'Discard this transaction?',
           'payment' => 'Discard this payment?',
+          'sale' => 'Discard this sale?',
           _ => 'Discard this visit?',
         };
         expect(find.text(question), findsOneWidget);
@@ -82,6 +83,8 @@ void main() {
 
       ph5TestWidgets('a tap outside a field closes the keyboard', (tester) async {
         await pumpPh6(tester, name, pushed: true);
+        await tester.ensureVisible(_field(field));
+        await tester.pump();
         await tester.tap(_field(field));
         await tester.pump();
         expect(FocusManager.instance.primaryFocus?.context?.findAncestorWidgetOfExactType<TextField>(), isNotNull);
