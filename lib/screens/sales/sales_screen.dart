@@ -23,6 +23,12 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_list/phone_filter_sheet.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
+import '../../widgets/phone_list/record_tile.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/restore_feedback.dart';
 import '../../l10n/l10n.dart';
@@ -231,6 +237,10 @@ class _SalesScreenState extends State<SalesScreen> {
     // a more complete source, but a bigger, separate change.
     final availableSellers = saleProvider.sales.map((s) => s.soldByName).toSet().toList()..sort();
 
+    // PH5a: phones get the standard phone list; everything below is the
+    // tablet and computer layout, unchanged.
+    if (AppLayout.isPhone(context)) return _buildPhone(saleProvider, availableSellers);
+
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
@@ -263,28 +273,7 @@ class _SalesScreenState extends State<SalesScreen> {
                       final pageSales = controller.items;
                       return Column(
                         children: [
-                          if (controller.newRecordsAvailable > 0)
-                            Container(
-                              width: double.infinity,
-                              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
-                                  const SizedBox(width: AppSpacing.s8),
-                                  Expanded(
-                                    child: Text(
-                                      context.l10n.sales_newRecords(controller.newRecordsAvailable),
-                                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => saleProvider.salesListController.refreshSession(),
-                                    child: Text(context.l10n.common_refresh),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          if (controller.newRecordsAvailable > 0) _buildNewRecordsBanner(controller),
                           Expanded(
                             child: controller.error != null && pageSales.isEmpty
                                 ? Center(child: FirestoreErrorView(error: controller.error))
@@ -483,19 +472,10 @@ class _SalesScreenState extends State<SalesScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: AppIconSize.i18),
-                      onPressed: () {
-                        _searchDebounce?.cancel();
-                        setState(() => _searchQuery = '');
-                        _searchController.clear();
-                        _openSalesListSession();
-                      },
+                      onPressed: _clearSearch,
                     ),
             ),
-            onChanged: (val) {
-              setState(() => _searchQuery = val.trim());
-              _searchDebounce?.cancel();
-              _searchDebounce = Timer(AppTimeouts.searchDebounce, _openSalesListSession);
-            },
+            onChanged: _onSearchChanged,
           ),
         ),
         const SizedBox(width: AppSpacing.s10),
@@ -607,14 +587,7 @@ class _SalesScreenState extends State<SalesScreen> {
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
-            onPressed: () => navigateOrShowLockedDialog(
-              context,
-              const AddSaleScreen(),
-              onNavigate: () async {
-                await showAddSaleScreen(context);
-                if (mounted) _openSalesListSession(forceRefresh: true);
-              },
-            ),
+            onPressed: _recordSale,
             icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: Text(context.l10n.sales_recordSale),
             style: ElevatedButton.styleFrom(
@@ -626,6 +599,54 @@ class _SalesScreenState extends State<SalesScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Record Sale, from the app bar and the phone's empty list: through the
+  /// locked-facility guard, then the list starts over.
+  void _recordSale() => navigateOrShowLockedDialog(
+        context,
+        const AddSaleScreen(),
+        onNavigate: () async {
+          await showAddSaleScreen(context);
+          if (mounted) _openSalesListSession(forceRefresh: true);
+        },
+      );
+
+  void _onSearchChanged(String val) {
+    setState(() => _searchQuery = val.trim());
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(AppTimeouts.searchDebounce, _openSalesListSession);
+  }
+
+  void _clearSearch() {
+    _searchDebounce?.cancel();
+    setState(() => _searchQuery = '');
+    _searchController.clear();
+    _openSalesListSession();
+  }
+
+  Widget _buildNewRecordsBanner(CursorPaginatedListController<Sale> controller) {
+    return Container(
+      width: double.infinity,
+      color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
+      child: Row(
+        children: [
+          Icon(Icons.fiber_new, size: AppIconSize.i18, color: context.colors.primary),
+          const SizedBox(width: AppSpacing.s8),
+          Expanded(
+            child: Text(
+              context.l10n.sales_newRecords(controller.newRecordsAvailable),
+              style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
+            ),
+          ),
+          TextButton(
+            onPressed: () => controller.refreshSession(),
+            child: Text(context.l10n.common_refresh),
+          ),
+        ],
+      ),
     );
   }
 
@@ -819,9 +840,172 @@ class _SalesScreenState extends State<SalesScreen> {
     );
   }
 
+  // ==================== PHONE (PH5a) ====================
+
+  // docs/design/phone_list_pattern.md: the same filters, session, summary,
+  // details and actions as the layout above, as the standard phone list.
+  // No floating button: the bar's raised "+" records a sale (R2).
+
+  String _statusLabel(String v) => v == 'All' ? context.l10n.common_all : context.l10n.paymentStatusLabel(v);
+
+  String _sellerLabel(String v) => v == 'All' ? context.l10n.common_all : v;
+
+  void _setFilters({String? date, String? status, String? seller}) {
+    setState(() {
+      _dateFilter = date ?? _dateFilter;
+      _filterStatus = status ?? _filterStatus;
+      _sellerFilter = seller ?? _sellerFilter;
+    });
+    _openSalesListSession();
+  }
+
+  Future<void> _openFilterSheet(List<String> availableSellers) async {
+    final l10n = context.l10n;
+    final applied = await showPhoneFilterSheet(context, fields: {
+      'date': PhoneFilterField(
+          title: l10n.common_date, options: _dateFilterOptions, label: _dateFilterLabel, defaultValue: 'Last 30 days'),
+      'status': PhoneFilterField(
+          title: l10n.sales_paymentStatus, options: _statusFilterOptions, label: _statusLabel, defaultValue: 'All'),
+      'seller': PhoneFilterField(
+          title: l10n.sales_seller, options: ['All', ...availableSellers], label: _sellerLabel, defaultValue: 'All'),
+    }, values: {
+      'date': _dateFilter,
+      'status': _filterStatus,
+      'seller': _sellerFilter,
+    });
+    if (applied == null || !mounted) return;
+    _setFilters(date: applied['date'], status: applied['status'], seller: applied['seller']);
+  }
+
+  /// The cards' figures (_buildMetricsRow), for the line and the sheet.
+  ({int count, double total, double collected, double pending}) _summaryFigures() {
+    final s = _rangeSummary ?? const {};
+    final total = s['totalAmount'] ?? 0.0;
+    return (
+      count: (s['saleCount'] ?? 0).toInt(),
+      total: total,
+      collected: s['totalCollected'] ?? 0.0,
+      pending: total - (s['totalPaid'] ?? 0.0),
+    );
+  }
+
+  void _showSummary() {
+    final l10n = context.l10n;
+    final f = _summaryFigures();
+    showPhoneSummarySheet(context, period: l10n.services_last30, rows: [
+      (l10n.reports_totalSales, '${f.count}'),
+      (l10n.reports_colRevenue, Money.format(f.total)),
+      (l10n.sales_collected, Money.format(f.collected)),
+      (l10n.sales_pending, Money.format(f.pending)),
+    ]);
+  }
+
+  /// Pull to refresh (R8): the list starts over and the summary reloads.
+  Future<void> _refresh() async {
+    _openSalesListSession(forceRefresh: true);
+    await _loadRangeSummary();
+  }
+
+  Future<void> _openDetailsPage(Sale sale) {
+    return Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        key: const ValueKey('phoneList-details'),
+        appBar: AppBar(title: Text(context.l10n.sales_details)),
+        body: _buildSaleDetailsPanel(sale, AppDateFormat.date, AppDateFormat.time12,
+            onDeleted: () => Navigator.of(pageContext).pop()),
+      ),
+    ));
+  }
+
+  Widget _saleTile(Sale sale, {required bool grouped}) {
+    final l10n = context.l10n;
+    final client = sale.clientName ?? l10n.common_walkIn;
+    final amount = Money.format(sale.totalAmount);
+    final status = l10n.paymentStatusLabel(_getPaymentStatus(sale.totalPaid, sale.totalAmount));
+    return RecordTile(
+      title: client,
+      amount: amount,
+      details: [
+        _invoiceNo(sale),
+        // Search results are not grouped by day, so they give the date too.
+        grouped ? AppDateFormat.time24.format(sale.timestamp) : AppDateFormat.dateShortTime24.format(sale.timestamp),
+      ],
+      status: RecordStatus(status, _statusColor(sale.totalPaid, sale.totalAmount)),
+      initialsOf: sale.clientName,
+      icon: Icons.person_outline,
+      colorSeed: client,
+      semanticsLabel: l10n.phoneList_rowSemantics(client, amount, status, AppDateFormat.dateShortTime24.format(sale.timestamp)),
+      onTap: () => _openDetailsPage(sale),
+    );
+  }
+
+  Widget _buildPhone(SaleProvider saleProvider, List<String> availableSellers) {
+    final l10n = context.l10n;
+    final controller = saleProvider.salesListController;
+    final f = _summaryFigures();
+    final filtered = _searchQuery.isNotEmpty || _filterStatus != 'All' || _dateFilter != 'Last 30 days' || _sellerFilter != 'All';
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) => PhoneListScaffold<Sale>(
+        title: l10n.sales_title,
+        asTab: widget.asTab,
+        menu: [
+          PhoneListMenuItem(
+            label: l10n.services_archive,
+            icon: Icons.archive_outlined,
+            onSelected: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SalesArchiveScreen())),
+          ),
+        ],
+        searchController: _searchController,
+        searchHint: l10n.sales_searchHint,
+        onSearchChanged: _onSearchChanged,
+        onSearchClosed: _clearSearch,
+        quickChips: PhoneQuickChips(
+          key: const ValueKey('phoneList-quickChips'),
+          values: const ['All', ...PaymentStatus.quickChipOrder],
+          selected: _filterStatus,
+          label: _statusLabel,
+          onSelected: (v) => _setFilters(status: v),
+        ),
+        filtersActive: _filterStatus != 'All' || _dateFilter != 'Last 30 days' || _sellerFilter != 'All',
+        onFilter: () => _openFilterSheet(availableSellers),
+        appliedFilters: [
+          if (_dateFilter != 'Last 30 days')
+            PhoneAppliedFilter(l10n.common_filterValue(l10n.common_date, _dateFilterLabel(_dateFilter)),
+                () => _setFilters(date: 'Last 30 days')),
+          if (_sellerFilter != 'All')
+            PhoneAppliedFilter(l10n.common_filterValue(l10n.sales_seller, _sellerFilter), () => _setFilters(seller: 'All')),
+        ],
+        summaryLine: _rangeSummary == null
+            ? null
+            : l10n.phoneList_salesSummaryLine(f.count, l10n.services_last30, Money.format(f.total)),
+        onSummary: _showSummary,
+        banner: controller.newRecordsAvailable > 0 ? _buildNewRecordsBanner(controller) : null,
+        items: controller.loadedItems,
+        idOf: (s) => s.id,
+        dateOf: (s) => s.timestamp,
+        amountOf: (s) => s.totalAmount,
+        grouped: _searchQuery.isEmpty,
+        tileBuilder: (context, s, {required grouped}) => _saleTile(s, grouped: grouped),
+        loading: controller.isLoading,
+        error: controller.error,
+        onRetry: controller.refreshSession,
+        emptyIcon: Icons.shopping_cart_outlined,
+        emptyText: filtered ? l10n.sales_emptyFiltered : l10n.sales_empty,
+        emptyAction: PhoneListAction(label: l10n.sales_recordSale, icon: Icons.add, onPressed: _recordSale),
+        hasMore: controller.hasNextPage,
+        loadingMore: controller.isLoading && controller.loadedItems.isNotEmpty,
+        onLoadMore: controller.goToNextPage,
+        onRefresh: _refresh,
+      ),
+    );
+  }
+
   // ==================== SALE DETAILS PANEL ====================
 
-  Future<void> _confirmDeleteSale(Sale sale) async {
+  /// [onDeleted]: the phone's details page closes itself once the sale is in
+  /// Trash (PH5a R7), before Undo is offered.
+  Future<void> _confirmDeleteSale(Sale sale, {VoidCallback? onDeleted}) async {
     // Read before the dialog: a confirmed delete must still go through.
     final saleProvider = Provider.of<SaleProvider>(context, listen: false);
     final confirmed = await showDialog<bool>(
@@ -853,6 +1037,7 @@ class _SalesScreenState extends State<SalesScreen> {
       await saleProvider.deleteSale(sale.id, facilityId);
       if (!mounted) return;
       if (_selectedSale?.id == sale.id) setState(() => _selectedSale = null);
+      onDeleted?.call();
       // Undo is the Trash restore, which takes the stock again and
       // re-creates the debt and the balance (E2, delete_restore.md).
       // The provider and the facility were read before: Undo may run after
@@ -867,7 +1052,11 @@ class _SalesScreenState extends State<SalesScreen> {
     }
   }
 
-  Widget _buildSaleDetailsPanel(Sale sale, DateFormat dateOnlyFormatter, DateFormat timeOnlyFormatter) {
+  /// The side panel; with [onDeleted], the body of the phone's details page
+  /// (PH5a R7): the same content without the title and close row (the
+  /// page's app bar has them).
+  Widget _buildSaleDetailsPanel(Sale sale, DateFormat dateOnlyFormatter, DateFormat timeOnlyFormatter,
+      {VoidCallback? onDeleted}) {
     final status = _getPaymentStatus(sale.totalPaid, sale.totalAmount);
     final statusColor = _statusColor(sale.totalPaid, sale.totalAmount);
     final subtotal = sale.items.fold<double>(0, (sum, i) => sum + i.unitPrice * i.quantity);
@@ -883,6 +1072,7 @@ class _SalesScreenState extends State<SalesScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (onDeleted == null)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -981,7 +1171,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   const SizedBox(width: AppSpacing.s8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _confirmDeleteSale(sale),
+                      onPressed: () => _confirmDeleteSale(sale, onDeleted: onDeleted),
                       icon: Icon(Icons.delete_outline, size: AppIconSize.i16, color: context.colors.dangerSoft),
                       label: Text(context.l10n.common_delete, style: TextStyle(color: context.colors.dangerSoft)),
                       style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.danger.withValues(alpha: AppAlpha.a50))),
@@ -1028,7 +1218,11 @@ class _SalesScreenState extends State<SalesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(label,
+                    style: TextStyle(
+                        // At least 12 on a phone (S3; the details page, PH5a R7).
+                        fontSize: AppLayout.isPhone(context) ? PhoneListMetrics.detailLabel : AppFontSize.f11_5,
+                        color: context.colors.textMuted)),
                 Text(value, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
                 if (subtitle != null && subtitle.isNotEmpty)
                   Text(subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
