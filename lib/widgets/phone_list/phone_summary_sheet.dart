@@ -35,13 +35,18 @@ Future<void> showPhoneSummarySheet(
                     child: Text(label, style: TextStyle(fontSize: AppFontSize.f14, color: colors.textSecondary)),
                   ),
                   const SizedBox(width: PhoneListMetrics.partGap),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: PhoneListMetrics.title,
-                      fontWeight: AppFontWeight.semibold,
-                      color: colors.textPrimary,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                  // PH5b: a value may be a name (Clients' Last Added): it
+                  // wraps rather than overflowing; an amount stays as before.
+                  Flexible(
+                    child: Text(
+                      value,
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        fontSize: PhoneListMetrics.title,
+                        fontWeight: AppFontWeight.semibold,
+                        color: colors.textPrimary,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
                   ),
                 ],

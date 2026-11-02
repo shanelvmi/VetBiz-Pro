@@ -44,7 +44,9 @@ class PhoneListHeader extends StatelessWidget {
   final Widget? banner;
   final Widget quickChips;
   final bool filtersActive;
-  final VoidCallback onFilter;
+
+  /// Null: no Filter button.
+  final VoidCallback? onFilter;
   final List<PhoneAppliedFilter> appliedFilters;
   final String? summaryLine;
   final VoidCallback onSummary;
@@ -72,21 +74,22 @@ class PhoneListHeader extends StatelessWidget {
         Row(
           children: [
             Expanded(child: quickChips),
-            Semantics(
-              value: filtersActive ? l10n.phoneList_filtersOn : null,
-              child: IconButton(
-                tooltip: l10n.facilityPicker_filter,
-                onPressed: onFilter,
-                icon: filtersActive
-                    ? Badge(
-                        key: const ValueKey('phoneList-filterDot'),
-                        smallSize: PhoneListMetrics.filterDot,
-                        backgroundColor: colors.primary,
-                        child: filterIcon,
-                      )
-                    : filterIcon,
+            if (onFilter != null)
+              Semantics(
+                value: filtersActive ? l10n.phoneList_filtersOn : null,
+                child: IconButton(
+                  tooltip: l10n.facilityPicker_filter,
+                  onPressed: onFilter,
+                  icon: filtersActive
+                      ? Badge(
+                          key: const ValueKey('phoneList-filterDot'),
+                          smallSize: PhoneListMetrics.filterDot,
+                          backgroundColor: colors.primary,
+                          child: filterIcon,
+                        )
+                      : filterIcon,
+                ),
               ),
-            ),
           ],
         ),
         if (appliedFilters.isNotEmpty)

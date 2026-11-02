@@ -35,9 +35,17 @@ class PhoneListScaffold<T> extends StatefulWidget {
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onSearchClosed;
 
+  /// Whether the bar starts as the search field; null: when the search
+  /// holds text. PH5b: Payments for one client keeps its title although
+  /// the search starts with the client's name.
+  final bool? startSearching;
+
   final Widget quickChips;
   final bool filtersActive;
-  final VoidCallback onFilter;
+
+  /// Null: no Filter button (PH5b: a list whose toolbar has no filter
+  /// beyond the quick chips, or none at all).
+  final VoidCallback? onFilter;
   final List<PhoneAppliedFilter> appliedFilters;
 
   /// The summary line (null while it has no figures) and its sheet.
@@ -106,6 +114,7 @@ class PhoneListScaffold<T> extends StatefulWidget {
     this.banner,
     this.fab,
     this.emptyAction,
+    this.startSearching,
   });
 
   @override
@@ -113,7 +122,7 @@ class PhoneListScaffold<T> extends StatefulWidget {
 }
 
 class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
-  late bool _searching = widget.searchController.text.isNotEmpty;
+  late bool _searching = widget.startSearching ?? widget.searchController.text.isNotEmpty;
   bool _fabExtended = true;
 
   bool _onScroll(ScrollNotification n) {
