@@ -190,7 +190,9 @@ Future<Ph5App> pumpPh5(
   });
   final debts = DebtProvider(firestore: fs);
   final navigator = GlobalKey<NavigatorState>();
-  await tester.pumpWidget(MultiProvider(
+  // A fresh tree each time: a second pump in one test must not keep the
+  // first one's providers (and so its Firestore).
+  await tester.pumpWidget(KeyedSubtree(key: UniqueKey(), child: MultiProvider(
     providers: [
       Provider<AuthService>.value(value: _NoAuth()),
       ChangeNotifierProvider<FacilityProvider>.value(value: facility),
@@ -217,8 +219,14 @@ Future<Ph5App> pumpPh5(
           MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion), child: child!),
       home: pushed ? const Scaffold(body: Text('UNDER')) : screen(fs),
     ),
-  ));
+  )));
   if (pushed) navigator.currentState!.push(MaterialPageRoute<void>(builder: (_) => screen(fs)));
+  // Two frames build the pushed route (its first frame is offstage) in its
+  // first, loading state.
+  if (pushed) {
+    await tester.pump();
+    await tester.pump();
+  }
   if (settle) await ph5Settle(tester);
   return Ph5App(fs, navigator);
 }

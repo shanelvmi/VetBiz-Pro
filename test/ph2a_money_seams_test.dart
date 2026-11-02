@@ -123,7 +123,6 @@ const Map<String, String> _overflowsToday = {
   'Record Payment': 'a Row overflows at add_payment_screen.dart:546 (36 px); PH6',
   'Add Sale': 'a Row overflows at add_sale_screen.dart:940 (44 px); PH6',
   'Clients': 'Rows overflow at clients_screen.dart:236 (15 px) and :1026 (163); PH5',
-  'Services': 'Rows overflow at services_screen.dart:459 (507 px) and :736 (175); PH5',
   'Products': 'a Row overflows at products_screen.dart:863 (66 px), a Column at :261 (4 down); PH5',
   'Add Transaction': 'a Row overflows at add_transaction_screen.dart:565 (142 px); PH6',
 };

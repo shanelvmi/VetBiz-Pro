@@ -3,6 +3,8 @@
 // extends on scroll, hidden with the keyboard, through the locked-facility
 // guard), the filter sheet against the toolbar (R3), the summary against the
 // cards (R4), the rows (R6) and the loading, empty and error states (R9).
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/money.dart';
@@ -12,7 +14,7 @@ import 'package:vetbiz_pro/screens/services/services_screen.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _phone = Size(390, 844);
 const _wide = Size(1200, 800);
@@ -22,8 +24,8 @@ Finder get _list => find.descendant(of: _key('phoneList-scroll'), matching: find
 Finder _inSheet(String text) => find.descendant(of: find.byType(BottomSheet), matching: find.text(text));
 
 final _four = [
-  Ph5Service('v1', ph5When(0, minutes: 5), client: 'Amina Juma', amount: 20000, paid: 20000, receipt: 1),
-  Ph5Service('v2', ph5When(0, minutes: 50), amount: 15000, paid: 0, category: 'Preventive', receipt: 2),
+  Ph5Service('v1', ph5When(0, minutes: 5), client: 'Amina Juma', amount: 20000, paid: 20000, method: 'Cash', receipt: 1),
+  Ph5Service('v2', ph5When(0, minutes: 50), amount: 15000, paid: 0, category: 'Preventive', method: 'Cash', receipt: 2),
   Ph5Service('v3', ph5When(1), client: 'Baraka Mushi', amount: 30000, paid: 10000, category: 'Surgical', method: 'mpesa', receipt: 3),
   Ph5Service('v4', ph5When(5), client: 'Neema Ally', amount: 10000, paid: 10000, category: 'Preventive', method: 'mpesa', receipt: 4),
 ];
@@ -97,19 +99,27 @@ void main() {
       await _services(tester);
       tester.view.viewInsets = const FakeViewPadding(bottom: 300);
       addTearDown(tester.view.resetViewInsets);
+      // The Scaffold animates the button out.
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
       await tester.pump();
       expect(_key('phoneList-fab'), findsNothing);
     }, skip: _skip);
 
-    testWidgets('locked: the guard holds and no form opens; unlocked: the form opens', (tester) async {
+    testWidgets('locked: the guard holds and no form opens', (tester) async {
       await _services(tester, locked: true);
       await tester.tap(_key('phoneList-fab'));
       await ph5Settle(tester);
       expect(find.byType(AddEditServiceScreen), findsNothing);
+    }, skip: _skip);
+
+    testWidgets('unlocked: the form opens', (tester) async {
       await _services(tester);
       await tester.tap(_key('phoneList-fab'));
       await ph5Settle(tester);
       expect(find.byType(AddEditServiceScreen), findsOneWidget);
+      // The form's own phone layout is PH6 (it overflows at 390 today).
+      while (tester.takeException() != null) {}
     }, skip: _skip);
   });
 
@@ -165,13 +175,20 @@ void main() {
 
   group('states (R9)', () {
     testWidgets('loading: six skeleton rows, with a pulse; still under reduced motion', (tester) async {
-      await _services(tester, settle: false);
-      final skeleton = _key('phoneList-skeleton');
-      expect(skeleton, findsOneWidget);
-      expect(find.descendant(of: skeleton, matching: _skeletonRows), findsNWidgets(6));
-      expect(find.descendant(of: skeleton, matching: find.byType(FadeTransition)), findsWidgets);
-      await _services(tester, settle: false, reduceMotion: true);
-      expect(find.descendant(of: _key('phoneList-skeleton'), matching: find.byType(FadeTransition)), findsNothing);
+      for (final still in [false, true]) {
+        // The list's first page is held back, so it stays loading.
+        final db = CountingFirestore()..holdGets = Completer<void>();
+        await tester.runAsync(() => ph5SeedServices(db.inner, _four));
+        await pumpPh5(tester, (fs) => ServicesScreen(firestore: fs),
+            pushed: true, firestore: db, settle: false, reduceMotion: still);
+        final skeleton = _key('phoneList-skeleton');
+        expect(skeleton, findsOneWidget);
+        expect(find.descendant(of: skeleton, matching: _skeletonRows), findsNWidgets(6));
+        expect(find.descendant(of: skeleton, matching: find.byType(FadeTransition)), still ? findsNothing : findsWidgets);
+        db.holdGets!.complete();
+        await ph5Settle(tester);
+        expect(skeleton, findsNothing);
+      }
     }, skip: _skip);
 
     testWidgets('empty: an icon, one plain line and Record Visit as a button (through the guard)', (tester) async {

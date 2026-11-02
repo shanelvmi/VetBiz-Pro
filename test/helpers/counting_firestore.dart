@@ -21,6 +21,9 @@ class CountingFirestore implements FirebaseFirestore {
   /// PH5a: while set, every query get fails (a list's error state).
   bool failGets = false;
 
+  /// PH5a: while set, every query get waits for it (a list's loading state).
+  Completer<void>? holdGets;
+
   void resetCounts() {
     reads = 0;
     gets = 0;
@@ -35,6 +38,7 @@ class CountingFirestore implements FirebaseFirestore {
 
   Future<QuerySnapshot<Map<String, dynamic>>> _get(Query<Map<String, dynamic>> q) async {
     gets++;
+    await holdGets?.future;
     if (failGets) throw FirebaseException(plugin: 'cloud_firestore', code: 'unavailable');
     final snap = await q.get();
     reads += snap.docs.length;
