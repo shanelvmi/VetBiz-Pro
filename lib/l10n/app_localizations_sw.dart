@@ -7181,4 +7181,46 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get phoneList_filtersOn => 'Vichujio vimewekwa';
+
+  @override
+  String phoneList_clientsSummaryLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'wateja $count',
+      one: 'mteja 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneList_debtorsSummaryLine(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'wadaiwa $count, wanadaiwa $amount',
+      one: 'mdaiwa 1, wanadaiwa $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneList_paymentsSummaryLine(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'malipo $count, $amount',
+      one: 'malipo 1, $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneList_transactionsSummaryLine(
+    String period,
+    String income,
+    String expenses,
+  ) {
+    return '$period: mapato $income, matumizi $expenses';
+  }
 }

@@ -12076,6 +12076,34 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Filters applied'**
   String get phoneList_filtersOn;
+
+  /// Clients on a phone (PH5b): the one summary line under the filters: how many clients the facility has (the old Total Clients card).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 client} other{{count} clients}}'**
+  String phoneList_clientsSummaryLine(int count);
+
+  /// Active Debts on a phone (PH5b): the one summary line under the filters, from the old cards: how many debtors and the total they owe.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 debtor, {amount} owed} other{{count} debtors, {amount} owed}}'**
+  String phoneList_debtorsSummaryLine(int count, String amount);
+
+  /// Payments on a phone (PH5b): the one summary line under the chips: how many payments the list shows for the chosen days and their total.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 payment, {amount}} other{{count} payments, {amount}}}'**
+  String phoneList_paymentsSummaryLine(int count, String amount);
+
+  /// Transactions on a phone (PH5b): the one summary line under the chips, from the old cards: the period (two dates), the other income and the expenses in it.
+  ///
+  /// In en, this message translates to:
+  /// **'{period}: income {income}, expenses {expenses}'**
+  String phoneList_transactionsSummaryLine(
+    String period,
+    String income,
+    String expenses,
+  );
 }
 
 class _AppLocalizationsDelegate

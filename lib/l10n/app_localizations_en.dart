@@ -7136,4 +7136,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get phoneList_filtersOn => 'Filters applied';
+
+  @override
+  String phoneList_clientsSummaryLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count clients',
+      one: '1 client',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneList_debtorsSummaryLine(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count debtors, $amount owed',
+      one: '1 debtor, $amount owed',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneList_paymentsSummaryLine(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count payments, $amount',
+      one: '1 payment, $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneList_transactionsSummaryLine(
+    String period,
+    String income,
+    String expenses,
+  ) {
+    return '$period: income $income, expenses $expenses';
+  }
 }
