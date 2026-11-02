@@ -22,6 +22,7 @@ const _forms = {
   'add-transaction': ('transaction', 'Record Transaction', 'What was this for?'),
   'record-payment': ('payment', 'Save Payment', 'Payment Amount'),
   'record-visit': ('visit', 'Record Visit', 'Service Name'),
+  'add-sale': ('sale', 'Record Sale', 'Add any additional notes (optional)...'),
 };
 
 Finder _field(String text) => find.ancestor(of: find.text(text), matching: find.byType(TextField)).first;

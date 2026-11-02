@@ -8,14 +8,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
-import 'package:vetbiz_pro/data/collections.dart';
-import 'package:vetbiz_pro/providers/product_provider.dart';
-import 'package:vetbiz_pro/screens/sales/add_sale_screen.dart';
 
 import 'helpers/fake_firestore.dart';
 import 'helpers/ph6_forms.dart';
@@ -168,9 +163,7 @@ void main() {
   ph5TestWidgets('Add Sale saves what it saved before (three items through Browse Products)', (tester) async {
     final app = await pumpPh6(tester, 'add-sale');
     _drain(tester);
-    await tester.runAsync(() => _seedSaleProducts(app.fs));
-    Provider.of<ProductProvider>(tester.element(find.byType(AddSaleScreen)), listen: false).listenToProducts(testFacilityId);
-    await ph5Settle(tester);
+    await ph6LoadSaleProducts(tester, app);
     await _tap(tester, find.text('Browse Products').first);
     _drain(tester);
     for (final name in ['Albendazole 10%', 'Albendazole 10%', 'Ivermectin 1%', 'Vitamin B12']) {
@@ -192,31 +185,3 @@ void main() {
   }, skip: _skip);
 }
 
-/// Three sellable products with prices, each in one batch that expires in
-/// 2030 (no expired-stock warning).
-Future<void> _seedSaleProducts(dynamic fs) async {
-  for (final (id, name, price) in const [
-    ('s1', 'Albendazole 10%', 15000.0),
-    ('s2', 'Ivermectin 1%', 8000.0),
-    ('s3', 'Vitamin B12', 4500.0),
-  ]) {
-    final ref = facilityCollection(fs, Collections.products).doc(id);
-    await ref.set({
-      'name': name,
-      'sellPrice': price,
-      'buyPrice': price / 2,
-      'sellableQty': 20,
-      'stockQty': 0,
-      'unit': 'pcs',
-      'category': 'Dewormers',
-      'type': 'Oral',
-      'hasEverHadStock': true,
-    });
-    await ref.collection(Collections.batches).doc('${id}b').set({
-      'sellableQty': 20,
-      'stockQty': 0,
-      'buyPrice': price / 2,
-      'expiry': Timestamp.fromDate(DateTime(2030, 1, 1)),
-    });
-  }
-}
