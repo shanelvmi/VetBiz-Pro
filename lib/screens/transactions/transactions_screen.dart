@@ -19,12 +19,17 @@ import '../../config/app_date_format.dart';
 import '../../data/data_keys.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
+import '../../theme/app_layout.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../services/trash_service.dart';
 import '../../data/collections.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
+import '../../widgets/phone_list/record_tile.dart';
 
 class TransactionScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH5b, as
@@ -63,6 +68,17 @@ class _TransactionScreenState extends State<TransactionScreen> {
   TransactionModel? _selectedTransaction;
   bool _isPrinting = false;
 
+  // PH5b: the phone's details page is a route of its own, which this
+  // State's setState does not rebuild; the page listens to this instead (the
+  // Print button's spinner).
+  final ValueNotifier<int> _phoneRevision = ValueNotifier(0);
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _phoneRevision.value++;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -86,6 +102,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _phoneRevision.dispose();
     super.dispose();
   }
 
@@ -151,22 +168,33 @@ class _TransactionScreenState extends State<TransactionScreen> {
   // title-cased as before for a type the lookup doesn't know.
   String _typeLabel(String type) => toTitleCase(context.l10n.transactionTypeLabel(type));
 
+  // Apply filter + search to the (paginated) list shown below the
+  // summary cards (both layouts).
+  List<TransactionModel> _filtered(TransactionProvider transactionProvider) =>
+      transactionProvider.transactions.where((tx) {
+        final matchesType = _filterType == null || tx.type.toLowerCase() == _filterType;
+        final matchesSearch = _searchQuery.isEmpty ||
+            tx.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            tx.category.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            tx.recordedBy.toLowerCase().contains(_searchQuery.toLowerCase());
+        return matchesType && matchesSearch;
+      }).toList();
+
+  /// Record Transaction (the app bar's button; the phone's floating one).
+  Future<void> _recordTransaction() async {
+    await showAddTransactionScreen(context);
+    await _loadPeriodTotals();
+  }
+
   @override
   Widget build(BuildContext context) {
     final transactionProvider = Provider.of<TransactionProvider>(context);
+    // PH5b: phones get the standard phone list (docs/design/phone_list_pattern.md).
+    if (AppLayout.isPhone(context)) return _buildPhone(transactionProvider);
 
     final subProfit = _otherIncomeTotal - _expensesTotal;
 
-    // Apply filter + search to the (paginated) list shown below the
-    // summary cards.
-    final filteredTransactions = transactionProvider.transactions.where((tx) {
-      final matchesType = _filterType == null || tx.type.toLowerCase() == _filterType;
-      final matchesSearch = _searchQuery.isEmpty ||
-          tx.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          tx.category.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          tx.recordedBy.toLowerCase().contains(_searchQuery.toLowerCase());
-      return matchesType && matchesSearch;
-    }).toList();
+    final filteredTransactions = _filtered(transactionProvider);
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -241,10 +269,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
-            onPressed: () async {
-              await showAddTransactionScreen(context);
-              await _loadPeriodTotals();
-            },
+            onPressed: _recordTransaction,
             icon: const Icon(Icons.add, size: AppIconSize.i18),
             label: Text(context.l10n.transactions_record),
             style: ElevatedButton.styleFrom(
@@ -576,8 +601,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
     );
   }
 
+  /// [onDeleted]: the phone's details page closes itself once the
+  /// transaction is in Trash (PH5b, as PH5a R7), before Undo is offered.
   Future<void> _confirmDeleteTransaction(
-      TransactionModel tx, TransactionProvider transactionProvider) async {
+      TransactionModel tx, TransactionProvider transactionProvider, {VoidCallback? onDeleted}) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -603,6 +630,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       await transactionProvider.deleteTransaction(facilityId, tx.id);
       if (!mounted) return;
       if (_selectedTransaction?.id == tx.id) setState(() => _selectedTransaction = null);
+      onDeleted?.call();
       // deleteTransaction moves it to Trash (a soft delete), so Undo puts
       // it back with the Trash screen's own restore.
       AppFeedback.undo(
@@ -671,7 +699,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
     }
   }
 
-  Widget _buildDetailsPanel(TransactionModel tx) {
+  /// The side panel; [onPage], the body of the phone's details page (PH5b,
+  /// as PH5a R7): the same content without the title and close row (the
+  /// page's app bar has them).
+  Widget _buildDetailsPanel(TransactionModel tx, {bool onPage = false}) {
     final isIncome = tx.type.toLowerCase() == 'other income';
     final accentColor = isIncome ? context.colors.accent : context.colors.dangerAccent;
     final reference = tx.receiptNumber != null
@@ -689,6 +720,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (!onPage)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -703,7 +735,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
               decoration: BoxDecoration(color: accentColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-              child: Text(_typeLabel(tx.type), style: TextStyle(fontSize: AppFontSize.f11_5, color: accentColor, fontWeight: AppFontWeight.semibold)),
+              child: Text(_typeLabel(tx.type), style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: accentColor, fontWeight: AppFontWeight.semibold)),
             ),
             const SizedBox(height: AppSpacing.s12),
             Text(
@@ -786,7 +818,151 @@ class _TransactionScreenState extends State<TransactionScreen> {
   Widget _detailLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s4),
-      child: Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),
+      child: Text(label, style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.textMuted, fontWeight: AppFontWeight.semibold)),
+    );
+  }
+
+  // ==================== PHONE (PH5b) ====================
+
+  // docs/design/phone_list_pattern.md: the same live list and its paging,
+  // filter, cards, panel and actions as the layout above, as the standard
+  // phone list. The toolbar's one filter is the type: the chips hold it, so
+  // there is no Filter sheet. Amounts carry their sign as a character, and a
+  // day's total is its net (other income less expenses).
+
+  /// Panel text under 12 px is 12 on a phone (S3); tablets keep theirs.
+  double _phoneMin(double size) =>
+      AppLayout.isPhone(context) && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
+
+  String _typeChipLabel(String v) => v == 'All' ? context.l10n.common_all : _typeLabel(v);
+
+  String get _rangeText => '${AppDateFormat.date.format(_rangeStart)} - ${AppDateFormat.date.format(_rangeEnd)}';
+
+  bool _isIncome(TransactionModel tx) => tx.type.toLowerCase() == 'other income';
+
+  /// "+Tsh 5,000" for other income, "-Tsh 5,000" for an expense.
+  String _signedAmount(TransactionModel tx) => _isIncome(tx) ? '+${Money.format(tx.amount)}' : Money.format(-tx.amount);
+
+  /// The cards (for their period) and the list's count, as rows.
+  void _showSummary(int count) {
+    final l10n = context.l10n;
+    showPhoneSummarySheet(context, period: _rangeText, rows: [
+      (l10n.payments_typeOtherIncome, Money.format(_otherIncomeTotal)),
+      (l10n.transactions_expenses, Money.format(_expensesTotal)),
+      (l10n.transactions_incomeVsExpenses, Money.format(_otherIncomeTotal - _expensesTotal)),
+      (l10n.transactions_title, '$count'),
+    ]);
+  }
+
+  Future<void> _openDetailsPage(TransactionModel tx) {
+    final transactionProvider = Provider.of<TransactionProvider>(context, listen: false);
+    // Edit and Delete are admin-only (owner decision, E4d-2), as the row menu.
+    final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
+    return Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        key: const ValueKey('phoneList-details'),
+        appBar: AppBar(
+          title: Text(context.l10n.transactions_detailsTitle),
+          actions: [
+            if (isAdmin) ...[
+              IconButton(
+                tooltip: context.l10n.common_edit,
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () async {
+                  await showAddTransactionScreen(context, transaction: tx);
+                  await _loadPeriodTotals();
+                },
+              ),
+              IconButton(
+                tooltip: context.l10n.common_delete,
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () => _confirmDeleteTransaction(tx, transactionProvider,
+                    onDeleted: () => Navigator.of(pageContext).pop()),
+              ),
+            ],
+          ],
+        ),
+        body: ValueListenableBuilder<int>(
+          valueListenable: _phoneRevision,
+          builder: (context, _, _) => _buildDetailsPanel(tx, onPage: true),
+        ),
+      ),
+    ));
+  }
+
+  Widget _transactionTile(TransactionModel tx) {
+    final l10n = context.l10n;
+    final title = tx.description.isEmpty ? _typeLabel(tx.type) : tx.description;
+    final amount = _signedAmount(tx);
+    final type = _typeLabel(tx.type);
+    return RecordTile(
+      title: title,
+      amount: amount,
+      details: [
+        if (tx.category.isNotEmpty) l10n.transactionCategoryLabel(tx.category),
+        AppDateFormat.time24.format(tx.date),
+      ],
+      status: RecordStatus(type, _isIncome(tx) ? context.colors.accent : context.colors.dangerAccent),
+      // The wide row's leading: money in or money out (no category has an
+      // icon of its own).
+      icon: _isIncome(tx) ? Icons.arrow_downward : Icons.arrow_upward,
+      colorSeed: tx.type,
+      semanticsLabel: l10n.phoneList_rowSemantics(title, amount, type, AppDateFormat.dateShortTime24.format(tx.date)),
+      onTap: () => _openDetailsPage(tx),
+    );
+  }
+
+  Widget _buildPhone(TransactionProvider transactionProvider) {
+    final l10n = context.l10n;
+    final transactions = _filtered(transactionProvider);
+    final record = PhoneListAction(label: l10n.transactions_record, icon: Icons.add, onPressed: _recordTransaction);
+    return PhoneListScaffold<TransactionModel>(
+      title: l10n.transactions_title,
+      asTab: false,
+      menu: [PhoneListMenuItem(label: l10n.export_dateRange, icon: Icons.date_range_outlined, onSelected: _showDateRangeDialog)],
+      searchController: _searchController,
+      searchHint: l10n.transactions_searchHint,
+      onSearchChanged: (val) => setState(() => _searchQuery = val.trim()),
+      onSearchClosed: () => setState(() {
+        _searchController.clear();
+        _searchQuery = '';
+      }),
+      quickChips: PhoneQuickChips(
+        key: const ValueKey('phoneList-quickChips'),
+        values: const ['All', 'other income', 'expense'],
+        selected: _filterType ?? 'All',
+        label: _typeChipLabel,
+        onSelected: (v) => setState(() => _filterType = v == 'All' ? null : v),
+      ),
+      filtersActive: false,
+      onFilter: null,
+      appliedFilters: const [],
+      summaryLine: _isSummaryLoading
+          ? null
+          : l10n.phoneList_transactionsSummaryLine(_rangeText, Money.format(_otherIncomeTotal), Money.format(_expensesTotal)),
+      onSummary: () => _showSummary(transactions.length),
+      items: transactions,
+      idOf: (tx) => tx.id,
+      dateOf: (tx) => tx.date,
+      amountOf: (tx) => _isIncome(tx) ? tx.amount : -tx.amount,
+      // Search filters what is loaded, still by date.
+      grouped: true,
+      tileBuilder: (context, tx, {required grouped}) => _transactionTile(tx),
+      // The live list keeps no loading or error state of its own: no rows
+      // yet while more may come is its first answer on the way.
+      loading: transactionProvider.transactions.isEmpty && transactionProvider.hasMore,
+      error: null,
+      onRetry: () {},
+      emptyIcon: Icons.receipt_long_outlined,
+      emptyText: _filterType != null ? l10n.transactions_emptyForType(_typeLabel(_filterType!)) : l10n.transactions_empty,
+      fab: record,
+      emptyAction: record,
+      hasMore: transactionProvider.hasMore,
+      loadingMore: transactionProvider.isLoadingMore,
+      onLoadMore: transactionProvider.loadMoreTransactions,
+      // Pull to refresh (R8): today's refresh, the cards' totals (the list
+      // itself is live).
+      onRefresh: _loadPeriodTotals,
     );
   }
 

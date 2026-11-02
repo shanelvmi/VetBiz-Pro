@@ -24,7 +24,7 @@ class CountingFirestore implements FirebaseFirestore {
   /// PH5a: while set, every query get waits for it (a list's loading state).
   Completer<void>? holdGets;
 
-  /// PH5b: while set, every listener's answers wait for it (a live list's
+  /// PH5b: while set, every query listener's answers wait for it (a live list's
   /// loading state).
   Completer<void>? holdListens;
 
@@ -49,7 +49,7 @@ class CountingFirestore implements FirebaseFirestore {
     return snap;
   }
 
-  Stream<S> _listen<S>(Stream<S> Function() open, int Function(S snap, bool first) billed) {
+  Stream<S> _listen<S>(Stream<S> Function() open, int Function(S snap, bool first) billed, {bool query = false}) {
     late StreamSubscription<S> sub;
     late StreamController<S> controller;
     var first = true;
@@ -64,7 +64,7 @@ class CountingFirestore implements FirebaseFirestore {
             controller.add(s);
           }
 
-          final hold = holdListens;
+          final hold = query ? holdListens : null;
           hold == null || hold.isCompleted ? deliver() : hold.future.then((_) => deliver());
         }, onError: controller.addError);
       },
@@ -127,7 +127,7 @@ class _Query implements Query<Map<String, dynamic>> {
   @override
   Stream<QuerySnapshot<Map<String, dynamic>>> snapshots(
           {bool includeMetadataChanges = false, ListenSource source = ListenSource.defaultSource}) =>
-      db._listen(() => q.snapshots(), (s, first) => first ? s.docs.length : s.docChanges.length);
+      db._listen(() => q.snapshots(), (s, first) => first ? s.docs.length : s.docChanges.length, query: true);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
