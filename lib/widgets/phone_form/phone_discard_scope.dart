@@ -58,3 +58,11 @@ class PhoneDiscardScope extends StatelessWidget {
     );
   }
 }
+
+/// PH6: on a phone a tap outside a field closes the keyboard (the field
+/// keeps what was typed). Wrap a form's body with it on phones only.
+Widget closeKeyboardOnTapOutside(BuildContext context, Widget child) => GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: child,
+    );

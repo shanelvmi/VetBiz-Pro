@@ -14,7 +14,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
 /// The forms done so far: the others stay skipped until theirs is.
-const _done = <String>{};
+const _done = <String>{'add-transaction'};
 
 /// Each form: its discard kind, its primary button, a field to type in.
 const _forms = {

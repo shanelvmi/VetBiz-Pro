@@ -18,7 +18,12 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_layout.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../widgets/field_message_slot.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/phone_discard_scope.dart';
+import '../../widgets/phone_form/picker_sheet.dart';
 import '../../l10n/l10n.dart';
 import '../../constants/transaction_categories.dart';
 import '../../widgets/app_sheet.dart';
@@ -53,6 +58,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? type = 'expense';
   String? paymentMethod;
 
+  // PH6 (phones only): a save with an entry missing shows "Required" in the
+  // line kept under each field, instead of the message at the bottom; and
+  // leaving after typing asks first (PhoneDiscardScope).
+  bool _attempted = false;
+  late final String _initialEntries;
+
+  bool get _isPhone => AppLayout.isPhone(context);
+
+  String get _entries => [type, selectedCategory, descriptionController.text, amountController.text, noteController.text, paymentMethod]
+      .join('\u0001');
+
 
   late final AuthService _authService = widget.authService ?? AuthService();
 
@@ -81,11 +97,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final note = noteController.text.trim().isEmpty ? null : noteController.text.trim();
 
     if (description.isEmpty || amount <= 0 || type == null || category.isEmpty) {
+      if (_isPhone) return setState(() => _attempted = true);
       AppFeedback.warning(L10n.current.transactions_fillRequired);
       return;
     }
 
     if (paymentMethod == null) {
+      if (_isPhone) return setState(() => _attempted = true);
       AppFeedback.warning(L10n.current.transactions_selectPaymentMethod);
       return;
     }
@@ -171,6 +189,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       paymentMethod = tx.paymentMethod;
       noteController.text = tx.note ?? '';
     }
+    _initialEntries = _entries;
   }
 
   @override
@@ -185,7 +204,40 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget build(BuildContext context) {
     final isEditing = widget.transaction != null;
 
-    return Scaffold(
+    final body = LayoutBuilder(
+      builder: (context, constraints) {
+        final isTwoColumn = constraints.maxWidth >= AppBreakpoints.formTwoColumn;
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1080),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.s16),
+              child: isTwoColumn
+                  ? IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(flex: 2, child: _buildTransactionDetailsCard()),
+                          const SizedBox(width: AppSpacing.s16),
+                          Expanded(flex: 1, child: _buildAmountPaymentCard()),
+                        ],
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        _buildTransactionDetailsCard(),
+                        const SizedBox(height: AppSpacing.s16),
+                        _buildAmountPaymentCard(),
+                      ],
+                    ),
+            ),
+          ),
+        );
+      },
+    );
+
+    final scaffold = Scaffold(
       backgroundColor: context.colors.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
@@ -215,40 +267,118 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isTwoColumn = constraints.maxWidth >= AppBreakpoints.formTwoColumn;
-          return Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1080),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.s16),
-                child: isTwoColumn
-                    ? IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(flex: 2, child: _buildTransactionDetailsCard()),
-                            const SizedBox(width: AppSpacing.s16),
-                            Expanded(flex: 1, child: _buildAmountPaymentCard()),
-                          ],
-                        ),
-                      )
-                    : Column(
-                        children: [
-                          _buildTransactionDetailsCard(),
-                          const SizedBox(height: AppSpacing.s16),
-                          _buildAmountPaymentCard(),
-                        ],
-                      ),
-              ),
-            ),
-          );
-        },
-      ),
-      bottomNavigationBar: _buildFooter(isEditing),
+      body: _isPhone ? closeKeyboardOnTapOutside(context, body) : body,
+      bottomNavigationBar: _isPhone
+          ? FormActionBar(
+              primaryLabel: isEditing ? context.l10n.transactions_update : context.l10n.transactions_record,
+              primaryIcon: Icons.receipt_long_outlined,
+              onPrimary: () => _saveTransaction(context),
+              busy: _isSaving,
+              secondaryLabel: context.l10n.common_cancel,
+              onSecondary: () => Navigator.of(context).maybePop(),
+            )
+          : _buildFooter(isEditing),
     );
+    if (!_isPhone) return scaffold;
+    return PhoneDiscardScope(kind: 'transaction', isDirty: () => _entries != _initialEntries, child: scaffold);
+  }
+
+  // ==================== PHONE (PH6) ====================
+
+  /// A field's label: 14 on a phone (S3), as before elsewhere.
+  Widget _label(String text) => Text(text,
+      style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _isPhone ? PhoneFormMetrics.label : AppFontSize.f13));
+
+  /// The line kept under a field on a phone: "Required" once a save found
+  /// it empty, so the form never changes height (the G5 technique).
+  Widget _phoneError(bool missing) => FieldMessageSlot(
+        message: _attempted && missing ? context.l10n.common_required : null,
+        reserve: [context.l10n.common_required],
+        maxLines: 1,
+        style: TextStyle(fontSize: PhoneFormMetrics.error, color: context.colors.danger),
+      );
+
+  /// A picker's field on a phone: the chosen label (or the placeholder),
+  /// at least 48 high; a tap opens the picker's sheet.
+  Widget _phoneChoiceField({required String text, required bool chosen, IconData? icon, required VoidCallback onTap}) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.r10),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: PhoneFormMetrics.fieldMinHeight),
+        padding: const EdgeInsets.symmetric(horizontal: PhoneFormMetrics.fieldPaddingH),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.r10),
+          border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
+        ),
+        child: Row(
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
+              const SizedBox(width: AppSpacing.s10),
+            ],
+            Expanded(
+              child: Text(text,
+                  style: TextStyle(
+                      fontSize: PhoneFormMetrics.body, color: chosen ? context.colors.textPrimary : context.colors.textHint)),
+            ),
+            Icon(Icons.expand_more, size: AppIconSize.i18, color: context.colors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickTypePhone() async {
+    final picked = await showPickerSheet<String>(
+      context,
+      title: context.l10n.common_type,
+      selected: type,
+      options: [
+        for (final t in const ['other income', 'expense']) PickerOption(t, _toTitleCase(context.l10n.transactionTypeLabel(t))),
+      ],
+    );
+    if (picked == null) return;
+    // As the dropdown: a category picked under one type is cleared.
+    setState(() {
+      type = picked;
+      selectedCategory = null;
+    });
+  }
+
+  Future<void> _pickCategoryPhone() async {
+    final l10n = context.l10n;
+    final picked = await showPickerSheet<String>(
+      context,
+      title: l10n.transactions_selectCategoryTitle,
+      selected: selectedCategory,
+      searchHint: l10n.transactions_searchCategories,
+      emptyText: l10n.transactions_noCategories,
+      // Typed text matches the stored category, as before, or the label shown.
+      matches: (o, q) => o.value.toLowerCase().contains(q),
+      options: type == 'expense'
+          ? [
+              for (final group in kExpenseCategoryGroups.entries)
+                for (final c in group.value)
+                  PickerOption(c, l10n.transactionCategoryLabel(c), group: l10n.expenseGroupLabel(group.key)),
+            ]
+          : [for (final c in kIncomeCategories) PickerOption(c, l10n.transactionCategoryLabel(c))],
+    );
+    if (picked != null) setState(() => selectedCategory = picked);
+  }
+
+  Future<void> _pickMethodPhone() async {
+    final picked = await showPickerSheet<String>(
+      context,
+      title: context.l10n.payments_method,
+      selected: paymentMethod,
+      options: [
+        for (final m in kPaymentMethods) PickerOption(m, context.l10n.paymentMethodLabel(m), icon: iconForPaymentMethod(m)),
+      ],
+    );
+    if (picked != null) setState(() => paymentMethod = picked);
   }
 
   Widget _sectionHeader(IconData icon, String title) {
@@ -256,7 +386,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       children: [
         Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
         const SizedBox(width: AppSpacing.s8),
-        Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
+        // On a phone the title wraps (Kiswahili at 360); elsewhere as before.
+        if (_isPhone)
+          Flexible(child: Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)))
+        else
+          Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
       ],
     );
   }
@@ -267,7 +401,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       filled: true,
       fillColor: context.colors.surface,
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
+      // At least 48 high on a phone (PH6).
+      contentPadding: _isPhone
+          ? const EdgeInsets.symmetric(vertical: PhoneFormMetrics.fieldPaddingV, horizontal: PhoneFormMetrics.fieldPaddingH)
+          : const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppRadius.r10),
         borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -296,8 +433,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: [
           _sectionHeader(Icons.swap_horiz, context.l10n.transactions_detailsTitle),
           const SizedBox(height: AppSpacing.s14),
-          Text(context.l10n.common_requiredLabel(context.l10n.common_type), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          _label(context.l10n.common_requiredLabel(context.l10n.common_type)),
           const SizedBox(height: AppSpacing.s6),
+          if (_isPhone)
+            _phoneChoiceField(
+              text: _toTitleCase(context.l10n.transactionTypeLabel(type ?? '')),
+              chosen: type != null,
+              onTap: _pickTypePhone,
+            )
+          else
           DropdownButtonFormField<String>(
             initialValue: type,
             items: dropdownOptions.map((val) {
@@ -314,8 +458,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             decoration: _fieldDecoration(),
           ),
           const SizedBox(height: AppSpacing.s14),
-          Text(context.l10n.common_requiredLabel(context.l10n.common_category), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          _label(context.l10n.common_requiredLabel(context.l10n.common_category)),
           const SizedBox(height: AppSpacing.s6),
+          if (_isPhone) ...[
+            _phoneChoiceField(
+              text: selectedCategory == null
+                  ? context.l10n.transactions_selectCategory
+                  : context.l10n.transactionCategoryLabel(selectedCategory!),
+              chosen: selectedCategory != null,
+              onTap: _pickCategoryPhone,
+            ),
+            _phoneError(selectedCategory == null),
+          ] else
           InkWell(
             borderRadius: BorderRadius.circular(AppRadius.r10),
             onTap: _showCategoryPickerDialog,
@@ -344,16 +498,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.s14),
-          Text(context.l10n.common_requiredLabel(context.l10n.common_description), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          _label(context.l10n.common_requiredLabel(context.l10n.common_description)),
           const SizedBox(height: AppSpacing.s6),
           TextField(
             controller: descriptionController,
             textCapitalization: TextCapitalization.sentences,
             inputFormatters: [SentenceCapitalizationFormatter()],
             decoration: _fieldDecoration(hintText: context.l10n.transactions_descriptionHint),
+            textInputAction: _isPhone ? TextInputAction.next : null,
+            onChanged: _isPhone ? (_) => _attempted ? setState(() {}) : null : null,
           ),
+          if (_isPhone) _phoneError(descriptionController.text.trim().isEmpty),
           const SizedBox(height: AppSpacing.s14),
-          Text(context.l10n.transactions_noteLabel, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          _label(context.l10n.transactions_noteLabel),
           const SizedBox(height: AppSpacing.s6),
           TextField(
             controller: noteController,
@@ -381,14 +538,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: [
           _sectionHeader(Icons.receipt_long_outlined, context.l10n.transactions_amountPayment),
           const SizedBox(height: AppSpacing.s14),
-          Text(context.l10n.transactions_amountRequired(AppDefaults.currencySymbol), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          _label(context.l10n.transactions_amountRequired(AppDefaults.currencySymbol)),
           const SizedBox(height: AppSpacing.s6),
           TextField(
             controller: amountController,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
             decoration: _fieldDecoration(hintText: '0.00'),
+            textInputAction: _isPhone ? TextInputAction.done : null,
+            onChanged: _isPhone ? (_) => _attempted ? setState(() {}) : null : null,
           ),
+          if (_isPhone) _phoneError(parseThousands(amountController.text) <= 0),
           const SizedBox(height: AppSpacing.s16),
           Container(
               width: double.infinity,
@@ -406,10 +566,24 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       Icon(Icons.credit_card_outlined, size: AppIconSize.i16, color: context.colors.primary),
                       const SizedBox(width: AppSpacing.s8),
                       Text(context.l10n.payments_method,
-                          style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13, color: context.colors.primary)),
+                          style: TextStyle(
+                              fontWeight: AppFontWeight.semibold,
+                              fontSize: _isPhone ? PhoneFormMetrics.label : AppFontSize.f13,
+                              color: context.colors.primary)),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.s10),
+                  if (_isPhone) ...[
+                    _phoneChoiceField(
+                      text: paymentMethod == null
+                          ? context.l10n.transactions_selectMethod
+                          : context.l10n.paymentMethodLabel(paymentMethod!),
+                      chosen: paymentMethod != null,
+                      icon: iconForPaymentMethod(paymentMethod ?? PaymentMethod.cash.key),
+                      onTap: _pickMethodPhone,
+                    ),
+                    _phoneError(paymentMethod == null),
+                  ] else
                   PopupMenuButton<String>(
                     initialValue: paymentMethod,
                     onSelected: (method) => setState(() => paymentMethod = method),

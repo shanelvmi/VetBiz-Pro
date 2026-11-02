@@ -124,7 +124,6 @@ const Map<String, String> _overflowsToday = {
   'Add Sale': 'a Row overflows at add_sale_screen.dart:940 (44 px); PH6',
   'Clients': 'Rows overflow at clients_screen.dart:236 (15 px) and :1026 (163); PH5',
   'Products': 'a Row overflows at products_screen.dart:863 (66 px), a Column at :261 (4 down); PH5',
-  'Add Transaction': 'a Row overflows at add_transaction_screen.dart:565 (142 px); PH6',
 };
 
 void main() {
