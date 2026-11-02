@@ -3999,5 +3999,7 @@
   "phoneForm_keepEditing": "Keep editing",
   "@phoneForm_keepEditing": {"description":"Money forms on a phone (PH6): the answer that stays on the form."},
   "phoneForm_discard": "Discard",
-  "@phoneForm_discard": {"description":"Money forms on a phone (PH6): the answer that leaves the form and drops what was entered."}
+  "@phoneForm_discard": {"description":"Money forms on a phone (PH6): the answer that leaves the form and drops what was entered."},
+  "phoneForm_saleSummary": "{count, plural, =1{1 item, {amount}} other{{count} items, {amount}}}",
+  "@phoneForm_saleSummary": {"description":"Add Sale on a phone (PH6): the line pinned above the buttons, and in Browse Products: how many items (units) the sale holds and its total.","placeholders":{"count":{"type":"int"},"amount":{"type":"String"}}}
 }

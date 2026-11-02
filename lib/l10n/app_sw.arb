@@ -3999,5 +3999,7 @@
   "phoneForm_keepEditing": "Endelea kuandika",
   "@phoneForm_keepEditing": {"x-review":"draft"},
   "phoneForm_discard": "Acha",
-  "@phoneForm_discard": {"x-review":"draft"}
+  "@phoneForm_discard": {"x-review":"draft"},
+  "phoneForm_saleSummary": "{count, plural, =1{bidhaa 1, {amount}} other{bidhaa {count}, {amount}}}",
+  "@phoneForm_saleSummary": {"x-review":"draft"}
 }
