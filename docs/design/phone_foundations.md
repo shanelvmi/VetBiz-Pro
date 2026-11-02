@@ -141,9 +141,10 @@ Each is a HARD STOP with before and after screenshots and the owner's phone and 
 | PH2 foundations | S1 `AppLayout`; S4 `showAppSheet` and `showAdaptiveForm` (the 15 copies); S5 `RecordList`; S7 receipts fit; S2 guard rule and `minTapTarget` 48; S8; the size-matrix helper; seams for the money screens | 2 |
 | PH3 the shell | `PhoneShell` (lazy tabs, bar, "+" sheet, back), `asTab` on Sales and Products, More page, `PhoneShellMetrics`, ARB drafts; tablets and computers unchanged | 2 |
 | PH4 phone home | figures as one value (period streams, debts, products), Today card, Quick access, Go to, Needs attention, All details list (with chart and feed if approved), `listenToProducts` at activation; the 7 dashboard builders (S9) | 2 |
-| PH5 money lists | sales, services, clients, debtors, payments, transactions onto `RecordList`; details as a page or sheet; 14 px cells | 3 |
+| PH5a the standard phone list, piloted | sales and services on phones: `docs/design/phone_list_pattern.md` (R1 to R12, `lib/widgets/phone_list/` on `RecordList` and `showAppSheet`); details as a full page; 14 px cells | 2 |
+| PH5b money lists | clients, debtors, payments, transactions onto the PH5a pattern | 2 |
 | PH6 money forms | Add Sale (Browse Products as a sheet, the 5 buttons), Record Payment, Add Client and Add Transaction pickers, the expired and release dialogs, S6 | 2 |
-| PH7 products, stock, reports, receipts | products, stock store, batches, reports and `report_tabbed_content`, receipts, stock alerts | 2 |
+| PH7 products, stock, reports, receipts | products, stock store and reports (their lists on the PH5a pattern), batches and `report_tabbed_content`, receipts, stock alerts | 2 |
 | PH8 the rest | archives, activity log, settings pages, Team Members, facilities, subscription; the 4 other customer builders | 2 |
 | PH9 tablet pass | the owner's answer to A section 5 and S10; landscape tablets; the console builders if wanted | 1 |
 
