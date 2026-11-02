@@ -109,6 +109,13 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
       ? _pages[_currentPageIndex].items
       : const [];
 
+  /// PH5a: every page up to the current one, in order. A phone list shows
+  /// them one after another and asks for the next with [goToNextPage]; the
+  /// pages, the cursors and the snapshot moment are the same as above.
+  List<T> get loadedItems => [
+        for (var i = 0; i <= _currentPageIndex && i < _pages.length; i++) ..._pages[i].items,
+      ];
+
   // 1-based for display ("Page 3 of ..."), matching how every other
   // page indicator in this app already counts.
   int get currentPage => _currentPageIndex + 1;

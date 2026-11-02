@@ -556,3 +556,68 @@ class PhoneHomeMetrics {
   static const double countChipPadding = AppSpacing.s8;
   static const double circleAlpha = 0.12;
 }
+
+/// PH5a: the standard phone list (docs/design/phone_list_pattern.md, rules R1
+/// to R12). Colours come from context.colors roles only.
+class PhoneListMetrics {
+  PhoneListMetrics._();
+
+  /// The page's side padding and the gap between the header's lines.
+  static const double pagePadding = AppSpacing.s16;
+  static const double headerGap = AppSpacing.s8;
+
+  /// R6 rows: two lines, at least 64 high, a 40 px round leading on a tint
+  /// of a chart role (initials in textPrimary), line 1 at 15, line 2 at 13.
+  static const double rowMinHeight = 64;
+  static const double rowPaddingV = AppSpacing.s10;
+  static const double leading = 40;
+  static const double leadingGap = AppSpacing.s12;
+  static const double leadingIcon = AppIconSize.i20;
+  static const double leadingText = AppFontSize.f14;
+  static const double leadingAlpha = 0.18;
+  static const double title = AppFontSize.f15;
+  static const double subtitle = AppFontSize.f13;
+  static const double lineGap = AppSpacing.s4;
+  static const double partGap = AppSpacing.s8;
+
+  /// The status chip: TEXT and colour (the role at [chipAlpha] behind it).
+  static const double chip = AppFontSize.f12;
+  static const double chipPaddingH = AppSpacing.s8;
+  static const double chipPaddingV = AppSpacing.s2;
+  static const double chipRadius = AppRadius.r10;
+  static const double chipAlpha = 0.14;
+
+  /// R5 day headers, pinned while their day scrolls.
+  static const double dayHeaderHeight = 40;
+  static const double dayHeader = AppFontSize.f13;
+
+  /// R3 the quick chips' row and the filter button's dot.
+  static const double chipRowHeight = 48;
+  static const double chipGap = AppSpacing.s8;
+  static const double filterDot = 8;
+
+  /// R4 the summary line.
+  static const double summaryLine = AppFontSize.f13;
+
+  /// R2 the floating button: its height, its gap from the edges, and the
+  /// room kept under the last row so the button never covers it.
+  static const double fabHeight = 56;
+  static const double fabMargin = AppSpacing.s16;
+  static const double fabClearance = fabHeight + fabMargin * 2;
+
+  /// R9 the loading rows, their bars, and the pulse's lowest opacity.
+  static const int skeletonRows = 6;
+  static const double skeletonBar = 12;
+  static const double skeletonBarWide = 160;
+  static const double skeletonBarNarrow = 96;
+  static const double skeletonLow = 0.45;
+
+  /// R9 the empty state's icon.
+  static const double emptyIcon = AppIconSize.i48;
+
+  /// R10 more loads when the list is this close to its end.
+  static const double loadMoreExtent = 400;
+
+  /// R7 the details page's labels: at least 12 on a phone (S3).
+  static const double detailLabel = AppFontSize.f12;
+}

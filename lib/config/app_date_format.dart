@@ -29,6 +29,10 @@ class AppDateFormat {
   static const String dateLongPaddedPattern = 'EEEE, dd MMM yyyy';
   static const String dateWeekdayShortPattern = 'EEE, dd MMM yyyy';
   static const String dateDayTime24Pattern = 'dd MMM, HH:mm';
+  /// PH5a: a phone list's day header ("Monday, 27 Oct") and a row's spoken
+  /// date and time ("27 Oct 10:15").
+  static const String weekdayDayMonthPattern = 'EEEE, d MMM';
+  static const String dateShortTime24Pattern = 'd MMM HH:mm';
 
   /// `y` and `yyyy` print the same four-digit year.
   static const String dateNoPadYPattern = 'd MMM y';
@@ -54,5 +58,7 @@ class AppDateFormat {
   static DateFormat get dateDayTime24 => DateFormat(dateDayTime24Pattern);
   static DateFormat get dateNoPadY => DateFormat(dateNoPadYPattern);
   static DateFormat get dayMonthNumeric => DateFormat(dayMonthNumericPattern);
+  static DateFormat get weekdayDayMonth => DateFormat(weekdayDayMonthPattern);
+  static DateFormat get dateShortTime24 => DateFormat(dateShortTime24Pattern);
 
 }
