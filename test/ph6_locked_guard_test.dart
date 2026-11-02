@@ -17,7 +17,7 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _phone = Size(390, 844);
 const _wide = Size(1200, 800);

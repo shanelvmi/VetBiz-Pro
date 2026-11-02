@@ -22,6 +22,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../constants/transaction_categories.dart';
 import '../../widgets/app_sheet.dart';
+import '../../utils/subscription_guard.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
@@ -612,11 +613,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 /// reasoning and threshold as showAddSaleScreen elsewhere in this app:
 /// a full-screen push on mobile, a large, centered, dismissable modal
 /// on desktop/tablet-width screens.
+///
+/// A new transaction goes through the locked-facility guard (PH6 finding a:
+/// every entry point, at every width, gets the friendly locked message and
+/// no form); editing an existing one does not.
 Future<void> showAddTransactionScreen(BuildContext context, {TransactionModel? transaction}) async {
-  await showAdaptiveForm(
-    context,
-    barrierLabel: transaction != null ? context.l10n.transactions_edit : context.l10n.transactions_record,
-    size: AdaptiveFormSize.formCapped,
-    builder: (isModal) => AddTransactionScreen(transaction: transaction, isModal: isModal),
-  );
+  Future<void> open() => showAdaptiveForm(
+        context,
+        barrierLabel: transaction != null ? context.l10n.transactions_edit : context.l10n.transactions_record,
+        size: AdaptiveFormSize.formCapped,
+        builder: (isModal) => AddTransactionScreen(transaction: transaction, isModal: isModal),
+      );
+  if (transaction != null) return open();
+  await navigateOrShowLockedDialog(context, const AddTransactionScreen(), onNavigate: open);
 }

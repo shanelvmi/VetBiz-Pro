@@ -23,6 +23,7 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
+import '../../utils/subscription_guard.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -601,18 +602,26 @@ Future<bool?> showAddPaymentScreen(
   Map<String, double>? debtorBalances,
   double? totalOwed,
 }) async {
-  return showAdaptiveForm<bool>(
+  // Through the locked-facility guard (PH6 finding a): every entry point,
+  // at every width, gets the friendly locked message and no form.
+  bool? result;
+  await navigateOrShowLockedDialog(
     context,
-    barrierLabel: context.l10n.debtors_recordPayment,
-    builder: (isModal) => AddPaymentScreen(
-      preselectedClient: preselectedClient,
-      debtDocId: debtDocId,
-      amountOwed: amountOwed,
-      facilityId: facilityId,
-      debtorClients: debtorClients,
-      debtorBalances: debtorBalances,
-      totalOwed: totalOwed,
-      isModal: isModal,
+    const AddPaymentScreen(),
+    onNavigate: () async => result = await showAdaptiveForm<bool>(
+      context,
+      barrierLabel: context.l10n.debtors_recordPayment,
+      builder: (isModal) => AddPaymentScreen(
+        preselectedClient: preselectedClient,
+        debtDocId: debtDocId,
+        amountOwed: amountOwed,
+        facilityId: facilityId,
+        debtorClients: debtorClients,
+        debtorBalances: debtorBalances,
+        totalOwed: totalOwed,
+        isModal: isModal,
+      ),
     ),
   );
+  return result;
 }

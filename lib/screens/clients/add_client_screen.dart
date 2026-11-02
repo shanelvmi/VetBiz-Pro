@@ -14,6 +14,7 @@ import '../../constants/client_options.dart';
 import '../../l10n/l10n.dart';
 import '../../constants/crops.dart';
 import '../../widgets/app_sheet.dart';
+import '../../utils/subscription_guard.dart';
 
 class AddClientScreen extends StatefulWidget {
   final Client? client; // null = add, not null = edit
@@ -980,11 +981,19 @@ class _AddClientScreenState extends State<AddClientScreen> {
 /// popped with (true on a successful save), same as calling
 /// Navigator.push directly - existing callers that check that value
 /// (e.g. add_edit_service_screen.dart) keep working unchanged.
+///
+/// A new client goes through the locked-facility guard (PH6 finding a:
+/// every entry point, at every width, gets the friendly locked message and
+/// no form); editing an existing client does not.
 Future<bool?> showAddClientScreen(BuildContext context, {Client? client}) async {
-  return showAdaptiveForm<bool>(
-    context,
-    barrierLabel: client == null ? context.l10n.clients_add : context.l10n.clients_edit,
-    size: AdaptiveFormSize.formCapped,
-    builder: (isModal) => AddClientScreen(client: client, isModal: isModal),
-  );
+  Future<bool?> open() => showAdaptiveForm<bool>(
+        context,
+        barrierLabel: client == null ? context.l10n.clients_add : context.l10n.clients_edit,
+        size: AdaptiveFormSize.formCapped,
+        builder: (isModal) => AddClientScreen(client: client, isModal: isModal),
+      );
+  if (client != null) return open();
+  bool? result;
+  await navigateOrShowLockedDialog(context, const AddClientScreen(), onNavigate: () async => result = await open());
+  return result;
 }
