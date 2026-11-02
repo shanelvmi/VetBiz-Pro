@@ -10,7 +10,7 @@ import 'package:vetbiz_pro/screens/sales/sales_screen.dart';
 
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _phone = Size(390, 844);
 const _wide = Size(1200, 800);
@@ -57,7 +57,7 @@ List<String> _valuesBeside(WidgetTester tester, Finder label, Type box, {Set<Str
 
 void main() {
   group('the app bar (R1) and no record button (R2)', () {
-    testWidgets('as a tab: the title only, a search icon and one overflow menu with Archive; nothing else', (tester) async {
+    ph5TestWidgets('as a tab: the title only, a search icon and one overflow menu with Archive; nothing else', (tester) async {
       await _sales(tester);
       expect(find.text('Sales Records'), findsOneWidget);
       expect(find.text('Track and manage all sales transactions'), findsNothing);
@@ -71,12 +71,12 @@ void main() {
       expect(find.text('Archive'), findsOneWidget);
     }, skip: _skip);
 
-    testWidgets('pushed: the back arrow', (tester) async {
+    ph5TestWidgets('pushed: the back arrow', (tester) async {
       await _sales(tester, asTab: false);
       expect(find.byType(BackButton), findsOneWidget);
     }, skip: _skip);
 
-    testWidgets('the cards, the toolbar, the table header and the page bar are gone', (tester) async {
+    ph5TestWidgets('the cards, the toolbar, the table header and the page bar are gone', (tester) async {
       await _sales(tester);
       expect(find.text('Revenue'), findsNothing);
       expect(find.text('Date: Last 30 days'), findsNothing);
@@ -86,7 +86,7 @@ void main() {
   });
 
   group('search and filters (R3)', () {
-    testWidgets('the quick chips: All, Unpaid, Partial, Paid; a chip filters by that status', (tester) async {
+    ph5TestWidgets('the quick chips: All, Unpaid, Partial, Paid; a chip filters by that status', (tester) async {
       await _sales(tester);
       final chips = _key('phoneList-quickChips');
       final labels = [for (final l in ['All', 'Unpaid', 'Partial', 'Paid']) tester.getCenter(find.descendant(of: chips, matching: find.text(l))).dx];
@@ -101,7 +101,7 @@ void main() {
       expect(_key('phoneList-filterDot'), findsNothing);
     }, skip: _skip);
 
-    testWidgets('the filter sheet gives the tablet toolbar\'s results for the same data', (tester) async {
+    ph5TestWidgets('the filter sheet gives the tablet toolbar\'s results for the same data', (tester) async {
       await _sales(tester, size: _wide);
       Future<void> pick(String current, String choice) async {
         await tester.tap(find.text(current));
@@ -137,7 +137,7 @@ void main() {
       expect(_invoices(tester), toolbarPaid);
     }, skip: _skip);
 
-    testWidgets('applied filters show as removable chips; Reset in the sheet puts the defaults back', (tester) async {
+    ph5TestWidgets('applied filters show as removable chips; Reset in the sheet puts the defaults back', (tester) async {
       await _sales(tester);
       await _openSheet(tester);
       await tester.tap(_inSheet('Last 7 days'));
@@ -161,7 +161,7 @@ void main() {
       expect(_invoices(tester), hasLength(6));
     }, skip: _skip);
 
-    testWidgets('search expands in place; results are not grouped; Close clears it', (tester) async {
+    ph5TestWidgets('search expands in place; results are not grouped; Close clears it', (tester) async {
       await _sales(tester);
       await tester.tap(find.byTooltip('Search'));
       await tester.pump();
@@ -178,7 +178,7 @@ void main() {
   });
 
   group('the summary (R4)', () {
-    testWidgets('one line and a Summary sheet with every card\'s figure, equal to the tablet\'s cards', (tester) async {
+    ph5TestWidgets('one line and a Summary sheet with every card\'s figure, equal to the tablet\'s cards', (tester) async {
       await _sales(tester, size: _wide);
       const labels = ['Total Sales', 'Revenue', 'Collected', 'Pending'];
       final cards = {for (final l in labels) l: _valuesBeside(tester, find.text(l), FittedBox, skip: {'Last 30 days'})};
@@ -195,7 +195,7 @@ void main() {
   });
 
   group('grouped by day (R5) with rows (R6)', () {
-    testWidgets('Today, Yesterday, then the weekday and date; each day\'s total; no Date column', (tester) async {
+    ph5TestWidgets('Today, Yesterday, then the weekday and date; each day\'s total; no Date column', (tester) async {
       await _sales(tester);
       final today = ph5DayKey(ph5When(0));
       final yesterday = ph5DayKey(ph5When(1));
@@ -210,7 +210,7 @@ void main() {
       expect(tester.getSize(row).height, greaterThanOrEqualTo(64));
     }, skip: _skip);
 
-    testWidgets('a day cut by the page end shows no total until it is fully loaded', (tester) async {
+    ph5TestWidgets('a day cut by the page end shows no total until it is fully loaded', (tester) async {
       // 20 today and 10 yesterday: the first page (25) ends inside yesterday.
       final sales = [
         for (var i = 0; i < 20; i++) Ph5Sale('t$i', ph5When(0, minutes: i), amount: 1000, receipt: 100 + i),
@@ -234,7 +234,7 @@ void main() {
   });
 
   group('refresh (R8)', () {
-    testWidgets('pull to refresh restarts the list and reloads the summary', (tester) async {
+    ph5TestWidgets('pull to refresh restarts the list and reloads the summary', (tester) async {
       final app = await _sales(tester);
       await tester.runAsync(() => ph5SeedSales(app.fs, [..._six, Ph5Sale('s7', ph5When(0, minutes: 1), amount: 3000, receipt: 7)]));
       expect(_invoices(tester), isNot(contains('SL-000007')));

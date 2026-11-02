@@ -239,3 +239,22 @@ Future<void> ph5Settle(WidgetTester tester) async {
   }
 }
 
+
+/// Ends a test: the tree goes, then the screens' own delayed work runs out
+/// (Sales' summary refresh waits 2 s after the sales change, then retries
+/// for a few seconds: AppTimeouts.salesSummaryRefresh and
+/// salesSummaryRetryDelays), so no timer is left pending.
+Future<void> ph5Finish(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox());
+  await tester.pump(const Duration(seconds: 30));
+}
+
+/// testWidgets, then [ph5Finish].
+void ph5TestWidgets(String description, WidgetTesterCallback body, {bool? skip}) => testWidgets(
+      description,
+      (tester) async {
+        await body(tester);
+        await ph5Finish(tester);
+      },
+      skip: skip,
+    );
