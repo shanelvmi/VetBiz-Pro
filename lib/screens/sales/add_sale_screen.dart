@@ -34,6 +34,11 @@ import '../../theme/app_tap_target.dart';
 import '../../theme/app_motion.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/phone_choice_field.dart';
+import '../../widgets/phone_form/phone_discard_scope.dart';
+import '../../widgets/phone_form/picker_sheet.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -90,6 +95,23 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   // radio-style, exactly like the mockup shows.
   bool isWalkIn = true;
   String? paymentMethod;
+
+  // PH6 (phones only): leaving after entering something asks first.
+  String _initialEntries = '';
+
+  bool get _isPhone => AppLayout.isPhone(context);
+
+  String get _entries => [
+        selectedClient?.id,
+        isWalkIn,
+        for (final i in items) '${i.productId}x${i.quantity}',
+        totalPaidController.text,
+        saleDiscount,
+        paymentMethod,
+        notesController.text,
+      ].join('\u0001');
+
+  int get _totalItemCount => items.fold<int>(0, (total, i) => total + i.quantity);
 
   // Used to measure the client field's actual on-screen position, so
   // the suggestions overlay below can be placed precisely under it
@@ -511,9 +533,12 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     _saleId = Provider.of<SaleProvider>(context, listen: false).newSaleId();
     totalPaid = 0.0;
     totalPaidController.text = Money.decimal(totalPaid);
+    _initialEntries = _entries;
     if (widget.prefilledProduct != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _addProductToSale(widget.prefilledProduct!);
+        // The product the form opened with is not something typed.
+        _initialEntries = _entries;
       });
     }
   }
@@ -858,7 +883,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
   Widget build(BuildContext context) {
     final productProvider = Provider.of<ProductProvider>(context);
 
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: context.colors.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(64),
@@ -927,8 +952,26 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           );
         },
       ),
-      bottomNavigationBar: _buildFooter(),
+      bottomNavigationBar: _isPhone
+          ? FormActionBar(
+              primaryLabel: context.l10n.sales_recordSale,
+              primaryIcon: Icons.receipt_long_outlined,
+              onPrimary: _saveSale,
+              busy: _isSaving,
+              secondaryLabel: context.l10n.common_cancel,
+              onSecondary: () => Navigator.of(context).maybePop(),
+              // The items and the total, pinned above the buttons.
+              summary: items.isEmpty
+                  ? null
+                  : Text(context.l10n.phoneForm_saleSummary(_totalItemCount, Money.format(totalAmount)),
+                      style: const TextStyle(fontWeight: AppFontWeight.semibold)),
+            )
+          : _buildFooter(),
     );
+    // PH6, a phone: leaving after entering something asks; a tap outside a
+    // field closes the keyboard. Elsewhere today's form.
+    if (!_isPhone) return scaffold;
+    return PhoneDiscardScope(kind: 'sale', isDirty: () => _entries != _initialEntries, child: closeKeyboardOnTapOutside(context, scaffold));
   }
 
   Widget _buildFooter() {
@@ -988,7 +1031,110 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
       children: [
         Icon(icon, size: AppIconSize.i18, color: context.colors.primary),
         const SizedBox(width: AppSpacing.s8),
-        Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
+        // On a phone the title wraps (Kiswahili at 360); elsewhere as before.
+        if (_isPhone) Flexible(child: Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary))) else Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
+      ],
+    );
+  }
+
+  // ==================== PHONE (PH6) ====================
+
+  Future<void> _pickMethodPhone() async {
+    final picked = await showPickerSheet<String>(
+      context,
+      title: context.l10n.payments_method,
+      selected: paymentMethod,
+      options: [
+        for (final m in kPaymentMethods) PickerOption(m, context.l10n.paymentMethodLabel(m), icon: iconForPaymentMethod(m)),
+      ],
+    );
+    if (picked == null) return;
+    setState(() {
+      paymentMethod = picked;
+      _paymentMethodMissing = false;
+    });
+  }
+
+  /// The sale's items on a phone: the name (two lines) and Delete, the
+  /// batch and expiry, the unit price, then 48 px minus and plus around the
+  /// quantity and the line's total (it wraps, never overflows, at 360).
+  Widget _buildProductsPhoneList() {
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    return Column(
+      children: [
+        for (final (index, item) in items.indexed)
+          Card(
+            key: ValueKey('saleItem-$index'),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r12)),
+            color: context.colors.background,
+            margin: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(AppSpacing.s14, AppSpacing.s8, AppSpacing.s4, AppSpacing.s8),
+              child: Builder(builder: (context) {
+                final product = _findProduct(productProvider, item.productId);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.s12),
+                            child: Text(item.name,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: context.l10n.common_delete,
+                          icon: const Icon(Icons.delete_outline),
+                          color: context.colors.danger,
+                          onPressed: () => _removeItemAt(index),
+                        ),
+                      ],
+                    ),
+                    if (product?.batchNo != null || product?.expiry != null)
+                      Text(
+                        [
+                          if (product?.batchNo != null) context.l10n.sales_batchShort(product!.batchNo!),
+                          if (product?.expiry != null) context.l10n.sales_expShort(AppDateFormat.date.format(product!.expiry!)),
+                        ].join('  •  '),
+                        style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
+                      ),
+                    Text(Money.unitPrice(item.unitPrice),
+                        style: TextStyle(fontSize: PhoneFormMetrics.body, color: context.colors.textSoft)),
+                    Row(
+                      children: [
+                        IconButton(
+                          key: ValueKey('saleItem-minus-$index'),
+                          icon: Icon(Icons.remove_circle_outline, color: context.colors.textMuted),
+                          onPressed: () => _changeItemQuantity(index, -1),
+                        ),
+                        Text('${item.quantity}',
+                            style: const TextStyle(fontSize: PhoneFormMetrics.body, fontWeight: AppFontWeight.semibold)),
+                        IconButton(
+                          key: ValueKey('saleItem-plus-$index'),
+                          icon: Icon(Icons.add_circle_outline, color: context.colors.primary),
+                          onPressed: () => _changeItemQuantity(index, 1),
+                        ),
+                        const SizedBox(width: AppSpacing.s8),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: AppSpacing.s10),
+                            child: Text(Money.format((item.unitPrice * item.quantity) - item.discount),
+                                textAlign: TextAlign.end,
+                                style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: PhoneFormMetrics.body)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
       ],
     );
   }
@@ -1025,6 +1171,14 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                       Text(Money.plain(saleDiscount),
                           style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
                       const SizedBox(width: AppSpacing.s6),
+                      // A 48 px button on a phone (PH2a S2); elsewhere as before.
+                      if (_isPhone)
+                        IconButton(
+                          tooltip: context.l10n.sales_saleDiscount,
+                          onPressed: items.isEmpty ? null : _showEditDiscountDialog,
+                          icon: Icon(Icons.edit_outlined, size: AppIconSize.i18, color: items.isEmpty ? context.colors.border : context.colors.textHint),
+                        )
+                      else
                       InkWell(
                         borderRadius: BorderRadius.circular(AppRadius.r4),
                         onTap: items.isEmpty ? null : _showEditDiscountDialog,
@@ -1077,6 +1231,14 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 ],
               ),
               const SizedBox(height: AppSpacing.s10),
+              if (_isPhone)
+                PhoneChoiceField(
+                  text: paymentMethod == null ? context.l10n.sales_selectMethod : context.l10n.paymentMethodLabel(paymentMethod!),
+                  chosen: paymentMethod != null,
+                  icon: paymentMethod == null ? Icons.payment_outlined : iconForPaymentMethod(paymentMethod!),
+                  onTap: _pickMethodPhone,
+                )
+              else
               PopupMenuButton<String>(
                 initialValue: paymentMethod,
                 onSelected: (method) => setState(() {
@@ -1126,10 +1288,11 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           ),
         ),
         const SizedBox(height: AppSpacing.s16),
-        Text(context.l10n.sales_amountReceivedLabel(AppDefaults.currencySymbol), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+        Text(context.l10n.sales_amountReceivedLabel(AppDefaults.currencySymbol), style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _isPhone ? PhoneFormMetrics.label : AppFontSize.f13)),
         const SizedBox(height: AppSpacing.s6),
         TextFormField(
           controller: totalPaidController,
+          textInputAction: _isPhone ? TextInputAction.done : null,
           enabled: items.isNotEmpty,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
@@ -1138,7 +1301,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
             filled: true,
             fillColor: context.colors.surface,
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
+            contentPadding: _isPhone
+                ? const EdgeInsets.symmetric(vertical: PhoneFormMetrics.fieldPaddingV, horizontal: PhoneFormMetrics.fieldPaddingH)
+                : const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppRadius.r10),
               borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -1150,7 +1315,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           },
         ),
         const SizedBox(height: AppSpacing.s14),
-        Text(context.l10n.sales_changeLabel(AppDefaults.currencySymbol), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+        Text(context.l10n.sales_changeLabel(AppDefaults.currencySymbol), style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _isPhone ? PhoneFormMetrics.label : AppFontSize.f13)),
         const SizedBox(height: AppSpacing.s6),
         Container(
           width: double.infinity,
@@ -1202,7 +1367,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
               filled: true,
               fillColor: context.colors.surface,
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
+              contentPadding: _isPhone
+                  ? const EdgeInsets.symmetric(vertical: PhoneFormMetrics.fieldPaddingV, horizontal: PhoneFormMetrics.fieldPaddingH)
+                  : const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppRadius.r10),
                 borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a40)),
@@ -1306,7 +1473,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         children: [
           _sectionHeader(Icons.shopping_cart_outlined, context.l10n.clients_infoSection),
           const SizedBox(height: AppSpacing.s12),
-          Text(context.l10n.services_selectClientRequired, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+          Text(context.l10n.services_selectClientRequired, style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _isPhone ? PhoneFormMetrics.label : AppFontSize.f13)),
           const SizedBox(height: AppSpacing.s6),
           isNarrow
               ? Column(
@@ -1330,23 +1497,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     );
   }
 
-  Widget _buildProductsCard(bool isNarrow) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.s16),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _sectionHeader(Icons.shopping_cart_outlined, context.l10n.reports_tabProducts),
-          const SizedBox(height: AppSpacing.s12),
-          Row(
-            key: _productFieldRowKey,
-            children: [
-              Expanded(
+  Widget _productSearchField() => Expanded(
                 child: TextField(
                   controller: productSearchController,
                   decoration: InputDecoration(
@@ -1369,9 +1520,9 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                     _showProductSuggestions = val.trim().isNotEmpty;
                   }),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.s8),
-              OutlinedButton.icon(
+              );
+
+  Widget _browseProductsButton() => OutlinedButton.icon(
                 icon: const Icon(Icons.grid_view_outlined, size: AppIconSize.i16),
                 label: Text(context.l10n.sales_browseProducts),
                 style: OutlinedButton.styleFrom(
@@ -1381,13 +1532,40 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
                 ),
                 onPressed: _showBrowseProductsDialog,
-              ),
+              );
+
+  Widget _buildProductsCard(bool isNarrow) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s16),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionHeader(Icons.shopping_cart_outlined, context.l10n.reports_tabProducts),
+          const SizedBox(height: AppSpacing.s12),
+          // PH6, a phone: Browse Products on its own line, full width, so the
+          // search keeps its room (Kiswahili at 360); elsewhere as before.
+          if (_isPhone) ...[
+            Row(key: _productFieldRowKey, children: [_productSearchField()]),
+            const SizedBox(height: AppSpacing.s8),
+            SizedBox(width: double.infinity, child: _browseProductsButton()),
+          ] else
+          Row(
+            key: _productFieldRowKey,
+            children: [
+              _productSearchField(),
+              const SizedBox(width: AppSpacing.s8),
+              _browseProductsButton(),
             ],
           ),
           const SizedBox(height: AppSpacing.s16),
           items.isEmpty
               ? _buildEmptyProductsState()
-              : (isNarrow ? _buildProductsCompactList() : _buildProductsTable()),
+              : (_isPhone ? _buildProductsPhoneList() : (isNarrow ? _buildProductsCompactList() : _buildProductsTable())),
         ],
       ),
     );
