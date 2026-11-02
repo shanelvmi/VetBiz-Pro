@@ -13,6 +13,8 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../data/activity_type.dart';
 import '../../l10n/l10n.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/sheet_or_dialog.dart';
 
 // The "release to shelf" flow, shared so it behaves identically wherever it's
 // started from - the Stock Store's own Release button and the Product Alerts
@@ -72,45 +74,46 @@ Future<List<(String?, int)>> _simulateExpiredPortion(Product product, int qty) a
 String _batchNameForLog(String? batchNo) => batchNo != null ? 'Batch $batchNo' : 'an unlabeled batch';
 
 Future<bool?> _showExpiredReleaseWarning(BuildContext context, Product product, List<(String?, int)> expiredPortion) {
-  return showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
-      title: Row(
-        children: [
-          Icon(Icons.warning_amber_rounded, color: ctx.colors.danger),
-          const SizedBox(width: AppSpacing.s8),
-          Text(ctx.l10n.store_expiredStockTitle),
-        ],
-      ),
-      content: SizedBox(
-        width: 320,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(ctx.l10n.store_expiredStockBody,
-                style: const TextStyle(fontSize: AppFontSize.f13_5)),
-            const SizedBox(height: AppSpacing.s10),
-            ...expiredPortion.map((e) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.s4),
-                  child: Text(
-                      ctx.l10n.store_expiredPortionLine('${e.$2}', ctx.l10n.productUnitLabel(product.unit),
-                          e.$1 != null ? ctx.l10n.store_batchName(e.$1!) : ctx.l10n.store_unlabeledBatch),
-                      style: TextStyle(fontSize: AppFontSize.f12_5, color: ctx.colors.dangerStrong)),
-                )),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(ctx.l10n.common_cancel)),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: ctx.colors.danger, foregroundColor: ctx.colors.onPrimary),
-          onPressed: () => Navigator.pop(ctx, true),
-          child: Text(ctx.l10n.store_releaseAnyway),
-        ),
+  // A sheet on a phone, today's dialog elsewhere (PH6).
+  return showSheetOrDialog<bool>(
+    context,
+    dialogShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
+    dialogWidth: 320,
+    title: Row(
+      children: [
+        Icon(Icons.warning_amber_rounded, color: context.colors.danger),
+        const SizedBox(width: AppSpacing.s8),
+        // The title wraps on a phone; the dialog keeps its row.
+        if (AppLayout.isPhone(context))
+          Flexible(child: Text(context.l10n.store_expiredStockTitle))
+        else
+          Text(context.l10n.store_expiredStockTitle),
       ],
     ),
+    body: (ctx, _) => Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(ctx.l10n.store_expiredStockBody,
+            style: const TextStyle(fontSize: AppFontSize.f13_5)),
+        const SizedBox(height: AppSpacing.s10),
+        ...expiredPortion.map((e) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.s4),
+              child: Text(
+                  ctx.l10n.store_expiredPortionLine('${e.$2}', ctx.l10n.productUnitLabel(product.unit),
+                      e.$1 != null ? ctx.l10n.store_batchName(e.$1!) : ctx.l10n.store_unlabeledBatch),
+                  style: TextStyle(fontSize: AppFontSize.f12_5, color: ctx.colors.dangerStrong)),
+            )),
+      ],
+    ),
+    actions: (ctx, _) => [
+      TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(ctx.l10n.common_cancel)),
+      ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: ctx.colors.danger, foregroundColor: ctx.colors.onPrimary),
+        onPressed: () => Navigator.pop(ctx, true),
+        child: Text(ctx.l10n.store_releaseAnyway),
+      ),
+    ],
   );
 }
 
@@ -123,12 +126,11 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
   final qtyController = TextEditingController(text: '$initialQuantity');
   final notesController = TextEditingController();
 
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (_) => AlertDialog(
-      title: Text(context.l10n.store_releaseTitle,
-          style: TextStyle(color: context.colors.primary)),
-      content: Column(
+  final confirmed = await showSheetOrDialog<bool>(
+    context,
+    title: Text(context.l10n.store_releaseTitle,
+        style: TextStyle(color: context.colors.primary)),
+    body: (_, _) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(context.l10n.store_availableStock('${product.stockQty}', context.l10n.productUnitLabel(product.unit))),
@@ -181,7 +183,7 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
           ),
         ],
       ),
-      actions: [
+    actions: (_, _) => [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
           style: TextButton.styleFrom(
@@ -205,7 +207,6 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
           child: Text(context.l10n.products_release),
         ),
       ],
-    ),
   );
 
   if (confirmed != true) return;

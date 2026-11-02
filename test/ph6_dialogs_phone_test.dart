@@ -10,7 +10,7 @@ import 'helpers/ph6_forms.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 void main() {
   for (final (name, title, primary) in const [

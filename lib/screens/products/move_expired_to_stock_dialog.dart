@@ -11,6 +11,8 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../constants/batch_move_reasons.dart';
 import '../../l10n/l10n.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/sheet_or_dialog.dart';
 
 /// The one action, worded two ways: Products says "Move to Stock", while
 /// the Stock Store and Product Alerts say "Remove from Sellable" (moving
@@ -51,14 +53,11 @@ Future<void> promptQuantityAndMoveToStock(
   String? qtyErrorText;
   String? reasonErrorText;
 
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setDialogState) => AlertDialog(
-        title: Text(actionLabel),
-        content: SizedBox(
-          width: 320,
-          child: Column(
+  final confirmed = await showSheetOrDialog<bool>(
+    context,
+    title: Text(actionLabel),
+    dialogWidth: 320,
+    body: (ctx, setDialogState) => Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -83,7 +82,7 @@ Future<void> promptQuantityAndMoveToStock(
                 decoration: InputDecoration(
                   labelText: context.l10n.batch_quantityToMove(context.l10n.productUnitLabel(product.unit)),
                   border: const OutlineInputBorder(),
-                  isDense: true,
+                  isDense: !AppLayout.isPhone(context),
                   errorText: qtyErrorText,
                 ),
               ),
@@ -93,7 +92,7 @@ Future<void> promptQuantityAndMoveToStock(
                 decoration: InputDecoration(
                   labelText: context.l10n.reports_reason,
                   border: const OutlineInputBorder(),
-                  isDense: true,
+                  isDense: !AppLayout.isPhone(context),
                   errorText: reasonErrorText,
                 ),
                 items: kBatchMoveReasons
@@ -112,14 +111,13 @@ Future<void> promptQuantityAndMoveToStock(
                 decoration: InputDecoration(
                   labelText: reason == kBatchMoveReasonOther ? context.l10n.batch_noteRequiredOther : context.l10n.batch_noteOptional,
                   border: const OutlineInputBorder(),
-                  isDense: true,
+                  isDense: !AppLayout.isPhone(context),
                 ),
                 maxLines: 2,
               ),
             ],
-          ),
-        ),
-        actions: [
+    ),
+    actions: (ctx, setDialogState) => [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
@@ -145,9 +143,7 @@ Future<void> promptQuantityAndMoveToStock(
             },
             child: Text(actionLabel),
           ),
-        ],
-      ),
-    ),
+    ],
   );
 
   if (confirmed != true || !context.mounted) return;
