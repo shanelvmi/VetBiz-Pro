@@ -22,6 +22,7 @@ import 'package:vetbiz_pro/providers/user_role_provider.dart';
 import 'package:vetbiz_pro/services/auth_service.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
+import 'package:vetbiz_pro/ui/feedback/app_feedback.dart';
 
 import 'fake_firestore.dart';
 import 'screen_size_matrix.dart';
@@ -162,6 +163,8 @@ Future<Ph5App> pumpPh5(
   bool pushed = false,
   FirebaseFirestore? firestore,
   Future<void> Function(FirebaseFirestore fs)? seed,
+  bool settle = true,
+  bool reduceMotion = false,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -205,15 +208,18 @@ Future<Ph5App> pumpPh5(
     ],
     child: MaterialApp(
       navigatorKey: navigator,
+      scaffoldMessengerKey: AppFeedback.messengerKey,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: locale,
       theme: AppTheme.build(AppColorTheme.pasture, look == MatrixLook.dark ? Brightness.dark : Brightness.light),
+      builder: (context, child) =>
+          MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion), child: child!),
       home: pushed ? const Scaffold(body: Text('UNDER')) : screen(fs),
     ),
   ));
   if (pushed) navigator.currentState!.push(MaterialPageRoute<void>(builder: (_) => screen(fs)));
-  await ph5Settle(tester);
+  if (settle) await ph5Settle(tester);
   return Ph5App(fs, navigator);
 }
 
