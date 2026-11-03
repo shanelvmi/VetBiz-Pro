@@ -2005,5 +2005,14 @@
   "phoneList_sort": ["Panga","Products and Stock Store on a phone (PH7a): the title of the sort choices in the Filter sheet (the tablet's sort menu).","draft"],
   "phoneReport_seeAll": ["Tazama zote ({count})","Reports on a phone (PH7b): the row under a list cut to its first 5 rows; it opens every row on a page of its own. count is how many rows there are.","draft"],
   "phoneReport_labelValue": ["{label}: {value}","Reports on a phone (PH7b): a table column's name and its value as one piece of a row's second line, for example Opening: 10. label is an existing column name.","draft"],
-  "phoneReport_pastSummaryLine": ["{count, plural, =1{ripoti 1} other{ripoti {count}}}","Past Reports on a phone (PH7b): the one summary line above the list, how many reports the time filter finds; it opens the Summary sheet.","draft"]
+  "phoneReport_pastSummaryLine": ["{count, plural, =1{ripoti 1} other{ripoti {count}}}","Past Reports on a phone (PH7b): the one summary line above the list, how many reports the time filter finds; it opens the Summary sheet.","draft"],
+  "notifications_bellOverNine": ["9+","The notifications bell (PH8a, NOTIF-2d): shown on the bell instead of the number when more than 9 are unread.","draft"],
+  "subscription_bannerLocked": ["Kusoma tu: usajili umekwisha","The subscription banner on phones (PH8a), one short line: the subscription has expired and the app is read-only.","draft"],
+  "subscription_bannerGrace": ["Usajili umekwisha: siku za neema","The subscription banner on phones (PH8a), one short line: expired, in the few grace days before read-only.","draft"],
+  "subscription_bannerTrialDays": ["Majaribio bure: {count, plural, =1{imebaki siku 1} other{zimebaki siku {count}}}","The subscription banner on phones (PH8a), one short line: the calm free trial and the days left.","draft"],
+  "subscription_bannerTrialEnds": ["Majaribio yanakwisha baada ya {count, plural, =1{siku 1} other{siku {count}}}","The subscription banner on phones (PH8a), one short line: the last 7 days of the free trial.","draft"],
+  "subscription_bannerEnds": ["Usajili unakwisha baada ya {count, plural, =1{siku 1} other{siku {count}}}","The subscription banner on phones (PH8a), one short line: the last 7 days of a paid subscription.","draft"],
+  "subscription_bannerAdminManages": ["Msimamizi wako ndiye anayesimamia usajili.","The subscription banner on phones (PH8a): an assistant's Details dialog, under the full sentence.","draft"],
+  "trash_rowSemantics": ["{name}, {type}, {deleted}","Trash on a phone (PH8a): what a screen reader says for a row: the record, its type and who deleted it when.","draft"],
+  "activity_rowSemantics": ["{who}, {action}, {type}, {time}","The Activity log on a phone (PH8a): what a screen reader says for a row: who, what they did, its type and the time.","draft"]
 }
