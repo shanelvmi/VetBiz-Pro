@@ -6,12 +6,14 @@ import '../../config/money.dart';
 import '../../config/payment_methods.dart';
 import '../../l10n/l10n.dart';
 import '../../models/daily_report.dart';
+import '../../theme/activity_type_style.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../widgets/app_safe_area.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/phone_report/phone_report_row.dart';
 import '../../widgets/phone_report/phone_report_section.dart';
+import 'report_activity_log_loader.dart';
 
 /// PH7b (docs/design/phone_reports.md): the report's 10 tabs on a phone, the
 /// same figures as the tablet's tabs (report_tabbed_content.dart) as rows
@@ -263,6 +265,169 @@ class ReportPhoneTabs {
             ),
         ],
       ),
+    ]);
+  }
+
+  // ---------- Expenses ----------
+
+  Widget expenses(BuildContext context) {
+    final l10n = context.l10n;
+    return _page(context, 'expenses', [
+      PhoneReportSection(
+        id: 'expenses',
+        icon: Icons.receipt_long_outlined,
+        title: l10n.reports_expensesRecorded,
+        emptyText: l10n.reports_noExpensesToday,
+        rows: [
+          for (final e in report.expenseLineItems)
+            PhoneReportRow(
+              title: e.description,
+              amount: Money.format(e.amount),
+              details: [
+                ReportPart(l10n.transactionCategoryLabel(e.category)),
+                ReportPart(AppDateFormat.time24.format(e.time)),
+              ],
+            ),
+        ],
+        footer: [
+          if (report.expenseLineItems.isNotEmpty)
+            PhoneReportStat(label: l10n.reports_totalExpenses, value: Money.format(report.totalExpenses), bold: true),
+        ],
+      ),
+    ]);
+  }
+
+  // ---------- Transactions ----------
+
+  Widget transactions(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final combined = [
+      ...report.expenseLineItems.map((e) => (item: e, isExpense: true)),
+      ...report.otherIncomeLineItems.map((e) => (item: e, isExpense: false)),
+    ]..sort((a, b) => a.item.time.compareTo(b.item.time));
+    return _page(context, 'transactions', [
+      PhoneReportSection(
+        id: 'transactions',
+        icon: Icons.sync_alt_outlined,
+        title: l10n.reports_allTransactions,
+        note: l10n.reports_transactionsNote,
+        emptyText: l10n.reports_noTransactionsToday,
+        rows: [
+          for (final entry in combined)
+            PhoneReportRow(
+              title: entry.item.description,
+              amount: '${entry.isExpense ? '-' : '+'}${Money.plain(entry.item.amount)}',
+              amountColor: entry.isExpense ? colors.dangerStrong : colors.successStrong,
+              details: [
+                ReportPart(entry.isExpense ? l10n.transactionType_expense : l10n.payments_typeOtherIncome,
+                    entry.isExpense ? colors.dangerStrong : colors.successStrong),
+                ReportPart(l10n.transactionCategoryLabel(entry.item.category)),
+                ReportPart(AppDateFormat.time24.format(entry.item.time)),
+              ],
+            ),
+        ],
+        footer: [
+          if (combined.isNotEmpty) ...[
+            PhoneReportStat(label: l10n.payments_typeOtherIncome, value: Money.format(report.totalOtherIncome)),
+            PhoneReportStat(label: l10n.transactions_expenses, value: Money.format(report.totalExpenses), bold: true),
+          ],
+        ],
+      ),
+    ]);
+  }
+
+  // ---------- Activity Log (R6: admins only, as today) ----------
+
+  Widget activityLog(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    Widget section(List<Widget> rows, {String? empty}) => PhoneReportSection(
+          id: 'activity',
+          icon: Icons.history,
+          title: l10n.export_activityLog,
+          note: l10n.reports_everythingToday,
+          emptyText: empty,
+          rows: rows,
+        );
+    return _page(context, 'activity', [
+      if (!report.activityLogIncluded)
+        section(const [], empty: l10n.reports_activityNotIncluded)
+      else
+        // From the admin-only subdocument (E4c, a1); this tab is built for
+        // admins only.
+        ReportActivityLogLoader(
+          report: report,
+          firestore: firestore,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Padding(
+                padding: EdgeInsets.all(PhoneReportMetrics.pagePadding),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) return section(const [], empty: l10n.error_couldNotLoad);
+            final entries = snapshot.data;
+            if (entries == null) return section(const [], empty: l10n.reports_activityLogNotSaved);
+            return section(empty: l10n.reports_noActivityToday, [
+              for (final entry in entries)
+                PhoneReportRow(
+                  title: entry.description,
+                  amount: AppDateFormat.time24.format(entry.time),
+                  icon: ActivityTypeStyle.icon(entry.actionType),
+                  iconColor: ActivityTypeStyle.color(entry.actionType, colors),
+                  details: [
+                    ReportPart(l10n.activityTypeLabel(entry.actionType), ActivityTypeStyle.color(entry.actionType, colors)),
+                    ReportPart(entry.userName),
+                  ],
+                ),
+            ]);
+          },
+        ),
+    ]);
+  }
+
+  // ---------- Payment Methods (R7: Tigo Pesa and Mixx by Yas merged) ----------
+
+  Widget paymentMethods(BuildContext context) {
+    final l10n = context.l10n;
+    final combined = PaymentMethod.combineShown([
+      report.salesByPaymentMethod,
+      report.servicesByPaymentMethod,
+      report.repaymentsByPaymentMethod,
+      report.otherIncomeByPaymentMethod,
+    ]);
+    final combinedTotal = combined.values.fold(0.0, (sum, v) => sum + v);
+    Widget category(String id, IconData icon, String title, Map<String, double> byMethod, String emptyText) =>
+        PhoneReportSection(
+          id: id,
+          icon: icon,
+          title: title,
+          emptyText: emptyText,
+          rows: const [],
+          footer: _methodRows(context, byMethod),
+        );
+    return _page(context, 'methods', [
+      PhoneReportSection(
+        id: 'methods-combined',
+        icon: Icons.credit_card_outlined,
+        title: l10n.reports_combinedAll,
+        note: l10n.reports_combinedNote,
+        emptyText: combined.isEmpty ? l10n.reports_noPaymentsToday : null,
+        rows: const [],
+        footer: [
+          for (final e in combined.entries) PhoneReportStat(label: l10n.paymentMethodLabel(e.key), value: Money.format(e.value)),
+          if (combined.isNotEmpty) PhoneReportStat(label: l10n.common_total, value: Money.format(combinedTotal), bold: true),
+        ],
+      ),
+      category('methods-sales', Icons.shopping_cart_outlined, l10n.payments_typeSales, report.salesByPaymentMethod,
+          l10n.reports_noSalesShort),
+      category('methods-services', Icons.medical_services_outlined, l10n.payments_typeServices,
+          report.servicesByPaymentMethod, l10n.reports_noServicesShort),
+      category('methods-repayments', Icons.people_alt_outlined, l10n.payments_typeDebtRepayments,
+          report.repaymentsByPaymentMethod, l10n.reports_noRepaymentsShort),
+      category('methods-other', Icons.savings_outlined, l10n.payments_typeOtherIncome, report.otherIncomeByPaymentMethod,
+          l10n.reports_noOtherIncomeShort),
     ]);
   }
 }

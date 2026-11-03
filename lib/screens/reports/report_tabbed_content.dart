@@ -12,7 +12,10 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../l10n/l10n.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_report/phone_report_tab_bar.dart';
 import 'report_activity_log_loader.dart';
+import 'report_phone_tabs.dart';
 
 /// The full tabbed report layout (Summary through Activity Log) -
 /// extracted as its own reusable widget since both the main "today's
@@ -27,7 +30,11 @@ class ReportTabbedContent extends StatefulWidget {
   /// pass an in-memory one (PH7b).
   final FirebaseFirestore? firestore;
 
-  const ReportTabbedContent({super.key, required this.report, this.firestore});
+  /// PH7b: on a phone, shown under the Summary's figures (View Reports'
+  /// Accountability and Declaration, beside the tabs on wider windows).
+  final Widget? phoneSummaryFooter;
+
+  const ReportTabbedContent({super.key, required this.report, this.firestore, this.phoneSummaryFooter});
 
   @override
   State<ReportTabbedContent> createState() => _ReportTabbedContentState();
@@ -78,8 +85,23 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
 
   @override
   Widget build(BuildContext context) {
+    // PH7b (docs/design/phone_reports.md): a phone gets the scrollable tab
+    // bar and the phone builders (report_phone_tabs.dart), the same tabs in
+    // the same order; tablets and computers keep the bar and the builders
+    // below, unchanged.
+    final phone = AppLayout.isPhone(context)
+        ? ReportPhoneTabs(
+            report: report,
+            isAdmin: _showActivityLog,
+            firestore: widget.firestore,
+            summaryFooter: widget.phoneSummaryFooter,
+          )
+        : null;
     return Column(
       children: [
+        if (phone != null)
+          PhoneReportTabBar(controller: _tabController, labels: [for (final t in _tabTitles) _tabLabel(t)])
+        else
         Material(
           color: context.colors.surface,
           child: TabBar(
@@ -96,16 +118,16 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
           child: TabBarView(
             controller: _tabController,
             children: [
-              _buildSummaryTab(),
-              _buildSalesTab(),
-              _buildServicesTab(),
-              _buildProductsTab(),
-              _buildStockReconciliationTab(),
-              _buildDebtTab(),
-              _buildExpensesTab(),
-              _buildTransactionsTab(),
-              if (_showActivityLog) _buildActivityLogTab(),
-              _buildPaymentMethodsTab(),
+              phone?.summary(context) ?? _buildSummaryTab(),
+              phone?.sales(context) ?? _buildSalesTab(),
+              phone?.services(context) ?? _buildServicesTab(),
+              phone?.products(context) ?? _buildProductsTab(),
+              phone?.stockReconciliation(context) ?? _buildStockReconciliationTab(),
+              phone?.debt(context) ?? _buildDebtTab(),
+              phone?.expenses(context) ?? _buildExpensesTab(),
+              phone?.transactions(context) ?? _buildTransactionsTab(),
+              if (_showActivityLog) phone?.activityLog(context) ?? _buildActivityLogTab(),
+              phone?.paymentMethods(context) ?? _buildPaymentMethodsTab(),
             ],
           ),
         ),

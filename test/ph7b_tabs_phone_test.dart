@@ -11,7 +11,7 @@ import 'package:vetbiz_pro/screens/reports/report_tabbed_content.dart';
 import 'helpers/ph7b_report.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _tabs = [
   'Summary',
@@ -28,10 +28,21 @@ const _tabs = [
 
 final _number = RegExp(r'\d[\d,]*');
 
-/// The numbers every text under [root] shows.
+bool _inSeeAllRow(Element e) {
+  var found = false;
+  e.visitAncestorElements((a) {
+    final key = a.widget.key;
+    found = key is ValueKey<String> && key.value.startsWith('phoneReport-seeAll-');
+    return !found;
+  });
+  return found;
+}
+
+/// The numbers every text under [root] shows (not See all's own count).
 Set<String> _numbers(Finder root) => {
       for (final e in find.descendant(of: root, matching: find.byType(RichText)).evaluate())
-        for (final m in _number.allMatches((e.widget as RichText).text.toPlainText())) m.group(0)!,
+        if (!_inSeeAllRow(e))
+          for (final m in _number.allMatches((e.widget as RichText).text.toPlainText())) m.group(0)!,
     };
 
 /// The open phone tab's numbers, and those of every See all page in it.
