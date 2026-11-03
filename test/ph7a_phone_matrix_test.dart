@@ -24,7 +24,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
 // The screens done so far: the others stay skipped until theirs is.
-const Set<String> _done = {'Products', 'Stock Store'};
+const Set<String> _done = {'Products', 'Stock Store', 'View Batches', 'Add Batch'};
 
 /// A page whose button opens View Batches, as the details pages do.
 class _BatchesHost extends StatelessWidget {

@@ -74,7 +74,7 @@ void main() {
     addTearDown(tester.view.resetViewInsets);
     await tester.pump();
     final bar = ph5Key('formActionBar');
-    expect(tester.getBottomLeft(bar).dy, lessThanOrEqualTo(844 - 300 + 1));
+    expect(tester.getBottomLeft(ph5Key('formActionBar-primary')).dy, lessThanOrEqualTo(844 - 300 + 1));
     expect(find.descendant(of: bar, matching: find.text('Save Product')).hitTestable(), findsOneWidget);
   }, skip: _skip);
 

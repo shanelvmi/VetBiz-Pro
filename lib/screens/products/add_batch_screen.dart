@@ -17,6 +17,9 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/phone_discard_scope.dart';
 
 /// Records a new delivery of an existing product as its own batch - a
 /// separate batch number, expiry, and quantity, never overwriting an
@@ -45,6 +48,15 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   // the shelf instead.
   String _destination = 'stock';
 
+  // PH7a (phones only): the PH6 form shell. Leaving after typing asks first
+  // (PhoneDiscardScope); text is at least 14 (S3).
+  bool get _isPhone => AppLayout.isPhone(context);
+  late final String _initialEntries;
+  String get _entries =>
+      [_batchController.text, _expiryController.text, _destination, _quantityController.text, _buyPriceController.text]
+          .join('\u0001');
+  double _phone14(double size) => _isPhone && size < PhoneFormMetrics.body ? PhoneFormMetrics.body : size;
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +66,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
       text: Money.decimal(widget.product.buyPrice.round()),
     );
     _expiryController = TextEditingController();
+    _initialEntries = _entries;
   }
 
   @override
@@ -118,7 +131,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final scaffold = Scaffold(
       appBar: AppBar(
         title: Text(context.l10n.products_addNewBatch),
         centerTitle: true,
@@ -133,7 +146,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
               )
             : null,
       ),
-      body: Center(
+      body: _phoneBody(Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
           child: Form(
@@ -144,7 +157,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                 Text(widget.product.name, style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
                 Text(
                   context.l10n.batch_addIntro,
-                  style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
+                  style: TextStyle(fontSize: _phone14(AppFontSize.f12_5), color: context.colors.textMuted),
                 ),
                 const SizedBox(height: AppSpacing.s20),
                 TextFormField(
@@ -163,7 +176,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s12),
-                Text(context.l10n.batch_addStockTo, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13)),
+                Text(context.l10n.batch_addStockTo, style: TextStyle(fontWeight: AppFontWeight.semibold, fontSize: _phone14(AppFontSize.f13))),
                 RadioGroup<String>(
                   groupValue: _destination,
                   onChanged: (value) => setState(() => _destination = value!),
@@ -174,7 +187,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                         contentPadding: EdgeInsets.zero,
                         dense: true,
                         title: Text(context.l10n.store_title),
-                        subtitle: Text(context.l10n.batch_storeHint, style: const TextStyle(fontSize: AppFontSize.f11_5)),
+                        subtitle: Text(context.l10n.batch_storeHint, style: TextStyle(fontSize: _phone14(AppFontSize.f11_5))),
                         value: 'stock',
                         activeColor: context.colors.primary,
                       ),
@@ -182,7 +195,7 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                         contentPadding: EdgeInsets.zero,
                         dense: true,
                         title: Text(context.l10n.batch_sellableOption),
-                        subtitle: Text(context.l10n.batch_sellableHint, style: const TextStyle(fontSize: AppFontSize.f11_5)),
+                        subtitle: Text(context.l10n.batch_sellableHint, style: TextStyle(fontSize: _phone14(AppFontSize.f11_5))),
                         value: 'sellable',
                         activeColor: context.colors.primary,
                       ),
@@ -194,7 +207,12 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   controller: _quantityController,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: InputDecoration(labelText: context.l10n.batch_quantityReceived, border: const OutlineInputBorder()),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.batch_quantityReceived,
+                    border: const OutlineInputBorder(),
+                    // A phone keeps the error's line, so nothing moves (PH6).
+                    helperText: _isPhone ? ' ' : null,
+                  ),
                   validator: (v) {
                     final n = int.tryParse(v ?? '');
                     if (n == null || n <= 0) return context.l10n.batch_validQuantity;
@@ -208,6 +226,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
                   decoration: InputDecoration(labelText: context.l10n.batch_buyPriceLabel(AppDefaults.currencySymbol), border: const OutlineInputBorder()),
                 ),
+                // A phone has the pinned action bar instead.
+                if (!_isPhone) ...[
                 const SizedBox(height: AppSpacing.s24),
                 SizedBox(
                   height: 48,
@@ -219,13 +239,28 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
                         : Text(context.l10n.batch_addBatch),
                   ),
                 ),
+                ],
               ],
             ),
           ),
         ),
-      ),
+      )),
+      bottomNavigationBar: _isPhone
+          ? FormActionBar(
+              primaryLabel: context.l10n.batch_addBatch,
+              primaryIcon: Icons.playlist_add,
+              onPrimary: _save,
+              busy: _isSaving,
+              secondaryLabel: context.l10n.common_cancel,
+              onSecondary: () => Navigator.of(context).maybePop(),
+            )
+          : null,
     );
+    if (!_isPhone) return scaffold;
+    return PhoneDiscardScope(kind: 'batch', isDirty: () => _entries != _initialEntries, child: scaffold);
   }
+
+  Widget _phoneBody(Widget body) => _isPhone ? closeKeyboardOnTapOutside(context, body) : body;
 }
 
 /// The one entry point for opening Add Batch - same reasoning and

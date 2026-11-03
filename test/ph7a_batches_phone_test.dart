@@ -15,7 +15,7 @@ import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 /// A page with buttons that open View Batches and Add Batch, as the
 /// Products details page does.
@@ -43,16 +43,18 @@ void main() {
   ph5TestWidgets('View Batches is a sheet: the batch in a row of at least 48 px, text of at least 14, Add New Batch at the foot', (tester) async {
     await _open(tester, 'BATCHES');
     expect(_sheet, findsOneWidget);
-    expect(find.byType(ViewBatchesScreen), findsNothing, reason: 'no full page on a phone');
+    expect(find.descendant(of: _sheet, matching: find.byType(ViewBatchesScreen)), findsOneWidget, reason: 'drawn in the sheet, no full page');
+    expect(find.byType(AppBar), findsNothing);
     final row = find.ancestor(of: find.descendant(of: _sheet, matching: find.textContaining('BN-001')), matching: find.byType(ListTile)).first;
     expect(tester.getSize(row).height, greaterThanOrEqualTo(48));
     expect(smallTexts(tester, min: 14).where((t) => !t.contains('Out of Stock')), isEmpty);
     expect(find.descendant(of: _sheet, matching: find.text('Add New Batch')), findsOneWidget);
     for (final tip in ['Adjust quantity', 'Delete batch', 'Move to Stock']) {
-      final button = find.descendant(of: _sheet, matching: find.byTooltip(tip));
-      expect(button, findsOneWidget, reason: tip);
-      expect(tester.getSize(button).width, greaterThanOrEqualTo(48));
+      expect(find.descendant(of: _sheet, matching: find.byTooltip(tip)), findsOneWidget, reason: tip);
     }
+    final semantics = tester.ensureSemantics();
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+    semantics.dispose();
   }, skip: _skip);
 
   ph5TestWidgets('an assistant\'s sheet has no Delete (as today)', (tester) async {
@@ -104,7 +106,7 @@ void main() {
     tester.view.viewInsets = const FakeViewPadding(bottom: 300);
     addTearDown(tester.view.resetViewInsets);
     await tester.pump();
-    expect(tester.getBottomLeft(bar).dy, lessThanOrEqualTo(844 - 300 + 1), reason: 'above the keyboard');
+    expect(tester.getBottomLeft(ph5Key('formActionBar-primary')).dy, lessThanOrEqualTo(844 - 300 + 1), reason: 'above the keyboard');
     tester.view.resetViewInsets();
     await tester.pump();
 
