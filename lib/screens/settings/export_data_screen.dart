@@ -23,6 +23,8 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/sheet_or_dialog.dart';
 import '../../data/payment_status.dart';
 
 /// One logical table of data - a title (shown as its own line in CSV,
@@ -759,18 +761,58 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       });
     }
 
+    // The presets and Custom range, the same in the dialog and the phone's sheet.
+    List<Widget> rangeTiles(BuildContext context) {
+      Widget presetTile(String label, DateTimeRange? Function() rangeBuilder, {IconData? icon}) {
+        return ListTile(
+          leading: icon != null ? Icon(icon, color: context.colors.primary, size: AppIconSize.i20) : null,
+          title: Text(label),
+          hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a10),
+          onTap: () => apply(rangeBuilder()),
+        );
+      }
+
+      return [
+        presetTile(context.l10n.export_last7, () => DateTimeRange(
+            start: today.subtract(AppRanges.exportLast7DaysBack), end: today)),
+        presetTile(context.l10n.export_last30, () => DateTimeRange(
+            start: today.subtract(AppRanges.exportLast30DaysBack), end: today)),
+        presetTile(context.l10n.payments_thisMonth, () => DateTimeRange(
+            start: DateTime(today.year, today.month, 1), end: today)),
+        presetTile(context.l10n.export_lastMonth, () {
+          final lastMonth = DateTime(today.year, today.month - 1, 1);
+          final lastDayOfLastMonth = DateTime(today.year, today.month, 0);
+          return DateTimeRange(start: lastMonth, end: lastDayOfLastMonth);
+        }),
+        presetTile(context.l10n.export_thisYear, () => DateTimeRange(
+            start: DateTime(today.year, 1, 1), end: today)),
+        presetTile(context.l10n.export_allTime, () => null),
+        const Divider(height: 16),
+        ListTile(
+          leading: Icon(Icons.edit_calendar_outlined, color: context.colors.primary, size: AppIconSize.i20),
+          title: Text(context.l10n.export_customRange),
+          hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a10),
+          onTap: pickCustomRange,
+        ),
+      ];
+    }
+
+    // PH8a: a sheet on a phone (showSheetOrDialog); elsewhere today's dialog.
+    if (AppLayout.isPhone(context)) {
+      await showSheetOrDialog<void>(
+        context,
+        title: Text(context.l10n.export_dateRange),
+        body: (context, _) => Column(mainAxisSize: MainAxisSize.min, children: rangeTiles(context)),
+        actions: (context, _) => [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.common_cancel)),
+        ],
+      );
+      return;
+    }
+
     await showDialog<void>(
       context: context,
       builder: (context) {
-        Widget presetTile(String label, DateTimeRange? Function() rangeBuilder, {IconData? icon}) {
-          return ListTile(
-            leading: icon != null ? Icon(icon, color: context.colors.primary, size: AppIconSize.i20) : null,
-            title: Text(label),
-            hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a10),
-            onTap: () => apply(rangeBuilder()),
-          );
-        }
-
         return AlertDialog(
           title: Text(context.l10n.export_dateRange),
           contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
@@ -778,29 +820,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
             width: 320,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: [
-                presetTile(context.l10n.export_last7, () => DateTimeRange(
-                    start: today.subtract(AppRanges.exportLast7DaysBack), end: today)),
-                presetTile(context.l10n.export_last30, () => DateTimeRange(
-                    start: today.subtract(AppRanges.exportLast30DaysBack), end: today)),
-                presetTile(context.l10n.payments_thisMonth, () => DateTimeRange(
-                    start: DateTime(today.year, today.month, 1), end: today)),
-                presetTile(context.l10n.export_lastMonth, () {
-                  final lastMonth = DateTime(today.year, today.month - 1, 1);
-                  final lastDayOfLastMonth = DateTime(today.year, today.month, 0);
-                  return DateTimeRange(start: lastMonth, end: lastDayOfLastMonth);
-                }),
-                presetTile(context.l10n.export_thisYear, () => DateTimeRange(
-                    start: DateTime(today.year, 1, 1), end: today)),
-                presetTile(context.l10n.export_allTime, () => null),
-                const Divider(height: 16),
-                ListTile(
-                  leading: Icon(Icons.edit_calendar_outlined, color: context.colors.primary, size: AppIconSize.i20),
-                  title: Text(context.l10n.export_customRange),
-                  hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a10),
-                  onTap: pickCustomRange,
-                ),
-              ],
+              children: rangeTiles(context),
             ),
           ),
           actions: [
@@ -993,7 +1013,8 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         title.toUpperCase(),
         style: TextStyle(
           fontWeight: AppFontWeight.bold,
-          fontSize: AppFontSize.f11,
+          // PH8a: 12 on a phone, the smallest text there.
+          fontSize: AppLayout.isPhone(context) ? AppFontSize.f12 : AppFontSize.f11,
           color: context.colors.primary.withValues(alpha: AppAlpha.a70),
           letterSpacing: 1.1,
         ),

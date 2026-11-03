@@ -24,6 +24,8 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/password_field_guard.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/sheet_or_dialog.dart';
 
 class ManageAccountScreen extends StatefulWidget {
   // Null: the app's own Firebase. Tests pass fakes (PH8a seams; no
@@ -71,6 +73,32 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         return baseColor;
       }),
       foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
+    );
+  }
+
+  // PH8a: how this page asks: a sheet on a phone (showSheetOrDialog), today's
+  // dialog elsewhere. Every action pops with Navigator.pop(context, ...),
+  // which closes either. [dismissible] false: only the buttons close it.
+  Future<T?> _ask<T>({
+    required String title,
+    required Widget body,
+    required List<Widget> actions,
+    bool dismissible = true,
+  }) {
+    final heading = Text(title, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold));
+    if (AppLayout.isPhone(context)) {
+      return showSheetOrDialog<T>(context,
+          title: heading, body: (_, __) => body, actions: (_, __) => actions, dismissible: dismissible);
+    }
+    return showDialog<T>(
+      context: context,
+      barrierDismissible: dismissible,
+      builder: (_) => AlertDialog(
+        backgroundColor: context.colors.raisedSurface,
+        title: heading,
+        content: SizedBox(width: _dialogWidth(context), child: body),
+        actions: actions,
+      ),
     );
   }
 
@@ -136,16 +164,10 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     // the other sessions are revoked.
     final authService = Provider.of<AuthService>(context, listen: false);
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: context.colors.raisedSurface,
-        title: Text(context.l10n.account_logoutAllTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
-        content: SizedBox(
-          width: _dialogWidth(context),
-          child: Text(context.l10n.account_logoutAllBody),
-        ),
-        actions: [
+    final confirm = await _ask<bool>(
+      title: context.l10n.account_logoutAllTitle,
+      body: Text(context.l10n.account_logoutAllBody),
+      actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
@@ -155,8 +177,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             style: _actionButtonStyle(context.colors.primary),
             child: Text(context.l10n.account_logoutEverywhere),
           ),
-        ],
-      ),
+      ],
     );
 
     if (confirm != true) return;
@@ -192,14 +213,9 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             .selectedFacility?['name'] ??
         context.l10n.account_thisFacility;
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: context.colors.raisedSurface,
-        title: Text(context.l10n.account_wipeTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
-        content: SizedBox(
-          width: _dialogWidth(context),
-          child: Column(
+    final confirm = await _ask<bool>(
+      title: context.l10n.account_wipeTitle,
+      body: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -212,8 +228,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               Text(context.l10n.account_wipeBody),
             ],
           ),
-        ),
-        actions: [
+      actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
@@ -223,22 +238,15 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             style: _actionButtonStyle(dangerColor),
             child: Text(context.l10n.account_wipe),
           ),
-        ],
-      ),
+      ],
     );
 
     if (confirm != true || !mounted) return;
 
-    final doubleCheck = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        final controller = TextEditingController();
-        return AlertDialog(
-          backgroundColor: context.colors.raisedSurface,
-          title: Text(context.l10n.account_confirmTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
-          content: SizedBox(
-            width: _dialogWidth(context),
-            child: Column(
+    final controller = TextEditingController();
+    final doubleCheck = await _ask<String>(
+      title: context.l10n.account_confirmTitle,
+      body: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -254,8 +262,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               ),
             ],
             ),
-          ),
-          actions: [
+      actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, ''),
               child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
@@ -265,9 +272,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               style: _actionButtonStyle(context.colors.primary),
               child: Text(context.l10n.common_confirm),
             ),
-          ],
-        );
-      },
+      ],
     );
 
     if (doubleCheck != _eraseWord || !mounted) return;
@@ -324,39 +329,26 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
           await _db.collection(Collections.platformAdmins).doc(currentUid).get();
       if (platformAdminDoc.exists) {
         if (!mounted) return;
-        await showDialog<void>(
-          context: context,
-          builder: (_) => AlertDialog(
-            backgroundColor: context.colors.raisedSurface,
-            title: Text(context.l10n.account_cannotDeactivateTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
-            content: SizedBox(
-              width: _dialogWidth(context),
-              child: Text(context.l10n.account_cannotDeactivateBody),
-            ),
-            actions: [
+        await _ask<void>(
+          title: context.l10n.account_cannotDeactivateTitle,
+          body: Text(context.l10n.account_cannotDeactivateBody),
+          actions: [
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
                 style: _actionButtonStyle(context.colors.primary),
                 child: Text(context.l10n.common_ok),
               ),
-            ],
-          ),
+          ],
         );
         return;
       }
     }
 
     if (!mounted) return;
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: context.colors.raisedSurface,
-        title: Text(context.l10n.account_deactivateTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
-        content: SizedBox(
-          width: _dialogWidth(context),
-          child: Text(context.l10n.account_deactivateBody),
-        ),
-        actions: [
+    final confirm = await _ask<bool>(
+      title: context.l10n.account_deactivateTitle,
+      body: Text(context.l10n.account_deactivateBody),
+      actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
@@ -366,8 +358,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             style: _actionButtonStyle(context.colors.primary),
             child: Text(context.l10n.team_deactivate),
           ),
-        ],
-      ),
+      ],
     );
 
     if (confirm != true || !mounted) return;
@@ -376,16 +367,10 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     // is reversible, but it still ends your current session immediately,
     // so a single tap was too little friction for something grouped with
     // the other Danger Zone actions.
-    final doubleCheck = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        final controller = TextEditingController();
-        return AlertDialog(
-          backgroundColor: context.colors.raisedSurface,
-          title: Text(context.l10n.account_confirmDeactivation, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
-          content: SizedBox(
-            width: _dialogWidth(context),
-            child: Column(
+    final controller = TextEditingController();
+    final doubleCheck = await _ask<String>(
+      title: context.l10n.account_confirmDeactivation,
+      body: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -401,8 +386,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               ),
             ],
             ),
-          ),
-          actions: [
+      actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, ''),
               child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
@@ -412,9 +396,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               style: _actionButtonStyle(context.colors.primary),
               child: Text(context.l10n.common_confirm),
             ),
-          ],
-        );
-      },
+      ],
     );
 
     if (doubleCheck != _deactivateWord || !mounted) return;
@@ -454,15 +436,10 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         Provider.of<UserRoleProvider>(context, listen: false).isAdmin && _hasOwnedFacility == true;
     if (isPlatformAdminAccount || blockedByOwnedFacilities) return;
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: context.colors.raisedSurface,
-        title: Text(context.l10n.account_deleteTitle, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold)),
-        content: SizedBox(
-          width: _dialogWidth(context),
-          child: Column(
+    _ask(
+      title: context.l10n.account_deleteTitle,
+      dismissible: false,
+      body: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(context.l10n.account_deleteWarning),
@@ -487,8 +464,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             ),
           ],
           ),
-        ),
-        actions: [
+      actions: [
           TextButton(
             onPressed: () {
               _deleteEmailController.clear();
@@ -544,8 +520,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                   )
                 : Text(context.l10n.account_deleteTitle),
           ),
-        ],
-      ),
+      ],
     );
   }
 

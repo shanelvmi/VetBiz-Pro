@@ -19,10 +19,14 @@ Future<T?> showSheetOrDialog<T>(
   required List<Widget> Function(BuildContext context, StateSetter setState) actions,
   double? dialogWidth,
   ShapeBorder? dialogShape,
+  // PH8a: false keeps it open until an action closes it (a tap outside or a
+  // drag down does nothing).
+  bool dismissible = true,
 }) {
   if (!AppLayout.isPhone(context)) {
     return showDialog<T>(
       context: context,
+      barrierDismissible: dismissible,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) => AlertDialog(
           shape: dialogShape,
@@ -36,6 +40,8 @@ Future<T?> showSheetOrDialog<T>(
 
   return showModalBottomSheet<T>(
     context: context,
+    isDismissible: dismissible,
+    enableDrag: dismissible,
     isScrollControlled: true,
     showDragHandle: true,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r16))),
