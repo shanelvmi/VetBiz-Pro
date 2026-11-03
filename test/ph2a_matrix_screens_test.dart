@@ -86,8 +86,6 @@ void main() {
   screenSizeMatrix(
     'Stock alerts',
     screen: () => const StockAlertsScreen(),
-    skip: _cases(['360x740', '390x844'],
-        'the pager row (stock_alerts_screen.dart:1111, rows per page and the page buttons) overflows by 35 to 153 px on a phone (PH7)'),
     prepare: (tester) async {
       final fs = newFakeFirestore();
       await tester.runAsync(() => _seedAlertProducts(fs));

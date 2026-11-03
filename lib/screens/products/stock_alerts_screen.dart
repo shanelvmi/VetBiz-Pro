@@ -20,6 +20,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../l10n/l10n.dart';
+import '../../theme/app_layout.dart';
 
 /// What kind of thing needs attention. Declared in the order they're
 /// shown - most urgent first.
@@ -429,6 +430,10 @@ class _AlertsBody extends StatefulWidget {
 }
 
 class _AlertsBodyState extends State<_AlertsBody> {
+  /// PH7a: text under 12 px is 12 on a phone (S3); tablets keep theirs.
+  double _phoneMin(double size) =>
+      AppLayout.isPhone(context) && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
+
 
   // Card order as requested. The table itself always lists the most
   // urgent first (see StockAlertsScreen.currentAlerts).
@@ -697,8 +702,8 @@ class _AlertsBodyState extends State<_AlertsBody> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.s4),
-                Text(StockAlertsScreen._title(context.l10n, kind), style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
-                Text(_cardHint(context.l10n, kind), style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
+                Text(StockAlertsScreen._title(context.l10n, kind), style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.textMuted)),
+                Text(_cardHint(context.l10n, kind), style: TextStyle(fontSize: _phoneMin(AppFontSize.f10_5), color: context.colors.textDisabled)),
               ],
             ),
           ),
@@ -783,7 +788,9 @@ class _AlertsBodyState extends State<_AlertsBody> {
     final items = ['All', ...categories];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
-      height: 44,
+      // PH7a: a 48 px target on a phone (inside the 1 px border on each
+      // side); as before elsewhere.
+      height: AppLayout.isPhone(context) ? AppSizes.minTapTarget + AppSpacing.s2 : 44,
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r10),
@@ -901,7 +908,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
           const SizedBox(width: AppSpacing.s4),
           Text(
             StockAlertsScreen._title(context.l10n, kind),
-            style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
+            style: TextStyle(color: color, fontSize: _phoneMin(AppFontSize.f11_5), fontWeight: AppFontWeight.semibold),
           ),
         ],
       ),
@@ -916,7 +923,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
         context.l10n.productCategoryLabel(category),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: context.colors.primary, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
+        style: TextStyle(color: context.colors.primary, fontSize: _phoneMin(AppFontSize.f11_5), fontWeight: AppFontWeight.semibold),
       ),
     );
   }
@@ -944,7 +951,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
       children: [
         Text(primary, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.medium)),
         const SizedBox(height: AppSpacing.s2),
-        Text(secondary, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
+        Text(secondary, style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.textHint)),
       ],
     );
   }
@@ -981,7 +988,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
                       Text(_subtitleOf(p),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
+                          style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.textHint)),
                     ],
                   ),
                 ),
@@ -1064,7 +1071,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
                         Text(_subtitleOf(p),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
+                            style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.textHint)),
                       ],
                     ),
                   ),
@@ -1096,6 +1103,33 @@ class _AlertsBodyState extends State<_AlertsBody> {
     final start = total == 0 ? 0 : (page - 1) * _pageSize + 1;
     final end = (page * _pageSize) > total ? total : page * _pageSize;
 
+    final controls = <Widget>[
+      DropdownButtonHideUnderline(
+        child: DropdownButton<int>(
+          value: _pageSize,
+          items: const [10, 25, 50].map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n)))).toList(),
+          onChanged: (val) {
+            if (val != null) {
+              setState(() {
+                _pageSize = val;
+                _page = 1;
+              });
+            }
+          },
+        ),
+      ),
+      const SizedBox(width: AppSpacing.s16),
+      IconButton(
+        icon: const Icon(Icons.chevron_left),
+        onPressed: page > 1 ? () => setState(() => _page = page - 1) : null,
+      ),
+      Text(context.l10n.common_page(page), style: const TextStyle(fontSize: AppFontSize.f13)),
+      IconButton(
+        icon: const Icon(Icons.chevron_right),
+        onPressed: page < totalPages ? () => setState(() => _page = page + 1) : null,
+      ),
+    ];
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
@@ -1108,37 +1142,12 @@ class _AlertsBodyState extends State<_AlertsBody> {
             total == 0 ? context.l10n.alerts_none : context.l10n.alerts_showingRange(start, end, total),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: _pageSize,
-                  items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() {
-                        _pageSize = val;
-                        _page = 1;
-                      });
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s16),
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: page > 1 ? () => setState(() => _page = page - 1) : null,
-              ),
-              Text(context.l10n.common_page(page), style: const TextStyle(fontSize: AppFontSize.f13)),
-              IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed: page < totalPages ? () => setState(() => _page = page + 1) : null,
-              ),
-            ],
-          ),
+          // PH7a: on a phone the rows-per-page and the page buttons wrap (one
+          // row overflowed a 360 to 390 window); elsewhere one row as before.
+          if (AppLayout.isPhone(context))
+            Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: controls)
+          else
+            Row(mainAxisSize: MainAxisSize.min, children: controls),
         ],
       ),
     );
