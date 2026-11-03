@@ -4029,5 +4029,7 @@
   "subscription_bannerAdminManages": "Msimamizi wako ndiye anayesimamia usajili.",
   "@subscription_bannerAdminManages": {"x-review":"draft"},
   "trash_rowSemantics": "{name}, {type}, {deleted}",
-  "@trash_rowSemantics": {"x-review":"draft"}
+  "@trash_rowSemantics": {"x-review":"draft"},
+  "activity_rowSemantics": "{who}, {action}, {type}, {time}",
+  "@activity_rowSemantics": {"x-review":"draft"}
 }

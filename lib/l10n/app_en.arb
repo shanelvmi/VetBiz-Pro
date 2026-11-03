@@ -4029,5 +4029,7 @@
   "subscription_bannerAdminManages": "Your admin manages the subscription.",
   "@subscription_bannerAdminManages": {"description":"The subscription banner on phones (PH8a): an assistant's Details dialog, under the full sentence."},
   "trash_rowSemantics": "{name}, {type}, {deleted}",
-  "@trash_rowSemantics": {"description":"Trash on a phone (PH8a): what a screen reader says for a row: the record, its type and who deleted it when.","placeholders":{"name":{"type":"String"},"type":{"type":"String"},"deleted":{"type":"String"}}}
+  "@trash_rowSemantics": {"description":"Trash on a phone (PH8a): what a screen reader says for a row: the record, its type and who deleted it when.","placeholders":{"name":{"type":"String"},"type":{"type":"String"},"deleted":{"type":"String"}}},
+  "activity_rowSemantics": "{who}, {action}, {type}, {time}",
+  "@activity_rowSemantics": {"description":"The Activity log on a phone (PH8a): what a screen reader says for a row: who, what they did, its type and the time.","placeholders":{"who":{"type":"String"},"action":{"type":"String"},"type":{"type":"String"},"time":{"type":"String"}}}
 }

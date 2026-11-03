@@ -71,6 +71,10 @@ class PhoneListScaffold<T> extends StatefulWidget {
 
   /// PH7b: the groups are months, not days (Past Reports).
   final bool byMonth;
+
+  /// PH8a: false for a list whose days have no amount (the Activity log): the
+  /// day headers then show no total.
+  final bool dayTotals;
   final Widget Function(BuildContext context, T item, {required bool grouped}) tileBuilder;
 
   /// The first page has not arrived yet.
@@ -125,6 +129,7 @@ class PhoneListScaffold<T> extends StatefulWidget {
     this.startSearching,
     this.menuBadge = false,
     this.byMonth = false,
+    this.dayTotals = true,
   });
 
   @override
@@ -247,7 +252,7 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
     return [
       for (final g in groups)
         SliverMainAxisGroup(slivers: [
-          SliverPersistentHeader(pinned: true, delegate: PhoneDayHeader(g.day, g.total, context.l10n, month: widget.byMonth)),
+          SliverPersistentHeader(pinned: true, delegate: PhoneDayHeader(g.day, widget.dayTotals ? g.total : null, context.l10n, month: widget.byMonth)),
           SliverList.list(children: [for (final item in g.items) tile(item)]),
         ]),
     ];

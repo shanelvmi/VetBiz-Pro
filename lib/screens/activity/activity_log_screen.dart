@@ -23,6 +23,14 @@ import '../../config/app_rules.dart';
 import '../../config/app_date_format.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/sheet_or_dialog.dart';
+import '../../widgets/phone_list/phone_filter_sheet.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/record_tile.dart';
+
+part 'activity_log_phone.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
@@ -242,7 +250,31 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
   Future<void> _showRetentionDialog(String facilityId) async {
     final current = _retentionDays ?? _defaultRetentionDays;
-    final selected = await showDialog<int>(
+    // PH8a: the choice and the warning are sheets on a phone
+    // (showSheetOrDialog); elsewhere today's dialogs.
+    Widget choices(BuildContext ctx) => RadioGroup<int>(
+          groupValue: current,
+          onChanged: (val) => Navigator.pop(ctx, val),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: _retentionOptions.map((days) {
+              return RadioListTile<int>(
+                value: days,
+                activeColor: context.colors.primary,
+                title: Text(context.l10n.debtors_daysCount(days)),
+              );
+            }).toList(),
+          ),
+        );
+    final phone = AppLayout.isPhone(context);
+    final selected = phone
+        ? await showSheetOrDialog<int>(
+            context,
+            title: Text(context.l10n.facilities_keepLogsFor),
+            body: (ctx, _) => choices(ctx),
+            actions: (ctx, _) => [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(context.l10n.common_cancel))],
+          )
+        : await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(context.l10n.facilities_keepLogsFor),
@@ -279,7 +311,21 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     // need this extra step.
     if (selected < current) {
       if (!mounted) return;
-      final confirmed = await showDialog<bool>(
+      List<Widget> confirmActions(BuildContext ctx) => [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(context.l10n.facilities_deleteAndSwitch(selected), style: TextStyle(color: context.colors.danger)),
+            ),
+          ];
+      final confirmed = phone
+          ? await showSheetOrDialog<bool>(
+              context,
+              title: Text(context.l10n.facilities_deleteOlderLogsTitle),
+              body: (ctx, _) => Text(context.l10n.facilities_deleteOlderLogsMessage(current, selected)),
+              actions: (ctx, _) => confirmActions(ctx),
+            )
+          : await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(context.l10n.facilities_deleteOlderLogsTitle),
@@ -348,6 +394,21 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   Future<int> _cleanupOldLogs(String facilityId, int retentionDays) =>
       ActivityLogRetention.deleteExpired(facilityId, retentionDays, firestore: widget.firestore);
 
+  // The type chip and the search, the same on every width (PH8a).
+  bool _matchesFilters(LogDoc doc) {
+    final data = doc.data();
+    final actionType = ActivityType.canonicalKey((data['actionType'] ?? '').toString());
+    final description = data['description'] ?? '';
+
+    final matchesType = selectedFilter == 'All' ||
+        actionType.toLowerCase() ==
+            selectedFilter.toLowerCase();
+    final matchesSearch =
+        description.toLowerCase().contains(searchQuery.toLowerCase());
+
+    return matchesType && matchesSearch;
+  }
+
   @override
   Widget build(BuildContext context) {
     final facilityProvider =
@@ -387,6 +448,10 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     // it's the same query) and re-running cleanup redundantly, each
     // time racing the retention fetch independently.
     _ensureInitializedForFacility(facilityId, isAdmin: isAdmin);
+
+    // PH8a: a phone gets the PH5a list (activity_log_phone.dart); tablets and
+    // computers keep today's log. The same streams, filters and settings.
+    if (AppLayout.isPhone(context)) return _buildPhone(facilityId, isAdmin: isAdmin);
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -482,19 +547,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                 }
 
                 // Filter logs
-                final logs = snapshot.data!.where((doc) {
-                  final data = doc.data();
-                  final actionType = ActivityType.canonicalKey((data['actionType'] ?? '').toString());
-                  final description = data['description'] ?? '';
-
-                  final matchesType = selectedFilter == 'All' ||
-                      actionType.toLowerCase() ==
-                          selectedFilter.toLowerCase();
-                  final matchesSearch =
-                      description.toLowerCase().contains(searchQuery.toLowerCase());
-
-                  return matchesType && matchesSearch;
-                }).toList();
+                final logs = snapshot.data!.where(_matchesFilters).toList();
 
                 if (logs.isEmpty) {
                   return Center(

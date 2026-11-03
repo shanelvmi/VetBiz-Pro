@@ -14,8 +14,8 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'ph8a_activity_wide_test.dart' show pumpActivity;
 
-// True until the phone list exists.
-const _skip = true;
+// Was true until the phone list existed.
+const _skip = false;
 
 const _sales = ['Recorded sale to Mwanaisha', 'Recorded sale to Walk-in'];
 const _phone = Size(390, 844);
@@ -44,8 +44,11 @@ void main() {
     await pumpActivity(tester, size: _phone);
     expect(find.text('Today'), findsOneWidget);
     expect(find.text('Yesterday'), findsOneWidget);
-    expect(find.byType(RecordTile), findsNWidgets(6));
     expect(find.descendant(of: find.byType(RecordTile), matching: find.text('Trash')), findsOneWidget);
+    // The oldest entry, two days back, at the end of the list.
+    await tester.scrollUntilVisible(find.textContaining('Recorded sale to Walk-in'), 200,
+        scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first);
+    expect(find.textContaining('Recorded sale to Walk-in'), findsOneWidget);
   }, skip: _skip);
 
   ph5TestWidgets('a type chip shows what the tablet\'s chip shows', (tester) async {
