@@ -10,6 +10,7 @@ import '../../config/app_date_format.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
+import '../../theme/app_layout.dart';
 import '../../theme/theme_context.dart';
 
 /// Read-only view of a past, already-generated report - the AppBar
@@ -34,6 +35,7 @@ class ReportDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (AppLayout.isPhone(context)) return _buildPhone(context);
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
@@ -71,6 +73,51 @@ class ReportDetailScreen extends StatelessWidget {
         ],
       ),
       body: ReportTabbedContent(report: report, firestore: firestore),
+    );
+  }
+
+  // PH7b R10 (docs/design/phone_reports.md): on a phone the date is the
+  // title (up to two lines, nothing cut), the status a line under the bar,
+  // and the PDF an icon button: the same PDF. Wider windows keep the bar
+  // above.
+  Widget _buildPhone(BuildContext context) {
+    final colors = context.colors;
+    final submitted = report.status == 'submitted';
+    return Scaffold(
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        backgroundColor: colors.surface,
+        foregroundColor: colors.textPrimary,
+        elevation: AppElevation.e1,
+        title: Text(
+          AppDateFormat.dateLong.format(report.reportDate),
+          maxLines: 2,
+          softWrap: true,
+          style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: PhoneReportMetrics.sectionTitle),
+        ),
+        actions: [
+          IconButton(
+            tooltip: context.l10n.reports_pdf,
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            onPressed: () => _printOrDownloadPdf(context),
+          ),
+        ],
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            color: colors.surface,
+            padding: const EdgeInsets.fromLTRB(
+                PhoneReportMetrics.pagePadding, PhoneReportMetrics.headerGap, PhoneReportMetrics.pagePadding, 0),
+            child: Text(
+              submitted ? context.l10n.reports_submittedBy(report.generatedByName) : context.l10n.reports_draftNotSubmitted,
+              style: TextStyle(fontSize: PhoneReportMetrics.title, color: submitted ? colors.textSecondary : colors.warningStrong),
+            ),
+          ),
+          Expanded(child: ReportTabbedContent(report: report, firestore: firestore)),
+        ],
+      ),
     );
   }
 }

@@ -19,7 +19,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
 // The screens done so far: the others stay skipped until theirs is.
-const Set<String> _done = {'View Reports', 'View Reports empty', 'Review', 'Past Reports'};
+const Set<String> _done = {'View Reports', 'View Reports empty', 'Review', 'Full view', 'Detail', 'Past Reports'};
 
 const _tabsEn = ['Summary', 'Sales', 'Services', 'Products', 'Stock Reconciliation', 'Debt', 'Expenses', 'Transactions', 'Activity Log', 'Payment Methods'];
 
@@ -123,4 +123,13 @@ void main() {
       }, skip: !_done.contains('View Reports'));
     }
   });
+
+  ph5TestWidgets('the detail on a phone: the date as the title, the status under the bar, the PDF as an icon', (tester) async {
+    final report = ph7bReport(day: DateTime(2025, 3, 12));
+    await pumpPh5(tester, (fs) => ReportDetailScreen(report: report, firestore: fs), pushed: true);
+    expect(find.text('Wednesday, 12 Mar 2025'), findsOneWidget);
+    expect(find.text('Submitted by Asha Mohamed'), findsOneWidget);
+    expect(find.byTooltip('PDF'), findsOneWidget);
+    expect(find.byType(OutlinedButton), findsNothing, reason: 'no wide PDF button in the bar');
+  }, skip: !_done.contains('Detail'));
 }

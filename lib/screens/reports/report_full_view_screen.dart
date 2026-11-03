@@ -10,6 +10,7 @@ import '../../config/app_date_format.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
+import '../../theme/app_layout.dart';
 import '../../theme/theme_context.dart';
 import 'report_activity_log_loader.dart';
 import '../../widgets/app_sheet.dart';
@@ -140,7 +141,7 @@ class ReportFullViewScreen extends StatelessWidget {
           report.status == 'submitted'
               ? context.l10n.reports_submittedBy(report.generatedByName)
               : context.l10n.reports_draftNotSubmitted,
-          style: TextStyle(fontSize: AppFontSize.f12_5, color: report.status == 'submitted' ? context.colors.textMuted : context.colors.warningStrong),
+          style: TextStyle(fontSize: _fs(context, AppFontSize.f12_5), color: report.status == 'submitted' ? context.colors.textMuted : context.colors.warningStrong),
         ),
       ],
     );
@@ -163,7 +164,35 @@ class ReportFullViewScreen extends StatelessWidget {
     return Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary));
   }
 
+  // PH7b R10: on a phone no text under 14 (wider windows keep their sizes).
+  double _fs(BuildContext context, double size) =>
+      AppLayout.isPhone(context) && size < PhoneReportMetrics.title ? PhoneReportMetrics.title : size;
+
   Widget _statRow(BuildContext context, String label, String value, {bool bold = false}) {
+    // PH7b R10: on a phone the label wraps beside its value (a long name
+    // or reason no longer pushes the row past the edge).
+    if (AppLayout.isPhone(context)) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Text(label, style: TextStyle(fontSize: PhoneReportMetrics.title, color: context.colors.textSoft)),
+            ),
+            const SizedBox(width: PhoneReportMetrics.partGap),
+            Flexible(
+              flex: 2,
+              child: Text(value,
+                  textAlign: TextAlign.end,
+                  style: TextStyle(
+                      fontSize: PhoneReportMetrics.title, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.medium)),
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
       child: Row(
@@ -179,7 +208,7 @@ class ReportFullViewScreen extends StatelessWidget {
   Widget _emptyState(BuildContext context, String message) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
-      child: Text(message, style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f13)),
+      child: Text(message, style: TextStyle(color: context.colors.textHint, fontSize: _fs(context, AppFontSize.f13))),
     );
   }
 
@@ -331,7 +360,7 @@ class ReportFullViewScreen extends StatelessWidget {
           _sectionHeader(context, context.l10n.reports_paymentReconciliation),
           const SizedBox(height: AppSpacing.s8),
           for (final p in report.paymentReconciliation) ...[
-            Text(context.l10n.paymentMethodLabel(p.method), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
+            Text(context.l10n.paymentMethodLabel(p.method), style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: _fs(context, AppFontSize.f13))),
             _statRow(context, context.l10n.reports_expectedBalance, Money.format(p.expected)),
             if (p.physicalCount != null) ...[
               _statRow(context, context.l10n.reports_physicalBalance, Money.format(p.physicalCount!), bold: true),
@@ -366,7 +395,7 @@ Widget category(String title, Map<String, double> byMethod, String emptyText) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
+          Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: _fs(context, AppFontSize.f13))),
           if (byMethod.isEmpty)
             _emptyState(context, emptyText)
           else
@@ -412,7 +441,7 @@ Widget category(String title, Map<String, double> byMethod, String emptyText) {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
               child: Text('${AppDateFormat.time24.format(entry.time)}  ${entry.description} - ${entry.userName}',
-                  style: const TextStyle(fontSize: AppFontSize.f12_5)),
+                  style: TextStyle(fontSize: _fs(context, AppFontSize.f12_5))),
             ),
         ],
       ),
@@ -430,7 +459,7 @@ Widget category(String title, Map<String, double> byMethod, String emptyText) {
             report.declarationConfirmed
                 ? context.l10n.reports_declarationConfirmed
                 : context.l10n.reports_notConfirmed,
-            style: TextStyle(fontSize: AppFontSize.f12_5, color: report.declarationConfirmed ? context.colors.successStrong : context.colors.warningStrong),
+            style: TextStyle(fontSize: _fs(context, AppFontSize.f12_5), color: report.declarationConfirmed ? context.colors.successStrong : context.colors.warningStrong),
           ),
         ],
       ),
