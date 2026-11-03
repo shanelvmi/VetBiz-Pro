@@ -26,13 +26,21 @@ import '../../l10n/l10n.dart';
 import '../../widgets/password_field_guard.dart';
 
 class ManageAccountScreen extends StatefulWidget {
-  const ManageAccountScreen({super.key});
+  // Null: the app's own Firebase. Tests pass fakes (PH8a seams; no
+  // behaviour change).
+  final FirebaseFirestore? firestore;
+  final FirebaseAuth? auth;
+
+  const ManageAccountScreen({super.key, this.firestore, this.auth});
 
   @override
   State<ManageAccountScreen> createState() => _ManageAccountScreenState();
 }
 
 class _ManageAccountScreenState extends State<ManageAccountScreen> {
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+  FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
+
   // The words to type before a wipe or a deactivation. They stay English in
   // every language: the sentence around them is translated, the word is what
   // is compared.
@@ -101,12 +109,12 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
   //   real staff, and nobody left who could ever manage or delete
   //   them again.
   Future<void> _checkDeleteEligibility() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
-    final platformAdminDoc = await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(uid).get();
+    final platformAdminDoc = await _db.collection(Collections.platformAdmins).doc(uid).get();
     final ownedFacilities =
-        await FirebaseFirestore.instance.collection(Collections.facilities).where('createdBy', isEqualTo: uid).limit(AppLimits.single).get();
+        await _db.collection(Collections.facilities).where('createdBy', isEqualTo: uid).limit(AppLimits.single).get();
 
     if (!mounted) return;
     setState(() {
@@ -310,10 +318,10 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
   void _deactivateAccount() async {
     final authService = Provider.of<AuthService>(context, listen: false);
 
-    final currentUid = FirebaseAuth.instance.currentUser?.uid;
+    final currentUid = _auth.currentUser?.uid;
     if (currentUid != null) {
       final platformAdminDoc =
-          await FirebaseFirestore.instance.collection(Collections.platformAdmins).doc(currentUid).get();
+          await _db.collection(Collections.platformAdmins).doc(currentUid).get();
       if (platformAdminDoc.exists) {
         if (!mounted) return;
         await showDialog<void>(

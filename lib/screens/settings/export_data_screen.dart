@@ -52,13 +52,18 @@ class _ExportSection {
 }
 
 class ExportDataScreen extends StatefulWidget {
-  const ExportDataScreen({super.key});
+  // Null: the app's own Firestore. Tests pass a fake one (PH8a seam; no
+  // behaviour change).
+  final FirebaseFirestore? firestore;
+
+  const ExportDataScreen({super.key, this.firestore});
 
   @override
   State<ExportDataScreen> createState() => _ExportDataScreenState();
 }
 
 class _ExportDataScreenState extends State<ExportDataScreen> {
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
 
   // The English names are the values: compared, used in the file name and
   // the share text. _dataTypeLabel and _dataTypeHint are what is shown.
@@ -384,7 +389,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     required String collection,
     required String dateField,
   }) async {
-    Query query = FirebaseFirestore.instance
+    Query query = _db
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(collection);
@@ -517,7 +522,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   /// batch tracking existed) fall back to a single row using their own
   /// aggregate fields, same as before this existed.
   Future<List<_ExportSection>> _buildProductsData(String facilityId) async {
-    final snapshot = await FirebaseFirestore.instance
+    final snapshot = await _db
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.products)
@@ -582,7 +587,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   }
 
   Future<List<_ExportSection>> _buildClientsData(String facilityId) async {
-    final snapshot = await FirebaseFirestore.instance
+    final snapshot = await _db
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.clients)
@@ -613,7 +618,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   /// Every currently outstanding debt, itemized - a snapshot of "who owes
   /// what right now", not filtered by date.
   Future<List<_ExportSection>> _buildDebtorsData(String facilityId) async {
-    final snapshot = await FirebaseFirestore.instance
+    final snapshot = await _db
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.debts)

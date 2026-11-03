@@ -24,7 +24,14 @@ import '../../ui/feedback/app_feedback.dart';
 /// tappable, beyond a hover tooltip). Admin-only, matching what the
 /// Firestore rules already enforce for facility document writes.
 class BusinessProfileScreen extends StatefulWidget {
-  const BusinessProfileScreen({super.key});
+  // Null: the app's own Firebase and the gallery. Tests pass fakes (PH8a
+  // seams; no behaviour change). [pickLogo] stands for the gallery only: the
+  // upload size check still applies to what it returns.
+  final FirebaseFirestore? firestore;
+  final FirebaseStorage? storage;
+  final Future<Uint8List?> Function()? pickLogo;
+
+  const BusinessProfileScreen({super.key, this.firestore, this.storage, this.pickLogo});
 
   @override
   State<BusinessProfileScreen> createState() => _BusinessProfileScreenState();
@@ -36,20 +43,23 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
   Uint8List? _pendingLogoBytes;
   bool _isUploading = false;
 
-  Future<void> _changeLogo() async {
-    final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
-    final facilityId = facilityProvider.selectedFacility?['id'];
-    if (facilityId == null) return;
-
+  Future<Uint8List?> _pickFromGallery() async {
     final pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
       maxWidth: AppLimits.logoImageMaxSide,
       maxHeight: AppLimits.logoImageMaxSide,
       imageQuality: AppLimits.pickedImageQuality,
     );
-    if (pickedFile == null) return;
+    return pickedFile?.readAsBytes();
+  }
 
-    final bytes = await pickedFile.readAsBytes();
+  Future<void> _changeLogo() async {
+    final facilityProvider = Provider.of<FacilityProvider>(context, listen: false);
+    final facilityId = facilityProvider.selectedFacility?['id'];
+    if (facilityId == null) return;
+
+    final bytes = await (widget.pickLogo ?? _pickFromGallery)();
+    if (bytes == null) return;
     if (!UploadSizeCheck.allow(bytes)) return;
     setState(() {
       _pendingLogoBytes = bytes;
@@ -57,7 +67,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
     });
 
     try {
-      final storageRef = FirebaseStorage.instance.ref().child('facility_logos/$facilityId.png');
+      final storageRef = (widget.storage ?? FirebaseStorage.instance).ref().child('facility_logos/$facilityId.png');
       await storageRef.putData(bytes, UploadContentTypes.png);
       final rawDownloadUrl = await storageRef.getDownloadURL();
       // Firebase Storage returns the same URL for repeat uploads to the
@@ -70,7 +80,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
       // correctly, it just wasn't being re-fetched.
       final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
 
-      await FirebaseFirestore.instance
+      await (widget.firestore ?? FirebaseFirestore.instance)
           .collection(Collections.facilities)
           .doc(facilityId)
           .set({'logoUrl': downloadUrl}, SetOptions(merge: true));

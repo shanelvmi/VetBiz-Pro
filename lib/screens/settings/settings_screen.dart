@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/ui_settings_provider.dart';
@@ -21,7 +23,12 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  // Null: the app's own Firebase, passed on to the screens the wide view
+  // shows in its pane. Tests pass fakes (PH8a seams; no behaviour change).
+  final FirebaseFirestore? firestore;
+  final FirebaseAuth? auth;
+
+  const SettingsScreen({super.key, this.firestore, this.auth});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -399,19 +406,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildContentPane(bool isAdmin) {
     switch (_selectedKey) {
       case 'subscription':
-        return isAdmin ? const SubscriptionScreen() : _buildEmptyPane();
+        return isAdmin ? SubscriptionScreen(firestore: widget.firestore, auth: widget.auth) : _buildEmptyPane();
       case 'notifications':
         return const NotificationsScreen();
       case 'printer':
         return const PrinterSettingsScreen();
       case 'trash':
-        return isAdmin ? const TrashScreen() : _buildEmptyPane();
+        return isAdmin ? TrashScreen(firestore: widget.firestore) : _buildEmptyPane();
       case 'export':
-        return isAdmin ? const ExportDataScreen() : _buildEmptyPane();
+        return isAdmin ? ExportDataScreen(firestore: widget.firestore) : _buildEmptyPane();
       case 'business_hours':
-        return isAdmin ? const BusinessHoursScreen() : _buildEmptyPane();
+        return isAdmin ? BusinessHoursScreen(firestore: widget.firestore) : _buildEmptyPane();
       case 'manage_account':
-        return const ManageAccountScreen();
+        return ManageAccountScreen(firestore: widget.firestore, auth: widget.auth);
       default:
         return _buildEmptyPane();
     }

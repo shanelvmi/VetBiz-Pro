@@ -19,7 +19,12 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/restore_feedback.dart';
 
 class TrashScreen extends StatefulWidget {
-  const TrashScreen({super.key});
+  // Null: the app's own Firestore and signed-in person. Tests pass fakes
+  // (PH8a seams; no behaviour change).
+  final FirebaseFirestore? firestore;
+  final Future<Map<String, String>> Function()? currentUserInfo;
+
+  const TrashScreen({super.key, this.firestore, this.currentUserInfo});
 
   @override
   State<TrashScreen> createState() => _TrashScreenState();
@@ -77,21 +82,29 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                   children: [
                     _TrashList(
                       facilityId: facilityId,
+                      firestore: widget.firestore ?? FirebaseFirestore.instance,
+                      currentUserInfo: widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
                       trashCollection: Collections.trashProducts,
                       liveCollection: Collections.products,
                     ),
                     _TrashList(
                       facilityId: facilityId,
+                      firestore: widget.firestore ?? FirebaseFirestore.instance,
+                      currentUserInfo: widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
                       trashCollection: Collections.trashClients,
                       liveCollection: Collections.clients,
                     ),
                     _TrashList(
                       facilityId: facilityId,
+                      firestore: widget.firestore ?? FirebaseFirestore.instance,
+                      currentUserInfo: widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
                       trashCollection: Collections.trashServices,
                       liveCollection: Collections.services,
                     ),
                     _TrashList(
                       facilityId: facilityId,
+                      firestore: widget.firestore ?? FirebaseFirestore.instance,
+                      currentUserInfo: widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
                       trashCollection: Collections.trashSales,
                       liveCollection: Collections.sales,
                       // The title also goes into the saved activity description ("Permanently
@@ -106,6 +119,8 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                     ),
                     _TrashList(
                       facilityId: facilityId,
+                      firestore: widget.firestore ?? FirebaseFirestore.instance,
+                      currentUserInfo: widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
                       trashCollection: Collections.trashTransactions,
                       liveCollection: Collections.transactions,
                       titleBuilder: (data) {
@@ -129,9 +144,13 @@ class _TrashList extends StatelessWidget {
   final String trashCollection;
   final String liveCollection;
   final String Function(Map<String, dynamic> data)? titleBuilder;
+  final FirebaseFirestore firestore;
+  final Future<Map<String, String>> Function() currentUserInfo;
 
   const _TrashList({
     required this.facilityId,
+    required this.firestore,
+    required this.currentUserInfo,
     required this.trashCollection,
     required this.liveCollection,
     this.titleBuilder,
@@ -156,6 +175,8 @@ class _TrashList extends StatelessWidget {
         liveCollection: liveCollection,
         id: id,
         data: data,
+        firestore: firestore,
+        currentUserInfo: currentUserInfo,
       );
 
       if (record != null) {
@@ -199,7 +220,7 @@ class _TrashList extends StatelessWidget {
       // or it's orphaned in Firestore forever with nothing left pointing
       // to it.
       if (trashCollection == Collections.trashProducts) {
-        final batchesSnap = await FirebaseFirestore.instance
+        final batchesSnap = await firestore
             .collection(Collections.facilities)
             .doc(facilityId)
             .collection(Collections.products)
@@ -211,15 +232,16 @@ class _TrashList extends StatelessWidget {
         }
       }
 
-      await FirebaseFirestore.instance
+      await firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(trashCollection)
           .doc(id)
           .delete();
 
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      final userInfo = await currentUserInfo();
       await ActivityLogger.logActivity(
+        firestore: firestore,
         facilityId: facilityId,
         userId: userInfo[Fields.userId]!,
         userName: userInfo['userName'],
@@ -246,7 +268,7 @@ class _TrashList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
+      stream: firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(trashCollection)

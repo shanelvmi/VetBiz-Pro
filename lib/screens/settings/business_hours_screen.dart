@@ -11,13 +11,18 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 
 class BusinessHoursScreen extends StatefulWidget {
-  const BusinessHoursScreen({super.key});
+  // Null: the app's own Firestore. Tests pass a fake one (PH8a seam; no
+  // behaviour change).
+  final FirebaseFirestore? firestore;
+
+  const BusinessHoursScreen({super.key, this.firestore});
 
   @override
   State<BusinessHoursScreen> createState() => _BusinessHoursScreenState();
 }
 
 class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
 
   TimeOfDay _weekdayTime = const TimeOfDay(hour: 18, minute: 0);
   bool _weekdayClosed = false;
@@ -75,7 +80,7 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
 
     setState(() => _isSaving = true);
     try {
-      await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).update({
+      await _db.collection(Collections.facilities).doc(facilityId).update({
         'businessHours': {
           'weekdayClosingTime': _formatTimeForStorage(_weekdayTime),
           'weekdayClosed': _weekdayClosed,
