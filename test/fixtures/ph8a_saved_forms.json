@@ -1,0 +1,21 @@
+{
+  "subscription": [
+    {
+      "amount": 30000.0,
+      "discountPercent": null,
+      "facilityId": "facility1",
+      "facilityName": "Kilimo Agrovet",
+      "method": "M-Pesa",
+      "planId": "monthly",
+      "planLabel": "Monthly",
+      "promotionLabel": null,
+      "proofImageUrl": null,
+      "reference": "MP26110312345",
+      "status": "pending",
+      "submittedAt": "<time>",
+      "submittedBy": "owner@kilimo.co.tz",
+      "submittedById": "user1",
+      "submittedByName": "Asha Mushi"
+    }
+  ]
+}
