@@ -12217,6 +12217,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your admin manages the subscription.'**
   String get subscription_bannerAdminManages;
+
+  /// Trash on a phone (PH8a): what a screen reader says for a row: the record, its type and who deleted it when.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {type}, {deleted}'**
+  String trash_rowSemantics(String name, String type, String deleted);
 }
 
 class _AppLocalizationsDelegate

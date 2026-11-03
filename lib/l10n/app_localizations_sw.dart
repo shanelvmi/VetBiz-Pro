@@ -7350,4 +7350,9 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get subscription_bannerAdminManages =>
       'Msimamizi wako ndiye anayesimamia usajili.';
+
+  @override
+  String trash_rowSemantics(String name, String type, String deleted) {
+    return '$name, $type, $deleted';
+  }
 }

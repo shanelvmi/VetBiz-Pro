@@ -7305,4 +7305,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subscription_bannerAdminManages =>
       'Your admin manages the subscription.';
+
+  @override
+  String trash_rowSemantics(String name, String type, String deleted) {
+    return '$name, $type, $deleted';
+  }
 }
