@@ -682,11 +682,12 @@ class PhoneReportMetrics {
   static const double tabLabel = AppFontSize.f14;
   static const double tabHeight = 48;
 
-  /// R2 rows: two lines, at least 56 high; line 1 at 14, line 2 at 13.
+  /// R2 rows: two lines, at least 56 high, both at 14 (line 2 muted: in
+  /// Kiswahili it is the longer one, and the owner's rule is 14 on rows).
   static const double rowMinHeight = 56;
   static const double rowPaddingV = AppSpacing.s8;
   static const double title = AppFontSize.f14;
-  static const double subtitle = AppFontSize.f13;
+  static const double subtitle = AppFontSize.f14;
   static const double sectionTitle = AppFontSize.f16;
   static const double icon = AppIconSize.i18;
   static const double lineGap = AppSpacing.s4;

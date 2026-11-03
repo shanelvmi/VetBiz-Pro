@@ -27,6 +27,12 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_list/phone_list_parts.dart';
+import '../../widgets/phone_list/record_tile.dart';
+import '../../widgets/phone_report/phone_report_row.dart';
+import '../../widgets/phone_report/phone_report_section.dart';
 import '../../ui/feedback/app_feedback.dart';
 
 /// The main View Reports screen - shows today's own report directly,
@@ -59,6 +65,9 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
   bool _isLoading = true;
   bool _isGenerating = false;
   DailyReport? _todaysReport;
+  // PH7b: why the last load failed; a phone shows it with Retry (wider windows
+  // keep showing the empty state, as before).
+  Object? _loadError;
 
   Timer? _closingTimer;
   DateTime? _scheduledClosingTime;
@@ -104,11 +113,17 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
       if (!mounted) return;
       setState(() {
         _todaysReport = todaysReport;
+        _loadError = null;
         _isLoading = false;
       });
     } catch (e) {
       debugPrint('Error loading report: $e');
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _loadError = e;
+        });
+      }
     }
   }
 
@@ -241,6 +256,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
     final isAllowedNow = facilityProvider.isReportGenerationAllowedNow();
     final closingTime = facilityProvider.todaysClosingTime();
     _scheduleClosingTimerIfNeeded(closingTime);
+    if (AppLayout.isPhone(context)) return _buildPhone(isAllowedNow, closingTime, facilityProvider.isClosedAllDayToday);
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -649,6 +665,199 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // ---------- Phone (PH7b R9, docs/design/phone_reports.md) ----------
+
+  // The title only and ONE menu holding today's Quick Actions, the tabs
+  // filling the page with Accountability and Declaration under the
+  // Summary, and today's action (Generate, Continue Closing, Submitted)
+  // pinned at the bottom. A failed load shows the error with Retry. The
+  // same loads and the same actions as the layout above.
+  Widget _buildPhone(bool isAllowedNow, DateTime? closingTime, bool isClosedAllDayToday) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final report = _todaysReport;
+    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
+    final menu = <(String, IconData, VoidCallback)>[
+      (
+        l10n.reports_pastTitle,
+        Icons.history,
+        () => Navigator.push(context, MaterialPageRoute(builder: (_) => PastReportsScreen(firestore: widget.firestore))),
+      ),
+      if (report != null) ...[
+        (l10n.reports_viewFull, Icons.visibility_outlined, () => showReportFullViewScreen(context, report, firestore: widget.firestore)),
+        (l10n.reports_downloadPdf, Icons.download_outlined, _printOrDownloadPdf),
+        if (isAdmin && report.status == 'draft')
+          (l10n.reports_deleteDraft, Icons.delete_outline, _deleteDraft)
+        else if (!isAdmin)
+          (l10n.reports_shareWithAdmin, Icons.send_outlined, _shareWithAdmin),
+      ],
+    ];
+
+    Widget body;
+    if (_isLoading) {
+      body = const Center(child: CircularProgressIndicator());
+    } else if (_loadError != null) {
+      body = PhoneListError(key: const ValueKey('viewReports-error'), error: _loadError, onRetry: _retryLoad);
+    } else if (report == null) {
+      body = _buildPhoneEmpty(isAllowedNow, closingTime, isClosedAllDayToday);
+    } else {
+      body = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            color: colors.surface,
+            padding: const EdgeInsets.fromLTRB(
+                PhoneReportMetrics.pagePadding, PhoneReportMetrics.headerGap, PhoneReportMetrics.pagePadding, 0),
+            child: Text(AppDateFormat.dateLong.format(report.reportDate),
+                style: TextStyle(fontSize: PhoneReportMetrics.title, fontWeight: AppFontWeight.semibold, color: colors.primary)),
+          ),
+          Expanded(
+            child: ReportTabbedContent(
+              report: report,
+              firestore: widget.firestore,
+              phoneSummaryFooter: _buildPhoneAccountability(report),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        backgroundColor: colors.surface,
+        foregroundColor: colors.textPrimary,
+        elevation: AppElevation.e1,
+        title: Text(l10n.reports_viewTitle, style: const TextStyle(fontWeight: AppFontWeight.bold)),
+        actions: [
+          PopupMenuButton<int>(
+            onSelected: (i) => menu[i].$3(),
+            itemBuilder: (context) => [
+              for (var i = 0; i < menu.length; i++)
+                PopupMenuItem(
+                  value: i,
+                  child: Row(children: [
+                    Icon(menu[i].$2, color: colors.textSecondary),
+                    const SizedBox(width: PhoneListMetrics.leadingGap),
+                    Flexible(child: Text(menu[i].$1)),
+                  ]),
+                ),
+            ],
+          ),
+        ],
+      ),
+      body: body,
+      bottomNavigationBar: _isLoading || _loadError != null ? null : _buildPhoneAction(isAllowedNow, closingTime, isClosedAllDayToday),
+    );
+  }
+
+  void _retryLoad() {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+    _loadTodaysReport();
+  }
+
+  /// Today's action as the app bar button above shows it, pinned.
+  Widget _buildPhoneAction(bool isAllowedNow, DateTime? closingTime, bool isClosedAllDayToday) {
+    final l10n = context.l10n;
+    final status = _todaysReport?.status;
+    if (status == 'submitted') {
+      return FormActionBar(primaryLabel: l10n.reports_todaySubmitted, primaryIcon: Icons.check_circle_outline, onPrimary: null);
+    }
+    if (status == 'draft') {
+      return FormActionBar(primaryLabel: l10n.reports_continueClosing, primaryIcon: Icons.edit_note_outlined, onPrimary: _continueClosing);
+    }
+    return FormActionBar(
+      primaryLabel: isAllowedNow
+          ? l10n.reports_generateToday
+          : isClosedAllDayToday
+              ? l10n.reports_generateClosedToday
+              : closingTime != null
+                  ? l10n.reports_generateAt(AppDateFormat.time12Short.format(closingTime).toLowerCase().replaceAll(' ', ''))
+                  : l10n.reports_generateAfterClosing,
+      primaryIcon: Icons.summarize_outlined,
+      busy: _isGenerating,
+      onPrimary: isAllowedNow ? _generateReport : null,
+    );
+  }
+
+  /// No report yet today: today's texts, at phone sizes.
+  Widget _buildPhoneEmpty(bool isAllowedNow, DateTime? closingTime, bool isClosedAllDayToday) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final message = isAllowedNow
+        ? l10n.reports_tapGenerate
+        : isClosedAllDayToday
+            ? l10n.reports_closedToday
+            : closingTime != null
+                ? l10n.reports_availableAt(AppDateFormat.time12Short.format(closingTime).toLowerCase().replaceAll(' ', ''))
+                : l10n.reports_availableOnceClosing;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(PhoneReportMetrics.pagePadding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.summarize_outlined, size: PhoneListMetrics.emptyIcon, color: colors.textDisabled),
+            const SizedBox(height: PhoneReportMetrics.headerGap),
+            Text(l10n.reports_noneToday,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: PhoneReportMetrics.sectionTitle, color: colors.textSoft)),
+            const SizedBox(height: PhoneReportMetrics.lineGap),
+            Text(message, textAlign: TextAlign.center, style: TextStyle(fontSize: PhoneReportMetrics.title, color: colors.textMuted)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Accountability and Declaration, under the Summary's figures.
+  Widget _buildPhoneAccountability(DailyReport report) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final isSubmitted = report.status == 'submitted';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PhoneReportSection(
+          id: 'accountability',
+          icon: Icons.verified_user_outlined,
+          title: l10n.reports_accountability,
+          rows: const [],
+          footer: [
+            PhoneReportRow(title: report.generatedByName, details: [ReportPart(l10n.reports_submittedByLabel)]),
+            PhoneReportRow(
+              title: AppDateFormat.dateNoPadTime12Short.format(report.submittedAt ?? report.generatedAt),
+              details: [ReportPart(l10n.payments_colDateTime)],
+            ),
+            PhoneReportRow(
+              title: l10n.common_status,
+              status: RecordStatus(
+                isSubmitted ? l10n.subscription_colSubmitted : l10n.reports_draftNotSubmitted,
+                isSubmitted ? colors.successStrong : colors.warningStrong,
+              ),
+            ),
+          ],
+        ),
+        PhoneReportSection(
+          id: 'declaration',
+          icon: Icons.fact_check_outlined,
+          title: l10n.reports_declaration,
+          note: isSubmitted ? l10n.reports_declarationConfirmed : l10n.reports_declarationPending,
+          rows: const [],
+          footer: [
+            Padding(
+              padding: const EdgeInsets.all(PhoneReportMetrics.pagePadding),
+              child: Text(l10n.reports_savedNote, style: TextStyle(fontSize: PhoneReportMetrics.subtitle, color: colors.textMuted)),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
