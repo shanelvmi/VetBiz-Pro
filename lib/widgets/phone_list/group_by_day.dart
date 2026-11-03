@@ -19,7 +19,9 @@ class DayGroup<T> {
 
 DateTime _midnight(DateTime d) => DateTime(d.year, d.month, d.day);
 
-/// [items] (newest first, as the lists' queries order them) cut into days.
+/// [items] (newest first, as the lists' queries order them) cut into days, or
+/// into months when [byMonth] (PH7b: Past Reports, one report a day; a
+/// group's day is then the first of its month).
 /// [complete] says no further page exists: without it, the last day may go
 /// on in the next page, so it gets no total.
 List<DayGroup<T>> groupByDay<T>(
@@ -27,10 +29,12 @@ List<DayGroup<T>> groupByDay<T>(
   required DateTime Function(T item) dateOf,
   required double Function(T item) amountOf,
   required bool complete,
+  bool byMonth = false,
 }) {
   final days = <(DateTime, List<T>)>[];
   for (final item in items) {
-    final day = _midnight(dateOf(item));
+    final date = dateOf(item);
+    final day = byMonth ? DateTime(date.year, date.month) : _midnight(date);
     if (days.isEmpty || days.last.$1 != day) {
       days.add((day, <T>[]));
     }

@@ -104,11 +104,6 @@ void main() {
   screenSizeMatrix(
     'Past reports',
     screen: () => PastReportsScreen(firestore: newFakeFirestore()),
-    skip: {
-      ..._cases(['360x740', '390x844'],
-          "the summary cards' labels (Reports generated, Loaded period, Latest) are 11 px, under 12 on a phone (S3; PH7)"),
-      '360x740 kiswahili': 'the time filter dropdown (as wide as its longest Kiswahili label, past_reports_screen.dart:266) squeezes the search field to 18 px (a 48 px tap target fails), and the summary labels are 11 px (PH7)',
-    },
     prepare: (tester) async {
       final ui = await _loadedUi(tester);
       final facility = FacilityProvider(firestore: newFakeFirestore());

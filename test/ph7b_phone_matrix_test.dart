@@ -19,7 +19,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
 // The screens done so far: the others stay skipped until theirs is.
-const Set<String> _done = {'View Reports', 'View Reports empty', 'Review'};
+const Set<String> _done = {'View Reports', 'View Reports empty', 'Review', 'Past Reports'};
 
 const _tabsEn = ['Summary', 'Sales', 'Services', 'Products', 'Stock Reconciliation', 'Debt', 'Expenses', 'Transactions', 'Activity Log', 'Payment Methods'];
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../config/app_date_format.dart';
 import '../../config/money.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
@@ -136,7 +137,10 @@ class PhoneDayHeader extends SliverPersistentHeaderDelegate {
   final double? total;
   final AppLocalizations l10n;
 
-  PhoneDayHeader(this.day, this.total, this.l10n);
+  /// PH7b: a month's header ("March 2025") in place of a day's.
+  final bool month;
+
+  PhoneDayHeader(this.day, this.total, this.l10n, {this.month = false});
 
   @override
   double get minExtent => PhoneListMetrics.dayHeaderHeight;
@@ -157,7 +161,7 @@ class PhoneDayHeader extends SliverPersistentHeaderDelegate {
         alignment: Alignment.centerLeft,
         child: Row(
           children: [
-            Expanded(child: Text(dayHeaderLabel(l10n, day), style: style, maxLines: 1, overflow: TextOverflow.ellipsis)),
+            Expanded(child: Text(month ? AppDateFormat.monthYear.format(day) : dayHeaderLabel(l10n, day), style: style, maxLines: 1, overflow: TextOverflow.ellipsis)),
             if (total != null) Text(Money.format(total!), key: ValueKey('phoneList-dayTotal-$key'), style: style),
           ],
         ),
@@ -167,7 +171,7 @@ class PhoneDayHeader extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(PhoneDayHeader oldDelegate) =>
-      oldDelegate.day != day || oldDelegate.total != total || oldDelegate.l10n != l10n;
+      oldDelegate.day != day || oldDelegate.total != total || oldDelegate.l10n != l10n || oldDelegate.month != month;
 }
 
 /// R9: nothing to show: an icon, one plain line, the primary action.

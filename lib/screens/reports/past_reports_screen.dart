@@ -15,6 +15,11 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
+import '../../widgets/phone_list/record_tile.dart';
 
 class PastReportsScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
@@ -71,6 +76,10 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
   String _searchQuery = '';
   _TimeFilter _timeFilter = _TimeFilter.allTime;
 
+  // PH7b: why the first page failed; a phone shows it with Retry (wider
+  // windows keep showing the empty list, as before).
+  Object? _loadError;
+
   DateTime get _todayStart {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
@@ -97,6 +106,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
     }
     setState(() {
       _isLoading = true;
+      _loadError = null;
       _reports = [];
       _lastDoc = null;
       _hasMore = true;
@@ -123,7 +133,12 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
       });
     } catch (e) {
       debugPrint('Error loading reports: $e');
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _loadError = e;
+        });
+      }
     }
   }
 
@@ -167,8 +182,21 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
     }).toList();
   }
 
+  /// A report opens Review while a draft, its detail once submitted; the
+  /// list reloads after.
+  Future<void> _openReport(DailyReport report) async {
+    if (report.status == 'draft') {
+      await showReportReviewScreen(context, report, firestore: widget.firestore);
+    } else {
+      await Navigator.push(
+          context, MaterialPageRoute(builder: (_) => ReportDetailScreen(report: report, firestore: widget.firestore)));
+    }
+    _loadInitialPage();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (AppLayout.isPhone(context)) return _buildPhone();
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
@@ -291,7 +319,9 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
     );
   }
 
-  Widget _summaryRow() {
+  /// The loaded period and the latest report's date (the summary row, and
+  /// on a phone the Summary sheet).
+  ({String period, String latest}) _summaryFigures() {
     String periodLabel;
     if (_reports.isEmpty) {
       periodLabel = '-';
@@ -304,6 +334,11 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
           : '${AppDateFormat.monthYearShort.format(earliest)} - ${AppDateFormat.monthYearShort.format(latest)}';
     }
     final latestDate = _reports.isEmpty ? null : (_reports.map((r) => r.reportDate).toList()..sort()).last;
+    return (period: periodLabel, latest: latestDate == null ? '-' : AppDateFormat.dateNoPad.format(latestDate));
+  }
+
+  Widget _summaryRow() {
+    final figures = _summaryFigures();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s14),
@@ -316,12 +351,12 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
         children: [
           Expanded(child: _summaryStat(Icons.assignment_outlined, '$_totalCount', context.l10n.reports_generatedCount)),
           _summaryDivider(),
-          Expanded(child: _summaryStat(Icons.event_note_outlined, periodLabel, context.l10n.reports_loadedPeriod)),
+          Expanded(child: _summaryStat(Icons.event_note_outlined, figures.period, context.l10n.reports_loadedPeriod)),
           _summaryDivider(),
           Expanded(
             child: _summaryStat(
               Icons.access_time,
-              latestDate == null ? '-' : AppDateFormat.dateNoPad.format(latestDate),
+              figures.latest,
               context.l10n.reports_latest,
             ),
           ),
@@ -361,15 +396,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
       padding: const EdgeInsets.only(bottom: AppSpacing.s10),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.r12),
-        onTap: () async {
-          if (isDraft) {
-            await showReportReviewScreen(context, report, firestore: widget.firestore);
-          } else {
-            await Navigator.push(
-                context, MaterialPageRoute(builder: (_) => ReportDetailScreen(report: report, firestore: widget.firestore)));
-          }
-          _loadInitialPage();
-        },
+        onTap: () => _openReport(report),
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.s14),
           decoration: BoxDecoration(
@@ -433,6 +460,81 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  // ---------- Phone (PH7b R9, docs/design/phone_reports.md) ----------
+
+  // The PH5a list: search in the bar (the same filter of the loaded
+  // reports), the four time filters as quick chips (the same reload), the
+  // summary line with the three old cards in its sheet, the reports under
+  // month headers, the same taps, the skeleton, empty and error states,
+  // and Load more. The same two queries as the layout above.
+  Widget _buildPhone() {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final figures = _summaryFigures();
+    return PhoneListScaffold<DailyReport>(
+      title: l10n.reports_pastTitle,
+      asTab: false,
+      menu: const [],
+      searchController: _searchController,
+      searchHint: l10n.reports_searchHint,
+      // The controller's listener already filters.
+      onSearchChanged: (_) {},
+      onSearchClosed: _searchController.clear,
+      quickChips: PhoneQuickChips(
+        values: [for (final f in _TimeFilter.values) f.name],
+        selected: _timeFilter.name,
+        label: (v) => _TimeFilter.values.byName(v).label(l10n),
+        onSelected: (v) {
+          final f = _TimeFilter.values.byName(v);
+          if (f == _timeFilter) return;
+          setState(() => _timeFilter = f);
+          _loadInitialPage();
+        },
+      ),
+      filtersActive: false,
+      onFilter: null,
+      appliedFilters: const [],
+      summaryLine: _isLoading || _loadError != null ? null : l10n.phoneReport_pastSummaryLine(_totalCount),
+      onSummary: () => showPhoneSummarySheet(context, rows: [
+        (l10n.reports_generatedCount, '$_totalCount'),
+        (l10n.reports_loadedPeriod, figures.period),
+        (l10n.reports_latest, figures.latest),
+      ]),
+      items: _filteredReports,
+      idOf: (r) => r.id,
+      dateOf: (r) => r.reportDate,
+      amountOf: (r) => r.salesTotalValue + r.servicesTotalValue,
+      grouped: true,
+      byMonth: true,
+      tileBuilder: (context, r, {required grouped}) {
+        final isDraft = r.status == 'draft';
+        final date = AppDateFormat.dateLong.format(r.reportDate);
+        final amount = Money.format(r.salesTotalValue + r.servicesTotalValue);
+        final status = RecordStatus(isDraft ? l10n.reports_notSubmitted : l10n.reports_completed,
+            isDraft ? colors.warningStrong : colors.successStrong);
+        return RecordTile(
+          title: date,
+          amount: amount,
+          details: [r.generatedByName],
+          status: status,
+          icon: Icons.description_outlined,
+          colorSeed: 'report',
+          semanticsLabel: l10n.phoneList_rowSemantics(date, amount, status.label, r.generatedByName),
+          onTap: () => _openReport(r),
+        );
+      },
+      loading: _isLoading,
+      error: _loadError,
+      onRetry: _loadInitialPage,
+      emptyIcon: Icons.description_outlined,
+      emptyText: _reports.isEmpty ? l10n.reports_noneYet : l10n.reports_noMatch,
+      hasMore: _searchQuery.isEmpty && _hasMore,
+      loadingMore: _isLoadingMore,
+      onLoadMore: _loadMore,
+      onRefresh: _loadInitialPage,
     );
   }
 }

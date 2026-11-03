@@ -17,7 +17,7 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph7b_report.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 /// Three days in March and two in February 2025: one a draft.
 final _days = [DateTime(2025, 3, 12), DateTime(2025, 3, 11), DateTime(2025, 3, 10), DateTime(2025, 2, 27), DateTime(2025, 2, 26)];
@@ -41,7 +41,7 @@ void main() {
     expect(find.text('Past Reports'), findsOneWidget);
     expect(find.text('Every daily closing report for this facility'), findsNothing, reason: 'no subtitle');
     expect(find.byTooltip('Search'), findsOneWidget);
-    for (final chip in ['All Time', 'Last 7 Days', 'This Month', 'This Year']) {
+    for (final chip in ['All time', 'Last 7 days', 'This month', 'This year']) {
       expect(find.widgetWithText(ChoiceChip, chip), findsOneWidget, reason: chip);
     }
     expect(find.byTooltip('Filter'), findsNothing);
@@ -99,7 +99,11 @@ void main() {
     });
     await _past(tester, firestore: db, reports: const []);
     db.resetCounts();
-    await tester.tap(find.widgetWithText(ChoiceChip, 'This Year'));
+    final chip = find.widgetWithText(ChoiceChip, 'This year');
+    await tester.ensureVisible(chip);
+    await tester.pump();
+    db.resetCounts();
+    await tester.tap(chip);
     await ph5Settle(tester);
     expect(db.gets, 2, reason: 'one page and one count, as the tablet\'s dropdown');
     expect(ph5RowIds(tester), isEmpty, reason: 'nothing this year');
@@ -132,7 +136,7 @@ void main() {
   ph5TestWidgets('paging: 25 rows, the next page near the end, Load more as the fallback', (tester) async {
     final many = [for (var i = 0; i < 30; i++) ph7bReport(day: DateTime(2025, 1, 31).subtract(Duration(days: i)))];
     // Tall enough to build every row reached.
-    await _past(tester, reports: many, size: const Size(390, 2400));
+    await _past(tester, reports: many, size: const Size(390, 4000));
     expect(ph5RowIds(tester), hasLength(25));
     await tester.tap(find.descendant(of: ph5Key('phoneList-loadMore'), matching: find.byType(OutlinedButton)));
     await ph5Settle(tester);
