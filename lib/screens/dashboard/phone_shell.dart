@@ -39,6 +39,11 @@ class PhoneShell extends StatefulWidget {
   /// Called after the tab changes.
   final ValueChanged<PhoneTab>? onTabChanged;
 
+  /// PH8a: the subscription banner, at the top of every tab under its app bar
+  /// (Home here; the other tabs through [bodyWithBanner]); null when hidden.
+  /// Deep screens are pushed over the shell, so they never show it.
+  final Widget? banner;
+
   const PhoneShell({
     super.key,
     this.homeAppBar,
@@ -49,6 +54,7 @@ class PhoneShell extends StatefulWidget {
     required this.more,
     required this.onRecord,
     this.onTabChanged,
+    this.banner,
   });
 
   @override
@@ -57,6 +63,10 @@ class PhoneShell extends StatefulWidget {
   /// PH4: switches the shell around [context] to [tab] (Go to's Products).
   static void selectTab(BuildContext context, PhoneTab tab) =>
       context.findAncestorStateOfType<_PhoneShellState>()?._select(tab);
+
+  /// PH8a: [body] under the shell's banner, for a tab that draws its own app
+  /// bar; [body] alone outside the shell (a pushed screen) or with no banner.
+  static Widget bodyWithBanner(BuildContext context, Widget body) => throw UnimplementedError();
 }
 
 class _PhoneShellState extends State<PhoneShell> {
