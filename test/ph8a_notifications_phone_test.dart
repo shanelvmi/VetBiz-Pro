@@ -11,7 +11,7 @@ import 'helpers/notification_harness.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 Future<NotificationFeedController> _feed(WidgetTester tester, {int window = 200}) async {
   final fs = FakeFirebaseFirestore();

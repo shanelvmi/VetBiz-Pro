@@ -25,6 +25,7 @@ import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
+import '../../theme/app_layout.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
@@ -77,6 +78,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   int _pageSize = AppLimits.tablePageSize;
 
   bool get _isLoading => _feed?.isLoading ?? false;
+
+  // PH8a: on a phone (AppLayout.isPhone) the page meets the size matrix: 48 px
+  // filter boxes, text 12 px or more (14 for what is typed and chosen).
+  // Tablets and computers keep today's sizes.
+  bool get _phone => AppLayout.isPhone(context);
   Object? get _error => _feed?.error;
   List<NotificationItem> get _items => _feed?.items ?? const [];
 
@@ -535,11 +541,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.s4),
-                Text(_categoryName(category), style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(_categoryName(category), style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textMuted)),
                 Text(
                   unread > 0 ? context.l10n.notifications_unreadCount(unread) : context.l10n.notifications_allRead,
                   style: TextStyle(
-                    fontSize: AppFontSize.f10_5,
+                    fontSize: _phone ? AppFontSize.f12 : AppFontSize.f10_5,
                     color: unread > 0 ? color : context.colors.textDisabled,
                     fontWeight: unread > 0 ? AppFontWeight.semibold : AppFontWeight.regular,
                   ),
@@ -564,7 +570,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       controller: _searchController,
       decoration: InputDecoration(
         hintText: context.l10n.notifications_searchHint,
-        hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+        hintStyle: TextStyle(fontSize: _phone ? AppFontSize.f14 : AppFontSize.f13),
         prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
         fillColor: context.colors.surface,
@@ -672,7 +678,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _statusDropdown({bool expand = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
-      height: 44,
+      // On a phone the dropdown's own 48 px decides the height.
+      height: _phone ? null : 44,
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r10),
@@ -683,7 +690,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           value: _statusFilter,
           isExpanded: expand,
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
-          style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: _phone ? AppFontSize.f14 : AppFontSize.f13),
           // The values stay 'All' / 'Unread' / 'Read' (the filter compares
           // them); only what is shown is localised.
           items: const ['All', 'Unread', 'Read']
@@ -719,13 +726,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       label,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textPrimary),
+      style: TextStyle(fontSize: _phone ? AppFontSize.f14 : AppFontSize.f13, color: context.colors.textPrimary),
     );
     final tappable = InkWell(
       borderRadius: BorderRadius.circular(AppRadius.r10),
       onTap: _pickDateRange,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s12),
+        padding: EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: _phone ? AppSpacing.s14 : AppSpacing.s12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -737,7 +744,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ),
     );
     return Container(
-      height: 44,
+      // On a phone the 48 px button inside decides the height.
+      height: _phone ? null : 44,
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r10),
@@ -751,7 +759,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             IconButton(
               icon: const Icon(Icons.close, size: AppIconSize.i16),
               tooltip: context.l10n.notifications_clearDateRange,
-              visualDensity: VisualDensity.compact,
+              visualDensity: _phone ? null : VisualDensity.compact,
               onPressed: () => setState(() {
                 _dateRange = null;
                 _currentPage = 1;
@@ -881,7 +889,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _categoryLabel(n.type.category),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
+        style: TextStyle(color: color, fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
       ),
     );
   }
@@ -893,7 +901,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
         i.isRead ? context.l10n.notifications_read : context.l10n.notifications_statusNew,
-        style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
+        style: TextStyle(color: color, fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
       ),
     );
   }
@@ -1038,7 +1046,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         AppDateFormat.dateTime12.format(created),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint),
+                        style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint),
                       ),
                     ),
                   const SizedBox(width: AppSpacing.s8),

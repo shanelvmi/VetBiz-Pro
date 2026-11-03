@@ -286,8 +286,8 @@
     {
       "rule": "R12",
       "file": "lib/screens/dashboard/notifications_screen.dart",
-      "lineContains": "visualDensity: VisualDensity.compact",
-      "reason": "out of PH scope (the notifications screen is already phone-ready): the clear-date-range button inside the date chip (LATER)"
+      "lineContains": "visualDensity: _phone ? null : VisualDensity.compact",
+      "reason": "wide windows only: the clear-date-range button inside the date chip; on a phone it keeps 48 px (PH8a)"
     },
     {
       "rule": "R12",
