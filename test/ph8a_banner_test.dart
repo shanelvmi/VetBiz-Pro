@@ -18,10 +18,11 @@ import 'package:vetbiz_pro/theme/theme_context.dart';
 import 'package:vetbiz_pro/widgets/phone_list/phone_list_scaffold.dart';
 import 'package:vetbiz_pro/widgets/phone_list/phone_quick_chips.dart';
 
+import 'helpers/real_font.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// True until the implementation (every call threw UnimplementedError).
-const _skip = true;
+// Was true until the implementation (every call threw UnimplementedError).
+const _skip = false;
 
 const _banner = ValueKey('phone-subscription-banner');
 
@@ -34,7 +35,8 @@ const _states = [
   SubscriptionBannerState(SubscriptionBannerKind.paidEnding, 1),
 ];
 
-Future<void> _pump(WidgetTester tester, Widget home, {Size size = const Size(390, 844), String locale = 'en', bool dark = false}) async {
+Future<void> _pump(WidgetTester tester, Widget home,
+    {Size size = const Size(390, 844), String locale = 'en', bool dark = false, bool realFont = false}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
@@ -42,11 +44,15 @@ Future<void> _pump(WidgetTester tester, Widget home, {Size size = const Size(390
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     locale: Locale(locale),
-    theme: AppTheme.build(AppColorTheme.pasture, dark ? Brightness.dark : Brightness.light),
+    theme: realFont ? _real(AppTheme.build(AppColorTheme.pasture, dark ? Brightness.dark : Brightness.light))
+        : AppTheme.build(AppColorTheme.pasture, dark ? Brightness.dark : Brightness.light),
     home: home,
   ));
   await tester.pumpAndSettle();
 }
+
+// Where a line wraps needs a real font: the square test font is twice as wide.
+ThemeData _real(ThemeData t) => t.copyWith(textTheme: t.textTheme.apply(fontFamily: realFontFamily));
 
 Widget _list(String title, {bool fab = false}) => PhoneListScaffold<String>(
       title: title,
@@ -146,6 +152,7 @@ void main() {
   });
 
   group('the phone banner', () {
+    setUpAll(loadRealFont);
     for (final state in _states) {
       for (final (size, locale, dark) in [
         (const Size(360, 740), 'sw', false),
@@ -156,7 +163,7 @@ void main() {
             'at most two lines, 48 px targets, colour and text', (tester) async {
           for (final admin in [true, false]) {
             await _pump(tester, Scaffold(body: Align(alignment: Alignment.topCenter, child: _phoneBanner(state, admin: admin))),
-                size: size, locale: locale, dark: dark);
+                size: size, locale: locale, dark: dark, realFont: true);
             await checkCase(tester, phone: true, where: '$state admin $admin');
             final line = tester.renderObject<RenderParagraph>(
                 find.descendant(of: find.byKey(const ValueKey('phone-subscription-banner-text')), matching: find.byType(RichText)));
@@ -175,14 +182,14 @@ void main() {
       }
     }
 
-    testWidgets('an admin\'s Renew and View Plans open Subscription; the close button snoozes', (tester) async {
+    testWidgets('an admin\'s Renew and Details open Subscription; the close button snoozes', (tester) async {
       var opened = 0;
       var snoozed = 0;
       await _pump(tester, Scaffold(body: _phoneBanner(_states[0], onOpen: () => opened++, onSnooze: () => snoozed++)));
       await tester.tap(find.text('Renew'));
       await tester.tap(find.byTooltip('Close'));
       await _pump(tester, Scaffold(body: _phoneBanner(_states[2], onOpen: () => opened++)));
-      await tester.tap(find.text('View Plans'));
+      await tester.tap(find.text('Details'));
       expect((opened, snoozed), (2, 1));
     }, skip: _skip);
 

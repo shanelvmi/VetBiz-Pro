@@ -29,6 +29,7 @@ import '../sales/sales_screen.dart';
 import 'more_screen.dart';
 import 'notification_bell.dart';
 import 'phone_shell.dart';
+import 'subscription_banner.dart';
 import 'record_sheet.dart';
 import 'all_details_screen.dart';
 import 'needs_attention.dart';
@@ -423,20 +424,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     await prefs.setBool('drawer_collapsed', newValue);
   }
 
-  // Dismissing the subscription notice snoozes it rather than hiding it
-  // permanently - this is still a real warning that access is about to
-  // change, so a one-time "X" that never comes back could mean someone
-  // forgets entirely and gets locked out with no further reminder.
-  // Deliberately kept in-memory only, not persisted to
-  // SharedPreferences - a fresh login creates a brand-new
-  // DashboardScreen instance (the old one is disposed on logout), so
-  // this naturally resets and reappears on every new login, on top of
-  // the 2-hour timer resurfacing it within a single continuous session.
-  static const Duration _subscriptionSnoozeDuration = AppTimeouts.subscriptionNoticeSnooze;
-  DateTime? _subscriptionSnoozedUntil;
+  // Dismissing the subscription notice snoozes it for 2 hours rather than
+  // hiding it for good, in memory only: a fresh sign-in creates a new
+  // DashboardScreen, so it shows again (SubscriptionBannerSnooze). PH8a: the
+  // wide pill and the phone banner share it.
+  final SubscriptionBannerSnooze _subscriptionSnooze = SubscriptionBannerSnooze();
 
   void _snoozeSubscriptionBanner() {
-    setState(() => _subscriptionSnoozedUntil = DateTime.now().add(_subscriptionSnoozeDuration));
+    setState(() => _subscriptionSnooze.snooze(DateTime.now()));
   }
 
   // The pill deliberately doesn't appear the instant Dashboard loads,
@@ -1566,6 +1561,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         return PhoneOrWide(
           phone: (_) => PhoneShell(
             homeAppBar: _buildPhoneHomeAppBar(context),
+            // PH8a: the subscription banner at the top of every tab, from here.
+            banner: _buildPhoneSubscriptionBanner(context),
             endDrawer: endDrawer,
             home: (homeContext) => PhoneHome(
               figures: PhoneHomeFigures.from(_periodTotals,
@@ -1583,7 +1580,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               onViewAll: () => showRecordSheet(homeContext, all: true, isAdmin: isAdmin, onDone: _returnToHome),
               onGoTo: (item) => _goTo(homeContext, item),
               onAttention: (target) => _openAttention(homeContext, target),
-              overlay: _buildSubscriptionBanner(context),
             ),
             sales: (_) => const SalesScreen(asTab: true),
             products: (_) => const ProductsScreen(asTab: true),
@@ -1637,24 +1633,18 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   Widget _buildSubscriptionBanner(BuildContext context) {
     final sub = Provider.of<SubscriptionProvider>(context);
 
-    final needsAttention = sub.status == SubscriptionStatus.grace ||
-        sub.status == SubscriptionStatus.locked ||
-        ((sub.status == SubscriptionStatus.trial || sub.status == SubscriptionStatus.active) &&
-            sub.daysRemaining != null &&
-            sub.daysRemaining! <= 7);
-
     // Calm, informational - shown for the rest of the trial once the
     // urgent <=7-day window above doesn't apply yet, rather than
     // showing nothing at all until it's nearly over.
     final isInTrialInfo = sub.isInCalmTrial; // one shared definition - see SubscriptionProvider
 
-    final isSnoozed = _subscriptionSnoozedUntil != null &&
-        DateTime.now().isBefore(_subscriptionSnoozedUntil!);
-    final shouldShow = (needsAttention || isInTrialInfo) && !isSnoozed && _subscriptionPillDelayPassed;
+    // PH8a: what to tell (and whether), from the one rule the phone banner
+    // shares: locked, grace, the calm trial, the last 7 days.
+    final state = subscriptionBannerFor(status: sub.status, daysRemaining: sub.daysRemaining, inCalmTrial: isInTrialInfo);
+    final isSnoozed = _subscriptionSnooze.isSnoozed(DateTime.now());
+    final shouldShow = state != null && !isSnoozed && _subscriptionPillDelayPassed;
 
     final isLocked = sub.status == SubscriptionStatus.locked;
-    final isGrace = sub.status == SubscriptionStatus.grace;
-    final isTrial = sub.status == SubscriptionStatus.trial;
     // The accent - carried by the icon, the text, and a thin border -
     // rather than a full background fill. Same deepened, burnt-amber
     // reasoning as before: the brand's own amber (accent) is too close to
@@ -1665,28 +1655,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // chips, rather than the shortened version needed when it was
     // squeezed inline next to Insights.
     final l = context.l10n;
-    String message;
-    if (isLocked) {
-      message = isTrial ? l.subscription_trialEndedReadOnly : l.subscription_expiredReadOnly;
-    } else if (isGrace) {
-      message = isTrial ? l.subscription_trialEndedGrace : l.subscription_expiredGrace;
-    } else if (isInTrialInfo) {
-      // A legacy facility with no trial/subscription date recorded at
-      // all reaches this branch with daysRemaining null - shown as an
-      // open-ended trial rather than ever interpolating "null" into
-      // the sentence.
-      message = sub.daysRemaining != null
-          ? l.subscription_freeTrialDaysLeft(sub.daysRemaining!)
-          : l.subscription_onFreeTrial;
-    } else if (isTrial) {
-      message = sub.daysRemaining != null
-          ? l.subscription_trialExpiresIn(sub.daysRemaining!)
-          : l.subscription_trialActive;
-    } else {
-      message = sub.daysRemaining != null
-          ? l.subscription_expiresIn(sub.daysRemaining!)
-          : l.subscription_active;
-    }
+    // The full sentence (subscriptionBannerSentence). After a trial ends the
+    // status is grace or locked like a paid one, so those read "subscription".
+    final message = state == null ? '' : subscriptionBannerSentence(l, state);
 
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
@@ -1747,7 +1718,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                         style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f11_5, fontStyle: FontStyle.italic)),
                   ],
                   // Snoozes rather than dismisses permanently - see the
-                  // note on _subscriptionSnoozeDuration above for why.
+                  // note on _subscriptionSnooze above for why.
                   const SizedBox(width: AppSpacing.s4),
                   InkWell(
                     borderRadius: BorderRadius.circular(AppRadius.r12),
@@ -1763,6 +1734,22 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     );
   }
 
+
+  // PH8a: the phone banner at the top of every shell tab: the same state,
+  // the same snooze and the same delay as the wide pill; null when hidden.
+  Widget? _buildPhoneSubscriptionBanner(BuildContext context) {
+    final sub = Provider.of<SubscriptionProvider>(context);
+    final state =
+        subscriptionBannerFor(status: sub.status, daysRemaining: sub.daysRemaining, inCalmTrial: sub.isInCalmTrial);
+    if (state == null || _subscriptionSnooze.isSnoozed(DateTime.now()) || !_subscriptionPillDelayPassed) return null;
+    return PhoneSubscriptionBanner(
+      key: const ValueKey('phone-subscription-banner'),
+      state: state,
+      isAdmin: Provider.of<UserRoleProvider>(context).isAdmin,
+      onOpenSubscription: () => showSubscriptionScreen(context),
+      onSnooze: _snoozeSubscriptionBanner,
+    );
+  }
 
   // --------------------- PH4: THE PHONE HOME ---------------------
 

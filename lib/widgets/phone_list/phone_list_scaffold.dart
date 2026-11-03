@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 
+import '../../screens/dashboard/phone_shell.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
@@ -269,7 +270,9 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
               extended: _fabExtended,
               onPressed: fab.onPressed,
             ),
-      body: RefreshIndicator(
+      // PH8a: as a tab of the phone shell, the subscription banner sits under
+      // the app bar; a pushed screen has none.
+      body: PhoneShell.bodyWithBanner(context, RefreshIndicator(
         onRefresh: widget.onRefresh,
         child: NotificationListener<ScrollNotification>(
           onNotification: _onScroll,
@@ -309,7 +312,7 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
             ],
           ),
         ),
-      ),
+      )),
     );
   }
 }

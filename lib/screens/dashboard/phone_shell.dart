@@ -66,7 +66,17 @@ class PhoneShell extends StatefulWidget {
 
   /// PH8a: [body] under the shell's banner, for a tab that draws its own app
   /// bar; [body] alone outside the shell (a pushed screen) or with no banner.
-  static Widget bodyWithBanner(BuildContext context, Widget body) => throw UnimplementedError();
+  static Widget bodyWithBanner(BuildContext context, Widget body) {
+    final scope = context.dependOnInheritedWidgetOfExactType<_PhoneShellBanner>();
+    return scope == null ? body : _withBanner(scope.banner, body);
+  }
+
+  // Always the same shape, with or without the banner: a snooze must not
+  // rebuild the tab under it (its scroll, its search).
+  static Widget _withBanner(Widget? banner, Widget body) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [banner ?? const SizedBox.shrink(), Expanded(child: body)],
+      );
 }
 
 class _PhoneShellState extends State<PhoneShell> {
@@ -107,24 +117,43 @@ class _PhoneShellState extends State<PhoneShell> {
       child: Scaffold(
         appBar: _tab == PhoneTab.home ? widget.homeAppBar : null,
         endDrawer: widget.endDrawer,
-        body: IndexedStack(
-          index: _tab.index,
-          children: [
-            for (final tab in PhoneTab.values)
-              KeyedSubtree(
-                key: ValueKey(tab),
-                child: TickerMode(
-                  enabled: tab == _tab,
-                  child: _visited.contains(tab) ? Builder(builder: _builder(tab)) : const SizedBox.shrink(),
+        // PH8a: the banner sits under Home's app bar here; the other tabs draw
+        // their own app bar and put it under theirs (PhoneShell.bodyWithBanner).
+        body: _PhoneShellBanner(
+          banner: widget.banner,
+          child: IndexedStack(
+            index: _tab.index,
+            children: [
+              for (final tab in PhoneTab.values)
+                KeyedSubtree(
+                  key: ValueKey(tab),
+                  child: TickerMode(
+                    enabled: tab == _tab,
+                    child: !_visited.contains(tab)
+                        ? const SizedBox.shrink()
+                        : tab == PhoneTab.home
+                            ? PhoneShell._withBanner(widget.banner, Builder(builder: _builder(tab)))
+                            : Builder(builder: _builder(tab)),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
         bottomNavigationBar:
             keyboardOpen ? null : PhoneBottomBar(current: _tab, onSelect: _select, onRecord: widget.onRecord),
       ),
     );
   }
+}
+
+/// PH8a: the shell's banner, for the tabs under it.
+class _PhoneShellBanner extends InheritedWidget {
+  final Widget? banner;
+
+  const _PhoneShellBanner({required this.banner, required super.child});
+
+  @override
+  bool updateShouldNotify(_PhoneShellBanner oldWidget) => banner != oldWidget.banner;
 }
 
 /// The bottom bar (phone_shell.md section 3): five equal slots (Home, Sales,

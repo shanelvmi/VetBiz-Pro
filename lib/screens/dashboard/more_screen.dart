@@ -24,6 +24,7 @@ import '../settings/trash_screen.dart';
 import '../store/stockstore_screen.dart';
 import '../subscription/subscription_screen.dart';
 import '../transactions/transactions_screen.dart';
+import 'phone_shell.dart';
 import 'insights_screen.dart';
 
 /// Everything the More page can show (phone_shell.md D5 and section 4).
@@ -158,7 +159,8 @@ class MoreScreen extends StatelessWidget {
         centerTitle: true,
         title: Text(context.l10n.shell_tabMore, style: const TextStyle(fontWeight: AppFontWeight.bold)),
       ),
-      body: LayoutBuilder(
+      // PH8a: the subscription banner sits under the app bar (the shell's).
+      body: PhoneShell.bodyWithBanner(context, LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth - 2 * PhoneShellMetrics.morePadding;
           // Four a row on a phone held upright; more when it is turned.
@@ -183,7 +185,7 @@ class MoreScreen extends StatelessWidget {
             ),
           );
         },
-      ),
+      )),
     );
   }
 }
