@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import '../../theme/app_layout.dart';
 
 import 'subscription_screen.dart' show submissionStatusColor;
 import '../../config/payment_methods.dart';
@@ -94,6 +95,10 @@ class SubscriptionHistoryScreen extends StatefulWidget {
 }
 
 class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
+  // PH8a: what the size matrix needs on a phone (48 px filters, text 12 px
+  // or more, the page controls wrapping); wider windows keep today's sizes.
+  bool get _phone => AppLayout.isPhone(context);
+
   // A generous cap rather than a truly unlimited query - protects
   // against an unbounded read for a facility with an unusually long
   // history, while still comfortably covering years of normal use.
@@ -383,8 +388,8 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.s4),
-                Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
-                Text(hint, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
+                Text(label, style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(hint, style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f10_5, color: context.colors.textDisabled)),
               ],
             ),
           ),
@@ -405,7 +410,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
       controller: _searchController,
       decoration: InputDecoration(
         hintText: context.l10n.subscription_searchHint,
-        hintStyle: const TextStyle(fontSize: AppFontSize.f13),
+        hintStyle: TextStyle(fontSize: _phone ? AppFontSize.f14 : AppFontSize.f13),
         prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
         filled: true,
         fillColor: context.colors.surface,
@@ -473,7 +478,8 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     final items = ['All', ...options];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
-      height: 44,
+      // On a phone the dropdown's own 48 px decides the height.
+      height: _phone ? null : 44,
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r10),
@@ -484,7 +490,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           value: value,
           isExpanded: expand,
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: _primary),
-          style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
+          style: TextStyle(color: context.colors.textPrimary, fontSize: _phone ? AppFontSize.f14 : AppFontSize.f13),
           items: items
               .map((v) => DropdownMenuItem(
                   value: v,
@@ -577,7 +583,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
       decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(_statusName(status), style: TextStyle(
-          color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
+          color: color, fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
     );
   }
 
@@ -603,7 +609,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
             if (s.reviewedAt != null) ...[
               const SizedBox(height: AppSpacing.s2),
               Text(context.l10n.subscription_rejectedOn(_dateTimeFormat.format(s.reviewedAt!)),
-                  style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
+                  style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
             ],
           ],
         );
@@ -615,7 +621,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                     fontSize: AppFontSize.f12_5, color: context.colors.successStrong, fontWeight: AppFontWeight.medium)),
             if (s.reviewedAt != null) ...[
               const SizedBox(height: AppSpacing.s2),
-              Text(_dateTimeFormat.format(s.reviewedAt!), style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
+              Text(_dateTimeFormat.format(s.reviewedAt!), style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
             ],
           ],
         );
@@ -643,7 +649,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                     children: [
                       Text(_dateFormat.format(submitted), style: const TextStyle(fontSize: AppFontSize.f13)),
                       Text(AppDateFormat.time24.format(submitted),
-                          style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
+                          style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
                     ],
                   ),
           ),
@@ -663,7 +669,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                   Text(s.promotionLabel!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
+                      style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
               ],
             ),
           ),
@@ -682,7 +688,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                   Text(s.reference,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
+                      style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
               ],
             ),
           ),
@@ -729,7 +735,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
               ),
               if (s.promotionLabel != null && s.promotionLabel!.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.s2),
-                Text(s.promotionLabel!, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
+                Text(s.promotionLabel!, style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
               ],
               const SizedBox(height: AppSpacing.s6),
               Row(
@@ -739,7 +745,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                   if (submitted != null)
                     Expanded(
                       child: Text(_dateTimeFormat.format(submitted),
-                          style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textHint)),
+                          style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
                     ),
                 ],
               ),
@@ -783,9 +789,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                 : context.l10n.subscription_showingRange(total, start, end),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          _rowOrWrapOnPhone([
               DropdownButtonHideUnderline(
                 child: DropdownButton<int>(
                   value: _pageSize,
@@ -812,10 +816,14 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                 icon: const Icon(Icons.chevron_right),
                 onPressed: page < totalPages ? () => setState(() => _page = page + 1) : null,
               ),
-            ],
-          ),
+            ]),
         ],
       ),
     );
   }
+
+  // PH8a: on a phone the page controls may go onto a second line.
+  Widget _rowOrWrapOnPhone(List<Widget> children) => _phone
+      ? Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: children)
+      : Row(mainAxisSize: MainAxisSize.min, children: children);
 }

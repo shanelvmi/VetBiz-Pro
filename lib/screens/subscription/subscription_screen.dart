@@ -31,6 +31,9 @@ import '../../l10n/l10n.dart';
 import '../../utils/submission_people.dart';
 import '../../config/app_info.dart';
 import '../../widgets/app_sheet.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/phone_discard_scope.dart';
 
 /// Who submitted a payment claim, as the claim stores it: submittedBy is
 /// for people to read (the email, which the review shows; the uid when
@@ -61,6 +64,13 @@ class SubscriptionScreen extends StatefulWidget {
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
   FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
+  // PH8a: a phone gets the PH6 form shell (Submit in the FormActionBar, the
+  // discard check) and 48 px targets; tablets and computers keep today's page.
+  bool get _phone => AppLayout.isPhone(context);
+
+  // What Back would lose: a typed reference or an attached proof.
+  bool _isDirty() => _referenceController.text.trim().isNotEmpty || _proofBytes != null;
 
   // The submit button's height: a size, not spacing (spec 4.3).
   static const double _submitButtonHeight = 48;
@@ -269,8 +279,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final sub = Provider.of<SubscriptionProvider>(context);
     final colors = context.colors;
     final statusColor = _statusColor(sub.status, colors);
+    // The submit button's state, for the page's button and the phone's bar.
+    final effectivePrice = _effectivePrice(_selectedPlan);
+    final priceUnavailable = effectivePrice <= 0;
+    final isBlocked = _hasPendingSubmission || priceUnavailable;
+    final submitLabel = _hasPendingSubmission
+        ? context.l10n.subscription_awaitingReview
+        : priceUnavailable
+            ? context.l10n.subscription_pricingUnavailable
+            : context.l10n.subscription_submitForReview;
 
-    return Scaffold(
+    final scaffold = Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
         title: Text(context.l10n.subscription_title),
@@ -306,14 +325,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                       children: [
                         Icon(Icons.workspace_premium, color: statusColor),
                         const SizedBox(width: AppSpacing.s8),
-                        Text(
+                        _flexibleOnPhone(Text(
                           sub.statusLabel,
                           style: TextStyle(
                             color: statusColor,
                             fontWeight: AppFontWeight.bold,
                             fontSize: AppFontSize.f15,
                           ),
-                        ),
+                        )),
                       ],
                     ),
                     if (sub.expiresAt != null) ...[
@@ -439,6 +458,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
               DropdownButtonFormField<String>(
                 initialValue: _method,
+                // PH8a: on a phone a long method name shortens instead of overflowing.
+                isExpanded: _phone,
                 decoration: InputDecoration(labelText: context.l10n.payments_method, border: const OutlineInputBorder()),
                 // New requests store the method's key ('Mixx by Yas', not the
                 // old 'Tigo Pesa'); old requests keep what they stored.
@@ -465,15 +486,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 onPressed: _pickProofImage,
                 icon: const Icon(Icons.upload_file),
                 label: Text(_proofBytes == null ? context.l10n.subscription_attachProof : context.l10n.subscription_proofAttached),
-                style: OutlinedButton.styleFrom(foregroundColor: colors.primary),
+                style: OutlinedButton.styleFrom(
+                    foregroundColor: colors.primary, minimumSize: _phone ? const Size(0, kMinInteractiveDimension) : null),
               ),
 
               const SizedBox(height: AppSpacing.s24),
               Builder(builder: (context) {
-                final effectivePrice = _effectivePrice(_selectedPlan);
-                final priceUnavailable = effectivePrice <= 0;
-                final isBlocked = _hasPendingSubmission || priceUnavailable;
-
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -521,6 +539,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           ],
                         ),
                       ),
+                    // On a phone Submit is in the action bar below.
+                    if (!_phone)
                     SizedBox(
                       height: _submitButtonHeight,
                       child: Opacity(
@@ -538,11 +558,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                   child: CircularProgressIndicator(strokeWidth: 2.5, color: colors.onPrimary),
                                 )
                               : Text(
-                                  _hasPendingSubmission
-                                      ? context.l10n.subscription_awaitingReview
-                                      : priceUnavailable
-                                          ? context.l10n.subscription_pricingUnavailable
-                                          : context.l10n.subscription_submitForReview,
+                                  submitLabel,
                                   style: const TextStyle(fontWeight: AppFontWeight.bold),
                                 ),
                         ),
@@ -560,8 +576,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: _phone
+          ? FormActionBar(
+              primaryLabel: submitLabel,
+              onPrimary: isBlocked ? null : _submitPayment,
+              busy: _isSubmitting,
+            )
+          : null,
     );
+    return _phone ? PhoneDiscardScope(kind: 'payment', isDirty: _isDirty, child: scaffold) : scaffold;
   }
+
+  Widget _flexibleOnPhone(Widget child) => _phone ? Flexible(child: child) : child;
 }
 
 Color submissionStatusColor(String status, AppColors colors) {
@@ -618,7 +644,8 @@ Widget buildSubmissionCard(BuildContext context, Map<String, dynamic> data, AppC
               const SizedBox(width: AppSpacing.s8),
               Chip(
                 label: Text(context.l10n.submissionStatusLabel(status),
-                    style: TextStyle(fontSize: AppFontSize.f11, color: colors.onPrimary)),
+                    style: TextStyle(
+                        fontSize: AppLayout.isPhone(context) ? AppFontSize.f12 : AppFontSize.f11, color: colors.onPrimary)),
                 backgroundColor: submissionStatusColor(status, colors),
                 padding: EdgeInsets.zero,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -644,12 +671,18 @@ Widget buildSubmissionCard(BuildContext context, Map<String, dynamic> data, AppC
   );
 }
 
-class _SubmissionHistory extends StatelessWidget {
+class _SubmissionHistory extends StatefulWidget {
   final String facilityId;
   final Color primaryColor;
   final FirebaseFirestore firestore;
 
   const _SubmissionHistory({required this.facilityId, required this.primaryColor, required this.firestore});
+
+  @override
+  State<_SubmissionHistory> createState() => _SubmissionHistoryState();
+}
+
+class _SubmissionHistoryState extends State<_SubmissionHistory> {
 
   // Genuinely "recent" rather than the previous 10, which was already
   // most of a full history on its own - the full list is a tap away
@@ -657,16 +690,23 @@ class _SubmissionHistory extends StatelessWidget {
   // glance, not double as the history itself.
   static const int _recentLimit = 5;
 
+  // PH8a (S9, the DASH-1 lesson): made once. A stream made in build() was a
+  // new listener on every rebuild of the screen (each plan tapped).
+  late final Stream<QuerySnapshot> _stream = widget.firestore
+      .collection(Collections.facilities)
+      .doc(widget.facilityId)
+      .collection(Collections.paymentSubmissions)
+      .orderBy('submittedAt', descending: true)
+      .limit(_recentLimit)
+      .snapshots();
+
   @override
   Widget build(BuildContext context) {
+    final facilityId = widget.facilityId;
+    final primaryColor = widget.primaryColor;
+    final firestore = widget.firestore;
     return StreamBuilder<QuerySnapshot>(
-      stream: firestore
-          .collection(Collections.facilities)
-          .doc(facilityId)
-          .collection(Collections.paymentSubmissions)
-          .orderBy('submittedAt', descending: true)
-          .limit(_recentLimit)
-          .snapshots(),
+      stream: _stream,
       builder: (context, snapshot) {
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
@@ -683,7 +723,12 @@ class _SubmissionHistory extends StatelessWidget {
                   builder: (_) => SubscriptionHistoryScreen(facilityId: facilityId, primaryColor: primaryColor, firestore: firestore),
                 ),
               ),
-              style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero, foregroundColor: primaryColor),
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                // PH8a: a 48 px target on a phone.
+                minimumSize: AppLayout.isPhone(context) ? const Size(kMinInteractiveDimension, kMinInteractiveDimension) : Size.zero,
+                foregroundColor: primaryColor,
+              ),
               child: Text(context.l10n.subscription_viewAll),
             ),
           ],

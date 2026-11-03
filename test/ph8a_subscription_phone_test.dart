@@ -18,7 +18,7 @@ import 'ph8a_seams_test.dart' show Ph8Auth;
 import 'ph8a_subscription_wide_test.dart' show seedSubscription;
 
 // True until the phone layout exists.
-const _skip = true;
+const _skip = false;
 
 Future<Ph5App> _pump(WidgetTester tester, {Size size = const Size(390, 844), MatrixLook look = MatrixLook.light,
     bool pending = false, CountingFirestore? firestore}) async {
