@@ -7189,6 +7189,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'visit': 'Discard this visit?',
       'product': 'Discard this product?',
       'batch': 'Discard this batch?',
+      'report': 'Discard these counts?',
       'other': 'Discard this form?',
     });
     return '$_temp0';
@@ -7237,4 +7238,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get phoneList_sort => 'Sort';
+
+  @override
+  String phoneReport_seeAll(int count) {
+    return 'See all ($count)';
+  }
+
+  @override
+  String phoneReport_labelValue(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
+  String phoneReport_pastSummaryLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reports',
+      one: '1 report',
+    );
+    return '$_temp0';
+  }
 }

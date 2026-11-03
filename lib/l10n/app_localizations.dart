@@ -12105,10 +12105,10 @@ abstract class AppLocalizations {
     String expenses,
   );
 
-  /// Money forms on a phone (PH6): the question when someone leaves a form that holds entered data. kind is a fixed key (sale, payment, client, transaction, visit; PH7a: product, batch), never shown.
+  /// Money forms on a phone (PH6): the question when someone leaves a form that holds entered data. kind is a fixed key (sale, payment, client, transaction, visit; PH7a: product, batch; PH7b: report, the review form's counts), never shown.
   ///
   /// In en, this message translates to:
-  /// **'{kind, select, sale{Discard this sale?} payment{Discard this payment?} client{Discard this client?} transaction{Discard this transaction?} visit{Discard this visit?} product{Discard this product?} batch{Discard this batch?} other{Discard this form?}}'**
+  /// **'{kind, select, sale{Discard this sale?} payment{Discard this payment?} client{Discard this client?} transaction{Discard this transaction?} visit{Discard this visit?} product{Discard this product?} batch{Discard this batch?} report{Discard these counts?} other{Discard this form?}}'**
   String phoneForm_discardTitle(String kind);
 
   /// Money forms on a phone (PH6): under the discard question.
@@ -12157,6 +12157,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sort'**
   String get phoneList_sort;
+
+  /// Reports on a phone (PH7b): the row under a list cut to its first 5 rows; it opens every row on a page of its own. count is how many rows there are.
+  ///
+  /// In en, this message translates to:
+  /// **'See all ({count})'**
+  String phoneReport_seeAll(int count);
+
+  /// Reports on a phone (PH7b): a table column's name and its value as one piece of a row's second line, for example Opening: 10. label is an existing column name.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}: {value}'**
+  String phoneReport_labelValue(String label, String value);
+
+  /// Past Reports on a phone (PH7b): the one summary line above the list, how many reports the time filter finds; it opens the Summary sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 report} other{{count} reports}}'**
+  String phoneReport_pastSummaryLine(int count);
 }
 
 class _AppLocalizationsDelegate

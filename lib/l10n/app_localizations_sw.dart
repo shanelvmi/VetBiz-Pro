@@ -7234,6 +7234,7 @@ class AppLocalizationsSw extends AppLocalizations {
       'visit': 'Acha ziara hii?',
       'product': 'Acha bidhaa hii?',
       'batch': 'Acha bechi hii?',
+      'report': 'Acha hesabu hizi?',
       'other': 'Acha fomu hii?',
     });
     return '$_temp0';
@@ -7282,4 +7283,25 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get phoneList_sort => 'Panga';
+
+  @override
+  String phoneReport_seeAll(int count) {
+    return 'Tazama zote ($count)';
+  }
+
+  @override
+  String phoneReport_labelValue(String label, String value) {
+    return '$label: $value';
+  }
+
+  @override
+  String phoneReport_pastSummaryLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ripoti $count',
+      one: 'ripoti 1',
+    );
+    return '$_temp0';
+  }
 }
