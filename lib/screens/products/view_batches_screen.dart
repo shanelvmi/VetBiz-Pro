@@ -366,18 +366,22 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                       child: ListTile(
                         title: Text(widget.product.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
                         subtitle: Text('${context.l10n.productCategoryLabel(widget.product.category)} · ${Money.unitPrice(widget.product.sellPrice)}'),
-                        trailing: TextButton(
-                          onPressed: () {
-                            showAddEditProductScreen(context, product: widget.product);
-                          },
-                          style: ButtonStyle(
-                            foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                              if (states.contains(WidgetState.hovered)) return context.colors.accent;
-                              return context.colors.primary;
-                            }),
-                          ),
-                          child: Text(context.l10n.batch_editDetails),
-                        ),
+                        // Edit Product is admin-only (PH7b): the rules let an
+                        // assistant change only a product's stock fields.
+                        trailing: !isAdmin
+                            ? null
+                            : TextButton(
+                                onPressed: () {
+                                  showAddEditProductScreen(context, product: widget.product);
+                                },
+                                style: ButtonStyle(
+                                  foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+                                    if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                                    return context.colors.primary;
+                                  }),
+                                ),
+                                child: Text(context.l10n.batch_editDetails),
+                              ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.s16),

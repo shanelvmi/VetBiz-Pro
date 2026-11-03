@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/admin_only_refusal.dart';
 import '../models/product.dart';
 import '../models/product_batch.dart';
 import 'facility_provider.dart';
@@ -20,9 +21,21 @@ class ProductProvider with ChangeNotifier {
   // pass their own): the author of stock logs and activity entries.
   final Future<Map<String, String>> Function() _currentUserInfo;
 
-  ProductProvider({FirebaseFirestore? firestore, Future<Map<String, String>> Function()? currentUserInfo})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo;
+  // Whether the signed-in person is an admin (UserRoleProvider in the app).
+  // Edit Product is admin-only (PH7b): firestore.rules lets an assistant
+  // update a product only in its stock fields, so a full edit would fail.
+  // Without one, nobody is: the helpers made inside ServiceProvider only
+  // move stock and never edit. Sales, batches and stock moves ask nothing.
+  final bool Function() _isAdmin;
+  static bool _nobodyIsAdmin() => false;
+
+  ProductProvider({
+    FirebaseFirestore? firestore,
+    Future<Map<String, String>> Function()? currentUserInfo,
+    bool Function()? isAdmin,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _currentUserInfo = currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
+        _isAdmin = isAdmin ?? _nobodyIsAdmin;
 
   final List<Product> _products = [];
 
@@ -751,6 +764,9 @@ class ProductProvider with ChangeNotifier {
   /// -------------------------------
   /// Like addProduct, the product must carry its facilityId.
   Future<void> updateProduct(Product updatedProduct) async {
+    // Admin-only (PH7b, like the E4d-2 guards): refused before anything is
+    // written, with the friendly admin-only message.
+    if (!_isAdmin()) throw const AdminOnlyException();
     try {
       final facilityId = updatedProduct.facilityId;
 

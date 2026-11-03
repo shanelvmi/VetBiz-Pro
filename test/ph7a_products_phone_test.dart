@@ -212,11 +212,11 @@ void main() {
     expect(app.fs, isNotNull);
   }, skip: _skip);
 
-  ph5TestWidgets('an assistant\'s page: Edit, Sell and the batches; no Delete, no watchlist (today\'s card)', (tester) async {
+  ph5TestWidgets('an assistant\'s page: Sell and the batches; no Edit (admin-only, PH7b), no Delete, no watchlist', (tester) async {
     await _products(tester, admin: false);
     await tester.tap(ph5Key('phoneList-row-p1'));
     await ph5Settle(tester);
-    expect(find.descendant(of: ph5Page, matching: find.byTooltip('Edit')), findsOneWidget);
+    expect(find.descendant(of: ph5Page, matching: find.byTooltip('Edit')), findsNothing, reason: 'Edit Product is admin-only (PH7b)');
     expect(find.descendant(of: ph5Page, matching: find.byTooltip('Delete')), findsNothing);
     expect(find.descendant(of: ph5Page, matching: find.text('Remove from Watchlist')), findsNothing);
     expect(find.descendant(of: ph5Page, matching: find.text('Add New Batch')), findsOneWidget);

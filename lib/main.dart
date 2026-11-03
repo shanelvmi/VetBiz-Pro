@@ -83,7 +83,8 @@ void main() async {
       providers: [
         // First, so the providers below can ask it who is signed in: Edit
         // Service, Edit Transaction and deleting a transaction are
-        // admin-only (E4d-2), and those providers check it at the call.
+        // admin-only (E4d-2), as is Edit Product (PH7b), and those
+        // providers check it at the call.
         ChangeNotifierProvider(create: (_) => UserRoleProvider()),
         ChangeNotifierProvider(create: (_) => DebtProvider()),
         ChangeNotifierProvider(create: (_) => PaymentProvider()),
@@ -94,7 +95,11 @@ void main() async {
           ),
         ),
         ChangeNotifierProvider(create: (_) => SaleProvider()),
-        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(
+          create: (context) => ProductProvider(
+            isAdmin: () => Provider.of<UserRoleProvider>(context, listen: false).isAdmin,
+          ),
+        ),
         ChangeNotifierProvider(create: (_) => ClientProvider()),
         ChangeNotifierProvider(
           create: (context) => TransactionProvider(

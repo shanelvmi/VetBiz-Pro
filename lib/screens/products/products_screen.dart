@@ -744,13 +744,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              IconButton(
-                onPressed: () async {
-                  await showAddEditProductScreen(context, product: p);
-                },
-                icon: Icon(Icons.edit_outlined, color: context.colors.primary, size: AppIconSize.i20),
-                tooltip: context.l10n.common_edit,
-              ),
+              // Edit Product is admin-only (PH7b): the rules let an
+              // assistant change only a product's stock fields.
+              if (isAdmin)
+                IconButton(
+                  onPressed: () async {
+                    await showAddEditProductScreen(context, product: p);
+                  },
+                  icon: Icon(Icons.edit_outlined, color: context.colors.primary, size: AppIconSize.i20),
+                  tooltip: context.l10n.common_edit,
+                ),
               Tooltip(
                 message: p.sellableQty <= 0 ? context.l10n.products_nothingSellable : context.l10n.products_sell,
                 child: IconButton(
@@ -1222,20 +1225,23 @@ class _ProductsScreenState extends State<ProductsScreen> {
           const SizedBox(height: AppSpacing.s12),
           Row(
             children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    await showAddEditProductScreen(context, product: p);
-                  },
-                  icon: Icon(Icons.edit_outlined, size: AppIconSize.i16, color: context.colors.primary),
-                  label: Text(context.l10n.common_edit, style: TextStyle(color: context.colors.primary)),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40)),
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s10),
+              // Edit Product is admin-only (PH7b), as on the Stock Store.
+              if (isAdmin) ...[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      await showAddEditProductScreen(context, product: p);
+                    },
+                    icon: Icon(Icons.edit_outlined, size: AppIconSize.i16, color: context.colors.primary),
+                    label: Text(context.l10n.common_edit, style: TextStyle(color: context.colors.primary)),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40)),
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s10),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.s8),
+                const SizedBox(width: AppSpacing.s8),
+              ],
               // Sell button - takes you into the real Add Sale
               // flow. Disabled when there's nothing sellable for
               // this product specifically, rather than opening
@@ -1350,11 +1356,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
       context,
       productId: product.id,
       barActions: (pageContext, p) => [
-        IconButton(
-          tooltip: l10n.common_edit,
-          icon: const Icon(Icons.edit_outlined),
-          onPressed: () => showAddEditProductScreen(context, product: p),
-        ),
+        // Edit Product is admin-only (PH7b).
+        if (isAdmin)
+          IconButton(
+            tooltip: l10n.common_edit,
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => showAddEditProductScreen(context, product: p),
+          ),
         if (isAdmin)
           IconButton(
             tooltip: l10n.common_delete,

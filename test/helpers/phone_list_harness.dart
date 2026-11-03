@@ -209,7 +209,7 @@ Future<Ph5App> pumpPh5(
           deletedBy: testDeletedBy,
           isAdmin: () => admin)),
       ChangeNotifierProvider(create: (_) => TransactionProvider(firestore: fs, currentUserInfo: testUserInfo, isAdmin: () => admin)),
-      ChangeNotifierProvider(create: (_) => ProductProvider(firestore: fs, currentUserInfo: testUserInfo)),
+      ChangeNotifierProvider(create: (_) => ProductProvider(firestore: fs, currentUserInfo: testUserInfo, isAdmin: () => admin)),
       ChangeNotifierProvider(create: (_) => PaymentProvider(firestore: fs)),
       ChangeNotifierProvider<SubscriptionProvider>(
           create: (_) => locked ? LockedSubscription(firestore: fs) : SubscriptionProvider(firestore: fs)),
