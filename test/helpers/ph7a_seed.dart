@@ -2,7 +2,11 @@
 // Stock Store, the batches screens and the product form on the real
 // providers over a fake Firestore (phone_list_harness.dart's pumpPh5).
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 import 'package:vetbiz_pro/data/collections.dart';
+import 'package:vetbiz_pro/models/product.dart';
+import 'package:vetbiz_pro/providers/product_provider.dart';
 
 import 'fake_firestore.dart';
 import 'screen_size_matrix.dart';
@@ -95,4 +99,42 @@ Future<void> ph7SeedProducts(FirebaseFirestore fs, [List<Ph7Product>? products])
       'expiry': expiry,
     });
   }
+}
+
+/// The long-named product, as the lists hand it to the batches screens and
+/// the form (one batch on file, in both the store and on the shelf).
+final ph7LongProduct = Product(
+  id: 'p7',
+  name: ph7Products[6].name,
+  buyPrice: ph7Products[6].buy,
+  sellPrice: ph7Products[6].sell,
+  stockQty: ph7Products[6].store,
+  sellableQty: ph7Products[6].shelf,
+  unit: 'pcs',
+  type: ph7Products[6].type,
+  category: ph7Products[6].category,
+  facilityId: testFacilityId,
+  batchNo: ph7Products[6].batchNo,
+  expiry: ph7Expiry(ph7Products[6].expiryDays!),
+  hasEverHadStock: true,
+);
+
+/// Starts the live products listener, as Products does when it opens.
+class Ph7Listening extends StatefulWidget {
+  final Widget child;
+  const Ph7Listening({super.key, required this.child});
+
+  @override
+  State<Ph7Listening> createState() => _Ph7ListeningState();
+}
+
+class _Ph7ListeningState extends State<Ph7Listening> {
+  @override
+  void initState() {
+    super.initState();
+    Provider.of<ProductProvider>(context, listen: false).listenToProducts(testFacilityId);
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
