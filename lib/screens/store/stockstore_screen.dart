@@ -25,6 +25,11 @@ import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
 import '../../l10n/l10n.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/record_tile.dart';
+import '../products/product_phone_parts.dart';
 
 class StockStoreScreen extends StatefulWidget {
   const StockStoreScreen({super.key});
@@ -46,6 +51,10 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   // default page size, so a small catalog never shows pagination
   // controls at all.
   ProductCatalogQuery _query = const ProductCatalogQuery(pageSize: kProductCatalogDefaultPageSize);
+
+  // PH7a (phones): how many pages the list shows (R10: every page reached
+  // so far); back to one whenever the query changes.
+  int _phonePages = 1;
 
   // Money formatter with thousand separator
 
@@ -310,7 +319,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     };
   }
 
-  Future<void> _deleteProduct(String productId) async {
+  /// [onDeleted] (the phone's details page closing) runs once it is gone.
+  Future<void> _deleteProduct(String productId, {VoidCallback? onDeleted}) async {
     final provider = Provider.of<ProductProvider>(context, listen: false);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -345,6 +355,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
     try {
       await provider.deleteProduct(context, productId);
+      onDeleted?.call();
       // deleteProduct moves the product to Trash (a soft delete), so Undo
       // puts it back with the Trash screen's own restore, as on Products.
       AppFeedback.undo(
@@ -442,6 +453,19 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         _query.selectedStatus == 'All';
 
     final totalStockValue = baseProducts.fold<double>(0, (sum, p) => sum + (p.stockQty * p.buyPrice));
+
+    if (AppLayout.isPhone(context)) {
+      return _buildPhone(
+        provider: provider,
+        belongsOnThisScreen: belongsOnThisScreen,
+        isDepleted: productIsDepleted,
+        categoriesInData: categoriesInData,
+        statusCounts: statusCounts,
+        totalCount: visibleProductCount,
+        totalStockValue: totalStockValue,
+        noFiltersActive: noFiltersActive,
+      );
+    }
 
     final content = Column(
       children: [
@@ -1184,6 +1208,175 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  // ==================== PHONE (PH7a) ====================
+
+  // docs/design/phone_list_pattern.md: the same live products, query, cards
+  // and card actions as the layout above, as the standard phone list (as on
+  // Products). A row gives the stored quantity, the stored value and the
+  // expiry; the details page is the card's content and actions. The bell's
+  // dropdown (for 900 px and wider) is the menu's Stock Alerts sheet.
+
+  void _setPhoneQuery(ProductCatalogQuery query) => setState(() {
+        _query = query;
+        _phonePages = 1;
+      });
+
+  /// The card's status, with 'Active' read as the In Stock chip it is
+  /// filtered by.
+  RecordStatus _phoneStatus(Product p) {
+    final status = _getProductStatus(p);
+    final text = status['text'] as String;
+    return RecordStatus(text == 'Active' ? context.l10n.products_statusInStock : _statusLabel(text), status['color'] as Color);
+  }
+
+  Future<void> _openPhoneDetails(Product product) {
+    final l10n = context.l10n;
+    // Edit, Release and Delete are admin-only, as on the card.
+    final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
+    return pushProductDetailsPage(
+      context,
+      productId: product.id,
+      barActions: (pageContext, p) => [
+        if (isAdmin) ...[
+          IconButton(
+            tooltip: l10n.common_edit,
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => showAddEditProductScreen(context, product: p),
+          ),
+          IconButton(
+            tooltip: l10n.common_delete,
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _deleteProduct(p.id, onDeleted: () => Navigator.of(pageContext).pop()),
+          ),
+        ],
+      ],
+      body: (pageContext, p) => ProductDetailsBody(
+        product: p,
+        status: _phoneStatus(p),
+        chips: [
+          if (p.hasRestockShelfAlert)
+            ProductInfoChip(label: l10n.products_restockShelf, icon: Icons.move_up, color: context.colors.infoStrong),
+        ],
+        figures: [
+          (l10n.products_stock, '${p.stockQty} ${l10n.productUnitLabel(p.unit)}'),
+          (l10n.products_price, Money.unitPrice(p.sellPrice)),
+        ],
+        lines: [
+          l10n.products_sellableBatch('${p.sellableQty}', l10n.productUnitLabel(p.unit), p.batchNo ?? '-'),
+          l10n.products_buyPrice(Money.unitPrice(p.buyPrice)),
+          if (p.expiry != null) l10n.products_expiryDate(AppDateFormat.date.format(p.expiry!)),
+        ],
+        actions: [
+          if (isAdmin && p.stockQty > 0)
+            ProductPageAction(label: l10n.products_release, icon: Icons.upload, primary: true, onPressed: () => _releaseToShop(p)),
+          ProductPageAction(
+              label: l10n.products_addNewBatch, icon: Icons.playlist_add, onPressed: () => showAddBatchScreen(context, product: p)),
+          ProductPageAction(
+            label: l10n.products_viewBatches,
+            icon: Icons.inventory_2_outlined,
+            onPressed: () => showViewBatchesScreen(context, product: p, moveToStockAction: MoveToStockAction.removeFromSellable),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _storeTile(Product p) {
+    final l10n = context.l10n;
+    final status = _phoneStatus(p);
+    final quantity = '${p.stockQty} ${l10n.productUnitLabel(p.unit)}';
+    final value = Money.format(p.stockQty * p.buyPrice);
+    return RecordTile(
+      title: p.name,
+      amount: quantity,
+      details: [
+        value,
+        if (p.expiry != null) l10n.products_expiryDate(AppDateFormat.date.format(p.expiry!)),
+      ],
+      status: status,
+      leading: ProductLeading(product: p),
+      colorSeed: p.name,
+      semanticsLabel: l10n.phoneList_productRowSemantics(p.name, quantity, value, status.label),
+      onTap: () => _openPhoneDetails(p),
+    );
+  }
+
+  Widget _buildPhone({
+    required ProductProvider provider,
+    required bool Function(Product) belongsOnThisScreen,
+    required bool Function(Product) isDepleted,
+    required Set<String> categoriesInData,
+    required Map<String, int> statusCounts,
+    required int totalCount,
+    required double totalStockValue,
+    required bool noFiltersActive,
+  }) {
+    final l10n = context.l10n;
+    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
+    final pageSize = _query.pageSize ?? kProductCatalogDefaultPageSize;
+    final shown = ProductCatalogService.run(
+      query: _query.copyWith(page: 1, pageSize: pageSize * _phonePages),
+      allProducts: provider.products,
+      belongsOnThisScreen: belongsOnThisScreen,
+      isDepleted: isDepleted,
+      statusResolver: _getProductStatus,
+    );
+    // Today's primary action, admin-only (E4d-2), through the guard.
+    final add = isAdmin
+        ? PhoneListAction(label: l10n.products_addProduct, icon: Icons.add, onPressed: () => showAddEditProductScreen(context))
+        : null;
+    return PhoneListScaffold<Product>(
+      title: l10n.store_title,
+      asTab: false,
+      menu: [
+        PhoneListMenuItem(label: l10n.products_stockAlerts, icon: Icons.notifications_none, onSelected: () => showStockAlertsSheet(context)),
+      ],
+      menuBadge: StockAlertsScreen.hasAnyAlert(provider.products),
+      searchController: _searchController,
+      searchHint: l10n.store_searchHint,
+      onSearchChanged: (val) => _setPhoneQuery(_query.copyWith(searchQuery: val.trim(), page: 1)),
+      onSearchClosed: () {
+        _searchController.clear();
+        _setPhoneQuery(_query.copyWith(searchQuery: '', page: 1));
+      },
+      quickChips: PhoneQuickChips(
+        key: const ValueKey('phoneList-quickChips'),
+        values: kProductStatusChips,
+        selected: _query.selectedStatus,
+        label: (v) => productStatusChipLabel(l10n, v),
+        onSelected: (v) => _setPhoneQuery(_query.copyWith(selectedStatus: v, page: 1)),
+      ),
+      filtersActive: productFiltersActive(_query),
+      onFilter: () async {
+        final query = await showProductFilterSheet(context, query: _query, categoriesInData: categoriesInData);
+        if (query != null) _setPhoneQuery(query);
+      },
+      appliedFilters: productAppliedFilters(l10n, _query, _setPhoneQuery),
+      summaryLine: l10n.phoneList_productsSummaryLine(totalCount, Money.format(totalStockValue)),
+      onSummary: () => showProductSummarySheet(context,
+          totalCount: totalCount, statusCounts: statusCounts, valueLabel: l10n.store_stockValue, stockValue: totalStockValue),
+      items: shown.items,
+      idOf: (p) => p.id,
+      // Not grouped by day (R5): a product has no date of its own here.
+      dateOf: (p) => p.updatedAt ?? DateTime(0),
+      amountOf: (p) => 0,
+      grouped: false,
+      tileBuilder: (context, p, {required grouped}) => _storeTile(p),
+      loading: !provider.loaded,
+      error: provider.listenError,
+      onRetry: provider.retryListening,
+      emptyIcon: Icons.inventory_2,
+      emptyText: noFiltersActive ? l10n.store_empty : l10n.products_noMatches,
+      fab: add,
+      emptyAction: add,
+      hasMore: shown.totalCount > shown.items.length,
+      loadingMore: false,
+      onLoadMore: () => setState(() => _phonePages++),
+      // Pull to refresh (R8): today's Refresh (the list itself is live).
+      onRefresh: _manualRefresh,
     );
   }
 }
