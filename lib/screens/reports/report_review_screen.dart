@@ -16,6 +16,11 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../widgets/app_sheet.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/phone_discard_scope.dart';
+import '../../widgets/phone_report/phone_report_row.dart';
+import '../../widgets/phone_report/phone_report_section.dart';
 
 class ReportReviewScreen extends StatefulWidget {
   final DailyReport report;
@@ -44,6 +49,21 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
   bool _declarationConfirmed = false;
   bool _isSubmitting = false;
 
+  // PH7b: every field's text and the declaration, as the form opened, so a
+  // phone's Back asks only once something was typed or ticked.
+  late final String _initialEntries;
+
+  String get _entries => [
+        for (final c in [
+          ..._physicalCountControllers.values,
+          ..._varianceReasonControllers.values,
+          ..._paymentCountControllers.values,
+          ..._paymentVarianceReasonControllers.values,
+        ])
+          c.text,
+        '$_declarationConfirmed',
+      ].join('0000');
+
   @override
   void initState() {
     super.initState();
@@ -58,6 +78,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
           TextEditingController(text: p.physicalCount != null ? Money.decimal(p.physicalCount!.round()) : '');
       _paymentVarianceReasonControllers[p.method] = TextEditingController(text: p.varianceReason ?? '');
     }
+    _initialEntries = _entries;
   }
 
   @override
@@ -175,6 +196,7 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (AppLayout.isPhone(context)) return _buildPhone();
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
@@ -556,17 +578,18 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     );
   }
 
+  /// Why Submit is off, or null when it is on (the footer and, on a phone,
+  /// the pinned bar).
+  String? get _blockedReason {
+    if (!_allWatchlistedCounted) return context.l10n.reports_blockedCounts;
+    if (!_allPaymentMethodsCounted) return context.l10n.reports_blockedBalances;
+    if (_anyMissingStockReasons || _anyMissingPaymentReasons) return context.l10n.reports_blockedReason;
+    if (!_declarationConfirmed) return context.l10n.reports_blockedDeclaration;
+    return null;
+  }
+
   Widget _buildFooter() {
-    String? blockedReason;
-    if (!_allWatchlistedCounted) {
-      blockedReason = context.l10n.reports_blockedCounts;
-    } else if (!_allPaymentMethodsCounted) {
-      blockedReason = context.l10n.reports_blockedBalances;
-    } else if (_anyMissingStockReasons || _anyMissingPaymentReasons) {
-      blockedReason = context.l10n.reports_blockedReason;
-    } else if (!_declarationConfirmed) {
-      blockedReason = context.l10n.reports_blockedDeclaration;
-    }
+    final blockedReason = _blockedReason;
 
     return Container(
       padding: EdgeInsets.fromLTRB(
@@ -619,6 +642,248 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                     ],
                   ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // ---------- Phone (PH7b R8, docs/design/phone_reports.md) ----------
+
+  // The PH6 form shell: one column, the count fields 48 high with the
+  // number keyboard, the reasons' error lines reserved so nothing moves,
+  // the declaration as the last item, Cancel and Submit pinned above the
+  // keyboard with the reason Submit is off, and Back asking once anything
+  // is typed or ticked. The same fields and checks as the form above, so
+  // it submits exactly the same report.
+  Widget _buildPhone() {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final blocked = _blockedReason;
+    final scaffold = Scaffold(
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        backgroundColor: colors.surface,
+        foregroundColor: colors.textPrimary,
+        elevation: AppElevation.e1,
+        title: Text(l10n.reports_reviewSubmit, style: const TextStyle(fontWeight: AppFontWeight.bold)),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(PhoneReportMetrics.pagePadding),
+        children: [
+          Text(AppDateFormat.dateLong.format(widget.report.reportDate),
+              style: TextStyle(fontSize: PhoneFormMetrics.body, fontWeight: AppFontWeight.semibold, color: colors.primary)),
+          const SizedBox(height: PhoneReportMetrics.headerGap),
+          Text(l10n.reports_reviewIntro, style: TextStyle(fontSize: PhoneFormMetrics.body, color: colors.textSecondary)),
+          const SizedBox(height: PhoneReportMetrics.sectionGap),
+          if (_watchlisted.isNotEmpty)
+            PhoneReportSection(
+              id: 'review-stock',
+              icon: Icons.inventory_2_outlined,
+              title: l10n.reports_physicalStockCount,
+              note: l10n.reports_watchlistedHint,
+              rows: const [],
+              footer: [for (final p in _watchlisted) _phoneProductCount(p)],
+            ),
+          PhoneReportSection(
+            id: 'review-payments',
+            icon: Icons.payments_outlined,
+            title: l10n.reports_paymentReconciliation,
+            note: widget.report.paymentReconciliation.isEmpty ? null : l10n.reports_countEachMethod,
+            emptyText: l10n.reports_noPaymentsToday,
+            rows: const [],
+            footer: [for (final p in widget.report.paymentReconciliation) _phonePaymentMethod(p)],
+          ),
+          PhoneReportSection(
+            id: 'review-declaration',
+            icon: Icons.verified_outlined,
+            title: l10n.reports_declaration,
+            rows: const [],
+            footer: [
+              InkWell(
+                onTap: () => setState(() => _declarationConfirmed = !_declarationConfirmed),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: PhoneFormMetrics.fieldMinHeight),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Checkbox(
+                        value: _declarationConfirmed,
+                        activeColor: colors.primary,
+                        onChanged: (v) => setState(() => _declarationConfirmed = v ?? false),
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(0, AppSpacing.s12, PhoneReportMetrics.pagePadding, AppSpacing.s12),
+                          child: Text(l10n.reports_confirmDeclaration,
+                              style: TextStyle(fontSize: PhoneFormMetrics.body, color: colors.textPrimary)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      bottomNavigationBar: FormActionBar(
+        primaryLabel: l10n.reports_submitDailyClosing,
+        primaryIcon: Icons.check,
+        onPrimary: _canSubmit ? _submit : null,
+        busy: _isSubmitting,
+        secondaryLabel: l10n.common_cancel,
+        onSecondary: () => Navigator.of(context).maybePop(),
+        summary: blocked == null ? null : Text(blocked, style: TextStyle(color: colors.textMuted)),
+      ),
+    );
+    return PhoneDiscardScope(
+        kind: 'report', isDirty: () => _entries != _initialEntries, child: closeKeyboardOnTapOutside(context, scaffold));
+  }
+
+  /// A phone field: at least 48 high, text at 14; [reserveError] keeps a
+  /// line under it for its error, so nothing moves when one comes or goes.
+  InputDecoration _phoneField(String hint, {String? errorText, bool reserveError = false}) {
+    final colors = context.colors;
+    const line = TextStyle(fontSize: PhoneFormMetrics.error);
+    return InputDecoration(
+      hintText: hint,
+      errorText: errorText,
+      helperText: reserveError ? ' ' : null,
+      helperStyle: line,
+      errorStyle: line,
+      filled: true,
+      fillColor: colors.surface,
+      constraints: const BoxConstraints(minHeight: PhoneFormMetrics.fieldMinHeight),
+      contentPadding: const EdgeInsets.symmetric(horizontal: PhoneFormMetrics.fieldPaddingH, vertical: PhoneFormMetrics.fieldPaddingV),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.r10),
+        borderSide: BorderSide(color: colors.textHint.withValues(alpha: AppAlpha.a40)),
+      ),
+    );
+  }
+
+  /// A variance or a match, in text and colour.
+  Widget _phoneOutcome(bool hasVariance, String text) {
+    final colors = context.colors;
+    final color = hasVariance ? colors.dangerStrong : colors.successStrong;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.s8),
+      child: Row(
+        children: [
+          Icon(hasVariance ? Icons.warning_amber_rounded : Icons.check_circle_outline, size: AppIconSize.i16, color: color),
+          const SizedBox(width: AppSpacing.s4),
+          Expanded(
+            child: Text(text,
+                style: TextStyle(fontSize: PhoneFormMetrics.body, fontWeight: AppFontWeight.semibold, color: color)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _phoneProductCount(ProductMovementEntry p) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final count = _physicalCountFor(p.productId);
+    final variance = count == null ? null : count - p.expectedClosing;
+    final hasVariance = variance != null && variance != 0;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          PhoneReportMetrics.pagePadding, AppSpacing.s8, PhoneReportMetrics.pagePadding, AppSpacing.s8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(p.name, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f15)),
+          Text(l10n.reports_expectedValue(p.expectedClosing),
+              style: TextStyle(fontSize: PhoneFormMetrics.body, color: colors.textMuted)),
+          const SizedBox(height: AppSpacing.s8),
+          TextField(
+            controller: _physicalCountControllers[p.productId],
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            style: const TextStyle(fontSize: PhoneFormMetrics.body),
+            decoration: _phoneField(l10n.reports_physicalCount),
+            onChanged: (_) => setState(() {}),
+          ),
+          if (hasVariance)
+            _phoneOutcome(true, l10n.reports_varianceCount('${variance > 0 ? '+' : ''}$variance'))
+          else if (count != null)
+            _phoneOutcome(false, l10n.reports_match),
+          if (hasVariance) ...[
+            const SizedBox(height: AppSpacing.s8),
+            TextField(
+              controller: _varianceReasonControllers[p.productId],
+              textCapitalization: TextCapitalization.sentences,
+              inputFormatters: [SentenceCapitalizationFormatter()],
+              style: const TextStyle(fontSize: PhoneFormMetrics.body),
+              decoration: _phoneField(l10n.reports_varianceReasonHint,
+                  errorText: _isMissingStockReason(p) ? l10n.reports_errVarianceReason : null, reserveError: true),
+              onChanged: (_) => setState(() {}),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _phonePaymentMethod(PaymentMethodReconciliation p) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final method = l10n.paymentMethodLabel(p.method);
+    final title = Text(method, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15));
+    if (!p.requiresCount) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(PhoneReportMetrics.pagePadding, AppSpacing.s8, PhoneReportMetrics.pagePadding, AppSpacing.s8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            title,
+            PhoneReportStat(label: l10n.reports_amountPaidOut, value: Money.format(p.expected.abs())),
+            Text(l10n.reports_noIncomeVia(method), style: TextStyle(fontSize: PhoneFormMetrics.body, color: colors.infoNoteTextSoft)),
+          ],
+        ),
+      );
+    }
+    final variance = _varianceForMethod(p.method);
+    final hasVariance = variance != null && variance != 0;
+    final count = _physicalCountForMethod(p.method);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(PhoneReportMetrics.pagePadding, AppSpacing.s8, PhoneReportMetrics.pagePadding, AppSpacing.s8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          title,
+          Text(l10n.phoneReport_labelValue(l10n.reports_expectedBalance, Money.format(p.expected)),
+              style: TextStyle(fontSize: PhoneFormMetrics.body, color: colors.textSoft)),
+          const SizedBox(height: AppSpacing.s8),
+          Text(l10n.reports_physicalBalanceRequired,
+              style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: PhoneFormMetrics.label)),
+          const SizedBox(height: AppSpacing.s6),
+          TextField(
+            controller: _paymentCountControllers[p.method],
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
+            style: const TextStyle(fontSize: PhoneFormMetrics.body),
+            decoration: _phoneField('0'),
+            onChanged: (_) => setState(() {}),
+          ),
+          if (hasVariance)
+            _phoneOutcome(true,
+                l10n.reports_methodVariance(method, '${variance > 0 ? '+' : ''}${Money.format(variance)}'))
+          else if (count != null)
+            _phoneOutcome(false, l10n.reports_methodMatches(method)),
+          if (hasVariance) ...[
+            const SizedBox(height: AppSpacing.s8),
+            TextField(
+              controller: _paymentVarianceReasonControllers[p.method],
+              textCapitalization: TextCapitalization.sentences,
+              inputFormatters: [SentenceCapitalizationFormatter()],
+              style: const TextStyle(fontSize: PhoneFormMetrics.body),
+              decoration: _phoneField(l10n.reports_methodVarianceReason(method),
+                  errorText: _isMissingPaymentReason(p.method) ? l10n.reports_errVarianceReason : null, reserveError: true),
+              onChanged: (_) => setState(() {}),
+            ),
+          ],
         ],
       ),
     );

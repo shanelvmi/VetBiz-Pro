@@ -10,7 +10,7 @@ import 'package:vetbiz_pro/screens/reports/report_review_screen.dart';
 import 'helpers/ph7b_report.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 Future<void> _review(WidgetTester tester, {Size size = const Size(390, 844)}) async {
   final report = ph7bReport(status: 'draft');
@@ -22,7 +22,8 @@ Finder _hint(String hint) => find.byWidgetPredicate((w) => w is TextField && w.d
 
 void main() {
   ph5TestWidgets('one column; the count fields 48 high with the number keyboard; the bar holds Cancel and Submit', (tester) async {
-    await _review(tester);
+    // Tall enough to build every field.
+    await _review(tester, size: const Size(390, 2000));
     expect(tester.takeException(), isNull);
     final counts = _hint('Physical count');
     expect(counts, findsNWidgets(2));
@@ -44,6 +45,8 @@ void main() {
     await _review(tester);
     final checkbox = find.byType(Checkbox);
     await tester.scrollUntilVisible(checkbox, 300, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(checkbox);
+    await tester.pump();
     await tester.pump();
     final row = find.ancestor(of: checkbox, matching: find.byType(InkWell)).first;
     expect(tester.getSize(row).height, greaterThanOrEqualTo(48));
@@ -68,8 +71,10 @@ void main() {
     expect(find.text('Please provide a reason for the variance.'), findsOneWidget);
     final before = tester.getSize(reason).height;
     await tester.enterText(reason, 'Broken');
+    // The error line fades out.
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.pump();
-    expect(find.text('Please provide a reason for the variance.'), findsNothing);
+    expect(tester.widget<TextField>(reason).decoration?.errorText, isNull);
     expect(tester.getSize(reason).height, before);
   }, skip: _skip);
 
@@ -99,6 +104,8 @@ void main() {
     await _review(tester);
     final checkbox = find.byType(Checkbox);
     await tester.scrollUntilVisible(checkbox, 300, scrollable: find.byType(Scrollable).first);
+    await tester.ensureVisible(checkbox);
+    await tester.pump();
     await tester.tap(checkbox);
     await tester.pump();
     await tester.tap(find.byType(BackButton));

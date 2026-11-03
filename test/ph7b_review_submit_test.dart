@@ -17,7 +17,7 @@ import 'helpers/ph7b_report.dart';
 import 'helpers/phone_list_harness.dart';
 
 // The phone case runs once the phone form exists.
-const _skipPhone = true;
+const _skipPhone = false;
 
 const _fixture = 'test/fixtures/ph7b_submitted_report.json';
 

@@ -19,7 +19,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
 // The screens done so far: the others stay skipped until theirs is.
-const Set<String> _done = {'View Reports', 'View Reports empty'};
+const Set<String> _done = {'View Reports', 'View Reports empty', 'Review'};
 
 const _tabsEn = ['Summary', 'Sales', 'Services', 'Products', 'Stock Reconciliation', 'Debt', 'Expenses', 'Transactions', 'Activity Log', 'Payment Methods'];
 
@@ -48,12 +48,12 @@ double _bodyPx(WidgetTester tester) {
 Future<void> _check(WidgetTester tester, String where) async {
   await checkCase(tester, phone: true, where: where);
   expect(_bodyPx(tester), greaterThanOrEqualTo(14), reason: '$where: body text');
-  // Only the tab bar, the swipe between tabs and the quick chips move
-  // sideways.
+  // Only the tab bar, the swipe between tabs, the quick chips and a text
+  // field's own line move sideways.
   for (final e in find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.right).evaluate()) {
     var allowed = false;
     e.visitAncestorElements((a) {
-      allowed = a.widget is TabBar || a.widget is TabBarView || a.widget is PhoneQuickChips;
+      allowed = a.widget is TabBar || a.widget is TabBarView || a.widget is PhoneQuickChips || a.widget is EditableText;
       return !allowed;
     });
     expect(allowed, isTrue, reason: '$where: something scrolls sideways');
