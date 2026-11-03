@@ -3992,7 +3992,7 @@
   "@phoneList_paymentsSummaryLine": {"x-review":"draft"},
   "phoneList_transactionsSummaryLine": "{period}: mapato {income}, matumizi {expenses}",
   "@phoneList_transactionsSummaryLine": {"x-review":"draft"},
-  "phoneForm_discardTitle": "{kind, select, sale{Acha mauzo haya?} payment{Acha malipo haya?} client{Acha mteja huyu?} transaction{Acha muamala huu?} visit{Acha ziara hii?} other{Acha fomu hii?}}",
+  "phoneForm_discardTitle": "{kind, select, sale{Acha mauzo haya?} payment{Acha malipo haya?} client{Acha mteja huyu?} transaction{Acha muamala huu?} visit{Acha ziara hii?} product{Acha bidhaa hii?} batch{Acha bechi hii?} other{Acha fomu hii?}}",
   "@phoneForm_discardTitle": {"x-review":"draft"},
   "phoneForm_discardBody": "Ulichoandika kitapotea.",
   "@phoneForm_discardBody": {"x-review":"draft"},
@@ -4001,5 +4001,11 @@
   "phoneForm_discard": "Acha",
   "@phoneForm_discard": {"x-review":"draft"},
   "phoneForm_saleSummary": "{count, plural, =1{bidhaa 1, {amount}} other{bidhaa {count}, {amount}}}",
-  "@phoneForm_saleSummary": {"x-review":"draft"}
+  "@phoneForm_saleSummary": {"x-review":"draft"},
+  "phoneList_productsSummaryLine": "{count, plural, =1{bidhaa 1, thamani {value}} other{bidhaa {count}, thamani {value}}}",
+  "@phoneList_productsSummaryLine": {"x-review":"draft"},
+  "phoneList_productRowSemantics": "{name}, {quantity}, {amount}, {status}",
+  "@phoneList_productRowSemantics": {"x-review":"draft"},
+  "phoneList_sort": "Panga",
+  "@phoneList_sort": {"x-review":"draft"}
 }
