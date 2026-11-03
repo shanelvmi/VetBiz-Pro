@@ -12175,6 +12175,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 report} other{{count} reports}}'**
   String phoneReport_pastSummaryLine(int count);
+
+  /// The notifications bell (PH8a, NOTIF-2d): shown on the bell instead of the number when more than 9 are unread.
+  ///
+  /// In en, this message translates to:
+  /// **'9+'**
+  String get notifications_bellOverNine;
 }
 
 class _AppLocalizationsDelegate

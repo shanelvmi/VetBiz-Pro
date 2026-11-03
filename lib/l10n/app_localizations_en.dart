@@ -7259,4 +7259,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get notifications_bellOverNine => '9+';
 }
