@@ -39,6 +39,12 @@ import '../../config/app_timeouts.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/field_message_slot.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/phone_choice_field.dart';
+import '../../widgets/phone_form/phone_discard_scope.dart';
+import '../../widgets/phone_form/picker_sheet.dart';
 
 enum ProductDestination {
   sellable,
@@ -136,6 +142,20 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   // after picking, while _imageUrl (the persisted download URL) only
   // updates once the upload actually finishes. When editing an
   // existing product, this starts as whatever photo it already has.
+  // PH7a (phones only): the PH6 form shell. One column, the pickers as
+  // sheets, error lines kept under the simple fields, text at least 14 (S3),
+  // and leaving after typing asks first (PhoneDiscardScope).
+  bool get _isPhone => AppLayout.isPhone(context);
+  double _phone14(double size) => _isPhone && size < PhoneFormMetrics.body ? PhoneFormMetrics.body : size;
+  double _phone12(double size) => _isPhone && size < PhoneFormMetrics.error ? PhoneFormMetrics.error : size;
+  String? _initialEntries;
+  String get _entries => [
+        _nameController.text, _supplierController.text, _batchController.text, _expiryController.text,
+        _descriptionController.text, _buyPriceController.text, _sellPriceController.text, _stockController.text,
+        _minStockController.text, _storeQtyController.text, _shelfQtyController.text,
+        _unit, _type, _category, '$_isWatchlisted', _imageUrl ?? '', '${_imageBytes != null}',
+      ].join('\u0001');
+
   late final ImagePicker _imagePicker = widget.imagePicker ?? ImagePicker();
   FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
   Uint8List? _imageBytes;
@@ -201,7 +221,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             child: Icon(icon, size: AppIconSize.i16, color: context.colors.primary),
           ),
           const SizedBox(width: AppSpacing.s8),
-          Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
+          // On a phone the title wraps (Kiswahili at 360); elsewhere as before.
+          if (_isPhone)
+            Flexible(child: Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)))
+          else
+            Text(title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, color: context.colors.primary)),
         ],
       ),
     );
@@ -290,9 +314,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         const SizedBox(height: AppSpacing.s8),
         Text(
           context.l10n.products_addPhoto,
-          style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold, color: context.colors.primary),
+          style: TextStyle(fontSize: _phone14(AppFontSize.f13), fontWeight: AppFontWeight.bold, color: context.colors.primary),
         ),
-        Text(context.l10n.common_optional, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
+        Text(context.l10n.common_optional, style: TextStyle(fontSize: _phone12(AppFontSize.f11), color: context.colors.textMuted)),
       ],
     );
   }
@@ -461,6 +485,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   Widget _typeField({required bool enabled}) {
+    if (_isPhone) {
+      return _phoneLabelled(
+        context.l10n.common_requiredLabel(context.l10n.common_type),
+        PhoneChoiceField(
+          text: _type.isEmpty ? context.l10n.products_selectType : context.l10n.productTypeLabel(_type),
+          chosen: _type.isNotEmpty,
+          onTap: enabled ? _pickTypePhone : () {},
+        ),
+      );
+    }
     return InkWell(
       onTap: enabled ? _selectTypeDialog : null,
       child: InputDecorator(
@@ -479,6 +513,34 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       validator: (value) =>
           (value == null || value.isEmpty) ? context.l10n.products_selectCategoryError : null,
       builder: (formFieldState) {
+        if (_isPhone) {
+          return _phoneLabelled(
+            context.l10n.common_requiredLabel(context.l10n.common_category),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                PhoneChoiceField(
+                  text: _category.isEmpty
+                      ? context.l10n.transactions_selectCategoryTitle
+                      : context.l10n.productCategoryLabel(_category),
+                  chosen: _category.isNotEmpty,
+                  onTap: enabled
+                      ? () async {
+                          await _pickCategoryPhone();
+                          formFieldState.didChange(_category);
+                        }
+                      : () {},
+                ),
+                FieldMessageSlot(
+                  message: formFieldState.errorText,
+                  reserve: [context.l10n.products_selectCategoryError],
+                  maxLines: 1,
+                  style: TextStyle(fontSize: PhoneFormMetrics.error, color: context.colors.danger),
+                ),
+              ],
+            ),
+          );
+        }
         return InkWell(
           onTap: enabled
               ? () async {
@@ -537,7 +599,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _buyPriceField(bool fieldsLocked) {
     return TextFormField(
       controller: _buyPriceController,
-      decoration: _inputDecoration(context.l10n.products_buyingPriceLabel(AppDefaults.currencySymbol), required: true),
+      decoration: _inputDecoration(context.l10n.products_buyingPriceLabel(AppDefaults.currencySymbol), required: true, keepErrorLine: true),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
       cursorColor: context.colors.primary,
@@ -553,7 +615,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _sellPriceField(bool fieldsLocked) {
     return TextFormField(
       controller: _sellPriceController,
-      decoration: _inputDecoration(context.l10n.products_sellingPriceLabel(AppDefaults.currencySymbol), required: true),
+      decoration: _inputDecoration(context.l10n.products_sellingPriceLabel(AppDefaults.currencySymbol), required: true, keepErrorLine: true),
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly, ThousandsSeparatorInputFormatter()],
       cursorColor: context.colors.primary,
@@ -569,7 +631,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Widget _quantityField() {
     return TextFormField(
       controller: _stockController,
-      decoration: _inputDecoration(context.l10n.products_quantity, required: true),
+      decoration: _inputDecoration(context.l10n.products_quantity, required: true, keepErrorLine: true),
       keyboardType: TextInputType.number,
       cursorColor: context.colors.primary,
       validator: (value) {
@@ -582,6 +644,16 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   }
 
   Widget _unitDropdown(bool fieldsLocked) {
+    if (_isPhone) {
+      return _phoneLabelled(
+        context.l10n.reports_colUnit,
+        PhoneChoiceField(
+          text: context.l10n.productUnitLabel(_unit),
+          chosen: true,
+          onTap: fieldsLocked ? () {} : _pickUnitPhone,
+        ),
+      );
+    }
     return DropdownButtonFormField(
       initialValue: _unit,
       // Shows the unit's label, saves the stored unit.
@@ -591,9 +663,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String label, {bool required = false}) {
+  /// [keepErrorLine]: on a phone the error's line is kept, so nothing moves
+  /// when it shows (PH6).
+  InputDecoration _inputDecoration(String label, {bool required = false, bool keepErrorLine = false}) {
     return InputDecoration(
       labelText: required ? context.l10n.common_requiredLabel(label) : label,
+      helperText: keepErrorLine && _isPhone ? ' ' : null,
       labelStyle: TextStyle(color: context.colors.textSoft),
       floatingLabelStyle: TextStyle(color: context.colors.primary),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r8)),
@@ -661,7 +736,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                       title: Text(
                         context.l10n.productCategoryLabel(cat),
-                        style: TextStyle(color: context.colors.onBrandInk, fontSize: AppFontSize.f13),
+                        style: TextStyle(color: context.colors.onBrandInk, fontSize: _phone14(AppFontSize.f13)),
                       ),
                       onTap: () {
                         if (!mounted) return;
@@ -718,7 +793,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                       title: Text(
                         context.l10n.productTypeLabel(t),
-                        style: TextStyle(color: context.colors.onBrandInk, fontSize: AppFontSize.f13),
+                        style: TextStyle(color: context.colors.onBrandInk, fontSize: _phone14(AppFontSize.f13)),
                       ),
                       onTap: () {
                         if (!mounted) return;
@@ -1059,7 +1134,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     final appBarTitle = isEditing ? context.l10n.products_editProduct : context.l10n.products_addProduct;
     final buttonText = isEditing ? context.l10n.products_updateProduct : context.l10n.products_saveProduct;
 
-    return Scaffold(
+    final scaffold = Scaffold(
       appBar: AppBar(
         backgroundColor: context.colors.brandSurface,
         iconTheme: IconThemeData(color: context.colors.onBrandInk),
@@ -1086,7 +1161,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       backgroundColor: context.colors.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isNarrow = constraints.maxWidth < AppBreakpoints.phoneNarrow;
+          // PH7a: one column on a phone, turned sideways too.
+          final isNarrow = constraints.maxWidth < AppBreakpoints.phoneNarrow || _isPhone;
           // Same breakpoint Add Sale uses for its own two-column layout,
           // so the two modals always switch layouts at the same width.
           final isTwoColumn = constraints.maxWidth >= AppBreakpoints.formTwoColumn;
@@ -1106,7 +1182,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               // disconnected product record.
               TextFormField(
                 controller: _nameController,
-                decoration: _inputDecoration(context.l10n.products_productName, required: true),
+                decoration: _inputDecoration(context.l10n.products_productName, required: true, keepErrorLine: true),
                 textCapitalization: TextCapitalization.sentences,
                 inputFormatters: [SentenceCapitalizationFormatter()],
                 validator: (value) =>
@@ -1162,7 +1238,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           const SizedBox(height: AppSpacing.s4),
                           Text(
                             context.l10n.products_openBelowHint,
-                            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft),
+                            style: TextStyle(fontSize: _phone14(AppFontSize.f12_5), color: context.colors.textSoft),
                           ),
                           const SizedBox(height: AppSpacing.s10),
                           SizedBox(
@@ -1194,7 +1270,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               const SizedBox(width: AppSpacing.s6),
                               Text(
                                 context.l10n.products_similarExist,
-                                style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.warningStrong, fontSize: AppFontSize.f13),
+                                style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.warningStrong, fontSize: _phone14(AppFontSize.f13)),
                               ),
                             ],
                           ),
@@ -1203,9 +1279,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
                                 child: Row(
                                   children: [
-                                    Expanded(child: Text(p.name, style: const TextStyle(fontSize: AppFontSize.f13))),
+                                    Expanded(child: Text(p.name, style: TextStyle(fontSize: _phone14(AppFontSize.f13)))),
                                     TextButton(
-                                      style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0)),
+                                      style: TextButton.styleFrom(
+                                        padding: EdgeInsets.zero,
+                                        minimumSize: _isPhone ? const Size(AppSizes.minTapTarget, AppSizes.minTapTarget) : const Size(0, 0)),
                                       onPressed: () async {
                                         Navigator.pop(context);
                                         await Future.delayed(AppTimeouts.productFormReopenDelay);
@@ -1214,7 +1292,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                                           showAddEditProductScreen(rootContext, product: p);
                                         }
                                       },
-                                      child: Text(context.l10n.products_open, style: const TextStyle(fontSize: AppFontSize.f12)),
+                                      child: Text(context.l10n.products_open, style: TextStyle(fontSize: _phone14(AppFontSize.f12))),
                                     ),
                                   ],
                                 ),
@@ -1226,7 +1304,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                 }),
               const SizedBox(height: AppSpacing.s12),
 
-              // Type & Category
+              // Type & Category (one above the other on a phone)
+              if (_isPhone) ...[
+                _typeField(enabled: !fieldsLocked),
+                const SizedBox(height: AppSpacing.s12),
+                _categoryField(enabled: !fieldsLocked),
+              ] else
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1258,43 +1341,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                         )
                       else if (_batches.length <= 1) ...[
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
-                                controller: _storeQtyController,
-                                decoration: _inputDecoration(context.l10n.products_storeQty, required: true),
-                                keyboardType: TextInputType.number,
-                                cursorColor: context.colors.primary,
-                                validator: (value) {
-                                  final parsed = int.tryParse((value ?? '').trim());
-                                  if (parsed == null) return context.l10n.products_invalid;
-                                  if (parsed < 0) return context.l10n.products_cannotBeNegative;
-                                  return null;
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.s12),
-                            Expanded(
-                              child: TextFormField(
-                                controller: _shelfQtyController,
-                                decoration: _inputDecoration(context.l10n.products_shelfQty, required: true),
-                                keyboardType: TextInputType.number,
-                                cursorColor: context.colors.primary,
-                                validator: (value) {
-                                  final parsed = int.tryParse((value ?? '').trim());
-                                  if (parsed == null) return context.l10n.products_invalid;
-                                  if (parsed < 0) return context.l10n.products_cannotBeNegative;
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+                        // PH7a: one above the other on a phone; side by side elsewhere.
+                        if (_isPhone)
+                          Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: _quantityFields())
+                        else
+                          Row(children: _quantityFields()),
                         const SizedBox(height: AppSpacing.s6),
                         Text(
                           context.l10n.products_quantityEditHint,
-                          style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
+                          style: TextStyle(fontSize: _phone12(AppFontSize.f11_5), color: context.colors.textMuted),
                         ),
                       ] else ...[
                         Container(
@@ -1308,7 +1363,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               Expanded(
                                 child: Text(
                                   context.l10n.products_manyBatchesHint(_batches.length),
-                                  style: const TextStyle(fontSize: AppFontSize.f12_5),
+                                  style: TextStyle(fontSize: _phone14(AppFontSize.f12_5)),
                                 ),
                               ),
                               TextButton(
@@ -1407,7 +1462,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     // setting, not something tied to a specific delivery/batch.
                     TextFormField(
                 controller: _minStockController,
-                decoration: _inputDecoration(context.l10n.products_minStockLevel).copyWith(
+                decoration: _inputDecoration(context.l10n.products_minStockLevel, keepErrorLine: true).copyWith(
                   hintText: context.l10n.products_minStockHint(Product.defaultLowStockThreshold),
                 ),
                 keyboardType: TextInputType.number,
@@ -1428,7 +1483,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     title: Text(context.l10n.products_trackInReports, style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold)),
                     subtitle: Text(
                       context.l10n.products_trackInReportsHint,
-                      style: const TextStyle(fontSize: AppFontSize.f12),
+                      style: TextStyle(fontSize: _phone14(AppFontSize.f12)),
                     ),
                     secondary: Icon(Icons.star_outline, color: context.colors.primary),
                     value: _isWatchlisted,
@@ -1487,7 +1542,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                   ],
                 );
 
-          return Form(
+          final form = Form(
             key: _formKey,
             child: Center(
               child: ConstrainedBox(
@@ -1501,10 +1556,100 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               ),
             ),
           );
+          return _isPhone ? closeKeyboardOnTapOutside(context, form) : form;
         },
       ),
-      bottomNavigationBar: _buildFooter(isEditing: isEditing, buttonText: buttonText),
+      bottomNavigationBar: _isPhone
+          ? FormActionBar(
+              primaryLabel: buttonText,
+              primaryIcon: isEditing ? Icons.update : Icons.save,
+              onPrimary: _saveProduct,
+              busy: _isSaving,
+              secondaryLabel: context.l10n.common_cancel,
+              onSecondary: () => Navigator.of(context).maybePop(),
+            )
+          : _buildFooter(isEditing: isEditing, buttonText: buttonText),
     );
+    if (!_isPhone) return scaffold;
+    _initialEntries ??= _entries;
+    return PhoneDiscardScope(kind: 'product', isDirty: () => _entries != _initialEntries, child: scaffold);
+  }
+
+  /// [field] alone on a phone (a column), in [wrap] elsewhere (a row).
+  Widget _phoneOr(Widget Function({Key? key, required Widget child, int flex}) wrap, Widget field) =>
+      _isPhone ? field : wrap(child: field);
+
+  /// The simple quantity editor's two fields (store and shelf).
+  List<Widget> _quantityFields() => [
+                            _phoneOr(Expanded.new, TextFormField(
+                                controller: _storeQtyController,
+                                decoration: _inputDecoration(context.l10n.products_storeQty, required: true, keepErrorLine: true),
+                                keyboardType: TextInputType.number,
+                                cursorColor: context.colors.primary,
+                                validator: (value) {
+                                  final parsed = int.tryParse((value ?? '').trim());
+                                  if (parsed == null) return context.l10n.products_invalid;
+                                  if (parsed < 0) return context.l10n.products_cannotBeNegative;
+                                  return null;
+                                },
+                              ),
+                            ),
+                            SizedBox(width: AppSpacing.s12, height: _isPhone ? AppSpacing.s4 : null),
+                            _phoneOr(Expanded.new, TextFormField(
+                                controller: _shelfQtyController,
+                                decoration: _inputDecoration(context.l10n.products_shelfQty, required: true, keepErrorLine: true),
+                                keyboardType: TextInputType.number,
+                                cursorColor: context.colors.primary,
+                                validator: (value) {
+                                  final parsed = int.tryParse((value ?? '').trim());
+                                  if (parsed == null) return context.l10n.products_invalid;
+                                  if (parsed < 0) return context.l10n.products_cannotBeNegative;
+                                  return null;
+                                },
+                              ),
+                            ),
+      ];
+
+  // ==================== PHONE (PH7a) ====================
+
+  /// A picker's field on a phone under its label (14).
+  Widget _phoneLabelled(String label, Widget field) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(label, style: TextStyle(fontSize: PhoneFormMetrics.label, color: context.colors.textSoft)),
+          const SizedBox(height: AppSpacing.s6),
+          field,
+        ],
+      );
+
+  Future<void> _pickTypePhone() async {
+    final picked = await showPickerSheet<String>(
+      context,
+      title: context.l10n.products_selectType,
+      selected: _type,
+      options: [for (final t in _types) PickerOption(t, context.l10n.productTypeLabel(t))],
+    );
+    if (picked != null) setState(() => _type = picked);
+  }
+
+  Future<void> _pickCategoryPhone() async {
+    final picked = await showPickerSheet<String>(
+      context,
+      title: context.l10n.transactions_selectCategoryTitle,
+      selected: _category.isEmpty ? null : _category,
+      options: [for (final c in _categories) PickerOption(c, context.l10n.productCategoryLabel(c))],
+    );
+    if (picked != null) setState(() => _category = picked);
+  }
+
+  Future<void> _pickUnitPhone() async {
+    final picked = await showPickerSheet<String>(
+      context,
+      title: context.l10n.reports_colUnit,
+      selected: _unit,
+      options: [for (final u in _units) PickerOption(u, context.l10n.productUnitLabel(u))],
+    );
+    if (picked != null) setState(() => _unit = picked);
   }
 
   /// Full-width footer pinned to the bottom of the modal, same as Add

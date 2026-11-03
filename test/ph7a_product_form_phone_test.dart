@@ -18,7 +18,7 @@ import 'helpers/ph7a_fakes.dart';
 import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 /// A page whose button opens the form, so leaving it can be seen.
 class _Host extends StatelessWidget {
@@ -139,6 +139,8 @@ void main() {
     var storage = await _form(tester);
     await tester.tap(find.text('Add photo'));
     await ph5Settle(tester);
+    // The fake bytes are no real picture: the preview cannot decode them.
+    while (tester.takeException() != null) {}
     expect(storage.uploads.single.path, startsWith('product_images/$testFacilityId/'));
     expect(storage.uploads.single.contentType, 'image/jpeg');
 
