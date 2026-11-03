@@ -115,8 +115,10 @@ Stream<List<Promotion>> streamAllPromotions() {
 /// so this just returns that one if it qualifies - V2's "several
 /// active, pick the best match" logic would live here without
 /// changing anything upstream of this function.
-Stream<Promotion?> streamApplicablePromotion({required String facilityId, required bool isExpiringSoon}) {
-  return FirebaseFirestore.instance
+Stream<Promotion?> streamApplicablePromotion(
+    {required String facilityId, required bool isExpiringSoon, FirebaseFirestore? firestore}) {
+  // [firestore]: tests pass a fake one (PH8a); the app's own otherwise.
+  return (firestore ?? FirebaseFirestore.instance)
       .collection(Collections.promotions)
       .where(Fields.active, isEqualTo: true)
       .snapshots()

@@ -90,8 +90,9 @@ Future<SubscriptionPlan?> loadPlanById(String id) async {
 /// own facility detail screen) should keep using
 /// loadSubscriptionPlans() instead - they don't need an open listener
 /// for a screen visited briefly.
-Stream<List<SubscriptionPlan>> streamSubscriptionPlans() {
-  return FirebaseFirestore.instance
+Stream<List<SubscriptionPlan>> streamSubscriptionPlans({FirebaseFirestore? firestore}) {
+  // [firestore]: tests pass a fake one (PH8a); the app's own otherwise.
+  return (firestore ?? FirebaseFirestore.instance)
       .collection(Collections.platformConfig)
       .doc('settings')
       .snapshots()

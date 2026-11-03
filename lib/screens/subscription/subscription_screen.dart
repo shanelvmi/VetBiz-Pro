@@ -46,13 +46,22 @@ Map<String, Object?> paymentClaimSubmitter({String? email, String? uid, String? 
 
 class SubscriptionScreen extends StatefulWidget {
   final bool isModal;
-  const SubscriptionScreen({super.key, this.isModal = false});
+
+  // Null: the app's own Firebase. Tests pass fakes (PH8a seams; no
+  // behaviour change).
+  final FirebaseFirestore? firestore;
+  final FirebaseAuth? auth;
+  final FirebaseStorage? storage;
+
+  const SubscriptionScreen({super.key, this.isModal = false, this.firestore, this.auth, this.storage});
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
   // The submit button's height: a size, not spacing (spec 4.3).
   static const double _submitButtonHeight = 48;
 
@@ -92,7 +101,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   @override
   void initState() {
     super.initState();
-    _plansSubscription = streamSubscriptionPlans().listen((plans) {
+    _plansSubscription = streamSubscriptionPlans(firestore: widget.firestore).listen((plans) {
       if (!mounted) return;
       setState(() {
         _plans = plans;
@@ -119,12 +128,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId != null) {
       _promoSubscription =
-          streamApplicablePromotion(facilityId: facilityId, isExpiringSoon: isExpiringSoon).listen((promo) {
+          streamApplicablePromotion(facilityId: facilityId, isExpiringSoon: isExpiringSoon, firestore: widget.firestore).listen((promo) {
         if (!mounted) return;
         setState(() => _activePromotion = promo);
       });
 
-      _pendingSubscription = FirebaseFirestore.instance
+      _pendingSubscription = _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.paymentSubmissions)
@@ -186,7 +195,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     try {
       String? proofUrl;
       if (_proofBytes != null) {
-        final ref = FirebaseStorage.instance.ref().child(
+        final ref = (widget.storage ?? FirebaseStorage.instance).ref().child(
             'payment_proofs/$facilityId/${DateTime.now().millisecondsSinceEpoch}.jpg');
         await ref.putData(_proofBytes!, UploadContentTypes.jpeg).timeout(
           AppTimeouts.proofUpload,
@@ -199,14 +208,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         proofUrl = await ref.getDownloadURL();
       }
 
-      final user = FirebaseAuth.instance.currentUser;
-      final fullName = await profileFullName(user?.uid);
+      final user = (widget.auth ?? FirebaseAuth.instance).currentUser;
+      final fullName = await profileFullName(user?.uid, firestore: widget.firestore);
       final effectivePrice = _effectivePrice(_selectedPlan);
       final appliedPromo = (_activePromotion != null && _activePromotion!.appliesToPlan(_selectedPlan.id))
           ? _activePromotion
           : null;
 
-      await FirebaseFirestore.instance
+      await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.paymentSubmissions)
@@ -546,7 +555,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               const SizedBox(height: AppSpacing.s24),
               Text(context.l10n.subscription_recentSubmissions, style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
               const SizedBox(height: AppSpacing.s8),
-              if (facilityId != null) _SubmissionHistory(facilityId: facilityId, primaryColor: colors.primary),
+              if (facilityId != null) _SubmissionHistory(facilityId: facilityId, primaryColor: colors.primary, firestore: _db),
             ],
           ),
         ),
@@ -638,8 +647,9 @@ Widget buildSubmissionCard(BuildContext context, Map<String, dynamic> data, AppC
 class _SubmissionHistory extends StatelessWidget {
   final String facilityId;
   final Color primaryColor;
+  final FirebaseFirestore firestore;
 
-  const _SubmissionHistory({required this.facilityId, required this.primaryColor});
+  const _SubmissionHistory({required this.facilityId, required this.primaryColor, required this.firestore});
 
   // Genuinely "recent" rather than the previous 10, which was already
   // most of a full history on its own - the full list is a tap away
@@ -650,7 +660,7 @@ class _SubmissionHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
+      stream: firestore
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.paymentSubmissions)
@@ -670,7 +680,7 @@ class _SubmissionHistory extends StatelessWidget {
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => SubscriptionHistoryScreen(facilityId: facilityId, primaryColor: primaryColor),
+                  builder: (_) => SubscriptionHistoryScreen(facilityId: facilityId, primaryColor: primaryColor, firestore: firestore),
                 ),
               ),
               style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero, foregroundColor: primaryColor),
