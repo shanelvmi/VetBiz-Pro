@@ -12,7 +12,7 @@ Batch PH7b (RUNBOOK2 ledger). The owner delegated the choices to the rules R1 to
 ## Shared pieces (`lib/widgets/phone_report/`, metrics in `PhoneReportMetrics`)
 
 - `PhoneReportTabBar` (R1): today's 10 (9 for assistants) tab values and labels in a scrollable `TabBar` (`tabAlignment: start`), labels 14 px, at least 48 high; the selected tab is scrolled into view (the scrollable bar's own behaviour, also after a swipe).
-- `PhoneReportRow` (R2): two lines, at least 56 high, 16 px sides. Line 1: the name (up to 2 lines, ellipsis) and the amount at the right (14 px, tabular figures). Line 2: short pieces in a `Wrap` (13 px) and an optional status chip (text and colour, `StatusChip`). A row that opens nothing has no ink; one that does is a 48 px target.
+- `PhoneReportRow` (R2): two lines, at least 56 high, 16 px sides. Line 1: the name (up to 2 lines, ellipsis) and the amount at the right (14 px, tabular figures). Line 2: short pieces in a `Wrap` (14 px, muted: in Kiswahili it is the longer line) and an optional status chip (text and colour, `StatusChip`). A row that opens nothing has no ink; one that does is a 48 px target.
 - `PhoneReportStat` (R4): a label and its value on one row (14 px, 48 high, the label wraps, the value never squeezed); `bold` for totals.
 - `PhoneReportSection`: a heading, an optional note, then its rows. With more than 5 rows (R3) it shows the first 5 and a "See all (N)" row that pushes `SeeAllPage`: the heading as the title, a back arrow, every row of the section in the same order. The tablet's report tabs have no search, so none is added.
 
