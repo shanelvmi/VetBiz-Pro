@@ -82,11 +82,22 @@ class AddEditProductScreen extends StatefulWidget {
   final ProductDestination? presetDestination; // 🆕 NEW: Auto-destination
   final bool isModal;
 
+  /// Null: the app's own Firestore, Storage, image picker and signed-in
+  /// person. Tests pass their own (PH7a seams, as the PH2a screens).
+  final FirebaseFirestore? firestore;
+  final FirebaseStorage? storage;
+  final ImagePicker? imagePicker;
+  final Future<Map<String, String>> Function()? currentUserInfo;
+
   const AddEditProductScreen({
     super.key,
     this.product,
     this.presetDestination, // 🆕 Pass from calling screen
     this.isModal = false,
+    this.firestore,
+    this.storage,
+    this.imagePicker,
+    this.currentUserInfo,
   });
 
   @override
@@ -124,7 +135,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   // after picking, while _imageUrl (the persisted download URL) only
   // updates once the upload actually finishes. When editing an
   // existing product, this starts as whatever photo it already has.
-  final ImagePicker _imagePicker = ImagePicker();
+  late final ImagePicker _imagePicker = widget.imagePicker ?? ImagePicker();
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
   Uint8List? _imageBytes;
   String? _imageUrl;
   bool _isUploadingImage = false;
@@ -159,7 +171,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       // uploader is actually a member of that facility, rather than a
       // flat path any authenticated user could write to.
       final storageRef =
-          FirebaseStorage.instance.ref().child('product_images/$facilityId/${const Uuid().v4()}.jpg');
+          (widget.storage ?? FirebaseStorage.instance).ref().child('product_images/$facilityId/${const Uuid().v4()}.jpg');
       await storageRef.putData(bytes, UploadContentTypes.jpeg);
       final downloadUrl = await storageRef.getDownloadURL();
       if (!mounted) return;
@@ -346,7 +358,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 
     setState(() => _loadingBatches = true);
     try {
-      final snap = await FirebaseFirestore.instance
+      final snap = await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.products)
@@ -895,7 +907,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         isWatchlisted: _isWatchlisted,
       );
 
-      final userInfo = await ActivityLogger.getCurrentUserInfo();
+      final userInfo = await (widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo)();
       final userId = userInfo[Fields.userId]!;
       final userName = userInfo['userName']!;
 
@@ -907,6 +919,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           userName: userName,
           actionType: ActivityType.products.key,
           description: "Added new product: ${newProduct.name}",
+          firestore: widget.firestore,
         );
       } else {
         await provider.updateProduct(newProduct);
@@ -943,7 +956,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               // Legacy product, no batch on file yet - a direct, simple
               // update, same as how this worked before batch tracking
               // existed.
-              await FirebaseFirestore.instance
+              await _db
                   .collection(Collections.facilities)
                   .doc(facilityId)
                   .collection(Collections.products)
@@ -955,7 +968,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             // when, before and after - rather than leaving the Daily
             // Report to infer that something happened from a leftover
             // number with no explanation attached to it.
-            await FirebaseFirestore.instance
+            await _db
                 .collection(Collections.facilities)
                 .doc(facilityId)
                 .collection(Collections.stockAdjustments)
@@ -992,7 +1005,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           final batchUpdate = <String, dynamic>{};
           if (batchNoWasFilledIn) batchUpdate['batchNo'] = newProduct.batchNo;
           if (expiryWasFilledIn) batchUpdate['expiry'] = Timestamp.fromDate(newProduct.expiry!);
-          await FirebaseFirestore.instance
+          await _db
               .collection(Collections.facilities)
               .doc(facilityId)
               .collection(Collections.products)
@@ -1008,6 +1021,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           userName: userName,
           actionType: ActivityType.products.key,
           description: "Updated product: ${newProduct.name}",
+          firestore: widget.firestore,
         );
       }
 
