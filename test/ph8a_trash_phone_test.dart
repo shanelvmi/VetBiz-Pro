@@ -20,8 +20,8 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'ph8a_settings_wide_test.dart' show ph8UserInfo, seedTrash;
 
-// True until the phone list exists.
-const _skip = true;
+// Was true until the phone list existed.
+const _skip = false;
 
 Future<Ph5App> _pump(WidgetTester tester,
         {Size size = const Size(390, 844), MatrixLook look = MatrixLook.light, bool admin = true, FirebaseFirestore? fs, bool seed = true}) =>
@@ -53,6 +53,8 @@ void main() {
     for (final type in ['Products', 'Clients', 'Sales', 'Transactions']) {
       expect(find.descendant(of: find.byType(RecordTile), matching: find.text(type)), findsOneWidget, reason: type);
     }
+    await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Sales'));
+    await ph5Settle(tester);
     await tester.tap(find.widgetWithText(ChoiceChip, 'Sales'));
     await ph5Settle(tester);
     expect(find.byType(RecordTile), findsOneWidget);

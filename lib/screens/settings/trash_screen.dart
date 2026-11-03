@@ -7,10 +7,12 @@ import '../../utils/activity_logger.dart';
 import '../../data/collections.dart';
 import '../../l10n/l10n.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_layout.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import 'trash_actions.dart';
+import 'trash_phone.dart';
 
 class TrashScreen extends StatefulWidget {
   // Null: the app's own Firestore and signed-in person. Tests pass fakes
@@ -46,6 +48,12 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     final firestore = widget.firestore ?? FirebaseFirestore.instance;
     final currentUserInfo = widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo;
+
+    // PH8a: a phone gets one list of every deleted record (the PH5a list
+    // pattern); tablets and computers keep the five tabs.
+    if (AppLayout.isPhone(context) && facilityId != null) {
+      return TrashPhoneList(facilityId: facilityId, firestore: firestore, currentUserInfo: currentUserInfo);
+    }
 
     return Scaffold(
       backgroundColor: context.colors.background,
