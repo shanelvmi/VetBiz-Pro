@@ -4027,5 +4027,7 @@
   "subscription_bannerEnds": "Subscription ends in {count, plural, =1{1 day} other{{count} days}}",
   "@subscription_bannerEnds": {"description":"The subscription banner on phones (PH8a), one short line: the last 7 days of a paid subscription.","placeholders":{"count":{"type":"int"}}},
   "subscription_bannerAdminManages": "Your admin manages the subscription.",
-  "@subscription_bannerAdminManages": {"description":"The subscription banner on phones (PH8a): an assistant's Details dialog, under the full sentence."}
+  "@subscription_bannerAdminManages": {"description":"The subscription banner on phones (PH8a): an assistant's Details dialog, under the full sentence."},
+  "trash_rowSemantics": "{name}, {type}, {deleted}",
+  "@trash_rowSemantics": {"description":"Trash on a phone (PH8a): what a screen reader says for a row: the record, its type and who deleted it when.","placeholders":{"name":{"type":"String"},"type":{"type":"String"},"deleted":{"type":"String"}}}
 }

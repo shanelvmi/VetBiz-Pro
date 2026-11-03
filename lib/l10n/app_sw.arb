@@ -4027,5 +4027,7 @@
   "subscription_bannerEnds": "Usajili unakwisha baada ya {count, plural, =1{siku 1} other{siku {count}}}",
   "@subscription_bannerEnds": {"x-review":"draft"},
   "subscription_bannerAdminManages": "Msimamizi wako ndiye anayesimamia usajili.",
-  "@subscription_bannerAdminManages": {"x-review":"draft"}
+  "@subscription_bannerAdminManages": {"x-review":"draft"},
+  "trash_rowSemantics": "{name}, {type}, {deleted}",
+  "@trash_rowSemantics": {"x-review":"draft"}
 }
