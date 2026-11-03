@@ -7310,4 +7310,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String trash_rowSemantics(String name, String type, String deleted) {
     return '$name, $type, $deleted';
   }
+
+  @override
+  String activity_rowSemantics(
+    String who,
+    String action,
+    String type,
+    String time,
+  ) {
+    return '$who, $action, $type, $time';
+  }
 }

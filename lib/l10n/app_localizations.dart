@@ -12223,6 +12223,17 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{name}, {type}, {deleted}'**
   String trash_rowSemantics(String name, String type, String deleted);
+
+  /// The Activity log on a phone (PH8a): what a screen reader says for a row: who, what they did, its type and the time.
+  ///
+  /// In en, this message translates to:
+  /// **'{who}, {action}, {type}, {time}'**
+  String activity_rowSemantics(
+    String who,
+    String action,
+    String type,
+    String time,
+  );
 }
 
 class _AppLocalizationsDelegate
