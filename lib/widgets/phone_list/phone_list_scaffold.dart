@@ -192,7 +192,8 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
                   child: Row(children: [
                     Icon(widget.menu[i].icon, color: colors.textSecondary),
                     const SizedBox(width: PhoneListMetrics.leadingGap),
-                    Text(widget.menu[i].label),
+                    // PH7a: a long label (Products' smart defaults) wraps.
+                    Flexible(child: Text(widget.menu[i].label)),
                   ]),
                 ),
             ],

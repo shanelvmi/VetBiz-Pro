@@ -620,6 +620,16 @@ class PhoneListMetrics {
 
   /// R7 the details page's labels: at least 12 on a phone (S3).
   static const double detailLabel = AppFontSize.f12;
+
+  /// PH7a: a product's photo as a row's leading (a rounded square, not
+  /// a face's circle), and on its details page: the photo's height, the
+  /// name, the facts' values and text, the gap between the page's parts.
+  static const double productThumbRadius = AppRadius.r8;
+  static const double detailsImageHeight = 180;
+  static const double detailsTitle = AppFontSize.f18;
+  static const double detailsValue = AppFontSize.f16;
+  static const double detailsText = AppFontSize.f14;
+  static const double detailsGap = AppSpacing.s12;
 }
 
 /// PH6 (docs/design/phone_foundations.md S6): the money forms on a phone.

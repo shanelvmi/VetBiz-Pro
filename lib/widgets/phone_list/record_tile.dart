@@ -142,7 +142,8 @@ class RecordTile extends StatelessWidget {
                             ),
                             if (status != null) ...[
                               const SizedBox(width: PhoneListMetrics.partGap),
-                              StatusChip(status: status!),
+                              // PH7a: a long label (Kiswahili at 360) wraps in the chip.
+                              Flexible(child: StatusChip(status: status!)),
                             ],
                           ],
                         ),
