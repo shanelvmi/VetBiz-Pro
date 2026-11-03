@@ -660,6 +660,9 @@ class PhoneFormMetrics {
   static const double body = AppFontSize.f14;
   static const double error = AppFontSize.f12;
 
+  /// PH8a: the time wheels in a sheet (Business hours' closing times).
+  static const double timeWheelHeight = 216;
+
   /// Picker sheets: one option a row, 56 high, a check on the chosen one.
   static const double optionRow = 56;
   static const double optionCheck = AppIconSize.i20;

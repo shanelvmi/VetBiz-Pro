@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -9,6 +10,9 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/app_sheet.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
 
 class BusinessHoursScreen extends StatefulWidget {
   // Null: the app's own Firestore. Tests pass a fake one (PH8a seam; no
@@ -23,6 +27,10 @@ class BusinessHoursScreen extends StatefulWidget {
 
 class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
   FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
+  // PH8a: on a phone 14 px text, 48 px rows, the closing time chosen in a
+  // sheet and Save in the PH6 action bar; tablets and computers keep today's.
+  bool get _phone => AppLayout.isPhone(context);
 
   TimeOfDay _weekdayTime = const TimeOfDay(hour: 18, minute: 0);
   bool _weekdayClosed = false;
@@ -68,8 +76,10 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
   String _formatTimeForStorage(TimeOfDay time) =>
       '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
 
-  Future<void> _pickTime(TimeOfDay current, ValueChanged<TimeOfDay> onPicked) async {
-    final picked = await showTimePicker(context: context, initialTime: current);
+  Future<void> _pickTime(TimeOfDay current, ValueChanged<TimeOfDay> onPicked, {required String title}) async {
+    final picked = _phone
+        ? await showAppSheet<TimeOfDay>(context, title: title, builder: (context) => _TimeSheet(initial: current))
+        : await showTimePicker(context: context, initialTime: current);
     if (picked != null) onPicked(picked);
   }
 
@@ -120,14 +130,14 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
           children: [
             Text(
               context.l10n.hours_intro,
-              style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted),
+              style: TextStyle(fontSize: _phone ? AppFontSize.f14 : AppFontSize.f13, color: context.colors.textMuted),
             ),
             const SizedBox(height: AppSpacing.s20),
             _dayGroupCard(
               title: context.l10n.hours_weekdays,
               time: _weekdayTime,
               closed: _weekdayClosed,
-              onTimeTap: () => _pickTime(_weekdayTime, (t) => setState(() => _weekdayTime = t)),
+              onTimeTap: () => _pickTime(_weekdayTime, (t) => setState(() => _weekdayTime = t), title: context.l10n.hours_weekdays),
               onClosedChanged: (v) => setState(() => _weekdayClosed = v),
             ),
             const SizedBox(height: AppSpacing.s12),
@@ -135,7 +145,7 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
               title: context.l10n.hours_saturday,
               time: _saturdayTime,
               closed: _saturdayClosed,
-              onTimeTap: () => _pickTime(_saturdayTime, (t) => setState(() => _saturdayTime = t)),
+              onTimeTap: () => _pickTime(_saturdayTime, (t) => setState(() => _saturdayTime = t), title: context.l10n.hours_saturday),
               onClosedChanged: (v) => setState(() => _saturdayClosed = v),
             ),
             const SizedBox(height: AppSpacing.s12),
@@ -143,7 +153,7 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
               title: context.l10n.hours_sunday,
               time: _sundayTime,
               closed: _sundayClosed,
-              onTimeTap: () => _pickTime(_sundayTime, (t) => setState(() => _sundayTime = t)),
+              onTimeTap: () => _pickTime(_sundayTime, (t) => setState(() => _sundayTime = t), title: context.l10n.hours_sunday),
               onClosedChanged: (v) => setState(() => _sundayClosed = v),
             ),
             const SizedBox(height: AppSpacing.s20),
@@ -178,6 +188,8 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
                 ],
               ),
             ),
+            // On a phone Save is in the action bar below.
+            if (!_phone) ...[
             const SizedBox(height: AppSpacing.s24),
             SizedBox(
               width: double.infinity,
@@ -195,11 +207,15 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
                     : Text(context.l10n.hours_save, style: const TextStyle(fontWeight: AppFontWeight.bold)),
               ),
             ),
+            ],
           ],
         ),
       ),
       ),
       ),
+      bottomNavigationBar: _phone
+          ? FormActionBar(primaryLabel: context.l10n.hours_save, onPrimary: _isSaving ? null : _save, busy: _isSaving)
+          : null,
     );
   }
 
@@ -210,6 +226,7 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
     required VoidCallback onTimeTap,
     required ValueChanged<bool> onClosedChanged,
   }) {
+    if (_phone) return _phoneDayGroupCard(title: title, time: time, closed: closed, onTimeTap: onTimeTap, onClosedChanged: onClosedChanged);
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
@@ -245,6 +262,104 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
               padding: const EdgeInsets.only(top: AppSpacing.s4),
               child: Text(context.l10n.hours_noClosingTime, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint)),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+extension on _BusinessHoursScreenState {
+  /// PH8a: a day on a phone: its name, a 48 px "Closed all day" row, then the
+  /// closing time as a full-width 48 px button (or why there is none).
+  Widget _phoneDayGroupCard({
+    required String title,
+    required TimeOfDay time,
+    required bool closed,
+    required VoidCallback onTimeTap,
+    required ValueChanged<bool> onClosedChanged,
+  }) {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s8, AppSpacing.s12),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r12),
+        border: Border.all(color: colors.textHint.withValues(alpha: AppAlpha.a30)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: PhoneFormMetrics.body)),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(context.l10n.hours_closedAllDay,
+                      style: TextStyle(fontSize: PhoneFormMetrics.body, color: colors.textSoft)),
+                ),
+                Switch(value: closed, activeThumbColor: colors.primary, onChanged: onClosedChanged),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.s8),
+            child: closed
+                ? Text(context.l10n.hours_noClosingTime, style: TextStyle(fontSize: PhoneFormMetrics.body, color: colors.textHint))
+                : OutlinedButton.icon(
+                    onPressed: onTimeTap,
+                    icon: Icon(Icons.access_time, size: AppIconSize.i18, color: colors.primary),
+                    label: Text(context.l10n.hours_closesAt(time.format(context)),
+                        style: TextStyle(color: colors.primary, fontSize: PhoneFormMetrics.body)),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(kMinInteractiveDimension),
+                      side: BorderSide(color: colors.primary.withValues(alpha: AppAlpha.a40)),
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// PH8a: a closing time chosen on a phone, in a sheet: the wheels and Done.
+/// Pops the time; closing the sheet keeps the old one.
+class _TimeSheet extends StatefulWidget {
+  final TimeOfDay initial;
+
+  const _TimeSheet({required this.initial});
+
+  @override
+  State<_TimeSheet> createState() => _TimeSheetState();
+}
+
+class _TimeSheetState extends State<_TimeSheet> {
+  late TimeOfDay _time = widget.initial;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.s16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: PhoneFormMetrics.timeWheelHeight,
+            child: CupertinoDatePicker(
+              mode: CupertinoDatePickerMode.time,
+              use24hFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+              initialDateTime: DateTime(2000, 1, 1, widget.initial.hour, widget.initial.minute),
+              onDateTimeChanged: (d) => _time = TimeOfDay(hour: d.hour, minute: d.minute),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, _time),
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(PhoneFormMetrics.buttonHeight)),
+            child: Text(context.l10n.common_done),
+          ),
         ],
       ),
     );

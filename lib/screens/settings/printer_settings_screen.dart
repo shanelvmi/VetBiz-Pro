@@ -7,6 +7,8 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/picker_sheet.dart';
 
 class PrinterSettingsScreen extends StatefulWidget {
   const PrinterSettingsScreen({super.key});
@@ -16,6 +18,24 @@ class PrinterSettingsScreen extends StatefulWidget {
 }
 
 class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
+  // PH8a: on a phone the paper size is chosen in a sheet and long labels
+  // wrap; tablets and computers keep today's page.
+  bool get _phone => AppLayout.isPhone(context);
+
+  Future<void> _setPaperSize(String value) async {
+    await _printerService.setPaperSize(value);
+    if (mounted) setState(() => _paperSize = value);
+  }
+
+  Future<void> _pickPaperSize() async {
+    final value = await showPickerSheet<String>(
+      context,
+      title: context.l10n.printer_paperSize,
+      selected: _paperSize,
+      options: [for (final w in const ['58', '80']) PickerOption(w, context.l10n.printer_paperWidth(w))],
+    );
+    if (value != null) await _setPaperSize(value);
+  }
 
   final ReceiptPrinterService _printerService = ReceiptPrinterService();
 
@@ -149,6 +169,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     }
   }
 
+  Widget _expandOnPhone(Widget child) => _phone ? Expanded(child: child) : child;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -216,7 +238,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(context.l10n.printer_paired, style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.primary)),
+                  _expandOnPhone(
+                      Text(context.l10n.printer_paired, style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.primary))),
                   TextButton.icon(
                     onPressed: _isLoadingDevices ? null : _refreshPairedDevices,
                     icon: _isLoadingDevices
@@ -274,6 +297,14 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                 elevation: AppElevation.e2,
                 child: Column(
                   children: [
+                    if (_phone)
+                      ListTile(
+                        title: Text(context.l10n.printer_paperSize),
+                        subtitle: Text(context.l10n.printer_paperWidth(_paperSize)),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: _pickPaperSize,
+                      )
+                    else
                     ListTile(
                       title: Text(context.l10n.printer_paperSize),
                       trailing: DropdownButton<String>(
@@ -284,8 +315,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                         ],
                         onChanged: (value) async {
                           if (value == null) return;
-                          await _printerService.setPaperSize(value);
-                          if (mounted) setState(() => _paperSize = value);
+                          await _setPaperSize(value);
                         },
                       ),
                     ),

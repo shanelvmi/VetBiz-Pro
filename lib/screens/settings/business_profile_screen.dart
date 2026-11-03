@@ -16,6 +16,8 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/form_action_bar.dart';
 
 /// A dedicated home for facility-level branding (currently just the
 /// logo) - built for discoverability, since the drawer's own
@@ -38,6 +40,13 @@ class BusinessProfileScreen extends StatefulWidget {
 }
 
 class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
+  // PH8a: on a phone the page scrolls (it was a Column that a short or
+  // turned phone cut off) and the logo action sits in the PH6 action bar.
+  // The upload is saved at once, as before, so nothing waits to be lost on
+  // Back. Tablets and computers keep today's page.
+  bool get _phone => AppLayout.isPhone(context);
+
+  Widget _scrollOnPhone(Widget child) => _phone ? SingleChildScrollView(child: child) : child;
 
   final ImagePicker _picker = ImagePicker();
   Uint8List? _pendingLogoBytes;
@@ -116,7 +125,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,
       ),
-      body: Center(
+      body: _scrollOnPhone(Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
           child: Padding(
@@ -176,6 +185,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13),
                 ),
+                if (!_phone) ...[
                 const SizedBox(height: AppSpacing.s24),
                 ElevatedButton.icon(
                   onPressed: _isUploading ? null : _changeLogo,
@@ -190,11 +200,20 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                     padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s12)),
                   ),
                 ),
+                ],
               ],
             ),
           ),
         ),
-      ),
+      )),
+      bottomNavigationBar: _phone
+          ? FormActionBar(
+              primaryLabel: logoUrl != null ? context.l10n.profile_changeLogo : context.l10n.profile_uploadLogo,
+              primaryIcon: Icons.upload,
+              onPrimary: _isUploading ? null : _changeLogo,
+              busy: _isUploading,
+            )
+          : null,
     );
   }
 }
