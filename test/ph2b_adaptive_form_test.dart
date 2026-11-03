@@ -173,7 +173,10 @@ void main() {
         final observer = _Observer();
         final (route, future) = await _open(tester, h, window, observer);
 
-        if (window.width < 900) {
+        if (h.name == 'View Batches' && window.width < 600) {
+          // PH7a: on a phone View Batches is a bottom sheet.
+          expect(route, isA<ModalBottomSheetRoute<dynamic>>(), reason: h.name);
+        } else if (window.width < 900) {
           // A full page with its own back arrow.
           expect(route, isA<MaterialPageRoute<dynamic>>(), reason: h.name);
         } else {

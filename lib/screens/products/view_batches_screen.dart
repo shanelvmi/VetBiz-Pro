@@ -17,6 +17,9 @@ import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
+import '../../widgets/app_safe_area.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_form/sheet_or_dialog.dart';
 
 /// Full management view for one product's stock - every batch on file,
 /// with a way to correct or top up any of them directly, plus a clear
@@ -37,7 +40,12 @@ class ViewBatchesScreen extends StatefulWidget {
     required this.product,
     this.isModal = false,
     this.moveToStockAction = MoveToStockAction.moveToStock,
+    this.asSheet = false,
   });
+
+  /// PH7a: drawn as a phone's bottom sheet (showViewBatchesScreen on a
+  /// phone): no app bar, Add New Batch at its foot.
+  final bool asSheet;
 
   @override
   State<ViewBatchesScreen> createState() => _ViewBatchesScreenState();
@@ -55,6 +63,12 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
   // whenever anything caused a rebuild.
   late final Stream<List<ProductBatch>> _batchesStream;
 
+  /// PH7a: on a phone the sheet's and its dialogs' text is at least 14
+  /// (the badge at least 12); tablets keep theirs.
+  bool get _isPhone => AppLayout.isPhone(context);
+  double _phone14(double size) => _isPhone && size < PhoneFormMetrics.body ? PhoneFormMetrics.body : size;
+  double _phone12(double size) => _isPhone && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
+
   @override
   void initState() {
     super.initState();
@@ -71,12 +85,11 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
     bool isSaving = false;
     String? errorText;
 
-    await showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(batch.batchNo?.isNotEmpty == true ? context.l10n.store_batchName(batch.batchNo!) : context.l10n.batch_unlabeledTitle),
-          content: SingleChildScrollView(
+    // PH7a: a bottom sheet on a phone, today's dialog elsewhere.
+    await showSheetOrDialog<void>(
+      context,
+      title: Text(batch.batchNo?.isNotEmpty == true ? context.l10n.store_batchName(batch.batchNo!) : context.l10n.batch_unlabeledTitle),
+      body: (context, setDialogState) => SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -93,7 +106,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                         child: RadioListTile<String>(
                           contentPadding: EdgeInsets.zero,
                           dense: true,
-                          title: Text(context.l10n.batch_modeAdd, style: const TextStyle(fontSize: AppFontSize.f13)),
+                          title: Text(context.l10n.batch_modeAdd, style: TextStyle(fontSize: _phone14(AppFontSize.f13))),
                           value: 'add',
                         ),
                       ),
@@ -101,7 +114,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                         child: RadioListTile<String>(
                           contentPadding: EdgeInsets.zero,
                           dense: true,
-                          title: Text(context.l10n.batch_modeSet, style: const TextStyle(fontSize: AppFontSize.f13)),
+                          title: Text(context.l10n.batch_modeSet, style: TextStyle(fontSize: _phone14(AppFontSize.f13))),
                           value: 'set',
                         ),
                       ),
@@ -150,7 +163,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                         Icon(Icons.error_outline, color: context.colors.dangerAccent, size: AppIconSize.i16),
                         const SizedBox(width: AppSpacing.s6),
                         Expanded(
-                          child: Text(errorText!, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12)),
+                          child: Text(errorText!, style: TextStyle(color: context.colors.dangerAccent, fontSize: _phone14(AppFontSize.f12))),
                         ),
                       ],
                     ),
@@ -159,7 +172,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
               ],
             ),
           ),
-          actions: [
+      actions: (context, setDialogState) => [
             TextButton(
               onPressed: isSaving ? null : () => Navigator.pop(context),
               style: ButtonStyle(
@@ -226,8 +239,6 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                   : Text(context.l10n.common_save),
             ),
           ],
-        ),
-      ),
     );
   }
 
@@ -235,12 +246,11 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
     bool isDeleting = false;
     String? errorText;
 
-    await showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(isExpired ? context.l10n.batch_deleteExpiredTitle : context.l10n.batch_deleteTitle),
-          content: Column(
+    // PH7a: a bottom sheet on a phone, today's dialog elsewhere.
+    await showSheetOrDialog<void>(
+      context,
+      title: Text(isExpired ? context.l10n.batch_deleteExpiredTitle : context.l10n.batch_deleteTitle),
+      body: (context, setDialogState) => Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -260,7 +270,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                       Expanded(
                         child: Text(
                           context.l10n.batch_notExpiredWarning,
-                          style: TextStyle(color: context.colors.warning, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold),
+                          style: TextStyle(color: context.colors.warning, fontSize: _phone14(AppFontSize.f12), fontWeight: AppFontWeight.semibold),
                         ),
                       ),
                     ],
@@ -273,7 +283,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                   batch.stockQty,
                   batch.sellableQty,
                 ),
-                style: const TextStyle(fontSize: AppFontSize.f13),
+                style: TextStyle(fontSize: _phone14(AppFontSize.f13)),
               ),
               if (errorText != null) ...[
                 const SizedBox(height: AppSpacing.s10),
@@ -289,7 +299,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                       Icon(Icons.error_outline, color: context.colors.dangerAccent, size: AppIconSize.i16),
                       const SizedBox(width: AppSpacing.s6),
                       Expanded(
-                        child: Text(errorText!, style: TextStyle(color: context.colors.dangerAccent, fontSize: AppFontSize.f12)),
+                        child: Text(errorText!, style: TextStyle(color: context.colors.dangerAccent, fontSize: _phone14(AppFontSize.f12))),
                       ),
                     ],
                   ),
@@ -297,7 +307,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
               ],
             ],
           ),
-          actions: [
+      actions: (context, setDialogState) => [
             TextButton(
               onPressed: isDeleting ? null : () => Navigator.pop(context),
               style: ButtonStyle(
@@ -346,50 +356,12 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                   : Text(context.l10n.common_delete),
             ),
           ],
-        ),
-      ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final facilityId =
-        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
-    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.product.name),
-        centerTitle: true,
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
-        automaticallyImplyLeading: !widget.isModal,
-        leading: widget.isModal
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                tooltip: context.l10n.common_close,
-                onPressed: () => Navigator.of(context).pop(),
-              )
-            : null,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showAddBatchScreen(context, product: widget.product);
-        },
-        backgroundColor: context.colors.primary,
-        foregroundColor: context.colors.onPrimary,
-        hoverColor: context.colors.accent,
-        icon: const Icon(Icons.add),
-        label: Text(context.l10n.products_addNewBatch),
-      ),
-      body: facilityId == null
-          ? Center(child: Text(context.l10n.common_noFacilityDot))
-          : Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 700),
-                child: ListView(
-                  padding: const EdgeInsets.all(AppSpacing.s16),
-                  children: [
+  /// The product's card, the heading and the batches: the page's list and
+  /// the phone's sheet.
+  List<Widget> _content(String facilityId, bool isAdmin) => [
                     Card(
                       child: ListTile(
                         title: Text(widget.product.name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
@@ -477,7 +449,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                               context.l10n.batch_outOfStock,
                                               style: TextStyle(
                                                 color: context.colors.danger,
-                                                fontSize: AppFontSize.f11,
+                                                fontSize: _phone12(AppFontSize.f11),
                                                 fontWeight: AppFontWeight.semibold,
                                               ),
                                             ),
@@ -539,11 +511,95 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                         );
                       },
                     ),
+      ];
+
+  @override
+  Widget build(BuildContext context) {
+    final facilityId =
+        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
+
+    if (widget.asSheet) return _buildSheet(facilityId, isAdmin);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.product.name),
+        centerTitle: true,
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
+        automaticallyImplyLeading: !widget.isModal,
+        leading: widget.isModal
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: context.l10n.common_close,
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          showAddBatchScreen(context, product: widget.product);
+        },
+        backgroundColor: context.colors.primary,
+        foregroundColor: context.colors.onPrimary,
+        hoverColor: context.colors.accent,
+        icon: const Icon(Icons.add),
+        label: Text(context.l10n.products_addNewBatch),
+      ),
+      body: facilityId == null
+          ? Center(child: Text(context.l10n.common_noFacilityDot))
+          : Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 700),
+                child: ListView(
+                  padding: const EdgeInsets.all(AppSpacing.s16),
+                  children: [
+                    ..._content(facilityId, isAdmin),
                     const SizedBox(height: _fabClearance),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  // ==================== PHONE (PH7a) ====================
+
+  /// A phone's bottom sheet: the same content, Add New Batch at the foot
+  /// (the page's floating button), clear of the home indicator.
+  Widget _buildSheet(String? facilityId, bool isAdmin) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (facilityId == null)
+          Padding(
+            padding: const EdgeInsets.all(PhoneListMetrics.pagePadding),
+            child: Text(context.l10n.common_noFacilityDot),
+          )
+        else
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(horizontal: PhoneListMetrics.pagePadding),
+              children: _content(facilityId, isAdmin),
+            ),
+          ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            PhoneListMetrics.pagePadding,
+            PhoneListMetrics.headerGap,
+            PhoneListMetrics.pagePadding,
+            PhoneListMetrics.pagePadding + AppSafeArea.bottomOf(context),
+          ),
+          child: FilledButton.icon(
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(AppSizes.minTapTarget)),
+            onPressed: () => showAddBatchScreen(context, product: widget.product),
+            icon: const Icon(Icons.add),
+            label: Text(context.l10n.products_addNewBatch),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -562,6 +618,17 @@ Future<void> showViewBatchesScreen(
   required Product product,
   MoveToStockAction moveToStockAction = MoveToStockAction.moveToStock,
 }) async {
+  // PH7a: a bottom sheet on a phone.
+  if (AppLayout.isPhone(context)) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r16))),
+      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * AppSheetMetrics.sheetMaxHeightFactor),
+      builder: (_) => ViewBatchesScreen(product: product, moveToStockAction: moveToStockAction, asSheet: true),
+    );
+  }
   await showAdaptiveForm(
     context,
     barrierLabel: context.l10n.products_viewBatches,
