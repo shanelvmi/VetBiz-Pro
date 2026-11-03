@@ -32,6 +32,9 @@ class CountingFirestore implements FirebaseFirestore {
   /// list's error state).
   bool failListens = false;
 
+  /// PH7b: while set, a document get fails (View Reports' error state).
+  bool failDocGets = false;
+
   void resetCounts() {
     reads = 0;
     gets = 0;
@@ -130,6 +133,19 @@ class _Query implements Query<Map<String, dynamic>> {
   @override
   Query<Map<String, dynamic>> limit(int limit) => _Query(db, q.limit(limit));
 
+  // PH7b: Past Reports pages with a cursor and counts with an aggregate (one
+  // get, billed as one read).
+  @override
+  Query<Map<String, dynamic>> startAfterDocument(DocumentSnapshot documentSnapshot) =>
+      _Query(db, q.startAfterDocument(documentSnapshot));
+
+  @override
+  AggregateQuery count() {
+    db.gets++;
+    db.reads++;
+    return q.count();
+  }
+
   @override
   Future<QuerySnapshot<Map<String, dynamic>>> get([GetOptions? options]) => db._get(q);
 
@@ -172,6 +188,7 @@ class _Doc implements DocumentReference<Map<String, dynamic>> {
   @override
   Future<DocumentSnapshot<Map<String, dynamic>>> get([GetOptions? options]) async {
     db.gets++;
+    if (db.failDocGets) throw FirebaseException(plugin: 'cloud_firestore', code: 'unavailable');
     final snap = await d.get();
     db.reads++;
     return snap;
