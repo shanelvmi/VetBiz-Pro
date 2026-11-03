@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -18,12 +19,12 @@ import '../../widgets/app_sheet.dart';
 /// like" preview: same structure and flow, but a fast, native render
 /// rather than an actual generated PDF document. Follows the same
 /// modal convention already established by showAddSaleScreen().
-Future<void> showReportFullViewScreen(BuildContext context, DailyReport report) async {
+Future<void> showReportFullViewScreen(BuildContext context, DailyReport report, {FirebaseFirestore? firestore}) async {
   await showAdaptiveForm(
     context,
     barrierLabel: context.l10n.reports_fullReport,
     size: AdaptiveFormSize.reportFull,
-    builder: (isModal) => ReportFullViewScreen(report: report, isModal: isModal),
+    builder: (isModal) => ReportFullViewScreen(report: report, isModal: isModal, firestore: firestore),
   );
 }
 
@@ -31,7 +32,10 @@ class ReportFullViewScreen extends StatelessWidget {
   final DailyReport report;
   final bool isModal;
 
-  const ReportFullViewScreen({super.key, required this.report, required this.isModal});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH7b).
+  final FirebaseFirestore? firestore;
+
+  const ReportFullViewScreen({super.key, required this.report, required this.isModal, this.firestore});
 
 
 
@@ -76,6 +80,7 @@ class ReportFullViewScreen extends StatelessWidget {
                       if (Provider.of<UserRoleProvider>(context, listen: false).isAdmin && report.activityLogIncluded)
                         ReportActivityLogLoader(
                           report: report,
+                          firestore: firestore,
                           builder: (context, snapshot) {
                             final entries = snapshot.data;
                             if (entries == null || entries.isEmpty) return const SizedBox.shrink();

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/daily_report.dart';
@@ -19,7 +20,10 @@ class ReportActivityLogLoader extends StatefulWidget {
   /// Tests pass their own read; the app reads through DailyReportService.
   final Future<List<ActivityLogEntry>?> Function(DailyReport report)? load;
 
-  const ReportActivityLogLoader({super.key, required this.report, required this.builder, this.load});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH7b).
+  final FirebaseFirestore? firestore;
+
+  const ReportActivityLogLoader({super.key, required this.report, required this.builder, this.load, this.firestore});
 
   @override
   State<ReportActivityLogLoader> createState() => _ReportActivityLogLoaderState();
@@ -32,7 +36,7 @@ class _ReportActivityLogLoaderState extends State<ReportActivityLogLoader> {
   void initState() {
     super.initState();
     final load = widget.load ??
-        (DailyReport r) => DailyReportService().getActivityLog(facilityId: r.facilityId, reportId: r.id);
+        (DailyReport r) => DailyReportService(firestore: widget.firestore).getActivityLog(facilityId: r.facilityId, reportId: r.id);
     _future = load(widget.report);
   }
 

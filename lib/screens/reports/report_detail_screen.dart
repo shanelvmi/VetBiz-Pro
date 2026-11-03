@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -19,7 +20,10 @@ import '../../theme/theme_context.dart';
 class ReportDetailScreen extends StatelessWidget {
   final DailyReport report;
 
-  const ReportDetailScreen({super.key, required this.report});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH7b).
+  final FirebaseFirestore? firestore;
+
+  const ReportDetailScreen({super.key, required this.report, this.firestore});
 
 
   Future<void> _printOrDownloadPdf(BuildContext context) async {
@@ -66,7 +70,7 @@ class ReportDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ReportTabbedContent(report: report),
+      body: ReportTabbedContent(report: report, firestore: firestore),
     );
   }
 }

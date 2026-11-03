@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,7 +23,11 @@ import 'report_activity_log_loader.dart';
 class ReportTabbedContent extends StatefulWidget {
   final DailyReport report;
 
-  const ReportTabbedContent({super.key, required this.report});
+  /// Null: the app's own Firestore (the Activity Log tab's read). Tests
+  /// pass an in-memory one (PH7b).
+  final FirebaseFirestore? firestore;
+
+  const ReportTabbedContent({super.key, required this.report, this.firestore});
 
   @override
   State<ReportTabbedContent> createState() => _ReportTabbedContentState();
@@ -883,6 +888,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               // built for admins only.
               ReportActivityLogLoader(
                 report: report,
+                firestore: widget.firestore,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState != ConnectionState.done) {
                     return const Padding(

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/sentence_capitalization_formatter.dart';
@@ -20,7 +21,10 @@ class ReportReviewScreen extends StatefulWidget {
   final DailyReport report;
   final bool isModal;
 
-  const ReportReviewScreen({super.key, required this.report, this.isModal = false});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (PH7b).
+  final FirebaseFirestore? firestore;
+
+  const ReportReviewScreen({super.key, required this.report, this.isModal = false, this.firestore});
 
   @override
   State<ReportReviewScreen> createState() => _ReportReviewScreenState();
@@ -28,7 +32,7 @@ class ReportReviewScreen extends StatefulWidget {
 
 class _ReportReviewScreenState extends State<ReportReviewScreen> {
 
-  final DailyReportService _reportService = DailyReportService();
+  late final DailyReportService _reportService = DailyReportService(firestore: widget.firestore);
 
   late List<ProductMovementEntry> _watchlisted;
   final Map<String, TextEditingController> _physicalCountControllers = {};
@@ -624,11 +628,11 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
 /// Opens Review & Submit as a modal, matching the convention already
 /// established by showAddSaleScreen/showReportFullViewScreen - a
 /// centered dialog on wide screens, a full-screen push on narrow ones.
-Future<DailyReport?> showReportReviewScreen(BuildContext context, DailyReport report) async {
+Future<DailyReport?> showReportReviewScreen(BuildContext context, DailyReport report, {FirebaseFirestore? firestore}) async {
   return showAdaptiveForm<DailyReport>(
     context,
     barrierLabel: context.l10n.reports_reviewSubmit,
     size: AdaptiveFormSize.reportReview,
-    builder: (isModal) => ReportReviewScreen(report: report, isModal: isModal),
+    builder: (isModal) => ReportReviewScreen(report: report, isModal: isModal, firestore: firestore),
   );
 }

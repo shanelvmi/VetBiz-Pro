@@ -363,9 +363,10 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
         borderRadius: BorderRadius.circular(AppRadius.r12),
         onTap: () async {
           if (isDraft) {
-            await showReportReviewScreen(context, report);
+            await showReportReviewScreen(context, report, firestore: widget.firestore);
           } else {
-            await Navigator.push(context, MaterialPageRoute(builder: (_) => ReportDetailScreen(report: report)));
+            await Navigator.push(
+                context, MaterialPageRoute(builder: (_) => ReportDetailScreen(report: report, firestore: widget.firestore)));
           }
           _loadInitialPage();
         },

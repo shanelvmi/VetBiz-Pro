@@ -35,7 +35,12 @@ import '../../ui/feedback/app_feedback.dart';
 /// out to their own places: Generate lives in the AppBar, and past
 /// reports get their own screen reached via the "Past Reports" button.
 class ViewReportsScreen extends StatefulWidget {
-  const ViewReportsScreen({super.key});
+  /// Null: the app's own Firestore and sign-in. Tests pass an in-memory
+  /// Firestore and their own AuthService (PH7b), as LoginScreen.authService.
+  final FirebaseFirestore? firestore;
+  final AuthService? authService;
+
+  const ViewReportsScreen({super.key, this.firestore, this.authService});
 
   @override
   State<ViewReportsScreen> createState() => _ViewReportsScreenState();
@@ -48,8 +53,8 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
   static const double _narrowReportHeight = 500;
 
 
-  final DailyReportService _reportService = DailyReportService();
-  final AuthService _authService = AuthService();
+  late final DailyReportService _reportService = DailyReportService(firestore: widget.firestore);
+  late final AuthService _authService = widget.authService ?? AuthService();
 
   bool _isLoading = true;
   bool _isGenerating = false;
@@ -111,7 +116,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
   Future<String> _fetchCurrentUserFullName() async {
     final user = _authService.getCurrentUser();
     if (user == null) return 'Unknown User';
-    final doc = await FirebaseFirestore.instance.collection(Collections.users).doc(user.uid).get();
+    final doc = await (widget.firestore ?? FirebaseFirestore.instance).collection(Collections.users).doc(user.uid).get();
     final data = doc.data();
     return (data?['fullName'] as String?) ?? 'Unknown User';
   }
@@ -145,7 +150,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
 
   Future<void> _continueClosing() async {
     if (_todaysReport == null) return;
-    await showReportReviewScreen(context, _todaysReport!);
+    await showReportReviewScreen(context, _todaysReport!, firestore: widget.firestore);
     _loadTodaysReport();
   }
 
@@ -184,6 +189,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
         userName: userInfo['userName'],
         actionType: ActivityType.reportDraftDeleted.key,
         description: 'Draft report for ${AppDateFormat.dateNoPad.format(_todaysReport!.reportDate)} deleted',
+        firestore: widget.firestore,
       );
       if (!mounted) return;
       _loadTodaysReport();
@@ -340,7 +346,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
             ),
             const SizedBox(height: AppSpacing.s16),
             OutlinedButton.icon(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PastReportsScreen())),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PastReportsScreen(firestore: widget.firestore))),
               icon: const Icon(Icons.history, size: AppIconSize.i16),
               label: Text(context.l10n.reports_pastTitle),
               style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
@@ -381,7 +387,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
                   ),
                   OutlinedButton.icon(
                     onPressed: () =>
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => const PastReportsScreen())),
+                        Navigator.push(context, MaterialPageRoute(builder: (_) => PastReportsScreen(firestore: widget.firestore))),
                     icon: const Icon(Icons.history, size: AppIconSize.i16),
                     label: Text(context.l10n.reports_pastTitle),
                     style: OutlinedButton.styleFrom(
@@ -393,7 +399,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.s8),
-            Expanded(child: ReportTabbedContent(report: report)),
+            Expanded(child: ReportTabbedContent(report: report, firestore: widget.firestore)),
           ],
         );
 
@@ -482,7 +488,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
             icon: Icons.visibility_outlined,
             title: context.l10n.reports_viewFull,
             subtitle: context.l10n.reports_viewFullHint,
-            onTap: () => showReportFullViewScreen(context, _todaysReport!),
+            onTap: () => showReportFullViewScreen(context, _todaysReport!, firestore: widget.firestore),
           ),
           const Divider(height: 18),
           _quickActionTile(
