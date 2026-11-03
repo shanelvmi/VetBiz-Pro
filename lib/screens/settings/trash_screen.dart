@@ -5,18 +5,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/facility_provider.dart';
 import '../../utils/activity_logger.dart';
 import '../../data/collections.dart';
-import '../../data/fields.dart';
-import '../../data/activity_type.dart';
-import '../../config/money.dart';
 import '../../l10n/l10n.dart';
-import '../../config/app_rules.dart';
 import '../../config/app_date_format.dart';
-import '../../services/trash_service.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
-import '../../ui/feedback/app_feedback.dart';
-import '../../ui/feedback/restore_feedback.dart';
+import 'trash_actions.dart';
 
 class TrashScreen extends StatefulWidget {
   // Null: the app's own Firestore and signed-in person. Tests pass fakes
@@ -37,7 +31,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: trashKinds.length, vsync: this);
   }
 
   @override
@@ -50,6 +44,8 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     final facilityId =
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    final firestore = widget.firestore ?? FirebaseFirestore.instance;
+    final currentUserInfo = widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo;
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -63,13 +59,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
           indicatorColor: context.colors.onBrandSurface,
           labelColor: context.colors.onBrandSurface,
           unselectedLabelColor: context.colors.onBrandSurfaceMuted,
-          tabs: [
-            Tab(text: context.l10n.activityType_products),
-            Tab(text: context.l10n.clients_title),
-            Tab(text: context.l10n.common_serviceRecords),
-            Tab(text: context.l10n.payments_typeSales),
-            Tab(text: context.l10n.transactions_title),
-          ],
+          tabs: [for (final kind in trashKinds) Tab(text: kind.label(context.l10n))],
         ),
       ),
       body: facilityId == null
@@ -80,57 +70,13 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
                 child: TabBarView(
                   controller: _tabController,
                   children: [
-                    _TrashList(
-                      facilityId: facilityId,
-                      firestore: widget.firestore ?? FirebaseFirestore.instance,
-                      currentUserInfo: widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
-                      trashCollection: Collections.trashProducts,
-                      liveCollection: Collections.products,
-                    ),
-                    _TrashList(
-                      facilityId: facilityId,
-                      firestore: widget.firestore ?? FirebaseFirestore.instance,
-                      currentUserInfo: widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
-                      trashCollection: Collections.trashClients,
-                      liveCollection: Collections.clients,
-                    ),
-                    _TrashList(
-                      facilityId: facilityId,
-                      firestore: widget.firestore ?? FirebaseFirestore.instance,
-                      currentUserInfo: widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
-                      trashCollection: Collections.trashServices,
-                      liveCollection: Collections.services,
-                    ),
-                    _TrashList(
-                      facilityId: facilityId,
-                      firestore: widget.firestore ?? FirebaseFirestore.instance,
-                      currentUserInfo: widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
-                      trashCollection: Collections.trashSales,
-                      liveCollection: Collections.sales,
-                      // The title also goes into the saved activity description ("Permanently
-
-                      // deleted: ..."), so it stays English.
-
-                      titleBuilder: (data) {
-                        final client = (data['clientName'] as String?) ?? 'Walk-in';
-                        final amount = (data['totalAmount'] as num?) ?? 0;
-                        return 'Sale - $client - ${Money.format(amount)}';
-                      },
-                    ),
-                    _TrashList(
-                      facilityId: facilityId,
-                      firestore: widget.firestore ?? FirebaseFirestore.instance,
-                      currentUserInfo: widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo,
-                      trashCollection: Collections.trashTransactions,
-                      liveCollection: Collections.transactions,
-                      titleBuilder: (data) {
-                        final description = (data['description'] as String?) ?? '';
-                        final type = (data['type'] as String?) ?? '';
-                        final amount = (data['amount'] as num?) ?? 0;
-                        final label = description.isNotEmpty ? description : (type.isNotEmpty ? type : 'Transaction');
-                        return '$label - ${Money.format(amount)}';
-                      },
-                    ),
+                    for (final kind in trashKinds)
+                      _TrashList(
+                        facilityId: facilityId,
+                        firestore: firestore,
+                        currentUserInfo: currentUserInfo,
+                        kind: kind,
+                      ),
                   ],
                 ),
               ),
@@ -139,141 +85,56 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
   }
 }
 
-class _TrashList extends StatelessWidget {
+class _TrashList extends StatefulWidget {
   final String facilityId;
-  final String trashCollection;
-  final String liveCollection;
-  final String Function(Map<String, dynamic> data)? titleBuilder;
   final FirebaseFirestore firestore;
   final Future<Map<String, String>> Function() currentUserInfo;
+  final TrashKind kind;
 
   const _TrashList({
     required this.facilityId,
     required this.firestore,
     required this.currentUserInfo,
-    required this.trashCollection,
-    required this.liveCollection,
-    this.titleBuilder,
+    required this.kind,
   });
 
-  // Sales and services restore with their stock, debt and balance (E2,
-  // delete_restore.md), so no warning first; a refusal says why.
-  TrashedRecord? get _record => liveCollection == Collections.sales
-      ? TrashedRecord.sale
-      : liveCollection == Collections.services
-          ? TrashedRecord.service
-          : null;
+  @override
+  State<_TrashList> createState() => _TrashListState();
+}
 
-  Future<void> _restore(BuildContext context, String id, Map<String, dynamic> data) async {
-    final record = _record;
-    try {
-      // The lists that show the record (Sales, Services, Clients, ...) start
-      // over on their own (RecordChanges, BUG-1).
-      final result = await TrashService.restore(
-        facilityId: facilityId,
-        trashCollection: trashCollection,
-        liveCollection: liveCollection,
+class _TrashListState extends State<_TrashList> {
+  // PH8a (S9, the DASH-1 lesson): made once. A stream made in build() was a
+  // new listener on every rebuild of the tab.
+  late final Stream<QuerySnapshot> _stream = widget.firestore
+      .collection(Collections.facilities)
+      .doc(widget.facilityId)
+      .collection(widget.kind.trashCollection)
+      .orderBy('deletedAt', descending: true)
+      .snapshots();
+
+  Future<void> _restore(String id, Map<String, dynamic> data) => restoreTrashed(
+        firestore: widget.firestore,
+        currentUserInfo: widget.currentUserInfo,
+        facilityId: widget.facilityId,
+        kind: widget.kind,
         id: id,
         data: data,
-        firestore: firestore,
-        currentUserInfo: currentUserInfo,
       );
 
-      if (record != null) {
-        RestoreFeedback.restored(record, result);
-      } else {
-        AppFeedback.success(L10n.current.trash_restored);
-      }
-    } catch (e, st) {
-      if (record != null) {
-        RestoreFeedback.failed(record, e, st);
-      } else {
-        AppFeedback.error(L10n.current.trash_restoreFailed, error: e, stackTrace: st);
-      }
-    }
-  }
-
-  Future<void> _deleteForever(BuildContext context, String id, String label) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.trash_deleteForeverTitle),
-        content: Text(context.l10n.trash_deleteForeverBody(label)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(context.l10n.common_cancel)),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.trash_deleteForever, style: TextStyle(color: context.colors.danger)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    try {
-      // A trashed product's batches subcollection is never touched when
-      // it was trashed (Firestore doesn't cascade-delete subcollections)
-      // - it just sits there, dangling, at the same path. Restoring the
-      // product later reconnects to it automatically, which is fine -
-      // but permanently deleting it needs to clean this up explicitly,
-      // or it's orphaned in Firestore forever with nothing left pointing
-      // to it.
-      if (trashCollection == Collections.trashProducts) {
-        final batchesSnap = await firestore
-            .collection(Collections.facilities)
-            .doc(facilityId)
-            .collection(Collections.products)
-            .doc(id)
-            .collection(Collections.batches)
-            .get();
-        for (final batchDoc in batchesSnap.docs) {
-          await batchDoc.reference.delete();
-        }
-      }
-
-      await firestore
-          .collection(Collections.facilities)
-          .doc(facilityId)
-          .collection(trashCollection)
-          .doc(id)
-          .delete();
-
-      final userInfo = await currentUserInfo();
-      await ActivityLogger.logActivity(
-        firestore: firestore,
-        facilityId: facilityId,
-        userId: userInfo[Fields.userId]!,
-        userName: userInfo['userName'],
-        actionType: ActivityType.trash.key,
-        description: 'Permanently deleted: $label',
+  Future<void> _deleteForever(BuildContext context, String id, String label) => deleteTrashedForever(
+        context,
+        firestore: widget.firestore,
+        currentUserInfo: widget.currentUserInfo,
+        facilityId: widget.facilityId,
+        trashCollection: widget.kind.trashCollection,
+        id: id,
+        label: label,
       );
-
-      // A hard delete: plain success, no Undo (PHASE2_FEEDBACK_SPEC section 8).
-      AppFeedback.success(L10n.current.trash_deleted);
-    } catch (e, st) {
-      AppFeedback.error(L10n.current.trash_deleteFailed, error: e, stackTrace: st);
-    }
-  }
-
-  // Items within this many days of auto-purge trigger the warning banner.
-  static const int _warningThresholdDays = 7;
-
-  int? _daysRemaining(DateTime? deletedAt) {
-    if (deletedAt == null) return null;
-    final purgeDate = deletedAt.add(AppRules.trashRetention);
-    return purgeDate.difference(DateTime.now()).inDays;
-  }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: firestore
-          .collection(Collections.facilities)
-          .doc(facilityId)
-          .collection(trashCollection)
-          .orderBy('deletedAt', descending: true)
-          .snapshots(),
+      stream: _stream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator(color: context.colors.primary));
@@ -299,8 +160,8 @@ class _TrashList extends StatelessWidget {
           final deletedAt = data['deletedAt'] is Timestamp
               ? (data['deletedAt'] as Timestamp).toDate()
               : null;
-          final remaining = _daysRemaining(deletedAt);
-          return remaining != null && remaining <= _warningThresholdDays;
+          final remaining = trashDaysRemaining(deletedAt);
+          return remaining != null && remaining <= trashWarningThresholdDays;
         }).length;
 
         return Column(
@@ -321,7 +182,7 @@ class _TrashList extends StatelessWidget {
                     const SizedBox(width: AppSpacing.s8),
                     Expanded(
                       child: Text(
-                        context.l10n.trash_expiringBanner(soonToExpireCount, _warningThresholdDays),
+                        context.l10n.trash_expiringBanner(soonToExpireCount, trashWarningThresholdDays),
                         style: const TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.medium),
                       ),
                     ),
@@ -335,31 +196,12 @@ class _TrashList extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final doc = docs[index];
                   final data = doc.data() as Map<String, dynamic>;
-                  final name = titleBuilder != null
-                      ? titleBuilder!(data)
-                      : (data['name'] as String?) ?? 'Untitled'; // also in the saved activity description: English
+                  final name = widget.kind.titleOf(data);
                   final deletedAt = data['deletedAt'] is Timestamp
                       ? (data['deletedAt'] as Timestamp).toDate()
                       : null;
                   final deletedBy = (data['deletedBy'] as String?) ?? context.l10n.common_unknown;
-                  final remaining = _daysRemaining(deletedAt);
-
-                  String expiryText;
-                  Color expiryColor = context.colors.textMuted;
-                  if (remaining == null) {
-                    expiryText = '';
-                  } else if (remaining <= 0) {
-                    expiryText = context.l10n.trash_deletingSoon;
-                    expiryColor = context.colors.dangerAccent;
-                  } else if (remaining == 1) {
-                    expiryText = context.l10n.trash_expiresTomorrow;
-                    expiryColor = context.colors.dangerAccent;
-                  } else if (remaining <= _warningThresholdDays) {
-                    expiryText = context.l10n.trash_expiresIn(remaining);
-                    expiryColor = context.colors.warningStrong;
-                  } else {
-                    expiryText = context.l10n.trash_expiresIn(remaining);
-                  }
+                  final (expiryText, expiryColor) = trashExpiry(context, deletedAt);
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: AppSpacing.s8),
@@ -387,7 +229,7 @@ class _TrashList extends StatelessWidget {
                           IconButton(
                             icon: Icon(Icons.restore, color: context.colors.primary),
                             tooltip: context.l10n.common_restore,
-                            onPressed: () => _restore(context, doc.id, data),
+                            onPressed: () => _restore(doc.id, data),
                           ),
                           IconButton(
                             icon: Icon(Icons.delete_forever, color: context.colors.dangerAccent),
