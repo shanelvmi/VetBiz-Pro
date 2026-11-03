@@ -7187,6 +7187,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'client': 'Discard this client?',
       'transaction': 'Discard this transaction?',
       'visit': 'Discard this visit?',
+      'product': 'Discard this product?',
+      'batch': 'Discard this batch?',
       'other': 'Discard this form?',
     });
     return '$_temp0';
@@ -7211,4 +7213,28 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String phoneList_productsSummaryLine(int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count products, $value stock value',
+      one: '1 product, $value stock value',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneList_productRowSemantics(
+    String name,
+    String quantity,
+    String amount,
+    String status,
+  ) {
+    return '$name, $quantity, $amount, $status';
+  }
+
+  @override
+  String get phoneList_sort => 'Sort';
 }

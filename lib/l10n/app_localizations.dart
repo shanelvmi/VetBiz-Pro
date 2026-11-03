@@ -12105,10 +12105,10 @@ abstract class AppLocalizations {
     String expenses,
   );
 
-  /// Money forms on a phone (PH6): the question when someone leaves a form that holds entered data. kind is a fixed key (sale, payment, client, transaction, visit), never shown.
+  /// Money forms on a phone (PH6): the question when someone leaves a form that holds entered data. kind is a fixed key (sale, payment, client, transaction, visit; PH7a: product, batch), never shown.
   ///
   /// In en, this message translates to:
-  /// **'{kind, select, sale{Discard this sale?} payment{Discard this payment?} client{Discard this client?} transaction{Discard this transaction?} visit{Discard this visit?} other{Discard this form?}}'**
+  /// **'{kind, select, sale{Discard this sale?} payment{Discard this payment?} client{Discard this client?} transaction{Discard this transaction?} visit{Discard this visit?} product{Discard this product?} batch{Discard this batch?} other{Discard this form?}}'**
   String phoneForm_discardTitle(String kind);
 
   /// Money forms on a phone (PH6): under the discard question.
@@ -12134,6 +12134,29 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 item, {amount}} other{{count} items, {amount}}}'**
   String phoneForm_saleSummary(int count, String amount);
+
+  /// Products and Stock Store on a phone (PH7a): the one summary line under the filters, from the old cards: how many products and their stock value (the shelf on Products, the store on Stock Store).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 product, {value} stock value} other{{count} products, {value} stock value}}'**
+  String phoneList_productsSummaryLine(int count, String value);
+
+  /// Products and Stock Store on a phone (PH7a): what a screen reader says for a product row: the name, the quantity with its unit, the price (Stock Store: the stored value) and the stock status, for example 'Albendazole 10%, 40 pcs, Tsh 15,000, In Stock'.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {quantity}, {amount}, {status}'**
+  String phoneList_productRowSemantics(
+    String name,
+    String quantity,
+    String amount,
+    String status,
+  );
+
+  /// Products and Stock Store on a phone (PH7a): the title of the sort choices in the Filter sheet (the tablet's sort menu).
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get phoneList_sort;
 }
 
 class _AppLocalizationsDelegate

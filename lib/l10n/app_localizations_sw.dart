@@ -7232,6 +7232,8 @@ class AppLocalizationsSw extends AppLocalizations {
       'client': 'Acha mteja huyu?',
       'transaction': 'Acha muamala huu?',
       'visit': 'Acha ziara hii?',
+      'product': 'Acha bidhaa hii?',
+      'batch': 'Acha bechi hii?',
       'other': 'Acha fomu hii?',
     });
     return '$_temp0';
@@ -7256,4 +7258,28 @@ class AppLocalizationsSw extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String phoneList_productsSummaryLine(int count, String value) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'bidhaa $count, thamani $value',
+      one: 'bidhaa 1, thamani $value',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String phoneList_productRowSemantics(
+    String name,
+    String quantity,
+    String amount,
+    String status,
+  ) {
+    return '$name, $quantity, $amount, $status';
+  }
+
+  @override
+  String get phoneList_sort => 'Panga';
 }
