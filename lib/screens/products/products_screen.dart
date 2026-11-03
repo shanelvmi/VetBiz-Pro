@@ -27,6 +27,14 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../l10n/l10n.dart';
+import '../../constants/product_categories.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/phone_list/phone_filter_sheet.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
+import '../../widgets/phone_list/record_tile.dart';
+import 'product_phone_parts.dart';
 
 class ProductsScreen extends StatefulWidget {
   final String? initialSearchQuery;
@@ -64,6 +72,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
   // products than one page) never shows pagination controls at
   // all - see result.needsPaginationControls below.
   ProductCatalogQuery _query = const ProductCatalogQuery(pageSize: kProductCatalogDefaultPageSize);
+
+  // PH7a (phones): how many pages the list shows (R10: every page reached
+  // so far); back to one whenever the query changes.
+  int _phonePages = 1;
 
   @override
   void initState() {
@@ -377,7 +389,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }
   }
 
-  Future<void> _deleteProduct(Product p) async {
+  /// [onDeleted] (the phone's details page closing) runs once it is gone.
+  Future<void> _deleteProduct(Product p, {VoidCallback? onDeleted}) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -409,6 +422,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     try {
       await Provider.of<ProductProvider>(context, listen: false)
           .deleteProduct(context, p.id);
+      onDeleted?.call();
 
       // deleteProduct moves the product to Trash (a soft delete), so Undo
       // puts it back with the Trash screen's own restore.
@@ -512,6 +526,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
         _query.selectedStatus == 'All';
 
     final totalStockValue = baseProducts.fold<double>(0, (total, p) => total + (p.sellableQty * p.buyPrice));
+
+    if (AppLayout.isPhone(context)) {
+      return _buildPhone(
+        provider: provider,
+        belongsOnThisScreen: belongsOnThisScreen,
+        isDepleted: productIsDepleted,
+        categoriesInData: categoriesInData,
+        statusCounts: statusCounts,
+        totalCount: visibleProductCount,
+        totalStockValue: totalStockValue,
+        noFiltersActive: noFiltersActive,
+      );
+    }
 
     final listOrGrid = result.items.isEmpty
         ? Center(
@@ -1293,6 +1320,240 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  // ==================== PHONE (PH7a) ====================
+
+  // docs/design/phone_list_pattern.md: the same live products, query, cards
+  // and card actions as the layout above, as the standard phone list. The
+  // side panel's statuses are the quick chips; its categories and the sort
+  // menu are in the Filter sheet. Rows keep the query's order (by name unless
+  // sorted) with no day headers (R5); the list shows every page reached so
+  // far (R10). The card holds everything (there is no details panel), so the
+  // details page is the card's content and its actions.
+
+  void _setPhoneQuery(ProductCatalogQuery query) => setState(() {
+        _query = query;
+        _phonePages = 1;
+      });
+
+  /// The card's status, with 'Active' read as the In Stock chip it is
+  /// filtered by.
+  RecordStatus _phoneStatus(Product p) {
+    final status = _getProductStatus(p);
+    final text = status['text'] as String;
+    return RecordStatus(text == 'Active' ? context.l10n.products_statusInStock : _statusLabel(text), status['color'] as Color);
+  }
+
+  Future<void> _showPhoneFilters(Set<String> categoriesInData) async {
+    final l10n = context.l10n;
+    final values = await showPhoneFilterSheet(context, fields: {
+      'category': PhoneFilterField(
+        title: l10n.common_category,
+        // The side panel's categories, group by group, with any in use that
+        // the list does not know.
+        options: [
+          'All',
+          for (final g in kProductCategoryGroups.keys)
+            ...{...kProductCategoryGroups[g]!, ...categoriesInData.where((c) => groupOfCategory(c) == g)},
+        ],
+        label: (v) => v == 'All' ? l10n.products_allProducts : l10n.productCategoryLabel(v),
+        defaultValue: 'All',
+      ),
+      'sort': PhoneFilterField(
+        title: l10n.phoneList_sort,
+        options: [for (final s in ProductSortOption.values) s.name],
+        label: (v) => ProductSortOption.values.byName(v).label,
+        defaultValue: ProductSortOption.nameAsc.name,
+      ),
+    }, values: {
+      'category': _query.selectedCategory,
+      'sort': _query.sortOption.name,
+    });
+    if (values == null) return;
+    final category = values['category']!;
+    _setPhoneQuery(_query.copyWith(
+      // As the side panel: a category selects its group too.
+      selectedGroup: category == 'All' ? 'All' : groupOfCategory(category),
+      selectedCategory: category,
+      sortOption: ProductSortOption.values.byName(values['sort']!),
+    ));
+  }
+
+  void _showPhoneSummary(int totalCount, Map<String, int> statusCounts, double totalStockValue) {
+    final l10n = context.l10n;
+    showPhoneSummarySheet(context, rows: [
+      (l10n.products_totalProducts, '$totalCount'),
+      (l10n.products_statusInStock, '${(statusCounts['Active'] ?? 0) + (statusCounts['Unknown'] ?? 0)}'),
+      (l10n.products_statusLowStock, '${statusCounts['Low Stock'] ?? 0}'),
+      (l10n.products_statusDepleted, '${statusCounts['Depleted'] ?? 0}'),
+      (l10n.products_shelfStockValue, Money.format(totalStockValue)),
+    ]);
+  }
+
+  Future<void> _openPhoneDetails(Product product) {
+    final l10n = context.l10n;
+    final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
+    return pushProductDetailsPage(
+      context,
+      productId: product.id,
+      barActions: (pageContext, p) => [
+        IconButton(
+          tooltip: l10n.common_edit,
+          icon: const Icon(Icons.edit_outlined),
+          onPressed: () => showAddEditProductScreen(context, product: p),
+        ),
+        if (isAdmin)
+          IconButton(
+            tooltip: l10n.common_delete,
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () => _deleteProduct(p, onDeleted: () => Navigator.of(pageContext).pop()),
+          ),
+      ],
+      body: (pageContext, p) => ProductDetailsBody(
+        product: p,
+        status: _phoneStatus(p),
+        chips: [
+          if (p.hasRestockShelfAlert)
+            ProductInfoChip(label: l10n.products_restockShelf, icon: Icons.move_up, color: context.colors.infoStrong),
+          if (p.isWatchlisted) ProductInfoChip(label: l10n.products_watchlisted, icon: Icons.star, color: context.colors.accent),
+        ],
+        figures: [
+          (l10n.products_sellable, '${p.sellableQty} ${l10n.productUnitLabel(p.unit)}'),
+          (l10n.products_price, Money.unitPrice(p.sellPrice)),
+        ],
+        lines: [
+          if (p.description != null && p.description!.isNotEmpty) p.description!,
+          l10n.products_stockBatch(p.stockQty, l10n.productUnitLabel(p.unit), p.batchNo ?? '-'),
+          l10n.products_buyPrice(Money.unitPrice(p.buyPrice)),
+          if (p.expiry != null) l10n.products_expiryDate(AppDateFormat.date.format(p.expiry!)),
+        ],
+        actions: [
+          ProductPageAction(
+            label: p.sellableQty <= 0 ? l10n.products_nothingSellable : l10n.products_sell,
+            icon: Icons.sell,
+            primary: true,
+            onPressed: p.sellableQty <= 0 ? null : () => showAddSaleScreen(context, product: p),
+          ),
+          ProductPageAction(
+              label: l10n.products_addNewBatch, icon: Icons.playlist_add, onPressed: () => showAddBatchScreen(context, product: p)),
+          ProductPageAction(
+              label: l10n.products_viewBatches,
+              icon: Icons.inventory_2_outlined,
+              onPressed: () => showViewBatchesScreen(context, product: p)),
+          if (isAdmin)
+            ProductPageAction(
+              label: p.isWatchlisted ? l10n.products_removeFromWatchlist : l10n.products_addToWatchlist,
+              icon: p.isWatchlisted ? Icons.star : Icons.star_outline,
+              onPressed: () => _toggleWatchlist(p),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _productTile(Product p) {
+    final l10n = context.l10n;
+    final status = _phoneStatus(p);
+    final quantity = '${p.sellableQty} ${l10n.productUnitLabel(p.unit)}';
+    final price = Money.unitPrice(p.sellPrice);
+    return RecordTile(
+      title: p.name,
+      amount: quantity,
+      details: [price, if (p.hasRestockShelfAlert) l10n.products_restockShelf],
+      status: status,
+      leading: ProductLeading(product: p),
+      colorSeed: p.name,
+      semanticsLabel: l10n.phoneList_productRowSemantics(p.name, quantity, price, status.label),
+      onTap: () => _openPhoneDetails(p),
+    );
+  }
+
+  Widget _buildPhone({
+    required ProductProvider provider,
+    required bool Function(Product) belongsOnThisScreen,
+    required bool Function(Product) isDepleted,
+    required Set<String> categoriesInData,
+    required Map<String, int> statusCounts,
+    required int totalCount,
+    required double totalStockValue,
+    required bool noFiltersActive,
+  }) {
+    final l10n = context.l10n;
+    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
+    final pageSize = _query.pageSize ?? kProductCatalogDefaultPageSize;
+    final shown = ProductCatalogService.run(
+      query: _query.copyWith(page: 1, pageSize: pageSize * _phonePages),
+      allProducts: provider.products,
+      belongsOnThisScreen: belongsOnThisScreen,
+      isDepleted: isDepleted,
+      statusResolver: _getProductStatus,
+    );
+    final sortChanged = _query.sortOption != ProductSortOption.nameAsc;
+    // Creating a product is admin-only (owner decision, E4d-2); the form's
+    // one entry goes through the locked-facility guard (PH7a finding).
+    final add = isAdmin
+        ? PhoneListAction(label: l10n.products_addProduct, icon: Icons.add, onPressed: () => showAddEditProductScreen(context))
+        : null;
+    return PhoneListScaffold<Product>(
+      title: l10n.products_sellableTitle,
+      asTab: widget.asTab,
+      menu: [
+        if (isAdmin)
+          PhoneListMenuItem(label: l10n.products_recalculateTooltip, icon: Icons.auto_awesome, onSelected: _recalculateSmartDefaults),
+        PhoneListMenuItem(label: l10n.products_stockAlerts, icon: Icons.notifications_none, onSelected: () => showStockAlertsSheet(context)),
+      ],
+      menuBadge: StockAlertsScreen.hasAnyAlert(provider.products),
+      searchController: _searchController,
+      searchHint: l10n.products_searchHint,
+      onSearchChanged: (val) => _setPhoneQuery(_query.copyWith(searchQuery: val.trim(), page: 1)),
+      onSearchClosed: () {
+        _searchController.clear();
+        _setPhoneQuery(_query.copyWith(searchQuery: '', page: 1));
+      },
+      quickChips: PhoneQuickChips(
+        key: const ValueKey('phoneList-quickChips'),
+        values: kProductStatusChips,
+        selected: _query.selectedStatus,
+        label: (v) => productStatusChipLabel(l10n, v),
+        onSelected: (v) => _setPhoneQuery(_query.copyWith(selectedStatus: v, page: 1)),
+      ),
+      filtersActive: _query.selectedCategory != 'All' || sortChanged,
+      onFilter: () => _showPhoneFilters(categoriesInData),
+      appliedFilters: [
+        if (_query.selectedCategory != 'All')
+          PhoneAppliedFilter(
+            l10n.common_filterValue(l10n.common_category, l10n.productCategoryLabel(_query.selectedCategory)),
+            () => _setPhoneQuery(_query.copyWith(selectedGroup: 'All', selectedCategory: 'All', page: 1)),
+          ),
+        if (sortChanged)
+          PhoneAppliedFilter(
+            l10n.common_filterValue(l10n.phoneList_sort, _query.sortOption.label),
+            () => _setPhoneQuery(_query.copyWith(sortOption: ProductSortOption.nameAsc, page: 1)),
+          ),
+      ],
+      summaryLine: l10n.phoneList_productsSummaryLine(totalCount, Money.format(totalStockValue)),
+      onSummary: () => _showPhoneSummary(totalCount, statusCounts, totalStockValue),
+      items: shown.items,
+      idOf: (p) => p.id,
+      // Not grouped by day (R5): a product has no date of its own here.
+      dateOf: (p) => p.updatedAt ?? DateTime(0),
+      amountOf: (p) => 0,
+      grouped: false,
+      tileBuilder: (context, p, {required grouped}) => _productTile(p),
+      loading: !provider.loaded,
+      error: provider.listenError,
+      onRetry: provider.retryListening,
+      emptyIcon: Icons.shopping_bag,
+      emptyText: noFiltersActive ? l10n.products_noSellable : l10n.products_noMatches,
+      fab: add,
+      emptyAction: add,
+      hasMore: shown.totalCount > shown.items.length,
+      loadingMore: false,
+      onLoadMore: () => setState(() => _phonePages++),
+      // Pull to refresh (R8): today's Refresh (the list itself is live).
+      onRefresh: _manualRefresh,
     );
   }
 }

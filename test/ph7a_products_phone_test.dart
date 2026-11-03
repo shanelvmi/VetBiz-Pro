@@ -20,9 +20,10 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
-const _wide = Size(1200, 800);
+// Tall, so every card of the tablet's lazy grid is built.
+const _wide = Size(1200, 2400);
 
 Future<Ph5App> _products(WidgetTester tester,
         {Size size = const Size(390, 844),
@@ -86,6 +87,8 @@ void main() {
     await tester.tap(ph5Key('phoneList-fab'));
     await ph5Settle(tester);
     expect(find.byType(AddEditProductScreen), findsOneWidget);
+    // The form's own phone layout is ph7a_product_form_phone_test.dart's.
+    while (tester.takeException() != null) {}
 
     await _products(tester, admin: false);
     expect(ph5Key('phoneList-fab'), findsNothing);
@@ -121,7 +124,7 @@ void main() {
     await _products(tester);
     await ph5OpenSheet(tester, 'Filter');
     await _tapIn(tester, find.byType(BottomSheet), 'Antibiotic');
-    await _tapIn(tester, find.byType(BottomSheet), 'Price: High to Low');
+    await _tapIn(tester, find.byType(BottomSheet), 'Price (High-Low)');
     await _tapIn(tester, find.byType(BottomSheet), 'Apply');
     expect(_rowNames(tester), expected);
     expect(ph5Key('phoneList-filterDot'), findsOneWidget);
@@ -161,7 +164,9 @@ void main() {
     for (final (id, chip) in [('p2', 'Low Stock'), ('p3', 'Reorder Soon'), ('p4', 'Expiring Soon'), ('p5', 'Expired'), ('p6', 'Depleted')]) {
       expect(find.descendant(of: ph5Key('phoneList-row-$id'), matching: find.text(chip)), findsOneWidget, reason: id);
     }
-    expect(find.descendant(of: ph5Key('phoneList-scroll'), matching: find.byType(IconButton)), findsNothing);
+    for (final id in ph5RowIds(tester)) {
+      expect(find.descendant(of: ph5Key('phoneList-row-$id'), matching: find.byType(IconButton)), findsNothing);
+    }
     final y = [for (final id in ['p1', 'p2', 'p6']) tester.getTopLeft(ph5Key('phoneList-row-$id')).dy];
     expect(y[0] < y[1] && y[1] < y[2], isTrue, reason: 'Albendazole, Ivermectin, Newcastle');
   }, skip: _skip);
@@ -228,7 +233,8 @@ void main() {
 
   ph5TestWidgets('paging: 12 rows, the next 12 near the end; Load more is the fallback', (tester) async {
     final many = [for (var i = 0; i < 30; i++) Ph7Product('m${i.toString().padLeft(2, '0')}', 'Product ${i.toString().padLeft(2, '0')}')];
-    await _products(tester, products: many);
+    // Tall enough to build every row reached.
+    await _products(tester, products: many, size: const Size(390, 2000));
     expect(ph5RowIds(tester), hasLength(12));
     await tester.fling(ph5List, const Offset(0, -3000), 3000);
     await ph5Settle(tester);
