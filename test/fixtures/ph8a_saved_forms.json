@@ -1,4 +1,27 @@
 {
+  "business_hours": [
+    {
+      "businessHours": {
+        "allowAnytime": true,
+        "saturdayClosed": true,
+        "saturdayClosingTime": "18:00",
+        "sundayClosed": false,
+        "sundayClosingTime": "14:00",
+        "weekdayClosed": false,
+        "weekdayClosingTime": "18:00"
+      }
+    }
+  ],
+  "business_profile": [
+    {
+      "logoUrl": "https://storage.test/o/facility_logos%2Ffacility1.png?alt=media&token=t&cb=<time>"
+    },
+    {
+      "bytes": 2048,
+      "contentType": "image/png",
+      "path": "facility_logos/facility1.png"
+    }
+  ],
   "subscription": [
     {
       "amount": 30000.0,
