@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../theme/app_layout.dart';
 import 'package:provider/provider.dart';
 import '../../providers/ui_settings_provider.dart';
 import '../../providers/user_role_provider.dart';
@@ -514,7 +515,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Text(
                 context.l10n.settings_selectLanguageBoth,
-                style: TextStyle(fontSize: AppFontSize.f11, fontWeight: AppFontWeight.bold, color: context.colors.primary, letterSpacing: 1.1),
+                style: TextStyle(
+                    // PH8a: 12 on a phone, the smallest text there.
+                    fontSize: AppLayout.isPhone(context) ? AppFontSize.f12 : AppFontSize.f11,
+                    fontWeight: AppFontWeight.bold,
+                    color: context.colors.primary,
+                    letterSpacing: 1.1),
               ),
               const SizedBox(height: AppSpacing.s10),
               Flexible(
@@ -608,7 +614,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title.toUpperCase(),
         style: TextStyle(
           fontWeight: AppFontWeight.bold,
-          fontSize: AppFontSize.f11,
+          // PH8a: 12 on a phone, the smallest text there.
+          fontSize: AppLayout.isPhone(context) ? AppFontSize.f12 : AppFontSize.f11,
           color: context.colors.primary.withValues(alpha: AppAlpha.a70),
           letterSpacing: 1.1,
         ),

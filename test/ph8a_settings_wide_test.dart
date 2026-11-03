@@ -25,8 +25,8 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/tree_fingerprint.dart';
 import 'ph8a_seams_test.dart' show Ph8Auth;
 
-// The phone cases run once the phone pages exist.
-const _skipPhone = true;
+// The phone cases were skipped until the phone pages existed.
+const _skipPhone = false;
 
 String _errors(WidgetTester tester) {
   final out = StringBuffer();

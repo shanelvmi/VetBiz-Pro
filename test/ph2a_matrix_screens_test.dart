@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/providers/facility_provider.dart';
 import 'package:vetbiz_pro/providers/product_provider.dart';
+import 'package:vetbiz_pro/providers/subscription_provider.dart';
 import 'package:vetbiz_pro/providers/ui_settings_provider.dart';
 import 'package:vetbiz_pro/providers/user_role_provider.dart';
 import 'package:vetbiz_pro/screens/products/stock_alerts_screen.dart';
@@ -13,6 +14,7 @@ import 'package:vetbiz_pro/screens/settings/settings_screen.dart';
 
 import 'helpers/fake_firestore.dart';
 import 'helpers/screen_size_matrix.dart';
+import 'ph8a_seams_test.dart' show Ph8Auth;
 
 // PH2a: the size matrix applied to three screens as proof
 // (phone_foundations.md section 10). A case that fails for a real layout
@@ -55,30 +57,22 @@ Future<void> _seedAlertProducts(FirebaseFirestore fs) async {
   await products.doc('d').set({...base, 'name': '$matrixLongProductName D', 'sellableQty': 7, 'stockQty': 0, 'expiry': past});
 }
 
-/// The case names at the given sizes, in every look, and the text at 1.3 when
-/// 360 is among them, all with one [reason].
-Map<String, String> _cases(List<String> sizes, String reason) => {
-      for (final s in matrixSizes.where((s) => sizes.contains(s.label)))
-        for (final look in MatrixLook.values) matrixCase(s, look): reason,
-      if (sizes.contains('360x740')) matrixTextScaleCase: reason,
-    };
-
 void main() {
+  // PH8a: the section headers are 12 px on a phone, and the wide view's
+  // Subscription pane takes the fake Firestore (the seam): every case runs.
+  late FirebaseFirestore settingsFs;
   screenSizeMatrix(
     'Settings',
-    screen: () => const SettingsScreen(),
-    skip: {
-      ..._cases(['360x740', '390x844'], 'the section headers are 11 px, under 12 on a phone (S3; PH8)'),
-      ..._cases(['1024x768', '1200x800'],
-          'the two-pane view opens Subscription first for an admin, and SubscriptionScreen reads FirebaseFirestore.instance (no seam yet; PH8)'),
-    },
+    screen: () => SettingsScreen(firestore: settingsFs, auth: Ph8Auth()),
     prepare: (tester) async {
-      final fs = newFakeFirestore();
+      final fs = settingsFs = newFakeFirestore();
       final ui = await _loadedUi(tester);
       final role = await _admin(tester, fs);
       return (app) => MultiProvider(providers: [
             ChangeNotifierProvider.value(value: ui),
             ChangeNotifierProvider.value(value: role),
+            ChangeNotifierProvider(create: (_) => FacilityProvider(firestore: fs)),
+            ChangeNotifierProvider(create: (_) => SubscriptionProvider(firestore: fs)),
           ], child: app);
     },
   );
