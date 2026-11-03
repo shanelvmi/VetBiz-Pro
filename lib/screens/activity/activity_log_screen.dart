@@ -26,13 +26,21 @@ import '../../widgets/app_sheet.dart';
 
 class ActivityLogScreen extends StatefulWidget {
   final bool isModal;
-  const ActivityLogScreen({super.key, this.isModal = false});
+
+  // Null: the app's own Firebase. Tests pass fakes (PH8a seams; no
+  // behaviour change).
+  final FirebaseFirestore? firestore;
+  final FirebaseAuth? auth;
+
+  const ActivityLogScreen({super.key, this.isModal = false, this.firestore, this.auth});
 
   @override
   State<ActivityLogScreen> createState() => _ActivityLogScreenState();
 }
 
 class _ActivityLogScreenState extends State<ActivityLogScreen> {
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+
   String selectedFilter = 'All';
   String searchQuery = '';
 
@@ -138,7 +146,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   Future<int> _fetchRetentionDays(String facilityId) async {
     if (_retentionLoadedForFacilityId == facilityId) return _retentionDays ?? _defaultRetentionDays;
     try {
-      final doc = await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).get();
+      final doc = await _db.collection(Collections.facilities).doc(facilityId).get();
       final configured = (doc.data()?['activityLogRetentionDays'] as num?)?.toInt();
       final resolved = (configured != null && _retentionOptions.contains(configured))
           ? configured
@@ -203,7 +211,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   /// screen is always right, whether or not anything has been deleted yet.
   void _buildStreams(String facilityId, int retentionDays, {required bool isAdmin}) {
     final cutoff = Timestamp.fromDate(ActivityLogRetention.cutoffFor(retentionDays));
-    final logs = FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
+    final logs = _db.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
 
     // Newest first, inside the retention window.
     Query<Map<String, dynamic>> windowed(Query<Map<String, dynamic>> q) =>
@@ -223,7 +231,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     // matters of the facility. Two questions, joined into one list - the
     // security rule only vouches for a query that pins one of these down, and
     // would refuse anything wider outright (see firestore.rules).
-    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final uid = (widget.auth ?? FirebaseAuth.instance).currentUser?.uid ?? '';
     final mine = [
       windowed(logs.where(Fields.userId, isEqualTo: uid)),
       windowed(logs.where('targetUserId', isEqualTo: uid)),
@@ -292,7 +300,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     }
 
     try {
-      await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).set(
+      await _db.collection(Collections.facilities).doc(facilityId).set(
         {'activityLogRetentionDays': selected},
         SetOptions(merge: true),
       );
@@ -338,7 +346,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   // the caller rather than reading _retentionDays, so it can never see an
   // unset or stale one.
   Future<int> _cleanupOldLogs(String facilityId, int retentionDays) =>
-      ActivityLogRetention.deleteExpired(facilityId, retentionDays);
+      ActivityLogRetention.deleteExpired(facilityId, retentionDays, firestore: widget.firestore);
 
   @override
   Widget build(BuildContext context) {

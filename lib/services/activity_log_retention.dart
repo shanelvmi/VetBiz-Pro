@@ -27,8 +27,10 @@ class ActivityLogRetention {
   /// allow it - so the caller can tell the user instead of claiming success.
   /// [maxRounds] only guards against a runaway loop (60 x 500 = 30,000 logs);
   /// anything left over is picked up the next time this runs.
-  static Future<int> deleteExpired(String facilityId, int retentionDays, {int maxRounds = 60}) async {
-    final firestore = FirebaseFirestore.instance;
+  static Future<int> deleteExpired(String facilityId, int retentionDays,
+      {int maxRounds = 60, FirebaseFirestore? firestore}) async {
+    // [firestore]: tests pass a fake one (PH8a); the app's own otherwise.
+    firestore ??= FirebaseFirestore.instance;
     final logs = firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
     final cutoff = Timestamp.fromDate(cutoffFor(retentionDays));
 
