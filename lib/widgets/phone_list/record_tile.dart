@@ -49,6 +49,10 @@ class RecordTile extends StatelessWidget {
   final String? initialsOf;
   final IconData? icon;
 
+  /// PH7a: a leading of the screen's own (a product's photo), 40 px, in
+  /// place of the initials or icon.
+  final Widget? leading;
+
   /// What picks the leading's colour (a client's name, a category).
   final String colorSeed;
 
@@ -66,6 +70,7 @@ class RecordTile extends StatelessWidget {
     this.status,
     this.initialsOf,
     this.icon,
+    this.leading,
     this.onTap,
   });
 
@@ -92,7 +97,7 @@ class RecordTile extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  _Leading(tint: tint, initialsOf: initialsOf, icon: icon),
+                  leading ?? _Leading(tint: tint, initialsOf: initialsOf, icon: icon),
                   const SizedBox(width: PhoneListMetrics.leadingGap),
                   Expanded(
                     child: Column(

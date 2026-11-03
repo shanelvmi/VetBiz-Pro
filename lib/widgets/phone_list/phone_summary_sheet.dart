@@ -12,7 +12,7 @@ import '../app_sheet.dart';
 
 Future<void> showPhoneSummarySheet(
   BuildContext context, {
-  required String period,
+  String? period,
   required List<(String label, String value)> rows,
 }) {
   return showAppSheet<void>(
@@ -24,8 +24,11 @@ Future<void> showPhoneSummarySheet(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(period, style: TextStyle(fontSize: PhoneListMetrics.subtitle, color: colors.textMuted)),
-          const SizedBox(height: PhoneListMetrics.headerGap),
+          // PH7a: a list with no period (Products, Stock Store) has none.
+          if (period != null) ...[
+            Text(period, style: TextStyle(fontSize: PhoneListMetrics.subtitle, color: colors.textMuted)),
+            const SizedBox(height: PhoneListMetrics.headerGap),
+          ],
           for (final (label, value) in rows)
             ConstrainedBox(
               constraints: const BoxConstraints(minHeight: AppSizes.minTapTarget),

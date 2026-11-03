@@ -34,6 +34,14 @@ class ProductProvider with ChangeNotifier {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
   String? _facilityId;
 
+  // PH7a: whether the products have arrived once (a phone list shows its
+  // skeleton until then, and its empty state only after), and why the live
+  // listener stopped, if it did (the list shows it with Retry).
+  bool _loaded = false;
+  Object? _listenError;
+  bool get loaded => _loaded;
+  Object? get listenError => _listenError;
+
   /// -------------------------------
   /// STOCK STORE (warehouse)
   /// -------------------------------
@@ -82,10 +90,26 @@ class ProductProvider with ChangeNotifier {
             (doc) => Product.fromFirestore(doc.data(), doc.id),
           ),
         );
+      _loaded = true;
+      _listenError = null;
       notifyListeners();
     }, onError: (e) {
       debugPrint('❌ ProductProvider listen error: $e');
+      _listenError = e;
+      notifyListeners();
     });
+  }
+
+  /// PH7a: starts the live listener again after it failed (a phone list's
+  /// Retry).
+  void retryListening() {
+    final facilityId = _facilityId;
+    if (facilityId == null) return;
+    _subscription?.cancel();
+    _subscription = null;
+    _listenError = null;
+    notifyListeners();
+    listenToProducts(facilityId);
   }
 
   /// -------------------------------
@@ -113,6 +137,7 @@ class ProductProvider with ChangeNotifier {
           ),
         );
 
+      _loaded = true;
       notifyListeners();
     } catch (e) {
       debugPrint('❌ Fetch products failed: $e');
@@ -1290,6 +1315,8 @@ class ProductProvider with ChangeNotifier {
     _subscription = null;
     _facilityId = null;
     _products.clear();
+    _loaded = false;
+    _listenError = null;
     notifyListeners();
   }
 

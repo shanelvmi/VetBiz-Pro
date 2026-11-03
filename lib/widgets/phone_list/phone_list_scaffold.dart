@@ -28,6 +28,10 @@ class PhoneListScaffold<T> extends StatefulWidget {
   final bool asTab;
   final List<PhoneListMenuItem> menu;
 
+  /// PH7a: a dot on the menu's button (Products' and Stock Store's stock
+  /// alerts, the old bell's dot).
+  final bool menuBadge;
+
   /// Search: the screen's own controller, called on each change and when
   /// the search is closed (which clears it).
   final TextEditingController searchController;
@@ -115,6 +119,7 @@ class PhoneListScaffold<T> extends StatefulWidget {
     this.fab,
     this.emptyAction,
     this.startSearching,
+    this.menuBadge = false,
   });
 
   @override
@@ -171,6 +176,14 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
               ),
         if (widget.menu.isNotEmpty)
           PopupMenuButton<int>(
+            icon: widget.menuBadge
+                ? Badge(
+                    key: const ValueKey('phoneList-menuDot'),
+                    smallSize: PhoneListMetrics.filterDot,
+                    backgroundColor: colors.danger,
+                    child: const Icon(Icons.more_vert),
+                  )
+                : null,
             onSelected: (i) => widget.menu[i].onSelected(),
             itemBuilder: (context) => [
               for (var i = 0; i < widget.menu.length; i++)
