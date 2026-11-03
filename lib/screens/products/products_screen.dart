@@ -16,6 +16,7 @@ import 'add_batch_screen.dart';
 import 'view_batches_screen.dart';
 import '../sales/add_sale_screen.dart';
 import 'stock_alerts_screen.dart';
+import '../dashboard/notification_bell.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_date_format.dart';
@@ -25,7 +26,6 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
-import '../../theme/app_motion.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
@@ -129,66 +129,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
     } catch (e, st) {
       AppFeedback.error(L10n.current.products_smartDefaultsFailed, error: e, stackTrace: st);
     }
-  }
-
-  /// Same anchored-dropdown pattern as the Dashboard's own bell (see
-  /// dashboard_screen.dart's _showNotificationsDropdown) - positioned
-  /// relative to this bell's actual measured position, transparent
-  /// barrier so it reads as a dropdown rather than a modal taking over
-  /// the screen. Scoped to stock-only notifications throughout, since
-  /// this bell belongs to the Products screen specifically.
-  Future<void> _showNotificationsDropdown(BuildContext context) async {
-    final renderBox = _bellKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final bellPosition = renderBox.localToGlobal(Offset.zero);
-    final bellSize = renderBox.size;
-    final screenSize = MediaQuery.of(context).size;
-
-    const panelWidth = 400.0;
-    final left = (bellPosition.dx + panelWidth > screenSize.width - 16)
-        ? screenSize.width - panelWidth - 16
-        : bellPosition.dx;
-
-    await showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: context.l10n.common_notifications,
-      barrierColor: Colors.transparent,
-      transitionDuration: AppMotion.fast,
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return Stack(
-          children: [
-            Positioned(
-              top: bellPosition.dy + bellSize.height + 8,
-              left: left,
-              child: Material(
-                elevation: AppElevation.e8,
-                borderRadius: BorderRadius.circular(AppRadius.r12),
-                clipBehavior: Clip.antiAlias,
-                child: SizedBox(
-                  width: panelWidth,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: screenSize.height * 0.75),
-                    child: const StockAlertsScreen(isDropdown: true),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-        return FadeTransition(
-          opacity: curved,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.95, end: 1.0).animate(curved),
-            alignment: Alignment.topLeft,
-            child: child,
-          ),
-        );
-      },
-    );
   }
 
   String _categoryOf(Product p) => p.category.isNotEmpty ? p.category : 'Uncategorized';
@@ -845,7 +785,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
               onPressed: () async {
                 final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
                 if (isWideScreen) {
-                  await _showNotificationsDropdown(context);
+                  // PH8a: the same anchored panel as the notifications bell.
+                  await showAnchoredDropdown(context, anchorKey: _bellKey, child: const StockAlertsScreen(isDropdown: true));
                 } else {
                   await Navigator.push(context, MaterialPageRoute(
                       builder: (_) => const StockAlertsScreen()));

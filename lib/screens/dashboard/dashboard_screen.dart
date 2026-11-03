@@ -27,6 +27,7 @@ import '../clients/clients_screen.dart';
 import '../services/services_screen.dart';
 import '../sales/sales_screen.dart';
 import 'more_screen.dart';
+import 'notification_bell.dart';
 import 'phone_shell.dart';
 import 'record_sheet.dart';
 import 'all_details_screen.dart';
@@ -50,7 +51,6 @@ import '../../utils/merged_query_stream.dart';
 import '../subscription/subscription_screen.dart';
 import 'dashboard_panels.dart';
 import 'sales_revenue_chart.dart';
-import 'notifications_screen.dart';
 import '../../utils/subscription_guard.dart';
 import '../../utils/force_logout.dart';
 import '../../utils/notification_seen_tracker.dart';
@@ -1764,73 +1764,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
 
-  // Compact bell icon with a red dot when there's a low-stock or
-  // expiring-item alert - replaces the old full-width banner. Tapping it
-  // goes straight to the same screen Settings > Notifications leads to.
-  /// Anchors a compact notifications panel near the bell's actual
-  /// measured position - it sits in different places depending on
-  /// screen width (AppBar leading on wide screens, actions on
-  /// narrow), so this can't assume a fixed corner the way a generic
-  /// modal could. Transparent barrier rather than a dimmed one - this
-  /// should read as a dropdown anchored to the bell, not a modal
-  /// taking over the screen.
-  Future<void> _showNotificationsDropdown(BuildContext context) async {
-    final renderBox = _bellKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final bellPosition = renderBox.localToGlobal(Offset.zero);
-    final bellSize = renderBox.size;
-    final screenSize = MediaQuery.of(context).size;
-
-    const panelWidth = 400.0;
-    // Keeps the panel on-screen if the bell sits close to the right
-    // edge - anchors to the bell's left edge by default, but shifts
-    // left just enough to stay within the viewport otherwise.
-    final left = (bellPosition.dx + panelWidth > screenSize.width - 16)
-        ? screenSize.width - panelWidth - 16
-        : bellPosition.dx;
-
-    await showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: context.l10n.common_notifications,
-      barrierColor: Colors.transparent,
-      transitionDuration: AppMotion.fast,
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return Stack(
-          children: [
-            Positioned(
-              top: bellPosition.dy + bellSize.height + 8,
-              left: left,
-              child: Material(
-                elevation: AppElevation.e8,
-                borderRadius: BorderRadius.circular(AppRadius.r12),
-                clipBehavior: Clip.antiAlias,
-                child: SizedBox(
-                  width: panelWidth,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: screenSize.height * 0.75),
-                    child: const NotificationsScreen(isDropdown: true),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-        return FadeTransition(
-          opacity: curved,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.95, end: 1.0).animate(curved),
-            alignment: Alignment.topLeft,
-            child: child,
-          ),
-        );
-      },
-    );
-  }
-
   // --------------------- PH4: THE PHONE HOME ---------------------
 
   /// Home's top bar on a phone: the avatar (the profile drawer), a small
@@ -2322,6 +2255,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             // unread for ME (my own read state, NOTIF-2c), subscription alerts
             // included: read means quiet. The calm trial is the blue dot.
             final hasUnreadFacilityNotification = bellFeed?.hasUnreadAlert ?? false;
+            // PH8a, NOTIF-2d: the same unread items as a number on the bell;
+            // while it shows, the red in the dot is only what is new since
+            // this device last looked (urgent announcements), and the dot
+            // moves under the number.
+            final unreadCount = bellFeed?.unreadAlertCount ?? 0;
+            final showsCount = unreadCount > 0;
 
             // Cycles through whichever of the three actually apply -
             // one just blinks in place, several cycle between them,
@@ -2329,7 +2268,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             // promotion sees both rather than only whichever was
             // checked first.
             final activeCategories = <Color>[
-              if (hasNew || hasUnreadFacilityNotification) context.colors.dangerAccent,
+              if (hasNew || (hasUnreadFacilityNotification && !showsCount)) context.colors.dangerAccent,
               if (isInTrialInfo) context.colors.info,
               if (hasActivePromotion) context.colors.accent,
             ];
@@ -2339,18 +2278,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               children: [
                 IconButton(
                   key: _bellKey,
-                  icon: const Icon(Icons.notifications_outlined),
+                  icon: NotificationBellIcon(count: unreadCount),
                   tooltip: context.l10n.common_notifications,
                   onPressed: () async {
-                    final isWideScreen = MediaQuery.of(context).size.width >= AppBreakpoints.medium;
-                    if (isWideScreen) {
-                      await _showNotificationsDropdown(context);
-                    } else {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                      );
-                    }
+                    // PH8a: the page on a phone, the dropdown on a wide window.
+                    await openNotifications(context, anchorKey: _bellKey);
                     // Notifications marks itself "viewed" on open - re-check
                     // here so the blink stops immediately on return, rather
                     // than waiting for some other reason to rebuild.
@@ -2360,7 +2292,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 if (activeCategories.isNotEmpty)
                   Positioned(
                     right: 8,
-                    top: 8,
+                    top: showsCount ? null : 8,
+                    bottom: showsCount ? AppSpacing.s8 : null,
                     child: _BlinkingDot(colors: activeCategories),
                   ),
               ],

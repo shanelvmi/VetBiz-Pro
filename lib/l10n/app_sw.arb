@@ -4013,5 +4013,7 @@
   "phoneReport_labelValue": "{label}: {value}",
   "@phoneReport_labelValue": {"x-review":"draft"},
   "phoneReport_pastSummaryLine": "{count, plural, =1{ripoti 1} other{ripoti {count}}}",
-  "@phoneReport_pastSummaryLine": {"x-review":"draft"}
+  "@phoneReport_pastSummaryLine": {"x-review":"draft"},
+  "notifications_bellOverNine": "9+",
+  "@notifications_bellOverNine": {"x-review":"draft"}
 }

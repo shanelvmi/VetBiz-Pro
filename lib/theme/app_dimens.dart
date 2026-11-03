@@ -697,3 +697,24 @@ class PhoneReportMetrics {
   static const double statMinHeight = 48;
   static const double statPaddingV = AppSpacing.s6;
 }
+
+/// PH8a: the bells (lib/screens/dashboard/notification_bell.dart).
+class BellMetrics {
+  BellMetrics._();
+
+  /// The dropdown under a bell on a wide window: 400 wide, [panelGap] below
+  /// the bell, kept [panelEdge] inside the window's right edge, at most
+  /// [panelMaxHeight] of the window high, growing from [panelEnterScale].
+  static const double panelWidth = 400;
+  static const double panelGap = AppSpacing.s8;
+  static const double panelEdge = AppSpacing.s16;
+  static const double panelMaxHeight = 0.75;
+  static const double panelEnterScale = 0.95;
+
+  /// The unread number (NOTIF-2d): 12 px, never under the phone minimum.
+  static const double countText = AppFontSize.f12;
+  static const double countHeight = 18;
+
+  /// The number shows up to [countMax], then "9+".
+  static const int countMax = 9;
+}

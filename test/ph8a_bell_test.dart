@@ -21,8 +21,8 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'helpers/notification_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// True until the implementation (every call threw UnimplementedError).
-const _skip = true;
+// Was true until the implementation (every call threw UnimplementedError).
+const _skip = false;
 
 final _anchor = GlobalKey();
 

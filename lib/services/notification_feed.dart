@@ -368,7 +368,7 @@ class NotificationFeedController extends ChangeNotifier {
 
   /// PH8a, NOTIF-2d: the bell's number: what [hasUnreadAlert] looks at,
   /// counted (persistent items included until I read them in their stage).
-  int get unreadAlertCount => throw UnimplementedError();
+  int get unreadAlertCount => _items.where((i) => !i.isRead && i.type != NotificationType.trialStatus).length;
 
   /// The bell's accent: whether I removed the live promotion's notification.
   bool isPromotionDismissedForMe(String promotionLabel) =>

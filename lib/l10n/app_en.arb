@@ -4013,5 +4013,7 @@
   "phoneReport_labelValue": "{label}: {value}",
   "@phoneReport_labelValue": {"description":"Reports on a phone (PH7b): a table column's name and its value as one piece of a row's second line, for example Opening: 10. label is an existing column name.","placeholders":{"label":{"type":"String"},"value":{"type":"String"}}},
   "phoneReport_pastSummaryLine": "{count, plural, =1{1 report} other{{count} reports}}",
-  "@phoneReport_pastSummaryLine": {"description":"Past Reports on a phone (PH7b): the one summary line above the list, how many reports the time filter finds; it opens the Summary sheet.","placeholders":{"count":{"type":"int"}}}
+  "@phoneReport_pastSummaryLine": {"description":"Past Reports on a phone (PH7b): the one summary line above the list, how many reports the time filter finds; it opens the Summary sheet.","placeholders":{"count":{"type":"int"}}},
+  "notifications_bellOverNine": "9+",
+  "@notifications_bellOverNine": {"description":"The notifications bell (PH8a, NOTIF-2d): shown on the bell instead of the number when more than 9 are unread."}
 }
