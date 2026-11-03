@@ -667,3 +667,32 @@ class PhoneFormMetrics {
   static const double optionGap = AppSpacing.s12;
   static const double groupHeaderPaddingTop = AppSpacing.s12;
 }
+
+/// PH7b (docs/design/phone_reports.md): the reports on a phone.
+class PhoneReportMetrics {
+  PhoneReportMetrics._();
+
+  /// The page's and a row's side padding; the gap between sections.
+  static const double pagePadding = AppSpacing.s16;
+  static const double sectionGap = AppSpacing.s16;
+  static const double sectionRadius = AppRadius.r12;
+  static const double headerGap = AppSpacing.s8;
+
+  /// R1: the tab bar's labels and each tab's height (a 48 px target).
+  static const double tabLabel = AppFontSize.f14;
+  static const double tabHeight = 48;
+
+  /// R2 rows: two lines, at least 56 high; line 1 at 14, line 2 at 13.
+  static const double rowMinHeight = 56;
+  static const double rowPaddingV = AppSpacing.s8;
+  static const double title = AppFontSize.f14;
+  static const double subtitle = AppFontSize.f13;
+  static const double sectionTitle = AppFontSize.f16;
+  static const double icon = AppIconSize.i18;
+  static const double lineGap = AppSpacing.s4;
+  static const double partGap = AppSpacing.s8;
+
+  /// R4 label-and-value rows (and See all): at least 48 high.
+  static const double statMinHeight = 48;
+  static const double statPaddingV = AppSpacing.s6;
+}

@@ -140,4 +140,7 @@ class AppLimits {
 
   /// The most announcements the login page's Updates list holds (AN2).
   static const int updatesMaxSlides = 5;
+
+  /// PH7b R3: a report list on a phone shows this many rows, then See all.
+  static const int reportPreviewRows = 5;
 }
