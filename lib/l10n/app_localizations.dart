@@ -12181,6 +12181,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'9+'**
   String get notifications_bellOverNine;
+
+  /// The subscription banner on phones (PH8a), one short line: the subscription has expired and the app is read-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Read-only: subscription expired'**
+  String get subscription_bannerLocked;
+
+  /// The subscription banner on phones (PH8a), one short line: expired, in the few grace days before read-only.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription expired: grace days'**
+  String get subscription_bannerGrace;
+
+  /// The subscription banner on phones (PH8a), one short line: the calm free trial and the days left.
+  ///
+  /// In en, this message translates to:
+  /// **'Free trial: {count, plural, =1{1 day} other{{count} days}} left'**
+  String subscription_bannerTrialDays(int count);
+
+  /// The subscription banner on phones (PH8a), one short line: the last 7 days of the free trial.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial ends in {count, plural, =1{1 day} other{{count} days}}'**
+  String subscription_bannerTrialEnds(int count);
+
+  /// The subscription banner on phones (PH8a), one short line: the last 7 days of a paid subscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription ends in {count, plural, =1{1 day} other{{count} days}}'**
+  String subscription_bannerEnds(int count);
+
+  /// The subscription banner on phones (PH8a): an assistant's Details dialog, under the full sentence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your admin manages the subscription.'**
+  String get subscription_bannerAdminManages;
 }
 
 class _AppLocalizationsDelegate

@@ -7307,4 +7307,47 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get notifications_bellOverNine => '9+';
+
+  @override
+  String get subscription_bannerLocked => 'Kusoma tu: usajili umekwisha';
+
+  @override
+  String get subscription_bannerGrace => 'Usajili umekwisha: siku za neema';
+
+  @override
+  String subscription_bannerTrialDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'zimebaki siku $count',
+      one: 'imebaki siku 1',
+    );
+    return 'Majaribio bure: $_temp0';
+  }
+
+  @override
+  String subscription_bannerTrialEnds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'siku $count',
+      one: 'siku 1',
+    );
+    return 'Majaribio yanakwisha baada ya $_temp0';
+  }
+
+  @override
+  String subscription_bannerEnds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'siku $count',
+      one: 'siku 1',
+    );
+    return 'Usajili unakwisha baada ya $_temp0';
+  }
+
+  @override
+  String get subscription_bannerAdminManages =>
+      'Msimamizi wako ndiye anayesimamia usajili.';
 }

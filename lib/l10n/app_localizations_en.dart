@@ -7262,4 +7262,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifications_bellOverNine => '9+';
+
+  @override
+  String get subscription_bannerLocked => 'Read-only: subscription expired';
+
+  @override
+  String get subscription_bannerGrace => 'Subscription expired: grace days';
+
+  @override
+  String subscription_bannerTrialDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return 'Free trial: $_temp0 left';
+  }
+
+  @override
+  String subscription_bannerTrialEnds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return 'Trial ends in $_temp0';
+  }
+
+  @override
+  String subscription_bannerEnds(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return 'Subscription ends in $_temp0';
+  }
+
+  @override
+  String get subscription_bannerAdminManages =>
+      'Your admin manages the subscription.';
 }
