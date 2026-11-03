@@ -718,3 +718,22 @@ class BellMetrics {
   /// The number shows up to [countMax], then "9+".
   static const int countMax = 9;
 }
+
+/// PH8a: the subscription banner at the top of the phone tabs.
+class PhoneBannerMetrics {
+  PhoneBannerMetrics._();
+
+  /// A tint of the status role behind the banner, a line of it under.
+  static const double fillAlpha = AppAlpha.a10;
+  static const double borderAlpha = AppAlpha.a40;
+  static const double border = 1;
+  static const double paddingStart = AppSpacing.s12;
+  static const double paddingV = AppSpacing.s2;
+  static const double icon = AppIconSize.i20;
+  static const double gap = AppSpacing.s8;
+
+  /// One line, two at most in Kiswahili, 14 px.
+  static const double text = AppFontSize.f14;
+  static const int maxLines = 2;
+  static const double actionPaddingH = AppSpacing.s8;
+}

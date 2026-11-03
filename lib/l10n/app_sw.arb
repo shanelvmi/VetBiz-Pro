@@ -4015,5 +4015,17 @@
   "phoneReport_pastSummaryLine": "{count, plural, =1{ripoti 1} other{ripoti {count}}}",
   "@phoneReport_pastSummaryLine": {"x-review":"draft"},
   "notifications_bellOverNine": "9+",
-  "@notifications_bellOverNine": {"x-review":"draft"}
+  "@notifications_bellOverNine": {"x-review":"draft"},
+  "subscription_bannerLocked": "Kusoma tu: usajili umekwisha",
+  "@subscription_bannerLocked": {"x-review":"draft"},
+  "subscription_bannerGrace": "Usajili umekwisha: siku za neema",
+  "@subscription_bannerGrace": {"x-review":"draft"},
+  "subscription_bannerTrialDays": "Majaribio bure: {count, plural, =1{imebaki siku 1} other{zimebaki siku {count}}}",
+  "@subscription_bannerTrialDays": {"x-review":"draft"},
+  "subscription_bannerTrialEnds": "Majaribio yanakwisha baada ya {count, plural, =1{siku 1} other{siku {count}}}",
+  "@subscription_bannerTrialEnds": {"x-review":"draft"},
+  "subscription_bannerEnds": "Usajili unakwisha baada ya {count, plural, =1{siku 1} other{siku {count}}}",
+  "@subscription_bannerEnds": {"x-review":"draft"},
+  "subscription_bannerAdminManages": "Msimamizi wako ndiye anayesimamia usajili.",
+  "@subscription_bannerAdminManages": {"x-review":"draft"}
 }

@@ -4015,5 +4015,17 @@
   "phoneReport_pastSummaryLine": "{count, plural, =1{1 report} other{{count} reports}}",
   "@phoneReport_pastSummaryLine": {"description":"Past Reports on a phone (PH7b): the one summary line above the list, how many reports the time filter finds; it opens the Summary sheet.","placeholders":{"count":{"type":"int"}}},
   "notifications_bellOverNine": "9+",
-  "@notifications_bellOverNine": {"description":"The notifications bell (PH8a, NOTIF-2d): shown on the bell instead of the number when more than 9 are unread."}
+  "@notifications_bellOverNine": {"description":"The notifications bell (PH8a, NOTIF-2d): shown on the bell instead of the number when more than 9 are unread."},
+  "subscription_bannerLocked": "Read-only: subscription expired",
+  "@subscription_bannerLocked": {"description":"The subscription banner on phones (PH8a), one short line: the subscription has expired and the app is read-only."},
+  "subscription_bannerGrace": "Subscription expired: grace days",
+  "@subscription_bannerGrace": {"description":"The subscription banner on phones (PH8a), one short line: expired, in the few grace days before read-only."},
+  "subscription_bannerTrialDays": "Free trial: {count, plural, =1{1 day} other{{count} days}} left",
+  "@subscription_bannerTrialDays": {"description":"The subscription banner on phones (PH8a), one short line: the calm free trial and the days left.","placeholders":{"count":{"type":"int"}}},
+  "subscription_bannerTrialEnds": "Trial ends in {count, plural, =1{1 day} other{{count} days}}",
+  "@subscription_bannerTrialEnds": {"description":"The subscription banner on phones (PH8a), one short line: the last 7 days of the free trial.","placeholders":{"count":{"type":"int"}}},
+  "subscription_bannerEnds": "Subscription ends in {count, plural, =1{1 day} other{{count} days}}",
+  "@subscription_bannerEnds": {"description":"The subscription banner on phones (PH8a), one short line: the last 7 days of a paid subscription.","placeholders":{"count":{"type":"int"}}},
+  "subscription_bannerAdminManages": "Your admin manages the subscription.",
+  "@subscription_bannerAdminManages": {"description":"The subscription banner on phones (PH8a): an assistant's Details dialog, under the full sentence."}
 }
