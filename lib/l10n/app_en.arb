@@ -3992,8 +3992,8 @@
   "@phoneList_paymentsSummaryLine": {"description":"Payments on a phone (PH5b): the one summary line under the chips: how many payments the list shows for the chosen days and their total.","placeholders":{"count":{"type":"int"},"amount":{"type":"String"}}},
   "phoneList_transactionsSummaryLine": "{period}: income {income}, expenses {expenses}",
   "@phoneList_transactionsSummaryLine": {"description":"Transactions on a phone (PH5b): the one summary line under the chips, from the old cards: the period (two dates), the other income and the expenses in it.","placeholders":{"period":{"type":"String"},"income":{"type":"String"},"expenses":{"type":"String"}}},
-  "phoneForm_discardTitle": "{kind, select, sale{Discard this sale?} payment{Discard this payment?} client{Discard this client?} transaction{Discard this transaction?} visit{Discard this visit?} product{Discard this product?} batch{Discard this batch?} other{Discard this form?}}",
-  "@phoneForm_discardTitle": {"description":"Money forms on a phone (PH6): the question when someone leaves a form that holds entered data. kind is a fixed key (sale, payment, client, transaction, visit; PH7a: product, batch), never shown.","placeholders":{"kind":{"type":"String"}}},
+  "phoneForm_discardTitle": "{kind, select, sale{Discard this sale?} payment{Discard this payment?} client{Discard this client?} transaction{Discard this transaction?} visit{Discard this visit?} product{Discard this product?} batch{Discard this batch?} report{Discard these counts?} other{Discard this form?}}",
+  "@phoneForm_discardTitle": {"description":"Money forms on a phone (PH6): the question when someone leaves a form that holds entered data. kind is a fixed key (sale, payment, client, transaction, visit; PH7a: product, batch; PH7b: report, the review form's counts), never shown.","placeholders":{"kind":{"type":"String"}}},
   "phoneForm_discardBody": "What you entered will be lost.",
   "@phoneForm_discardBody": {"description":"Money forms on a phone (PH6): under the discard question."},
   "phoneForm_keepEditing": "Keep editing",
@@ -4007,5 +4007,11 @@
   "phoneList_productRowSemantics": "{name}, {quantity}, {amount}, {status}",
   "@phoneList_productRowSemantics": {"description":"Products and Stock Store on a phone (PH7a): what a screen reader says for a product row: the name, the quantity with its unit, the price (Stock Store: the stored value) and the stock status, for example 'Albendazole 10%, 40 pcs, Tsh 15,000, In Stock'.","placeholders":{"name":{"type":"String"},"quantity":{"type":"String"},"amount":{"type":"String"},"status":{"type":"String"}}},
   "phoneList_sort": "Sort",
-  "@phoneList_sort": {"description":"Products and Stock Store on a phone (PH7a): the title of the sort choices in the Filter sheet (the tablet's sort menu)."}
+  "@phoneList_sort": {"description":"Products and Stock Store on a phone (PH7a): the title of the sort choices in the Filter sheet (the tablet's sort menu)."},
+  "phoneReport_seeAll": "See all ({count})",
+  "@phoneReport_seeAll": {"description":"Reports on a phone (PH7b): the row under a list cut to its first 5 rows; it opens every row on a page of its own. count is how many rows there are.","placeholders":{"count":{"type":"int"}}},
+  "phoneReport_labelValue": "{label}: {value}",
+  "@phoneReport_labelValue": {"description":"Reports on a phone (PH7b): a table column's name and its value as one piece of a row's second line, for example Opening: 10. label is an existing column name.","placeholders":{"label":{"type":"String"},"value":{"type":"String"}}},
+  "phoneReport_pastSummaryLine": "{count, plural, =1{1 report} other{{count} reports}}",
+  "@phoneReport_pastSummaryLine": {"description":"Past Reports on a phone (PH7b): the one summary line above the list, how many reports the time filter finds; it opens the Summary sheet.","placeholders":{"count":{"type":"int"}}}
 }
