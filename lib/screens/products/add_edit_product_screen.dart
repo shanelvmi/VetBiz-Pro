@@ -12,6 +12,7 @@ import '../../utils/activity_logger.dart';
 import '../../utils/upload_size_check.dart';
 import '../../config/app_limits.dart';
 import '../../utils/navigator_key.dart';
+import '../../utils/subscription_guard.dart';
 import '../../utils/thousands_input_formatter.dart';
 import '../../models/product.dart';
 import '../../models/product_batch.dart';
@@ -1563,18 +1564,24 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
 /// desktop/tablet-width screens. Same reasoning as showAddSaleScreen -
 /// a quick, frequent action shouldn't need a full page navigation away
 /// from wherever it was triggered.
+///
+/// A new product goes through the locked-facility guard (PH7a finding: every
+/// entry point, at every width, gets the friendly locked message and no
+/// form); editing an existing product does not.
 Future<void> showAddEditProductScreen(
   BuildContext context, {
   Product? product,
   ProductDestination? presetDestination,
 }) async {
-  await showAdaptiveForm(
-    context,
-    barrierLabel: product != null ? context.l10n.products_editProduct : context.l10n.products_addProduct,
-    builder: (isModal) => AddEditProductScreen(
-      product: product,
-      presetDestination: presetDestination,
-      isModal: isModal,
-    ),
-  );
+  Future<void> open() => showAdaptiveForm(
+        context,
+        barrierLabel: product != null ? context.l10n.products_editProduct : context.l10n.products_addProduct,
+        builder: (isModal) => AddEditProductScreen(
+          product: product,
+          presetDestination: presetDestination,
+          isModal: isModal,
+        ),
+      );
+  if (product != null) return open();
+  await navigateOrShowLockedDialog(context, const AddEditProductScreen(), onNavigate: open);
 }

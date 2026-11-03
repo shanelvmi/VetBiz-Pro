@@ -14,7 +14,7 @@ import 'package:vetbiz_pro/screens/store/stockstore_screen.dart';
 import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _phone = Size(390, 844);
 const _wide = Size(1200, 800);
