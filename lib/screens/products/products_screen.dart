@@ -27,12 +27,9 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
 import '../../l10n/l10n.dart';
-import '../../constants/product_categories.dart';
 import '../../theme/app_layout.dart';
-import '../../widgets/phone_list/phone_filter_sheet.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
-import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import 'product_phone_parts.dart';
 
@@ -1346,52 +1343,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
     return RecordStatus(text == 'Active' ? context.l10n.products_statusInStock : _statusLabel(text), status['color'] as Color);
   }
 
-  Future<void> _showPhoneFilters(Set<String> categoriesInData) async {
-    final l10n = context.l10n;
-    final values = await showPhoneFilterSheet(context, fields: {
-      'category': PhoneFilterField(
-        title: l10n.common_category,
-        // The side panel's categories, group by group, with any in use that
-        // the list does not know.
-        options: [
-          'All',
-          for (final g in kProductCategoryGroups.keys)
-            ...{...kProductCategoryGroups[g]!, ...categoriesInData.where((c) => groupOfCategory(c) == g)},
-        ],
-        label: (v) => v == 'All' ? l10n.products_allProducts : l10n.productCategoryLabel(v),
-        defaultValue: 'All',
-      ),
-      'sort': PhoneFilterField(
-        title: l10n.phoneList_sort,
-        options: [for (final s in ProductSortOption.values) s.name],
-        label: (v) => ProductSortOption.values.byName(v).label,
-        defaultValue: ProductSortOption.nameAsc.name,
-      ),
-    }, values: {
-      'category': _query.selectedCategory,
-      'sort': _query.sortOption.name,
-    });
-    if (values == null) return;
-    final category = values['category']!;
-    _setPhoneQuery(_query.copyWith(
-      // As the side panel: a category selects its group too.
-      selectedGroup: category == 'All' ? 'All' : groupOfCategory(category),
-      selectedCategory: category,
-      sortOption: ProductSortOption.values.byName(values['sort']!),
-    ));
-  }
-
-  void _showPhoneSummary(int totalCount, Map<String, int> statusCounts, double totalStockValue) {
-    final l10n = context.l10n;
-    showPhoneSummarySheet(context, rows: [
-      (l10n.products_totalProducts, '$totalCount'),
-      (l10n.products_statusInStock, '${(statusCounts['Active'] ?? 0) + (statusCounts['Unknown'] ?? 0)}'),
-      (l10n.products_statusLowStock, '${statusCounts['Low Stock'] ?? 0}'),
-      (l10n.products_statusDepleted, '${statusCounts['Depleted'] ?? 0}'),
-      (l10n.products_shelfStockValue, Money.format(totalStockValue)),
-    ]);
-  }
-
   Future<void> _openPhoneDetails(Product product) {
     final l10n = context.l10n;
     final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
@@ -1490,7 +1441,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
       isDepleted: isDepleted,
       statusResolver: _getProductStatus,
     );
-    final sortChanged = _query.sortOption != ProductSortOption.nameAsc;
     // Creating a product is admin-only (owner decision, E4d-2); the form's
     // one entry goes through the locked-facility guard (PH7a finding).
     final add = isAdmin
@@ -1519,22 +1469,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
         label: (v) => productStatusChipLabel(l10n, v),
         onSelected: (v) => _setPhoneQuery(_query.copyWith(selectedStatus: v, page: 1)),
       ),
-      filtersActive: _query.selectedCategory != 'All' || sortChanged,
-      onFilter: () => _showPhoneFilters(categoriesInData),
-      appliedFilters: [
-        if (_query.selectedCategory != 'All')
-          PhoneAppliedFilter(
-            l10n.common_filterValue(l10n.common_category, l10n.productCategoryLabel(_query.selectedCategory)),
-            () => _setPhoneQuery(_query.copyWith(selectedGroup: 'All', selectedCategory: 'All', page: 1)),
-          ),
-        if (sortChanged)
-          PhoneAppliedFilter(
-            l10n.common_filterValue(l10n.phoneList_sort, _query.sortOption.label),
-            () => _setPhoneQuery(_query.copyWith(sortOption: ProductSortOption.nameAsc, page: 1)),
-          ),
-      ],
+      filtersActive: productFiltersActive(_query),
+      onFilter: () async {
+        final query = await showProductFilterSheet(context, query: _query, categoriesInData: categoriesInData);
+        if (query != null) _setPhoneQuery(query);
+      },
+      appliedFilters: productAppliedFilters(l10n, _query, _setPhoneQuery),
       summaryLine: l10n.phoneList_productsSummaryLine(totalCount, Money.format(totalStockValue)),
-      onSummary: () => _showPhoneSummary(totalCount, statusCounts, totalStockValue),
+      onSummary: () => showProductSummarySheet(context,
+          totalCount: totalCount,
+          statusCounts: statusCounts,
+          valueLabel: l10n.products_shelfStockValue,
+          stockValue: totalStockValue),
       items: shown.items,
       idOf: (p) => p.id,
       // Not grouped by day (R5): a product has no date of its own here.

@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../config/money.dart';
+import '../../constants/product_categories.dart';
 import '../../l10n/l10n.dart';
 import '../../models/product.dart';
 import '../../providers/product_provider.dart';
+import '../../services/product_catalog_service.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../widgets/initials_avatar.dart';
+import '../../widgets/phone_list/phone_filter_sheet.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/product_thumbnail.dart';
 import 'stock_alerts_screen.dart';
@@ -268,4 +274,91 @@ Future<void> showStockAlertsSheet(BuildContext context) {
     constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * AppSheetMetrics.sheetMaxHeightFactor),
     builder: (_) => const SafeArea(top: false, child: StockAlertsScreen(isDropdown: true)),
   );
+}
+
+/// The Filter sheet of a product list (R3): the side panel's categories and
+/// the sort menu, applied to [query]. Returns the new query, or null when
+/// the sheet was closed without Apply.
+Future<ProductCatalogQuery?> showProductFilterSheet(
+  BuildContext context, {
+  required ProductCatalogQuery query,
+  required Set<String> categoriesInData,
+}) async {
+  final l10n = context.l10n;
+  final values = await showPhoneFilterSheet(context, fields: {
+    'category': PhoneFilterField(
+      title: l10n.common_category,
+      // The side panel's categories, group by group, with any in use that
+      // the list does not know.
+      options: [
+        'All',
+        for (final g in kProductCategoryGroups.keys)
+          ...{...kProductCategoryGroups[g]!, ...categoriesInData.where((c) => groupOfCategory(c) == g)},
+      ],
+      label: (v) => v == 'All' ? l10n.products_allProducts : l10n.productCategoryLabel(v),
+      defaultValue: 'All',
+    ),
+    'sort': PhoneFilterField(
+      title: l10n.phoneList_sort,
+      options: [for (final s in ProductSortOption.values) s.name],
+      label: (v) => ProductSortOption.values.byName(v).label,
+      defaultValue: ProductSortOption.nameAsc.name,
+    ),
+  }, values: {
+    'category': query.selectedCategory,
+    'sort': query.sortOption.name,
+  });
+  if (values == null) return null;
+  final category = values['category']!;
+  return query.copyWith(
+    // As the side panel: a category selects its group too.
+    selectedGroup: category == 'All' ? 'All' : groupOfCategory(category),
+    selectedCategory: category,
+    sortOption: ProductSortOption.values.byName(values['sort']!),
+    page: 1,
+  );
+}
+
+/// Whether [query] has a filter the Filter sheet set.
+bool productFiltersActive(ProductCatalogQuery query) =>
+    query.selectedCategory != 'All' || query.sortOption != ProductSortOption.nameAsc;
+
+/// The Filter sheet's choices as removable chips; [onChanged] gets the query
+/// without the removed one.
+List<PhoneAppliedFilter> productAppliedFilters(
+  AppLocalizations l10n,
+  ProductCatalogQuery query,
+  ValueChanged<ProductCatalogQuery> onChanged,
+) =>
+    [
+      if (query.selectedCategory != 'All')
+        PhoneAppliedFilter(
+          l10n.common_filterValue(l10n.common_category, l10n.productCategoryLabel(query.selectedCategory)),
+          () => onChanged(query.copyWith(selectedGroup: 'All', selectedCategory: 'All', page: 1)),
+        ),
+      if (query.sortOption != ProductSortOption.nameAsc)
+        PhoneAppliedFilter(
+          l10n.common_filterValue(l10n.phoneList_sort, query.sortOption.label),
+          () => onChanged(query.copyWith(sortOption: ProductSortOption.nameAsc, page: 1)),
+        ),
+    ];
+
+/// The five cards as the Summary sheet's rows (R4); [valueLabel] names the
+/// last card (the shelf's or the store's stock value).
+void showProductSummarySheet(
+  BuildContext context, {
+  required int totalCount,
+  required Map<String, int> statusCounts,
+  required String valueLabel,
+  required double stockValue,
+}) {
+  final l10n = context.l10n;
+  showPhoneSummarySheet(context, rows: [
+    (l10n.products_totalProducts, '$totalCount'),
+    // 'Unknown' (no expiry) is in stock too, as on the cards.
+    (l10n.products_statusInStock, '${(statusCounts['Active'] ?? 0) + (statusCounts['Unknown'] ?? 0)}'),
+    (l10n.products_statusLowStock, '${statusCounts['Low Stock'] ?? 0}'),
+    (l10n.products_statusDepleted, '${statusCounts['Depleted'] ?? 0}'),
+    (valueLabel, Money.format(stockValue)),
+  ]);
 }
