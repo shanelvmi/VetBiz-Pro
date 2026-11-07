@@ -20,6 +20,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_layout.dart';
 import '../../l10n/l10n.dart';
 
 /// Only ever shown for an Admin managing more than one facility - the
@@ -162,7 +163,9 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.s24),
+                      // PH8b: the 16 px gutter on a phone, so the card keeps its own
+                      // padding at 360 (24 on a tablet or computer, as before).
+                      padding: EdgeInsets.all(_phone ? AppSpacing.s16 : AppSpacing.s24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -184,6 +187,19 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
       ),
     );
   }
+
+  // PH8b: the phone fixes (the gutter, 12 px text, a 48 px menu, the row
+  // that wraps); tablets and computers keep today's picker.
+  bool get _phone => AppLayout.isPhone(context);
+
+  // At least 48 x 48 on a phone; untouched elsewhere.
+  Widget _phoneTapTarget(Widget child) =>
+      _phone
+          ? ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: AppSizes.minTapTarget, minHeight: AppSizes.minTapTarget),
+              child: child,
+            )
+          : child;
 
   Widget _buildHeader() {
     return Container(
@@ -213,7 +229,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                 Text(context.l10n.facilityPicker_tagline,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: context.colors.onBrandSurfaceMuted, fontSize: AppFontSize.f10_5)),
+                    style: TextStyle(color: context.colors.onBrandSurfaceMuted, fontSize: _phone ? AppFontSize.f12 : AppFontSize.f10_5)),
               ],
             ),
           ),
@@ -225,7 +241,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
             itemBuilder: (context) => [
               PopupMenuItem(value: 'logout', child: Text(context.l10n.facilityPicker_logOut)),
             ],
-            child: Row(
+            child: _phoneTapTarget(Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 InitialsAvatar(
@@ -244,7 +260,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                 ),
                 Icon(Icons.expand_more, color: context.colors.onBrandSurface, size: AppIconSize.i18),
               ],
-            ),
+            )),
           ),
           ),
         ],
@@ -351,7 +367,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
             // Shows the label; filters on the stored type.
             ...kFacilityTypes.map((t) => PopupMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))),
           ],
-          child: Container(
+          child: _phoneTapTarget(Container(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
             decoration: BoxDecoration(color: context.colors.surface, borderRadius: BorderRadius.circular(AppRadius.r10)),
             child: Row(
@@ -363,7 +379,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                 const Icon(Icons.expand_more, size: AppIconSize.i18),
               ],
             ),
-          ),
+          )),
         ),
       ],
     );
@@ -466,17 +482,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.s6),
-                Row(
-                  children: [
-                    Icon(Icons.people_outline, size: AppIconSize.i14, color: context.colors.textHint),
-                    const SizedBox(width: AppSpacing.s4),
-                    Text(context.l10n.facilityPicker_staffCount(staffCount), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
-                    const SizedBox(width: AppSpacing.s12),
-                    Container(width: 6, height: 6, decoration: BoxDecoration(color: FacilityStatus.fromKey(status) == FacilityStatus.active ? context.colors.success : context.colors.textHint, shape: BoxShape.circle)),
-                    const SizedBox(width: AppSpacing.s4),
-                    Text(context.l10n.facilityStatusLabel(status), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
-                  ],
-                ),
+                _staffAndStatus(staffCount, status),
                 const SizedBox(height: AppSpacing.s12),
                 Row(
                   children: [
@@ -504,11 +510,11 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                       itemBuilder: (context) => [
                         if (!isDefault) PopupMenuItem(value: 'default', child: Text(context.l10n.facilityPicker_setAsDefault)),
                       ],
-                      child: Container(
+                      child: _phoneTapTarget(Container(
                         padding: const EdgeInsets.all(AppSpacing.s10),
                         decoration: BoxDecoration(border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)), borderRadius: BorderRadius.circular(AppRadius.r8)),
                         child: const Icon(Icons.more_vert, size: AppIconSize.i16),
-                      ),
+                      )),
                     ),
                   ],
                 ),
@@ -537,11 +543,38 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     );
   }
 
+  // The staff count and the status. On a phone the two pairs wrap onto a
+  // second line when the words are long (Kiswahili overflowed by up to 77 px
+  // at 360); elsewhere today's single row.
+  Widget _staffAndStatus(int staffCount, String status) {
+    final staff = [
+      Icon(Icons.people_outline, size: AppIconSize.i14, color: context.colors.textHint),
+      const SizedBox(width: AppSpacing.s4),
+      Text(context.l10n.facilityPicker_staffCount(staffCount), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+    ];
+    final state = [
+      Container(width: 6, height: 6, decoration: BoxDecoration(color: FacilityStatus.fromKey(status) == FacilityStatus.active ? context.colors.success : context.colors.textHint, shape: BoxShape.circle)),
+      const SizedBox(width: AppSpacing.s4),
+      Text(context.l10n.facilityStatusLabel(status), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+    ];
+    if (_phone) {
+      return Wrap(
+        spacing: AppSpacing.s12,
+        runSpacing: AppSpacing.s4,
+        children: [
+          Row(mainAxisSize: MainAxisSize.min, children: staff),
+          Row(mainAxisSize: MainAxisSize.min, children: state),
+        ],
+      );
+    }
+    return Row(children: [...staff, const SizedBox(width: AppSpacing.s12), ...state]);
+  }
+
   Widget _buildFooter() {
     return Center(
       child: Text(
         context.l10n.facilityPicker_footer,
-        style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f11_5),
+        style: TextStyle(color: context.colors.textHint, fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5),
       ),
     );
   }

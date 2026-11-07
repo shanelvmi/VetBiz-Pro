@@ -14,8 +14,8 @@ import 'package:vetbiz_pro/screens/facilities/select_facility_screen.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// True until the picker's phone fixes exist.
-const _skipPicker = true;
+// Was true until the picker's phone fixes existed.
+const _skipPicker = false;
 
 const _items = <Map<String, dynamic>>[
   {'facilityId': 'f1', 'facilityName': matrixLongFacilityName, 'facilityType': 'Agrovet', 'facilityTypeDetail': null},
@@ -58,8 +58,9 @@ void main() {
     await _picker(tester, const Size(360, 740), MatrixLook.light);
     final card = find.ancestor(of: find.text('Mifugo Clinic'), matching: find.byType(Stack)).first;
     final rect = tester.getRect(card);
-    expect(rect.left, 16);
-    expect(rect.right, 360 - 16);
+    // The 16 px gutter, then the card's 1 px border.
+    expect(rect.left, 16 + 1);
+    expect(rect.right, 360 - 16 - 1);
     final name = tester.getRect(find.text('Mifugo Clinic'));
     // 14 px padding, the 56 px logo and its 12 px gap before the name.
     expect(name.left - rect.left, 14 + 56 + 12);
