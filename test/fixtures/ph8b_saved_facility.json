@@ -1,0 +1,159 @@
+{
+  "add-agrovet": {
+    "calls": [
+      {
+        "name": "addFacility",
+        "payload": {
+          "name": "Mpya Vet Centre",
+          "type": "Agrovet"
+        }
+      }
+    ],
+    "deletes": [],
+    "facility": {
+      "logoUrl": "https://storage.test/o/facility_logos%2FfacilityNew.png?alt=media&token=t&cb=<time>"
+    },
+    "uploads": [
+      {
+        "bytes": 70,
+        "contentType": "image/png",
+        "path": "facility_logos/facilityNew.png"
+      }
+    ]
+  },
+  "add-ambulatory-vet": {
+    "calls": [
+      {
+        "name": "addFacility",
+        "payload": {
+          "name": "Mpya Vet Centre",
+          "type": "Ambulatory Vet"
+        }
+      }
+    ],
+    "deletes": [],
+    "facility": null,
+    "uploads": []
+  },
+  "add-other": {
+    "calls": [
+      {
+        "name": "addFacility",
+        "payload": {
+          "name": "Mpya Vet Centre",
+          "type": "Other",
+          "typeDetail": "Kituo cha mafunzo"
+        }
+      }
+    ],
+    "deletes": [],
+    "facility": {
+      "logoUrl": "https://storage.test/o/facility_logos%2FfacilityNew.png?alt=media&token=t&cb=<time>"
+    },
+    "uploads": [
+      {
+        "bytes": 70,
+        "contentType": "image/png",
+        "path": "facility_logos/facilityNew.png"
+      }
+    ]
+  },
+  "add-vet-clinic": {
+    "calls": [
+      {
+        "name": "addFacility",
+        "payload": {
+          "name": "Mpya Vet Centre",
+          "type": "Vet Clinic"
+        }
+      }
+    ],
+    "deletes": [],
+    "facility": null,
+    "uploads": []
+  },
+  "add-vet-hospital": {
+    "calls": [
+      {
+        "name": "addFacility",
+        "payload": {
+          "name": "Mpya Vet Centre",
+          "type": "Vet Hospital"
+        }
+      }
+    ],
+    "deletes": [],
+    "facility": null,
+    "uploads": []
+  },
+  "edit-all": {
+    "calls": [
+      {
+        "name": "syncFacilityDetails",
+        "payload": {
+          "facilityId": "facility1"
+        }
+      }
+    ],
+    "deletes": [],
+    "facility": {
+      "address": "Barabara ya Sokoine",
+      "code": "VBP-001",
+      "createdAt": "<time>",
+      "createdBy": "user1",
+      "description": "Pembejeo na dawa za mifugo",
+      "email": "mpya@kilimo.co.tz",
+      "licenseNo": "LIC-99",
+      "logoUrl": "https://storage.test/o/facility_logos%2Ffacility1.png?alt=media&token=t&cb=<time>",
+      "name": "Kilimo Agrovet Mpya",
+      "ownership": "Rented",
+      "phone": "+255 754 999 000",
+      "restockFrequency": "Monthly",
+      "status": "Inactive",
+      "tagline": "Afya ya mifugo yako",
+      "tin": "123-456-789",
+      "type": "Other",
+      "typeDetail": "Duka la pembejeo",
+      "updatedAt": "<time>"
+    },
+    "uploads": [
+      {
+        "bytes": 70,
+        "contentType": "image/png",
+        "path": "facility_logos/facility1.png"
+      }
+    ]
+  },
+  "edit-remove-logo": {
+    "calls": [
+      {
+        "name": "syncFacilityDetails",
+        "payload": {
+          "facilityId": "facility3"
+        }
+      }
+    ],
+    "deletes": [
+      "facility_logos/facility3.png"
+    ],
+    "facility": {
+      "address": null,
+      "code": "VBP-003",
+      "createdAt": "<time>",
+      "createdBy": "user1",
+      "description": null,
+      "email": "info3@kilimo.co.tz",
+      "licenseNo": "LIC-2",
+      "name": "Shamba Hub",
+      "ownership": null,
+      "phone": "+255 754 000 102",
+      "restockFrequency": "Every 2 Weeks",
+      "status": "Inactive",
+      "tagline": null,
+      "tin": null,
+      "type": "Vet Clinic",
+      "updatedAt": "<time>"
+    },
+    "uploads": []
+  }
+}
