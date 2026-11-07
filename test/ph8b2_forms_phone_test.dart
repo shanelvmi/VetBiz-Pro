@@ -22,7 +22,7 @@ import 'helpers/ph8b_team.dart';
 import 'helpers/phone_list_harness.dart';
 
 // True until the phone forms are built (P3).
-const _skip = true;
+const _skip = false;
 
 final _en = ph8b2En;
 const _bar = ValueKey('formActionBar');
@@ -32,6 +32,11 @@ Future<void> _openAdd(WidgetTester tester) => ph8b2Tap(tester, find.byKey(const 
 
 Future<void> _openEdit(WidgetTester tester) async {
   await ph8b2OpenDetails(tester);
+  await _editFromPage(tester);
+}
+
+/// From the facility's page: its menu, then Edit.
+Future<void> _editFromPage(WidgetTester tester) async {
   await ph8b2Tap(tester, find.byKey(ph8b2Menu));
   await ph8b2Tap(tester, find.text(_en.facilities_editTitle).last);
 }
@@ -48,9 +53,9 @@ List<String> _order(WidgetTester tester, List<String> labels) {
 }
 
 void main() {
-  for (final (name, open, title, primary) in [
-    ('Add', _openAdd, _en.facilities_addTitle, _en.common_add),
-    ('Edit', _openEdit, _en.facilities_editTitle, _en.common_save),
+  for (final (name, open, reopen, title, primary) in [
+    ('Add', _openAdd, _openAdd, _en.facilities_addTitle, _en.common_add),
+    ('Edit', _openEdit, _editFromPage, _en.facilities_editTitle, _en.common_save),
   ]) {
     ph5TestWidgets('$name: a full page with the pinned bar (Cancel, $primary), not a dialog', (tester) async {
       await pumpPh8b2(tester);
@@ -82,7 +87,7 @@ void main() {
       await ph8b2Settle(tester);
       expect(find.byKey(_bar), findsNothing);
       expect(find.byType(AlertDialog), findsNothing);
-      await open(tester);
+      await reopen(tester);
       await ph8b2Tap(tester, find.descendant(of: find.byKey(_bar), matching: find.text(_en.common_cancel)));
       expect(find.byKey(_bar), findsNothing);
     }, skip: _skip);

@@ -32,7 +32,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/updates_harness.dart' show testPng;
 
 // True until the phone forms exist (P3).
-const _skipPhone = true;
+const _skipPhone = false;
 
 const _fixture = 'test/fixtures/ph8b_saved_facility.json';
 final _en = lookupAppLocalizations(const Locale('en'));

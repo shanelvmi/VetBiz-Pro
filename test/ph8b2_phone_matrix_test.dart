@@ -11,7 +11,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
 // True until the phone forms are built (P3); the page and the sheets pass.
-const _skipForms = true;
+const _skipForms = false;
 
 /// The part's name, the platform limit it needs and how to open it from the
 /// list (labels found by key or icon, the same in both languages).

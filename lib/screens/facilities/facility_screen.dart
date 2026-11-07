@@ -50,6 +50,8 @@ import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
 import '../../widgets/app_safe_area.dart';
+import '../../widgets/app_sheet.dart';
+import 'facility_phone_form.dart';
 
 class FacilityScreen extends StatefulWidget {
   // PH8b seams: tests pass fakes; the app leaves them null (the default
@@ -440,6 +442,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
       return;
     }
 
+    if (!mounted) return;
+    // PH8b-2 P3: the form page on a phone, today's dialog elsewhere.
+    if (AppLayout.isPhone(context)) {
+      await _openPhoneForm(null);
+      return;
+    }
+
     final nameController = TextEditingController();
     String? selectedType;
     // RW2b2: an Other facility's own words, and the two fields' errors.
@@ -657,6 +666,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // ==================== EDIT FACILITY ====================
 
   Future<void> _showEditFacilityDialog(Map<String, dynamic> facility) async {
+    if (AppLayout.isPhone(context)) return _openPhoneForm(facility);
     final nameController = TextEditingController(text: facility['name'] as String? ?? '');
     final existingContact = _contactByFacility[facility[Fields.facilityId]];
     final emailController = TextEditingController(text: existingContact?['email'] ?? '');
@@ -2009,6 +2019,78 @@ class _FacilityScreenState extends State<FacilityScreen> {
         ],
       ),
     );
+  }
+
+  // ==================== PHONE FORMS (PH8b-2 P3) ====================
+
+  /// Today's picking path for a logo: the picker, then UploadSizeCheck (too
+  /// large is refused with today's message). Null when nothing is kept.
+  Future<Uint8List?> _pickLogoBytes() async {
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: AppLimits.logoImageMaxSide,
+      maxHeight: AppLimits.logoImageMaxSide,
+      imageQuality: AppLimits.pickedImageQuality,
+    );
+    if (picked == null) return null;
+    final bytes = await picked.readAsBytes();
+    return UploadSizeCheck.allow(bytes) ? bytes : null;
+  }
+
+  /// Add ([facility] null) or Edit as the phone form page; each saves what
+  /// today's dialog saves, with the same arguments.
+  Future<void> _openPhoneForm(Map<String, dynamic>? facility) async {
+    final facilityId = facility?[Fields.facilityId] as String?;
+    Map<String, dynamic>? added;
+    await showAdaptiveForm<bool>(
+      context,
+      barrierLabel: facility == null ? context.l10n.facilities_addTitle : context.l10n.facilities_editTitle,
+      builder: (_) => FacilityPhoneForm(
+        facility: facility,
+        details: _detailsByFacility[facilityId],
+        contact: _contactByFacility[facilityId],
+        existingLogoUrl: facilityId == null ? null : _logoByFacility[facilityId],
+        pickLogo: _pickLogoBytes,
+        errorFor: (e) => facility == null
+            // The server's own wording: the facility limit, a connection problem.
+            ? MembershipService.errorMessage(e)
+            : L10n.current.facilities_saveFailed(FriendlyError.messageFor(e)),
+        onSave: (input) async {
+          if (facility == null) {
+            setState(() => _isAddingFacility = true);
+            try {
+              added = await _addFacility(
+                  name: input.name, type: input.type!, typeDetail: input.typeDetail, logoBytes: input.logoBytes);
+            } finally {
+              if (mounted) setState(() => _isAddingFacility = false);
+            }
+            return;
+          }
+          String? orNull(String field) => input.texts[field]!.trim().isEmpty ? null : input.texts[field]!.trim();
+          await _editFacility(
+            facilityId: facilityId!,
+            name: input.name,
+            type: input.type!,
+            typeDetail: input.typeDetail.trim(),
+            logoBytes: input.logoBytes,
+            removeLogo: input.removeLogo,
+            email: orNull('email'),
+            phone: orNull('phone'),
+            address: orNull('address'),
+            description: orNull('description'),
+            tagline: orNull('tagline'),
+            licenseNo: orNull('licenseNo'),
+            tin: orNull('tin'),
+            ownership: input.ownership,
+            status: input.status,
+            restockFrequency: input.restockFrequency,
+          );
+        },
+      ),
+    );
+    // As today: switch to the new facility only once the form has closed.
+    final newFacility = added;
+    if (newFacility != null && mounted) await _switchToFacility(newFacility);
   }
 
   // ==================== PHONE SHEETS (PH8b-2 P4) ====================
