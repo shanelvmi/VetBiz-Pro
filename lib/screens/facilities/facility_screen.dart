@@ -56,8 +56,11 @@ class FacilityScreen extends StatefulWidget {
   final FirebaseAuth? auth;
   final FirebaseStorage? storage;
   final MembershipService? membership;
+  // PH8b-2 seams: the delete callable and the logo picker (default the app's own).
+  final FirebaseFunctions? functions;
+  final ImagePicker? imagePicker;
 
-  const FacilityScreen({super.key, this.firestore, this.auth, this.storage, this.membership});
+  const FacilityScreen({super.key, this.firestore, this.auth, this.storage, this.membership, this.functions, this.imagePicker});
 
   @override
   State<FacilityScreen> createState() => _FacilityScreenState();
@@ -141,7 +144,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   // Logo upload - the ImagePicker instance is shared by both the Add
   // and Edit Facility dialogs.
-  final ImagePicker _picker = ImagePicker();
+  late final ImagePicker _picker = widget.imagePicker ?? ImagePicker();
 
   bool _isAddingFacility = false;
 
@@ -1276,7 +1279,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Future<void> _deleteFacility(String facilityId, {required bool isOnlyFacility}) async {
     final wasActive = facilityId == activeFacilityId;
 
-    final callable = FirebaseFunctions.instance.httpsCallable('deleteOwnFacility');
+    final callable = (widget.functions ?? FirebaseFunctions.instance).httpsCallable('deleteOwnFacility');
     await callable.call({'facilityId': facilityId});
 
     if (!mounted) return;

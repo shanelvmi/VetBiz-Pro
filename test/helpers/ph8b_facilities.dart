@@ -3,6 +3,8 @@
 // Agrovet (the active one), a Vet Clinic with an assistant, and an Other one
 // with its own words for the type (RW2b2), inactive.
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/collections.dart';
 
 import 'fake_firestore.dart';
@@ -51,4 +53,36 @@ Future<void> ph8bSeedFacilities(FirebaseFirestore fs, {bool longNames = false}) 
     'fullName': 'Rehema Clinic',
     'facilityIds': [ph8bClinicId],
   });
+}
+
+/// PH8b-2: the server, through the functions: seam (and MembershipService's
+/// own functions: parameter): every callable asked for, by name and payload,
+/// in order. addFacility answers a new facility's entry as the server does.
+class Ph8bFunctions extends Fake implements FirebaseFunctions {
+  final calls = <(String, Object?)>[];
+  static const newFacilityId = 'facilityNew';
+
+  @override
+  HttpsCallable httpsCallable(String name, {HttpsCallableOptions? options}) => _Callable(this, name);
+}
+
+class _Callable extends Fake implements HttpsCallable {
+  final Ph8bFunctions owner;
+  final String name;
+  _Callable(this.owner, this.name);
+
+  @override
+  Future<HttpsCallableResult<T>> call<T>([dynamic parameters]) async {
+    owner.calls.add((name, parameters));
+    final answer = name == 'addFacility'
+        ? {'facilityId': Ph8bFunctions.newFacilityId, ...Map<String, dynamic>.from(parameters as Map)}
+        : <String, dynamic>{};
+    return _Result<T>(answer as T);
+  }
+}
+
+class _Result<T> extends Fake implements HttpsCallableResult<T> {
+  @override
+  final T data;
+  _Result(this.data);
 }
