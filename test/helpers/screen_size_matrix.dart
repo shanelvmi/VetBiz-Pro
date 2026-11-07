@@ -6,6 +6,8 @@ import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
+import 'dark_surface_scan.dart';
+
 // PH2a: the overflow matrix (docs/design/phone_foundations.md section 10).
 // A screen is pumped at five window sizes, each in Light, Dark and
 // Kiswahili, and once at 360 with the text scaled to 1.3. Every case fails
@@ -129,6 +131,9 @@ Future<void> checkCase(WidgetTester tester, {required bool phone, required Strin
   if (const bool.fromEnvironment('MATRIX_DEBUG')) return;
   final error = tester.takeException();
   expect(error, isNull, reason: '$where: $error');
+  // DK1: no bright filled box with text on it in Dark, no dark one in Light.
+  final dark = Theme.of(tester.element(find.byType(Navigator).first)).brightness == Brightness.dark;
+  expectNoBadSurfaces(tester, dark: dark, where: where);
   if (!phone) return;
   final semantics = tester.ensureSemantics();
   await expectLater(tester, meetsGuideline(androidTapTargetGuideline), reason: where);
