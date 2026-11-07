@@ -10,7 +10,7 @@ import 'package:vetbiz_pro/theme/app_page_transitions.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
-const _skip = true; // RV1: until the implementation
+const _skip = false;
 
 final _theme = AppTheme.build(AppColorTheme.pasture, Brightness.light);
 const _home = ValueKey('home page');

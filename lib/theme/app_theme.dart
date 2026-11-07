@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
+import 'app_page_transitions.dart';
 import 'app_palette.dart';
 
 /// Builds the app-wide [ThemeData] for a colour theme.
@@ -87,6 +88,8 @@ class AppTheme {
   }) {
     return ThemeData(
       useMaterial3: true,
+      // RV1: every pushed page slides in from the right (app_page_transitions.dart).
+      pageTransitionsTheme: AppPageTransitionsBuilder.theme,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: page,
       // The blinking text cursor and the highlighted selection in every
