@@ -8478,10 +8478,10 @@ abstract class AppLocalizations {
   /// **'Enter your password'**
   String get login_passwordHint;
 
-  /// Login checkbox: keep the email for next time.
+  /// Login checkbox: keep the email for next time (only the email; AUTH-1).
   ///
   /// In en, this message translates to:
-  /// **'Remember Me'**
+  /// **'Remember my email'**
   String get login_rememberMe;
 
   /// Login link that sends a password reset email.

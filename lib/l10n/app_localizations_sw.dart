@@ -4940,7 +4940,7 @@ class AppLocalizationsSw extends AppLocalizations {
   String get login_passwordHint => 'Weka nenosiri lako';
 
   @override
-  String get login_rememberMe => 'Nikumbuke';
+  String get login_rememberMe => 'Kumbuka barua pepe yangu';
 
   @override
   String get login_forgotPassword => 'Umesahau Nenosiri?';

@@ -4912,7 +4912,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_passwordHint => 'Enter your password';
 
   @override
-  String get login_rememberMe => 'Remember Me';
+  String get login_rememberMe => 'Remember my email';
 
   @override
   String get login_forgotPassword => 'Forgot Password?';
