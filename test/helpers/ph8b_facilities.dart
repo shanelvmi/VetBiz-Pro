@@ -40,7 +40,7 @@ Future<void> ph8bSeedFacilities(FirebaseFirestore fs, {bool longNames = false}) 
       'phone': '+255 754 000 10$i',
       'address': i == 0 ? 'Mtaa wa Uhuru, Arusha' : 'Dodoma',
       'licenseNo': 'LIC-$i',
-      'status': i == 2 ? 'inactive' : 'active',
+      'status': i == 2 ? 'Inactive' : 'Active',
       'createdAt': _at(1 + i),
       'updatedAt': _at(4 + i),
     });

@@ -73,7 +73,7 @@ Future<void> ph8bSeedTeam(FirebaseFirestore fs, {bool longNames = false, bool tw
   final mine = [testFacilityId, if (twoFacilities) ph8bSecondFacilityId];
   Future<void> user(String id, String name, Map<String, dynamic> extra) => users.doc(id).set({
         'fullName': longNames ? '$name $matrixLongClientName' : name,
-        'phone': '+255 712 000 ${id.hashCode % 900 + 100}',
+        'phone': '+255 712 000 ${100 + id.codeUnits.fold<int>(0, (a, c) => a + c) % 900}',
         'email': '$id@kilimo.co.tz',
         'createdAt': _at(1),
         'facilityIds': [testFacilityId],
