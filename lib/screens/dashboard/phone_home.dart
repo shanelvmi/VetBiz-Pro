@@ -97,6 +97,12 @@ class PhoneHome extends StatelessWidget {
   /// Drawn over the top of the page (the subscription pill).
   final Widget? overlay;
 
+  /// RV1: Home's skeleton (docs/design/screen_reveal.md); stub first.
+  final bool skeleton;
+
+  /// RV1: whether Needs attention's data has answered; stub first.
+  final bool attentionReady;
+
   const PhoneHome({
     super.key,
     required this.figures,
@@ -110,6 +116,8 @@ class PhoneHome extends StatelessWidget {
     required this.onGoTo,
     required this.onAttention,
     this.overlay,
+    this.skeleton = false,
+    this.attentionReady = true,
   });
 
   @override

@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 final _months = RegExp(r'\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b');
 
@@ -14,13 +15,33 @@ final _months = RegExp(r'\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b')
 String _mask(String s) => s.replaceAll(RegExp(r'\d'), '#').replaceAll(_months, 'Mon').replaceAll(RegExp(r'\b[AP]M\b'), 'XM');
 
 /// Every element under [root]: its depth, widget type, text (masked), and
-/// for a box its size and position relative to [root].
-String treeFingerprint(WidgetTester tester, Finder root) {
+/// for a box its size and position relative to [root]. With [stripReveal]
+/// (RV1), a ScreenReveal or LateSlot counts as its own content (the child of
+/// its RevealedContent, at the wrapper's depth) and a SkeletonOr as its child,
+/// so a revealed screen compares with the same screen before RV1.
+String treeFingerprint(WidgetTester tester, Finder root, {bool stripReveal = false}) {
   final rootElement = root.evaluate().single;
   final origin = (rootElement.renderObject! as RenderBox).localToGlobal(Offset.zero);
   final out = StringBuffer();
   void visit(Element e, int depth, Offset origin) {
     final w = e.widget;
+    if (stripReveal && (w is ScreenReveal || w is LateSlot)) {
+      Element? content;
+      void find(Element c) {
+        if (content != null) return;
+        if (c.widget is RevealedContent) {
+          c.visitChildren((inner) => content = inner);
+        } else {
+          c.visitChildren(find);
+        }
+      }
+
+      e.visitChildren(find);
+      if (content != null) return visit(content!, depth, origin);
+    }
+    if (stripReveal && w is SkeletonOr) {
+      return e.visitChildren((c) => visit(c, depth, origin));
+    }
     // RV1: a route's page transition counts as its page (the wrappers the
     // platform's builder adds, Zoom before RV1 or AppPageSlide after, are
     // left out), so a screen under a Navigator compares across the change;

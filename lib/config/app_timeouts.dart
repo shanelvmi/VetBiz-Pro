@@ -40,6 +40,10 @@ class AppTimeouts {
   /// The loading screen offers a way out after this long.
   static const Duration startupRecoveryOffer = Duration(seconds: 8);
 
+  /// RV1: the longest a screen shows its skeleton after its first frame
+  /// before it reveals what it has (docs/design/screen_reveal.md).
+  static const Duration revealGate = Duration(milliseconds: 1200);
+
   /// Login button safety net: re-enabled if nothing happened by then
   /// (login_screen.dart).
   static const Duration loginSafetyNet = Duration(seconds: 6);

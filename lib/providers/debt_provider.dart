@@ -40,6 +40,9 @@ class DebtProvider with ChangeNotifier {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
   String? _facilityId;
 
+  // RV1: whether the debts have answered once; stub first.
+  bool get loaded => throw UnimplementedError();
+
   /// Clear all debts (used when switching facility or logout)
   void clear() {
     _subscription?.cancel();

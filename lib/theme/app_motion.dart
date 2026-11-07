@@ -1,3 +1,5 @@
+import 'package:flutter/animation.dart';
+
 /// Animation durations, and how long a snackbar or toast stays up.
 ///
 /// Only for motion. Network timeouts, debounces and business date ranges are
@@ -53,7 +55,25 @@ class AppMotion {
   /// The signed-out page's entrance (AN6): the header and the two cards fade
   /// in and rise [authEntranceRise] px together, once per page, the second
   /// card [authEntranceStagger] after the first, with Curves.easeOutCubic.
-  static const Duration authEntrance = Duration(milliseconds: 350);
+  static const Duration authEntrance = revealDuration;
   static const Duration authEntranceStagger = Duration(milliseconds: 40);
-  static const double authEntranceRise = 12;
+  static const double authEntranceRise = revealRise;
+
+  /// RV1 (docs/design/screen_reveal.md): a screen's content arriving as one
+  /// piece, a fade and a [revealRise] px rise, the login entrance's motion;
+  /// also a late slot's fade.
+  static const Duration revealDuration = Duration(milliseconds: 350);
+  static const Curve revealCurve = Curves.easeOutCubic;
+  static const double revealRise = 12;
+
+  /// RV1: every pushed page slides in [pageSlideOffset] of the width from the
+  /// right with a fade; the page under it moves [pageSlideOutgoingOffset] to
+  /// the left.
+  static const Duration pageSlide = Duration(milliseconds: 280);
+  static const Curve pageSlideCurve = Curves.easeOutCubic;
+  static const double pageSlideOffset = 0.06;
+  static const double pageSlideOutgoingOffset = 0.03;
+
+  /// RV1: the phone's bottom-bar tabs cross-fade.
+  static const Duration tabFade = Duration(milliseconds: 180);
 }

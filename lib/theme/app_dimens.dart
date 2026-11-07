@@ -762,3 +762,15 @@ class PhoneBannerMetrics {
   /// It comes in sliding down this fraction of its height as it fades in.
   static const double enterSlide = 0.25;
 }
+
+/// RV1 (docs/design/screen_reveal.md): the shared skeleton, the phone list's
+/// soft pulse (PH5a R9) and a gentle corner; Home's reserved late slots.
+class RevealMetrics {
+  RevealMetrics._();
+
+  static const double skeletonLow = PhoneListMetrics.skeletonLow;
+  static const double skeletonRadius = AppRadius.r8;
+
+  /// While Needs attention waits: its title and one row.
+  static const double attentionReserve = PhoneHomeMetrics.linkHeight + PhoneHomeMetrics.rowHeight;
+}
