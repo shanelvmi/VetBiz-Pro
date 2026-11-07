@@ -13,7 +13,7 @@ import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true; // DK1: un-skipped with the fix
+const _skip = false;
 
 final _clients = [
   Ph5Client('c1', 'Amina Juma', ph5When(0, minutes: 5), types: ['Farmer', 'Vet'], phone: '0712111111'),

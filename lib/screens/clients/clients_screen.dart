@@ -472,21 +472,47 @@ class _ClientsScreenState extends State<ClientsScreen> {
     });
   }
 
-  Future<Uint8List?> _captureClientCardImage() async {
-    final boundary =
-        _clientCardKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (boundary == null) return null;
+  /// The PNG a customer gets stays Pasture light in every app mode (D11, K5),
+  /// while the card on screen follows the app theme (DK1). So a light copy,
+  /// as wide as the card on screen, is drawn off screen for one frame and
+  /// that copy is captured.
+  Future<Uint8List?> _captureClientCardImage(Client client) async {
+    final onScreen = _clientCardKey.currentContext?.findRenderObject() as RenderBox?;
+    if (onScreen == null || !onScreen.hasSize) return null;
+    final width = onScreen.size.width;
+    final stats = await _getClientStatsFuture(client);
+    if (!mounted) return null;
 
-    final image = await boundary.toImage(pixelRatio: 3.0);
-    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    return byteData?.buffer.asUint8List();
+    final copyKey = GlobalKey();
+    final copy = OverlayEntry(
+      builder: (_) => Positioned(
+        left: -2 * width,
+        top: 0,
+        width: width,
+        child: RepaintBoundary(
+          key: copyKey,
+          child: PrintableTheme(builder: (light) => _clientCard(light, client, stats: stats)),
+        ),
+      ),
+    );
+    Overlay.of(context).insert(copy);
+    try {
+      await WidgetsBinding.instance.endOfFrame;
+      final boundary = copyKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      return byteData?.buffer.asUint8List();
+    } finally {
+      copy.remove();
+    }
   }
 
   Future<void> _shareOrSaveClientCard(Client client) async {
     setState(() => _isSharing = true);
     Uint8List? bytes;
     try {
-      bytes = await _captureClientCardImage();
+      bytes = await _captureClientCardImage(client);
       if (bytes == null) throw Exception('Could not capture the client card image.');
 
       final xfile = XFile.fromData(
@@ -516,8 +542,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
   /// as PH5a R7): the same content without the title and close row (the
   /// page's app bar has them).
   Widget _buildDetailsPanel(Client client, {bool onPage = false}) {
-    final types = client.types.isNotEmpty ? client.types : [kClientTypeOther];
-    final latestNote = client.debtorNotes.isNotEmpty ? client.debtorNotes.last['text'] as String? : null;
 
     return Container(
       decoration: BoxDecoration(
@@ -542,16 +566,47 @@ class _ClientsScreenState extends State<ClientsScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.s12),
-            RepaintBoundary(
+            // DK1: the card follows the app theme on screen (under
+            // PrintableTheme it was a white box in Dark); the PNG is drawn
+            // from a light copy (_captureClientCardImage).
+            KeyedSubtree(
               key: _clientCardKey,
-              child: PrintableTheme(
-                builder: (context) {
-                final accent = _colorForType(types.first, context);
-                return Container(
-                color: context.colors.surface,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: _clientCard(context, client),
+            ),
+            const SizedBox(height: AppSpacing.s24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isSharing ? null : () => _shareOrSaveClientCard(client),
+                icon: _isSharing
+                    ? SizedBox(height: AppSpacing.s16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
+                    : const Icon(Icons.share_outlined, size: AppIconSize.i18),
+                label: Text(context.l10n.clients_saveShare),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.colors.primary,
+                  foregroundColor: context.colors.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The client card: on screen in the app theme, and for the PNG once more,
+  /// off screen, under PrintableTheme ([stats] already loaded, so the
+  /// picture has the figures in its first frame).
+  Widget _clientCard(BuildContext context, Client client, {(int, double)? stats}) {
+    final types = client.types.isNotEmpty ? client.types : [kClientTypeOther];
+    final latestNote = client.debtorNotes.isNotEmpty ? client.debtorNotes.last['text'] as String? : null;
+    final accent = _colorForType(types.first, context);
+    return Container(
+      color: context.colors.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Row(
               children: [
                 CircleAvatar(
@@ -641,6 +696,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             const SizedBox(height: AppSpacing.s16),
             FutureBuilder<(int, double)>(
               future: _getClientStatsFuture(client),
+              initialData: stats,
               builder: (context, snapshot) {
                 final count = snapshot.data?.$1 ?? 0;
                 final total = snapshot.data?.$2 ?? 0.0;
@@ -659,30 +715,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             const SizedBox(height: AppSpacing.s16),
             _detailLabel(context, context.l10n.common_notes),
             Text(latestNote ?? context.l10n.common_noNotes, style: TextStyle(fontSize: AppFontSize.f13_5, color: latestNote == null ? context.colors.textHint : context.colors.textPrimary)),
-                  ],
-                ),
-              );
-              },
-              ),
-            ),
-            const SizedBox(height: AppSpacing.s24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isSharing ? null : () => _shareOrSaveClientCard(client),
-                icon: _isSharing
-                    ? SizedBox(height: AppSpacing.s16, width: 16, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.onPrimary))
-                    : const Icon(Icons.share_outlined, size: AppIconSize.i18),
-                label: Text(context.l10n.clients_saveShare),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: context.colors.primary,
-                  foregroundColor: context.colors.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
-                ),
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
