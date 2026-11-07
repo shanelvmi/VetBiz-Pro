@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/app_timeouts.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
-const _skip = true; // RV1: until the implementation
+const _skip = false;
 
 class _FakeTimer implements Timer {
   bool cancelled = false;
