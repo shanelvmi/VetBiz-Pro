@@ -49,6 +49,10 @@ class RecordTile extends StatelessWidget {
   /// role), when there is no amount to show.
   final RecordStatus? titleStatus;
 
+  /// PH8b: a small tag of the screen's own at the start of line 2 (a
+  /// facility's type).
+  final Widget? tag;
+
   /// The leading: [initialsOf]'s initials, or [icon] when it is null.
   final String? initialsOf;
   final IconData? icon;
@@ -73,6 +77,7 @@ class RecordTile extends StatelessWidget {
     required this.semanticsLabel,
     this.status,
     this.titleStatus,
+    this.tag,
     this.initialsOf,
     this.icon,
     this.leading,
@@ -145,7 +150,7 @@ class RecordTile extends StatelessWidget {
                             Expanded(
                               child: Wrap(
                                 spacing: PhoneListMetrics.partGap,
-                                children: [for (final d in details) Text(d, style: secondary)],
+                                children: [if (tag != null) tag!, for (final d in details) Text(d, style: secondary)],
                               ),
                             ),
                             if (status != null) ...[

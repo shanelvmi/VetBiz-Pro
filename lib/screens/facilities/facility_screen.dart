@@ -39,10 +39,15 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_layout.dart';
 import '../../theme/app_tap_target.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/friendly_error.dart';
 import '../../l10n/l10n.dart';
+import '../../widgets/initials_avatar.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/record_tile.dart';
 
 class FacilityScreen extends StatefulWidget {
   // PH8b seams: tests pass fakes; the app leaves them null (the default
@@ -150,7 +155,19 @@ class _FacilityScreenState extends State<FacilityScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _phoneRevision.dispose();
     super.dispose();
+  }
+
+  // PH8b: the phone's details page is another route, so it cannot rebuild
+  // with this screen; every change of this screen's state ticks this, and
+  // the page rebuilds from the same fields.
+  final ValueNotifier<int> _phoneRevision = ValueNotifier(0);
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _phoneRevision.value++;
   }
 
   /// Fetches a facility's logo URL and this month's quick stats (sales
@@ -1287,13 +1304,15 @@ class _FacilityScreenState extends State<FacilityScreen> {
     }
   }
 
+  Color _statusColor(String status) => switch (FacilityStatus.fromKey(status)) {
+        FacilityStatus.active => context.colors.success,
+        FacilityStatus.inactive => context.colors.danger,
+        FacilityStatus.pending => context.colors.warning,
+        null => context.colors.textHint,
+      };
+
   Widget buildStatusChip(String status) {
-    final chipColor = switch (FacilityStatus.fromKey(status)) {
-      FacilityStatus.active => context.colors.success,
-      FacilityStatus.inactive => context.colors.danger,
-      FacilityStatus.pending => context.colors.warning,
-      null => context.colors.textHint,
-    };
+    final chipColor = _statusColor(status);
     return Container(
       margin: const EdgeInsets.only(left: AppSpacing.s8),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
@@ -1347,6 +1366,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // PH8b (phone_facilities.md P1): phones get the standard phone list;
+    // tablets and computers keep today's panels.
+    if (AppLayout.isPhone(context)) return _buildPhone();
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
@@ -1355,15 +1377,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
           if (isLoading) return const Center(child: CircularProgressIndicator());
           if (facilities.isEmpty) return Center(child: Text(context.l10n.facilities_noneFound));
 
-          final filtered = facilities.where((f) {
-            final name = (f['name'] ?? '').toString().toLowerCase();
-            final code = (_detailsByFacility[f[Fields.facilityId]]?[FacilityCodes.field] ?? '').toString().toLowerCase();
-            final matchesSearch =
-                _searchQuery.isEmpty || name.contains(_searchQuery) || code.contains(_searchQuery);
-            final status = _detailsByFacility[f[Fields.facilityId]]?[Fields.status] as String? ?? FacilityStatus.active.key;
-            final matchesStatus = _listStatusFilter == 'All' || status == _listStatusFilter;
-            return matchesSearch && matchesStatus;
-          }).toList();
+          final filtered = _filteredFacilities();
 
           Map<String, dynamic>? selectedFacility;
           if (filtered.isNotEmpty) {
@@ -1426,6 +1440,156 @@ class _FacilityScreenState extends State<FacilityScreen> {
       ),
     );
   }
+
+  // ==================== PHONE (PH8b) ====================
+
+  Widget _buildPhone() {
+    final l10n = context.l10n;
+    final filtered = _filteredFacilities();
+    // Today's Add Facility, its limit check first.
+    final add = PhoneListAction(label: l10n.facilities_addTitle, icon: Icons.add, onPressed: _showAddFacilityDialog);
+    return PhoneListScaffold<Map<String, dynamic>>(
+      title: l10n.facilities_title,
+      asTab: false,
+      menu: const [],
+      searchController: _searchController,
+      searchHint: l10n.facilities_searchHint,
+      onSearchChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
+      onSearchClosed: () {
+        _searchController.clear();
+        setState(() => _searchQuery = '');
+      },
+      // The list panel's status chips: the stored statuses.
+      quickChips: PhoneQuickChips(
+        key: const ValueKey('phoneList-quickChips'),
+        values: [_allStatuses, FacilityStatus.active.key, FacilityStatus.inactive.key],
+        selected: _listStatusFilter,
+        label: (v) => v == _allStatuses ? l10n.common_all : l10n.facilityStatusLabel(v),
+        onSelected: (v) => setState(() => _listStatusFilter = v),
+      ),
+      // Nothing to filter beyond the chips, and no cards to sum up.
+      filtersActive: false,
+      onFilter: null,
+      appliedFilters: const [],
+      summaryLine: null,
+      onSummary: () {},
+      items: isLoading && facilities.isEmpty ? const [] : filtered,
+      idOf: (f) => '${f[Fields.facilityId]}',
+      dateOf: (_) => DateTime.now(),
+      amountOf: (_) => 0,
+      grouped: false,
+      tileBuilder: (context, f, {required grouped}) => _phoneFacilityTile(f),
+      loading: isLoading,
+      error: null,
+      onRetry: fetchFacilities,
+      emptyIcon: facilities.isEmpty ? Icons.business : Icons.search_off,
+      emptyText: facilities.isEmpty ? l10n.facilities_noneFound : l10n.facilities_noMatchFilter,
+      fab: add,
+      emptyAction: facilities.isEmpty ? add : null,
+      hasMore: false,
+      loadingMore: false,
+      onLoadMore: () {},
+      // Pull to refresh: today's Refresh button.
+      onRefresh: fetchFacilities,
+    );
+  }
+
+  static const _allStatuses = 'All';
+
+  // A row: the logo or initials, the name alone, the type as its small tag
+  // and the status. No buttons: they are on the details page.
+  Widget _phoneFacilityTile(Map<String, dynamic> facility) {
+    final l10n = context.l10n;
+    final id = facility[Fields.facilityId] as String?;
+    final name = _nameOf(facility);
+    final type = facility['type'] as String? ?? '';
+    final typeDetail = facility['typeDetail'] as String?;
+    final status = _detailsByFacility[id]?[Fields.status] as String? ?? FacilityStatus.active.key;
+    final code = (_detailsByFacility[id]?[FacilityCodes.field] ?? '').toString();
+    return RecordTile(
+      title: name,
+      amount: '',
+      tag: FacilityTypeTag(type: type, typeDetail: typeDetail),
+      details: const [],
+      status: RecordStatus(l10n.facilityStatusLabel(status), _statusColor(status)),
+      leading: _phoneLeading(id, name),
+      colorSeed: name,
+      semanticsLabel: l10n.phoneList_rowSemantics(
+        name,
+        type.isEmpty ? l10n.facilityPicker_typeNotSet : l10n.facilityTypeDisplay(type, typeDetail),
+        l10n.facilityStatusLabel(status),
+        code,
+      ),
+      onTap: () => _openPhoneDetails(facility),
+    );
+  }
+
+  // 40 px: the facility's logo, contained as on the panel's rows, or the
+  // name's initials.
+  Widget _phoneLeading(String? id, String name) {
+    final logoUrl = _logoByFacility[id];
+    final initials = Text(
+      InitialsAvatar.initialsFor(name),
+      style: TextStyle(fontSize: PhoneListMetrics.leadingText, fontWeight: AppFontWeight.bold, color: context.colors.textPrimary),
+    );
+    return Container(
+      key: ValueKey('facility-leading-$id'),
+      width: PhoneListMetrics.leading,
+      height: PhoneListMetrics.leading,
+      alignment: Alignment.center,
+      padding: logoUrl != null ? const EdgeInsets.all(AppSpacing.s4) : null,
+      decoration: BoxDecoration(
+        color: context.colors.surfaceMuted,
+        borderRadius: BorderRadius.circular(AppRadius.r8),
+        border: Border.all(color: context.colors.border),
+      ),
+      child: logoUrl != null
+          ? Image.network(logoUrl, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => initials)
+          : initials,
+    );
+  }
+
+  // The facility's details as a page (phone_facilities.md P2 builds it out
+  // in PH8b-2; until then today's details content, as the panel shows it).
+  Future<void> _openPhoneDetails(Map<String, dynamic> facility) {
+    setState(() {
+      _selectedFacilityIdForDetail = facility[Fields.facilityId] as String?;
+      _selectedTabIndex = 0;
+    });
+    return Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        key: const ValueKey('facility-details'),
+        backgroundColor: context.colors.background,
+        appBar: AppBar(title: Text(_nameOf(facility))),
+        body: ValueListenableBuilder<int>(
+          valueListenable: _phoneRevision,
+          builder: (_, _, _) {
+            // The list's copy of the facility, refreshed after an edit.
+            final current = facilities.firstWhere(
+              (f) => f[Fields.facilityId] == facility[Fields.facilityId],
+              orElse: () => facility,
+            );
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.s16),
+              child: _buildDetailPanelContent(current),
+            );
+          },
+        ),
+      ),
+    ));
+  }
+
+  // What search and the status chips leave: the panel and the phone list
+  // show exactly these.
+  List<Map<String, dynamic>> _filteredFacilities() => facilities.where((f) {
+        final name = (f['name'] ?? '').toString().toLowerCase();
+        final code = (_detailsByFacility[f[Fields.facilityId]]?[FacilityCodes.field] ?? '').toString().toLowerCase();
+        final matchesSearch =
+            _searchQuery.isEmpty || name.contains(_searchQuery) || code.contains(_searchQuery);
+        final status = _detailsByFacility[f[Fields.facilityId]]?[Fields.status] as String? ?? FacilityStatus.active.key;
+        final matchesStatus = _listStatusFilter == 'All' || status == _listStatusFilter;
+        return matchesSearch && matchesStatus;
+      }).toList();
 
   // ==================== LIST PANEL ====================
 

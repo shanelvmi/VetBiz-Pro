@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
+import '../theme/app_layout.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 
@@ -55,7 +56,9 @@ class FacilityTypeTag extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: known ? _label(context, type) : context.colors.textMuted,
-          fontSize: AppFontSize.f11,
+          // PH8b: 12 on a phone (S3: secondary text at least 12); 11 elsewhere,
+          // as before.
+          fontSize: AppLayout.isPhone(context) ? AppFontSize.f12 : AppFontSize.f11,
           fontWeight: AppFontWeight.semibold,
         ),
       ),
