@@ -2,6 +2,7 @@
 
 **For:** Claude Code. **Owner:** Shanel (the only reviewer and tester).
 **Continues:** `docs/RUNBOOK.md`. Its batches Q1 (Radio) and Q2 (`dart:html`) are still to do and come first. Every rule in `docs/RUNBOOK.md` section 2 applies here too (git rules, gates, data safety, no logic changes unless a batch says so, no push, budget hygiene, the ledger in the batch's last commit). This file adds the rules below.
+**Ledger integrity:** every ledger edit must keep all existing rows (change a row in place, never delete or empty one) and append each new row's id to `docs/ledger_rows.txt`; `test/ledger_integrity_test.dart` fails, naming the id, when a listed row is missing.
 
 ---
 
