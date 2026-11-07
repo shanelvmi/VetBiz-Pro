@@ -49,6 +49,7 @@ import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
+import '../../widgets/app_safe_area.dart';
 
 class FacilityScreen extends StatefulWidget {
   // PH8b seams: tests pass fakes; the app leaves them null (the default
@@ -1645,8 +1646,12 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
-  // The facility's details as a page (phone_facilities.md P2 builds it out
-  // in PH8b-2; until then today's details content, as the panel shows it).
+  // ==================== PHONE PAGE (PH8b-2 P2) ====================
+
+  // The facility's details as a page: the name alone in the bar with today's
+  // More Actions in one menu; the header card, the metrics in two columns,
+  // Overview, then the other tabs as rows, each its own page with today's
+  // tab content (the same builders), so nothing scrolls sideways.
   Future<void> _openPhoneDetails(Map<String, dynamic> facility) {
     setState(() {
       _selectedFacilityIdForDetail = facility[Fields.facilityId] as String?;
@@ -1654,27 +1659,86 @@ class _FacilityScreenState extends State<FacilityScreen> {
     });
     _phoneListRoute = ModalRoute.of(context);
     return Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (pageContext) => Scaffold(
+      builder: (pageContext) => _phonePage(
+        facility,
         key: const ValueKey('facility-details'),
-        backgroundColor: context.colors.background,
-        appBar: AppBar(title: Text(_nameOf(facility))),
-        body: ValueListenableBuilder<int>(
-          valueListenable: _phoneRevision,
-          builder: (_, _, _) {
-            // The list's copy of the facility, refreshed after an edit.
-            final current = facilities.firstWhere(
-              (f) => f[Fields.facilityId] == facility[Fields.facilityId],
-              orElse: () => facility,
-            );
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.s16),
-              child: _buildDetailPanelContent(current),
-            );
-          },
-        ),
+        title: (current) => _nameOf(current),
+        body: _buildDetailPanelContent,
       ),
     ));
   }
+
+  /// A phone page about [facility], rebuilt with the screen (an edit, a
+  /// status change) from the list's fresh copy of it.
+  Widget _phonePage(
+    Map<String, dynamic> facility, {
+    required Key key,
+    required String Function(Map<String, dynamic> current) title,
+    List<Widget> Function(Map<String, dynamic> current)? actions,
+    required Widget Function(Map<String, dynamic> current) body,
+  }) {
+    return ValueListenableBuilder<int>(
+      valueListenable: _phoneRevision,
+      builder: (_, _, _) {
+        final current = facilities.firstWhere(
+          (f) => f[Fields.facilityId] == facility[Fields.facilityId],
+          orElse: () => facility,
+        );
+        return Scaffold(
+          key: key,
+          backgroundColor: context.colors.background,
+          appBar: AppBar(
+            title: Text(title(current), maxLines: 1, overflow: TextOverflow.ellipsis),
+            actions: actions?.call(current),
+          ),
+          body: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              PhoneListMetrics.pagePadding,
+              PhoneListMetrics.pagePadding,
+              PhoneListMetrics.pagePadding,
+              PhoneListMetrics.pagePadding + AppSafeArea.bottomOf(context),
+            ),
+            child: body(current),
+          ),
+        );
+      },
+    );
+  }
+
+
+  /// Opens tab [index] (Team Members 1 to Settings 5): its own page on a
+  /// phone, the tab itself elsewhere.
+  void _openTab(Map<String, dynamic> facility, int index) {
+    if (!AppLayout.isPhone(context)) {
+      setState(() => _selectedTabIndex = index);
+      return;
+    }
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => _phonePage(
+        facility,
+        key: ValueKey('facility-tab-page-$index'),
+        title: (_) => _tabLabels()[index],
+        body: (current) => _buildTabContent(current, index),
+      ),
+    ));
+  }
+
+  /// On a phone [child] is at least a 48 px target; elsewhere it is as today.
+  Widget _phoneTarget(Widget child) => AppLayout.isPhone(context)
+      ? ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: AppSizes.minTapTarget),
+          child: Align(alignment: Alignment.centerLeft, widthFactor: 1, child: child),
+        )
+      : child;
+
+  /// On a phone [child] shares a row's width (long Kiswahili wraps);
+  /// elsewhere it is as today.
+  Widget _phoneFlexible(Widget child) => AppLayout.isPhone(context) ? Flexible(child: child) : child;
+
+  /// Panel text under 12 px is 12 on a phone (S3); tablets keep theirs.
+  double _phoneMin(double size) =>
+      AppLayout.isPhone(context) && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
+
 
   // ==================== PHONE SHEETS (PH8b-2 P4) ====================
   //
@@ -2235,7 +2299,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   if (timestampTs != null)
                     Text(
                       _formatDateTime(timestampTs.toDate()),
-                      style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint),
+                      style: TextStyle(fontSize: _phoneMin(AppFontSize.f11), color: context.colors.textHint),
                     ),
                 ],
               ),
@@ -2248,7 +2312,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   // ==================== METRICS ROW ====================
 
-  Widget _buildMetricsRow(Map<String, dynamic> facility) {
+  /// The metric cards: label, value, icon, colour, link and the link's tab
+  /// (the wide row and the phone's two columns show the same).
+  List<(String, String, IconData, Color, String, int)> _metricsFor(Map<String, dynamic> facility) {
     final facilityId = facility[Fields.facilityId] as String?;
     final stats = _statsByFacility[facilityId];
     final totalProducts = stats?['totalProducts'] as int? ?? 0;
@@ -2257,7 +2323,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final expiredCount = stats?['expiredCount'] as int? ?? 0;
     final totalAmount = stats?['totalAmount'] as double? ?? 0.0;
 
-    final metrics = [
+    return [
       (context.l10n.products_totalProducts, '$totalProducts', Icons.inventory_2_outlined, context.colors.brandTeal, context.l10n.facilities_viewProducts, 2),
       (context.l10n.products_sellableTitle, '$sellableProducts', Icons.shopping_cart_outlined, context.colors.success, context.l10n.facilities_viewAll, 2),
       (context.l10n.facilities_lowStockItems, '$lowStockCount', Icons.warning_amber_outlined, context.colors.warning, context.l10n.facilities_viewItems, 2),
@@ -2271,6 +2337,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
         3,
       ),
     ];
+  }
+
+  Widget _buildMetricsRow(Map<String, dynamic> facility) {
+    final metrics = _metricsFor(facility);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -2426,8 +2496,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
-  Widget _buildTabContent(Map<String, dynamic> facility) {
-    switch (_selectedTabIndex) {
+  // [index]: a phone's tab page (PH8b-2); the selected tab otherwise.
+  Widget _buildTabContent(Map<String, dynamic> facility, [int? index]) {
+    switch (index ?? _selectedTabIndex) {
       case 0:
         return _buildOverviewTab(facility);
       case 1:
@@ -2620,7 +2691,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         borderRadius: BorderRadius.circular(AppRadius.r10),
         border: Border.all(color: color.withValues(alpha: AppAlpha.a40)),
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
+      child: Text(label, style: TextStyle(color: color, fontSize: _phoneMin(AppFontSize.f11), fontWeight: AppFontWeight.semibold)),
     );
   }
 
@@ -2804,6 +2875,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
               ),
               const SizedBox(height: AppSpacing.s16),
               _settingsActionRow(
+                key: const ValueKey('facility-settings-action-0'),
                 icon: Icons.edit_outlined,
                 label: context.l10n.facilities_editDetails,
                 subtitle: context.l10n.facilities_editDetailsHint,
@@ -2811,6 +2883,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
               ),
               const Divider(height: 24),
               _settingsActionRow(
+                key: const ValueKey('facility-settings-action-1'),
                 icon: isActive ? Icons.pause_circle_outline : Icons.play_circle_outline,
                 label: isActive ? context.l10n.facilities_deactivateThis : context.l10n.facilities_reactivateThis,
                 subtitle: isActive
@@ -2820,6 +2893,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
               ),
               const Divider(height: 24),
               _settingsActionRow(
+                key: const ValueKey('facility-settings-action-2'),
                 icon: Icons.delete_outline,
                 label: context.l10n.facilities_deleteThis,
                 subtitle: context.l10n.facilities_deleteThisHint,
@@ -2906,6 +2980,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Widget _settingsActionRow({
+    Key? key,
     required IconData icon,
     required String label,
     required String subtitle,
@@ -2913,9 +2988,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
     Color? iconColor,
   }) {
     return InkWell(
+      key: key,
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppRadius.r8),
-      child: Padding(
+      child: _phoneTarget(Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.s6),
         child: Row(
           children: [
@@ -2933,7 +3009,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             Icon(Icons.chevron_right, size: AppIconSize.i18, color: context.colors.textDisabled),
           ],
         ),
-      ),
+      )),
     );
   }
 
@@ -3229,18 +3305,18 @@ class _FacilityScreenState extends State<FacilityScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(context.l10n.dashboard_recentActivity, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15)),
-              InkWell(
-                onTap: () => setState(() => _selectedTabIndex = 4),
-                child: Row(
+              _phoneFlexible(Text(context.l10n.dashboard_recentActivity, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15))),
+              _phoneFlexible(InkWell(
+                onTap: () => _openTab(facility, 4),
+                child: _phoneTarget(Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(context.l10n.facilities_viewAllActivity,
-                        style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
+                    _phoneFlexible(Text(context.l10n.facilities_viewAllActivity,
+                        style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.primary, fontWeight: AppFontWeight.semibold))),
                     Icon(Icons.arrow_forward, size: AppIconSize.i12, color: context.colors.primary),
                   ],
-                ),
-              ),
+                )),
+              )),
             ],
           ),
           const SizedBox(height: AppSpacing.s12),
