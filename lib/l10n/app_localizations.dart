@@ -12246,6 +12246,12 @@ abstract class AppLocalizations {
     String type,
     String time,
   );
+
+  /// Team Members on a phone (PH8b): the line under the status chips, in place of the four cards: how many are listed and how many wait for approval (the Waiting Approval card). Its Summary link opens the cards as a list.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 member} other{{count} members}}, {pending} waiting approval'**
+  String team_phoneSummaryLine(int count, int pending);
 }
 
 class _AppLocalizationsDelegate

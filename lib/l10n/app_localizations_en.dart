@@ -7342,4 +7342,15 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return '$who, $action, $type, $time';
   }
+
+  @override
+  String team_phoneSummaryLine(int count, int pending) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count members',
+      one: '1 member',
+    );
+    return '$_temp0, $pending waiting approval';
+  }
 }

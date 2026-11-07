@@ -7387,4 +7387,15 @@ class AppLocalizationsSw extends AppLocalizations {
   ) {
     return '$who, $action, $type, $time';
   }
+
+  @override
+  String team_phoneSummaryLine(int count, int pending) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Wafanyakazi $count',
+      one: 'Mfanyakazi 1',
+    );
+    return '$_temp0, $pending wanasubiri idhini';
+  }
 }
