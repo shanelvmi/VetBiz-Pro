@@ -86,7 +86,14 @@ void main() {
     ));
   }
 
-  double footerTop(WidgetTester tester) => tester.getRect(find.byKey(AuthFooter.bandKey)).top;
+  // LG1: on the phone login the footer is part of the flat page and rises
+  // with it in the one entrance, so it is measured from the page's column,
+  // which rises with it; elsewhere from the window.
+  double footerTop(WidgetTester tester) {
+    final page = find.byKey(LoginScreen.phonePageKey);
+    final origin = page.evaluate().isEmpty ? 0.0 : tester.getRect(page).top;
+    return tester.getRect(find.byKey(AuthFooter.bandKey)).top - origin;
+  }
   int icons(WidgetTester tester) => find.byType(FaIcon).evaluate().length;
 
   /// Lets the read answer, then everything settle.

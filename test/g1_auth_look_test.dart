@@ -178,19 +178,30 @@ void main() {
   });
 
   group('(4) one card, and no overflow', () {
-    for (final width in [1200.0, 390.0]) {
-      testWidgets('both cards are the same width at $width', (tester) async {
-        final sizes = <double>[];
-        for (final s in _Screen.values) {
-          await pump(tester, await settingsIn(tester, {}), s, size: Size(width, 900));
-          sizes.add(tester.getSize(find.byKey(AuthCard.surfaceKey)).width);
-          await finish(tester);
+    testWidgets('both cards are the same width at 1200.0', (tester) async {
+      final sizes = <double>[];
+      for (final s in _Screen.values) {
+        await pump(tester, await settingsIn(tester, {}), s, size: const Size(1200, 900));
+        sizes.add(tester.getSize(find.byKey(AuthCard.surfaceKey)).width);
+        await finish(tester);
+      }
+      expect(sizes[0], sizes[1]);
+    });
+
+    // LG1 (owner): on phones the login is one flat page with no card;
+    // Register keeps its card, the full width minus the page margins.
+    testWidgets('390.0: the login has no card, Register\'s card is the width minus the margins', (tester) async {
+      for (final s in _Screen.values) {
+        await pump(tester, await settingsIn(tester, {}), s, size: const Size(390, 900));
+        if (s == _Screen.login) {
+          expect(find.byKey(AuthCard.surfaceKey), findsNothing, reason: s.name);
+          expect(find.byKey(LoginScreen.phonePageKey), findsOneWidget);
+        } else {
+          expect(tester.getSize(find.byKey(AuthCard.surfaceKey)).width, lessThan(390), reason: s.name);
         }
-        expect(sizes[0], sizes[1]);
-        // Phones: the full width minus the page margins.
-        if (width == 390) expect(sizes[0], lessThan(width));
-      });
-    }
+        await finish(tester);
+      }
+    });
 
     for (final s in _Screen.values) {
       for (final width in [360.0, 390.0]) {

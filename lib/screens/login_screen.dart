@@ -24,6 +24,7 @@ import '../l10n/l10n.dart';
 import '../ui/feedback/auth_error_messages.dart';
 import '../ui/feedback/app_feedback.dart';
 import '../ui/feedback/friendly_error.dart';
+import '../theme/app_layout.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
@@ -868,6 +869,92 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
+  // ==================== PHONE: ONE FLAT PAGE (LG1) ====================
+  // The owner: the first screen a customer sees, calm and modern - no frame,
+  // no header bar, no cards. A compact brand row, the form and the Updates
+  // straight on the page's background in one centred column, the footer
+  // below. The form is the same widget as in the card (flat), so every
+  // behaviour is the card's. The whole page enters as one, once (AN6's
+  // rule: never on a rebuild, a resize, a theme or language change).
+  Widget _buildPhonePage(Widget updates) {
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, viewport) => SingleChildScrollView(
+          child: ConstrainedBox(
+            // At least the screen's height, so the footer reaches the bottom.
+            constraints: BoxConstraints(minHeight: viewport.maxHeight),
+            child: AuthEntrance(
+              animation: _entrance,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: PhoneLoginMetrics.maxWidth),
+                      child: Padding(
+                        key: LoginScreen.phonePageKey,
+                        padding: const EdgeInsets.fromLTRB(
+                          PhoneLoginMetrics.sidePadding,
+                          PhoneLoginMetrics.topPadding,
+                          PhoneLoginMetrics.sidePadding,
+                          PhoneLoginMetrics.bottomPadding,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildPhoneBrandRow(),
+                            const SizedBox(height: PhoneLoginMetrics.brandGap),
+                            _loginForm(flat: true),
+                            const SizedBox(height: PhoneLoginMetrics.updatesGap),
+                            // The Updates as they are in the card (the same
+                            // reserved 16:9 frame, so their answer moves
+                            // nothing above), without the card.
+                            KeyedSubtree(key: LoginScreen.phoneUpdatesKey, child: updates),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const AuthFooter(),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // The VB mark and the app name at the left, the Light/Dark switch at the
+  // right; no bar behind them.
+  Widget _buildPhoneBrandRow() {
+    return Row(
+      key: LoginScreen.phoneBrandKey,
+      children: [
+        Container(
+          width: PhoneLoginMetrics.mark,
+          height: PhoneLoginMetrics.mark,
+          decoration: BoxDecoration(color: context.colors.brandSurface, shape: BoxShape.circle),
+          alignment: Alignment.center,
+          child: Text(
+            AppInfo.logoMark,
+            style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
+          ),
+        ),
+        const SizedBox(width: PhoneLoginMetrics.markGap),
+        Expanded(
+          child: Text(
+            AppInfo.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: context.colors.textPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
+          ),
+        ),
+        const AuthThemeToggle(onPage: true),
+      ],
+    );
+  }
+
   // ==================== BUILD ====================
   @override
   Widget build(BuildContext context) {
@@ -886,13 +973,18 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           // (G3).
           // The Updates (AN2) come from the app's one store (AN6) and always
           // fill the left card: slides, a skeleton or a calm panel.
+          // LG1: phones get one flat page instead (_buildPhonePage).
           UpdatesCarousel(
             firestore: _db,
-            builder: (context, updates) => AuthCard(
-              header: AuthEntrance(animation: _entrance, child: _buildHeader()),
-              below: const AuthFooter(),
-              bodyBuilder: (context, layout) => _buildBody(layout, updates),
-            ),
+            builder:
+                (context, updates) =>
+                    AppLayout.isPhone(context)
+                        ? _buildPhonePage(updates)
+                        : AuthCard(
+                          header: AuthEntrance(animation: _entrance, child: _buildHeader()),
+                          below: const AuthFooter(),
+                          bodyBuilder: (context, layout) => _buildBody(layout, updates),
+                        ),
           ),
         ],
       ),

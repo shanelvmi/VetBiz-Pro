@@ -27,8 +27,12 @@ final _en = lookupAppLocalizations(const Locale('en'));
 
 Rect _rect(WidgetTester tester, Key key) => tester.getRect(find.byKey(key));
 
+// LG1: on phones the Updates are a flat section of the page (no card).
+Key _updatesKey(WidgetTester tester) =>
+    find.byKey(UpdatesCard.surfaceKey).evaluate().isEmpty ? LoginScreen.phoneUpdatesKey : UpdatesCard.surfaceKey;
+
 ({Rect card, Rect login}) _rects(WidgetTester tester) =>
-    (card: _rect(tester, UpdatesCard.surfaceKey), login: _rect(tester, LoginScreen.loginCardKey));
+    (card: _rect(tester, _updatesKey(tester)), login: _rect(tester, LoginScreen.loginCardKey));
 
 double _opacity(WidgetTester tester, int i) => tester
     .widget<FadeTransition>(find.descendant(of: find.byType(AuthEntrance).at(i), matching: find.byType(FadeTransition)).first)
@@ -40,7 +44,7 @@ void main() {
     final wide = width > 1000;
     testWidgets('$width, the first frame with nothing known: both cards, ${wide ? 'the welcome note, ' : ''}the skeleton in the frame', (tester) async {
       await pumpLogin(tester, await dbWithUpdates(3), width: width, height: 2400, settle: false);
-      expect(find.byKey(UpdatesCard.surfaceKey), findsOneWidget);
+      expect(find.byKey(wide ? UpdatesCard.surfaceKey : LoginScreen.phoneUpdatesKey), findsOneWidget);
       expect(find.byKey(LoginScreen.loginCardKey), findsOneWidget);
       expect(find.byKey(UpdatesCard.welcomeKey), wide ? findsOneWidget : findsNothing);
       expect(find.text(_en.updates_label), findsOneWidget);
@@ -105,7 +109,8 @@ void main() {
     await tester.pump();
     tester.view.physicalSize = const Size(390, 1000);
     await tester.pump();
-    for (var i = 0; i < 3; i++) {
+    // LG1: the phone page is one part (the whole page enters as one).
+    for (var i = 0; i < find.byType(AuthEntrance).evaluate().length; i++) {
       expect(_opacity(tester, i), 1, reason: 'part $i after resizing');
     }
   }, skip: _skip);

@@ -27,7 +27,7 @@ import 'helpers/login_harness.dart';
 // button, then the Updates as a flat section (no card) and the footer. The
 // form fits without scrolling on common phones; the page enters once, as one.
 // Tablets and wide windows: test/lg1_wide_login_unchanged_test.dart.
-const _skip = true;
+const _skip = false;
 
 const _page = ValueKey<String>('login-phone-page');
 const _brand = ValueKey<String>('login-phone-brand');

@@ -70,11 +70,13 @@ void main() {
   }, skip: _skip);
 
   for (final width in [768.0, 390.0]) {
-    testWidgets('$width: no welcome note, the Updates card below the login card', (tester) async {
+    // LG1: on phones the Updates are a flat section of the page, no card.
+    final updates = width < 600 ? LoginScreen.phoneUpdatesKey : UpdatesCard.surfaceKey;
+    testWidgets('$width: no welcome note, the Updates ${width < 600 ? 'section' : 'card'} below the login form', (tester) async {
       await pumpLogin(tester, await dbWithUpdates(3), width: width, height: 2400);
       expect(find.byKey(UpdatesCard.welcomeKey), findsNothing);
-      expect(find.descendant(of: find.byKey(UpdatesCard.surfaceKey), matching: find.text(_en.updates_welcomeLine)), findsNothing);
-      expect(_rect(tester, UpdatesCard.surfaceKey).top, greaterThan(_rect(tester, LoginScreen.loginCardKey).bottom));
+      expect(find.text(_en.updates_welcomeLine), findsNothing);
+      expect(_rect(tester, updates).top, greaterThan(_rect(tester, LoginScreen.loginCardKey).bottom));
       expect(find.text(_en.updates_label), findsOneWidget);
       expect(find.byType(UpdatesDots), findsOneWidget);
     }, skip: _skip);
@@ -83,16 +85,18 @@ void main() {
   for (final width in [1200.0, 1024.0, 768.0, 390.0]) {
     // AN6 (owner): changed from "no Updates card; the login card centred
     // alone": the card is always there, with the calm panel in its frame.
+    // LG1: on phones (390) the flat Updates section, no card.
+    final updates = width < 600 ? LoginScreen.phoneUpdatesKey : UpdatesCard.surfaceKey;
     testWidgets('$width: no updates, the Updates card with the calm panel beside or below the login card', (tester) async {
       await pumpLogin(tester, FakeFirebaseFirestore(), width: width, height: 2400);
-      expect(find.byKey(UpdatesCard.surfaceKey), findsOneWidget);
+      expect(find.byKey(updates), findsOneWidget);
       expect(find.byKey(UpdatesCarousel.emptyKey), findsOneWidget);
       expect(find.text(_en.updates_empty), findsOneWidget);
       expect(find.byKey(UpdatesCard.welcomeKey), width > 1000 ? findsOneWidget : findsNothing);
       if (width > 1000) {
         expect(_rect(tester, UpdatesCard.surfaceKey).height, closeTo(_rect(tester, LoginScreen.loginCardKey).height, 1));
       } else {
-        expect(_rect(tester, UpdatesCard.surfaceKey).top, greaterThan(_rect(tester, LoginScreen.loginCardKey).bottom));
+        expect(_rect(tester, updates).top, greaterThan(_rect(tester, LoginScreen.loginCardKey).bottom));
       }
     }, skip: _skip);
   }

@@ -8,7 +8,7 @@ import 'helpers/screen_size_matrix.dart';
 // and 740x360 (a phone turned sideways), in Light, Dark and Kiswahili, with
 // no Updates, one and several: no overflow, no bright box in Dark, 48 px tap
 // targets and no text under 12 px (the size matrix's checks).
-const _skip = true;
+const _skip = false;
 
 const _sizes = [Size(360, 740), Size(390, 844), Size(740, 360)];
 
