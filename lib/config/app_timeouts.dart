@@ -60,6 +60,10 @@ class AppTimeouts {
   /// Signing out (force_logout.dart).
   static const Duration signOut = Duration(seconds: 10);
 
+  /// At start, how long the session policy waits for FirebaseAuth to restore
+  /// a user before it reads currentUser (session_policy.dart, AUTH-1).
+  static const Duration sessionRestore = Duration(seconds: 5);
+
   /// The team list shows a fallback after this (manage_assistants_screen.dart).
   static const Duration teamLoadFallback = Duration(seconds: 8);
 

@@ -25,6 +25,7 @@ import 'services/auth_service.dart';
 import 'services/membership_service.dart';
 import 'services/support_contact_store.dart';
 import 'services/updates_store.dart';
+import 'services/session_policy.dart';
 import 'constants/facility_types.dart';
 
 import 'providers/product_provider.dart';
@@ -70,6 +71,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // AUTH-1: every new launch starts at the login. Before AppEntryPoint's
+  // listener and any sign-in: SESSION persistence on web, and a user left
+  // from an earlier session is signed out (a reload in the same tab keeps it).
+  await SessionPolicy.forThisPlatform().applyAtStart();
   // AN6: the Updates' one subscription starts now, in parallel with the
   // auth check, so the login page usually has them on its first frame.
   UpdatesStore.instance.start();

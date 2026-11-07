@@ -39,7 +39,7 @@ import 'package:vetbiz_pro/widgets/signed_in_home_host.dart';
 
 import 'helpers/fake_firestore.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _dashboard = 'DASHBOARD (stand-in)';
 const _login = 'LOGIN (stand-in)';
@@ -315,6 +315,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
       expect(find.text(en.login_rememberMe), findsOneWidget);
+      // The login page's own caches (support contact, Updates) are not the sign-in's.
+      final before = (await SharedPreferences.getInstance()).getKeys().toSet();
       await tester.enterText(find.byType(TextField).at(0), 'amina@example.com');
       await tester.enterText(find.byType(TextField).at(1), 'S3cret-pass!');
       await tester.tap(find.byType(Checkbox));
@@ -323,7 +325,7 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getKeys(), {'remembered_email'});
+      expect(prefs.getKeys().difference(before), {'remembered_email'});
       expect(prefs.getString('remembered_email'), 'amina@example.com');
       for (final key in prefs.getKeys()) {
         expect('${prefs.get(key)}', isNot(contains('S3cret')));
