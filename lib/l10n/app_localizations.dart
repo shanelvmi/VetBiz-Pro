@@ -10266,6 +10266,18 @@ abstract class AppLocalizations {
   /// **'Load older'**
   String get notifications_loadOlder;
 
+  /// PH8a-fix: the Notifications page on a phone, the line under the app bar (in place of the category cards) when some are unread; with none unread it shows notifications_allRead.
+  ///
+  /// In en, this message translates to:
+  /// **'{total, plural, =1{1 notification} other{{total} notifications}}, {unread} unread'**
+  String notifications_summaryLine(int total, int unread);
+
+  /// PH8a-fix: a category chip on the Notifications page on a phone (All, Critical, Stock...), with how many in it are unread.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{{category}} other{{category}, {count} unread}}'**
+  String notifications_categoryChip(String category, int count);
+
   /// Error toast when marking read or unread, removing or Undo failed.
   ///
   /// In en, this message translates to:

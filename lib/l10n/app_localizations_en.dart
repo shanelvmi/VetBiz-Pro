@@ -6004,6 +6004,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications_loadOlder => 'Load older';
 
   @override
+  String notifications_summaryLine(int total, int unread) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: '$total notifications',
+      one: '1 notification',
+    );
+    return '$_temp0, $unread unread';
+  }
+
+  @override
+  String notifications_categoryChip(String category, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$category, $count unread',
+      zero: '$category',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get notifications_updateFailed => 'Couldn\'t update the notifications';
 
   @override

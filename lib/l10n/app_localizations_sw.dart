@@ -6038,6 +6038,28 @@ class AppLocalizationsSw extends AppLocalizations {
   String get notifications_loadOlder => 'Pakia za zamani zaidi';
 
   @override
+  String notifications_summaryLine(int total, int unread) {
+    String _temp0 = intl.Intl.pluralLogic(
+      total,
+      locale: localeName,
+      other: 'Arifa $total',
+      one: 'Arifa 1',
+    );
+    return '$_temp0, $unread hazijasomwa';
+  }
+
+  @override
+  String notifications_categoryChip(String category, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$category, $count hazijasomwa',
+      zero: '$category',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get notifications_updateFailed => 'Imeshindikana kusasisha arifa';
 
   @override
