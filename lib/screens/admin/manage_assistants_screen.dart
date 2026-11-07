@@ -351,45 +351,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
               children: [
                 Text(context.l10n.team_moveTitle(who), style: const TextStyle(fontSize: AppFontSize.f17, fontWeight: AppFontWeight.bold)),
                 const SizedBox(height: AppSpacing.s6),
-                Text(
-                  context.l10n.team_moveBody,
-                  style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted, height: 1.35),
-                ),
-                const SizedBox(height: AppSpacing.s16),
-                if (options.isEmpty)
-                  Text(context.l10n.team_noOtherFacility,
-                      style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft))
-                else
-                  ...options.map(
-                    (e) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.s8),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(AppRadius.r12),
-                          onTap: () {
-                            Navigator.of(ctx).pop();
-                            reassignAssistant(userId, e.key);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(AppSpacing.s14),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(AppRadius.r12),
-                              border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.storefront_outlined, size: AppIconSize.i20, color: context.colors.primary),
-                                const SizedBox(width: AppSpacing.s12),
-                                Expanded(child: Text(e.value, style: const TextStyle(fontWeight: AppFontWeight.semibold))),
-                                Icon(Icons.chevron_right, color: context.colors.textHint),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                ..._facilityPickerChoices(ctx, userId, options),
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(context.l10n.common_cancel)),
@@ -401,6 +363,50 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       ),
     );
   }
+
+  // The picker's sentence and one choice per other facility: the dialog and
+  // the phone's sheet show the same.
+  List<Widget> _facilityPickerChoices(BuildContext ctx, String userId, List<MapEntry<String, String>> options) => [
+        Text(
+          context.l10n.team_moveBody,
+          style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted, height: 1.35),
+        ),
+        const SizedBox(height: AppSpacing.s16),
+        if (options.isEmpty)
+          Text(context.l10n.team_noOtherFacility,
+              style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSoft))
+        else
+          ...options.map(
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.s8),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppRadius.r12),
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    reassignAssistant(userId, e.key);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.s14),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(AppRadius.r12),
+                      border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.storefront_outlined, size: AppIconSize.i20, color: context.colors.primary),
+                        const SizedBox(width: AppSpacing.s12),
+                        Expanded(child: Text(e.value, style: const TextStyle(fontWeight: AppFontWeight.semibold))),
+                        Icon(Icons.chevron_right, color: context.colors.textHint),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ];
 
   // Opening the invite dialog takes a moment, and tapping Invite Assistant
   // again meanwhile stacked up several dialogs.
@@ -516,7 +522,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   int _tier(TeamMemberKind kind) =>
       kind == TeamMemberKind.assistant ? 2 : (kind == TeamMemberKind.coAdmin ? 1 : 0);
 
-  Widget _roleChip(TeamMemberKind kind) {
+  // [onPage]: on the phone's details page labels are at least 12 px (S3).
+  Widget _roleChip(TeamMemberKind kind, {bool onPage = false}) {
     final colors = context.colors;
     final (color, strong) = switch (kind) {
       TeamMemberKind.assistant => (colors.roleAssistant, colors.roleAssistantStrong),
@@ -528,7 +535,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
       child: Text(
         _kindLabel(kind),
-        style: TextStyle(color: strong, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
+        style: TextStyle(color: strong, fontSize: onPage ? AppFontSize.f12 : AppFontSize.f11_5, fontWeight: AppFontWeight.semibold),
       ),
     );
   }
@@ -960,51 +967,26 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     );
   }
 
-  Widget _buildBody(List<QueryDocumentSnapshot> all) {
+  // How many are in each bucket (the cards; the summary on a phone).
+  Map<String, int> _countsOf(List<QueryDocumentSnapshot> all) {
     final counts = <String, int>{UserStatus.active.key: 0, UserStatus.deactivated.key: 0, UserStatus.pending.key: 0};
     for (final doc in all) {
       final b = _bucket(doc.data() as Map<String, dynamic>);
       counts[b] = (counts[b] ?? 0) + 1;
     }
+    return counts;
+  }
 
-    // A chosen facility can disappear if the list changes underneath it.
-    final facility = (_facilityFilter == 'All' || facilityNames.containsKey(_facilityFilter)) ? _facilityFilter : 'All';
+  // A chosen facility can disappear if the list changes underneath it.
+  String get _facilityInUse =>
+      (_facilityFilter == 'All' || facilityNames.containsKey(_facilityFilter)) ? _facilityFilter : 'All';
+
+  Widget _buildBody(List<QueryDocumentSnapshot> all) {
+    final counts = _countsOf(all);
+    final facility = _facilityInUse;
+    final filtered = _visible(all, facility);
 
     final q = _searchQuery;
-    final filtered = all.where((doc) {
-      final data = doc.data() as Map<String, dynamic>;
-      if (_statusFilter != null && _bucket(data) != _statusFilter) return false;
-      final ids = _facilityIdsOf(data);
-      if (facility != 'All' && !ids.contains(facility)) return false;
-      if (q.isNotEmpty) {
-        final name = (data['fullName'] ?? '').toString().toLowerCase();
-        final phone = (data['phone'] ?? '').toString().toLowerCase();
-        final facilityName = ids.map((id) => (facilityNames[id] ?? '').toLowerCase()).join(' ');
-        final kind = _kindOf(doc.id, data);
-        final roleName = '${_kindLabel(kind)} ${_kindSearchWords(kind)}'.toLowerCase();
-        if (!name.contains(q) && !phone.contains(q) && !facilityName.contains(q) && !roleName.contains(q)) {
-          return false;
-        }
-      }
-      return true;
-    }).toList();
-
-    // By authority: the Admin first, then Co-admins, then Assistants. Within
-    // each, you come first; then anyone waiting on a decision, then active,
-    // then deactivated - so the people who need something from you are at the
-    // top of the Assistants.
-    int rank(String b) => b == UserStatus.pending.key ? 0 : (b == UserStatus.active.key ? 1 : 2);
-    filtered.sort((a, b) {
-      final da = a.data() as Map<String, dynamic>;
-      final db = b.data() as Map<String, dynamic>;
-      final byTier = _tier(_kindOf(a.id, da)).compareTo(_tier(_kindOf(b.id, db)));
-      if (byTier != 0) return byTier;
-      if ((a.id == adminUid) != (b.id == adminUid)) return a.id == adminUid ? -1 : 1;
-      final byStatus = rank(_bucket(da)).compareTo(rank(_bucket(db)));
-      if (byStatus != 0) return byStatus;
-      return (da['fullName'] ?? '').toString().toLowerCase().compareTo((db['fullName'] ?? '').toString().toLowerCase());
-    });
-
     final hasActiveFilters = q.isNotEmpty || _statusFilter != null || facility != 'All';
     // Just you, and nobody else yet.
     final onlySelf = all.isNotEmpty && all.every((d) => d.id == adminUid);
@@ -1067,6 +1049,46 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         );
       },
     );
+  }
+
+  // Who the filters and search leave, in order. The table and the phone list
+  // both show exactly these.
+  List<QueryDocumentSnapshot> _visible(List<QueryDocumentSnapshot> all, String facility) {
+    final q = _searchQuery;
+    final filtered = all.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      if (_statusFilter != null && _bucket(data) != _statusFilter) return false;
+      final ids = _facilityIdsOf(data);
+      if (facility != 'All' && !ids.contains(facility)) return false;
+      if (q.isNotEmpty) {
+        final name = (data['fullName'] ?? '').toString().toLowerCase();
+        final phone = (data['phone'] ?? '').toString().toLowerCase();
+        final facilityName = ids.map((id) => (facilityNames[id] ?? '').toLowerCase()).join(' ');
+        final kind = _kindOf(doc.id, data);
+        final roleName = '${_kindLabel(kind)} ${_kindSearchWords(kind)}'.toLowerCase();
+        if (!name.contains(q) && !phone.contains(q) && !facilityName.contains(q) && !roleName.contains(q)) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+
+    // By authority: the Admin first, then Co-admins, then Assistants. Within
+    // each, you come first; then anyone waiting on a decision, then active,
+    // then deactivated - so the people who need something from you are at the
+    // top of the Assistants.
+    int rank(String b) => b == UserStatus.pending.key ? 0 : (b == UserStatus.active.key ? 1 : 2);
+    filtered.sort((a, b) {
+      final da = a.data() as Map<String, dynamic>;
+      final db = b.data() as Map<String, dynamic>;
+      final byTier = _tier(_kindOf(a.id, da)).compareTo(_tier(_kindOf(b.id, db)));
+      if (byTier != 0) return byTier;
+      if ((a.id == adminUid) != (b.id == adminUid)) return a.id == adminUid ? -1 : 1;
+      final byStatus = rank(_bucket(da)).compareTo(rank(_bucket(db)));
+      if (byStatus != 0) return byStatus;
+      return (da['fullName'] ?? '').toString().toLowerCase().compareTo((db['fullName'] ?? '').toString().toLowerCase());
+    });
+    return filtered;
   }
 
   // ==================== CARDS ====================
@@ -1411,12 +1433,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     );
   }
 
-  Widget _statusChip(String bucket) {
+  Widget _statusChip(String bucket, {bool onPage = false}) {
     final color = _statusColor(bucket);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
       decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-      child: Text(_statusLabel(bucket), style: TextStyle(color: color, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
+      child: Text(_statusLabel(bucket), style: TextStyle(color: color, fontSize: onPage ? AppFontSize.f12 : AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
     );
   }
 
@@ -1601,7 +1623,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   String _when(DateTime? d) => d == null ? context.l10n.team_notRecorded : AppDateFormat.dateTime24.format(d);
 
-  Widget _panelField(IconData icon, String label, String value, {String? subtitle}) {
+  Widget _panelField(IconData icon, String label, String value, {String? subtitle, bool onPage = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s14),
       child: Row(
@@ -1613,7 +1635,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
+                Text(label, style: TextStyle(fontSize: onPage ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textMuted)),
                 Text(value, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.semibold)),
                 if (subtitle != null && subtitle.isNotEmpty)
                   Text(subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
@@ -1655,6 +1677,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     required bool showActions,
     VoidCallback? onClose,
     ScrollController? scrollController,
+    // PH8b: the phone's full details page: no close row (it has a back
+    // arrow), labels at least 12 px.
+    bool onPage = false,
   }) {
     final data = doc.data() as Map<String, dynamic>;
     final kind = _kindOf(doc.id, data);
@@ -1673,6 +1698,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final changedBy = (data['statusChangedBy'] ?? '').toString();
     final changedRole = (data['statusChangedByRole'] ?? '').toString();
     final email = (data['email'] ?? '').toString();
+    Widget field(IconData icon, String label, String value, {String? subtitle}) =>
+        _panelField(icon, label, value, subtitle: subtitle, onPage: onPage);
 
     // Newest first. Registration comes from the account itself; everything
     // after it from the history the server keeps with each change.
@@ -1714,17 +1741,19 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(context.l10n.team_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-                IconButton(
-                  icon: const Icon(Icons.close, size: AppIconSize.i20),
-                  onPressed: onClose ?? () => setState(() => _selectedUserId = null),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.s8),
+            if (!onPage) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(context.l10n.team_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: AppIconSize.i20),
+                    onPressed: onClose ?? () => setState(() => _selectedUserId = null),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.s8),
+            ],
             Row(
               children: [
                 InitialsAvatar(
@@ -1744,7 +1773,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                         style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17),
                       ),
                       const SizedBox(height: AppSpacing.s6),
-                      Wrap(spacing: AppSpacing.s6, runSpacing: AppSpacing.s6, children: [_roleChip(kind), _statusChip(bucket)]),
+                      Wrap(spacing: AppSpacing.s6, runSpacing: AppSpacing.s6, children: [_roleChip(kind, onPage: onPage), _statusChip(bucket, onPage: onPage)]),
                     ],
                   ),
                 ),
@@ -1755,18 +1784,18 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
               Wrap(spacing: AppSpacing.s8, runSpacing: AppSpacing.s8, children: _actionsFor(doc, data, rawStatus, facilityId)),
             ],
             const Divider(height: 28),
-            _panelField(Icons.phone_outlined, context.l10n.common_phone, '${data['phone'] ?? ''}'.isEmpty ? context.l10n.team_notRecorded : '${data['phone']}'),
-            _panelField(Icons.mail_outline, context.l10n.common_email, email.isEmpty ? context.l10n.team_notRecorded : email),
-            _panelField(Icons.storefront_outlined, context.l10n.common_facility, _facilityText(data)),
+            field(Icons.phone_outlined, context.l10n.common_phone, '${data['phone'] ?? ''}'.isEmpty ? context.l10n.team_notRecorded : '${data['phone']}'),
+            field(Icons.mail_outline, context.l10n.common_email, email.isEmpty ? context.l10n.team_notRecorded : email),
+            field(Icons.storefront_outlined, context.l10n.common_facility, _facilityText(data)),
             const Divider(height: 28),
-            _panelField(
+            field(
               Icons.event_available_outlined,
               context.l10n.team_joined,
               _when(created),
               subtitle: rejoined != null ? context.l10n.team_askedAgain(_when(rejoined)) : null,
             ),
             if (isAssistant)
-              _panelField(
+              field(
                 Icons.verified_outlined,
                 context.l10n.team_approvedLabel,
                 approved != null
@@ -1776,7 +1805,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                     ? (approvedBy.isEmpty ? null : context.l10n.team_byName(approvedBy))
                     : (bucket == UserStatus.pending.key ? null : context.l10n.team_approvedBeforeRecords),
               ),
-            _panelField(
+            field(
               Icons.update_outlined,
               context.l10n.team_lastStatusChange,
               _when(statusChanged),
@@ -1785,7 +1814,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
                   ? null
                   : (changedRole.isEmpty ? context.l10n.team_byName(changedBy) : context.l10n.team_byNameRole(changedBy, changedRole)),
             ),
-            _panelField(Icons.access_time, context.l10n.team_lastActive, _when(lastActive)),
+            field(Icons.access_time, context.l10n.team_lastActive, _when(lastActive)),
             const Divider(height: 28),
             Text(context.l10n.team_history, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
             const SizedBox(height: AppSpacing.s12),

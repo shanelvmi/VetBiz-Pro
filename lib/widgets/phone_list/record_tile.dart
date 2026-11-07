@@ -45,6 +45,10 @@ class RecordTile extends StatelessWidget {
   final List<String> details;
   final RecordStatus? status;
 
+  /// PH8b: a chip after the title in place of the amount (a team member's
+  /// role), when there is no amount to show.
+  final RecordStatus? titleStatus;
+
   /// The leading: [initialsOf]'s initials, or [icon] when it is null.
   final String? initialsOf;
   final IconData? icon;
@@ -68,6 +72,7 @@ class RecordTile extends StatelessWidget {
     required this.colorSeed,
     required this.semanticsLabel,
     this.status,
+    this.titleStatus,
     this.initialsOf,
     this.icon,
     this.leading,
@@ -120,15 +125,18 @@ class RecordTile extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: PhoneListMetrics.partGap),
-                            Text(
-                              amount,
-                              style: TextStyle(
-                                fontSize: PhoneListMetrics.title,
-                                fontWeight: AppFontWeight.semibold,
-                                color: colors.textPrimary,
-                                fontFeatures: const [FontFeature.tabularFigures()],
+                            if (titleStatus != null)
+                              Flexible(child: StatusChip(status: titleStatus!))
+                            else
+                              Text(
+                                amount,
+                                style: TextStyle(
+                                  fontSize: PhoneListMetrics.title,
+                                  fontWeight: AppFontWeight.semibold,
+                                  color: colors.textPrimary,
+                                  fontFeatures: const [FontFeature.tabularFigures()],
+                                ),
                               ),
-                            ),
                           ],
                         ),
                         const SizedBox(height: PhoneListMetrics.lineGap),
