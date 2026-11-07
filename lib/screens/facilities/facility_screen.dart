@@ -48,6 +48,7 @@ import '../../widgets/initials_avatar.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/record_tile.dart';
+import '../../widgets/phone_form/sheet_or_dialog.dart';
 
 class FacilityScreen extends StatefulWidget {
   // PH8b seams: tests pass fakes; the app leaves them null (the default
@@ -417,6 +418,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final maxFacilities = await loadMaxFacilitiesPerAdmin(widget.firestore);
     if (facilities.length >= maxFacilities) {
       if (!mounted) return;
+      // PH8b-2 P4: a sheet on a phone, today's dialog elsewhere.
+      if (AppLayout.isPhone(context)) {
+        await _phoneNotice(context.l10n.facilities_limitTitle, context.l10n.facilities_limitMessage(maxFacilities));
+        return;
+      }
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -1140,6 +1146,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
     AppFeedback.messengerKey.currentState?.hideCurrentSnackBar();
 
     if (assistants.isNotEmpty) {
+      if (AppLayout.isPhone(context)) {
+        await _phoneNotice(context.l10n.facilities_cannotDeleteTitle, context.l10n.facilities_cannotDeleteMessage(assistants.length));
+        return;
+      }
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -1176,6 +1186,89 @@ class _FacilityScreenState extends State<FacilityScreen> {
     bool canConfirm = false;
     bool isDeleting = false;
     String? errorMessage;
+
+    // PH8b-2 P4: on a phone the same field, comparison and call in a sheet
+    // that only its buttons close; after a delete the facility's pages close.
+    if (AppLayout.isPhone(context)) {
+      final deleted = await showSheetOrDialog<bool>(
+        context,
+        dismissible: false,
+        title: Text(context.l10n.facilities_deleteTitle),
+        body: (sheetContext, setSheetState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(context.l10n.facilities_deleteWarning(facilityName), style: const TextStyle(fontSize: PhoneFormMetrics.body)),
+            if (isOnlyFacility) ...[
+              const SizedBox(height: AppSpacing.s12),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.s10),
+                decoration: BoxDecoration(
+                  color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a10),
+                  borderRadius: BorderRadius.circular(AppRadius.r8),
+                  border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a30)),
+                ),
+                child: Text(
+                  context.l10n.facilities_onlyFacilityWarning,
+                  style: TextStyle(fontSize: PhoneFormMetrics.body, color: context.colors.dangerAccent, fontWeight: AppFontWeight.semibold),
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.s16),
+            Text(context.l10n.facilities_typeToConfirm(facilityName),
+                style: const TextStyle(fontSize: PhoneFormMetrics.body, fontWeight: AppFontWeight.semibold)),
+            const SizedBox(height: AppSpacing.s8),
+            TextField(
+              controller: confirmController,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              onChanged: (val) => setSheetState(() => canConfirm = val.trim() == facilityName),
+            ),
+            if (errorMessage != null) ...[
+              const SizedBox(height: AppSpacing.s10),
+              Text(errorMessage!, style: TextStyle(color: context.colors.dangerAccent, fontSize: PhoneFormMetrics.error)),
+            ],
+          ],
+        ),
+        actions: (sheetContext, setSheetState) => [
+          TextButton(
+            onPressed: isDeleting ? null : () => Navigator.pop(sheetContext, false),
+            child: Text(context.l10n.common_cancel),
+          ),
+          ElevatedButton(
+            onPressed: (!canConfirm || isDeleting)
+                ? null
+                : () async {
+                    setSheetState(() {
+                      isDeleting = true;
+                      errorMessage = null;
+                    });
+                    try {
+                      await _deleteFacility(facilityId, isOnlyFacility: isOnlyFacility);
+                      if (sheetContext.mounted) Navigator.pop(sheetContext, true);
+                    } catch (e) {
+                      setSheetState(() {
+                        isDeleting = false;
+                        errorMessage = L10n.current.facilities_deleteFailed(FriendlyError.messageFor(e));
+                      });
+                    }
+                  },
+            style: ButtonStyle(
+              backgroundColor: WidgetStateProperty.all(context.colors.dangerAccent),
+              foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
+            ),
+            child: isDeleting
+                ? SizedBox(
+                    width: PhoneFormMetrics.spinnerSize,
+                    height: PhoneFormMetrics.spinnerSize,
+                    child: CircularProgressIndicator(strokeWidth: PhoneFormMetrics.spinnerStroke, color: context.colors.onPrimary),
+                  )
+                : Text(context.l10n.common_delete),
+          ),
+        ],
+      );
+      if (deleted == true) _closePhonePages();
+      return;
+    }
 
     await showDialog(
       context: context,
@@ -1559,6 +1652,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       _selectedFacilityIdForDetail = facility[Fields.facilityId] as String?;
       _selectedTabIndex = 0;
     });
+    _phoneListRoute = ModalRoute.of(context);
     return Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (pageContext) => Scaffold(
         key: const ValueKey('facility-details'),
@@ -1580,6 +1674,73 @@ class _FacilityScreenState extends State<FacilityScreen> {
         ),
       ),
     ));
+  }
+
+  // ==================== PHONE SHEETS (PH8b-2 P4) ====================
+  //
+  // Today's dialogs as sheets on a phone (showSheetOrDialog): the same
+  // titles, texts and results; the callers keep today's showDialog elsewhere.
+
+  /// A message with OK (the facility limit, Delete blocked).
+  Future<void> _phoneNotice(String title, String message) => showSheetOrDialog<void>(
+        context,
+        title: Text(title),
+        body: (_, _) => Text(message),
+        actions: (sheetContext, _) => [
+          TextButton(onPressed: () => Navigator.pop(sheetContext), child: Text(context.l10n.common_ok)),
+        ],
+      );
+
+  /// A question with Cancel (false) and [confirm] (true); [danger] colours
+  /// it as today's retention confirmation does.
+  Future<bool?> _phoneQuestion(String title, String message, String confirm, {bool danger = false}) =>
+      showSheetOrDialog<bool>(
+        context,
+        title: Text(title),
+        body: (_, _) => Text(message),
+        actions: (sheetContext, _) => [
+          TextButton(onPressed: () => Navigator.pop(sheetContext, false), child: Text(context.l10n.common_cancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(sheetContext, true),
+            child: Text(confirm, style: danger ? TextStyle(color: context.colors.danger) : null),
+          ),
+        ],
+      );
+
+  /// Today's radio rows of [options] days; a tap answers, Cancel answers null.
+  Future<int?> _phoneDaysPicker(String title, List<int> options, int current) => showSheetOrDialog<int>(
+        context,
+        title: Text(title),
+        body: (sheetContext, _) => RadioGroup<int>(
+          groupValue: current,
+          onChanged: (val) => Navigator.pop(sheetContext, val),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final days in options)
+                RadioListTile<int>(
+                  value: days,
+                  activeColor: context.colors.primary,
+                  title: Text(context.l10n.debtors_daysCount(days)),
+                ),
+            ],
+          ),
+        ),
+        actions: (sheetContext, _) => [
+          TextButton(onPressed: () => Navigator.pop(sheetContext), child: Text(context.l10n.common_cancel)),
+        ],
+      );
+
+  /// The list's route, under the facility's page and its tab pages.
+  Route<dynamic>? _phoneListRoute;
+
+  /// After a delete on a phone: back to the list (the facility's pages show
+  /// a facility that is gone). A delete that switched facility has already
+  /// replaced the whole stack.
+  void _closePhonePages() {
+    final list = _phoneListRoute;
+    if (!mounted || list == null || !list.isActive) return;
+    Navigator.of(context).popUntil((route) => route == list);
   }
 
   // What search and the status chips leave: the panel and the phone list
@@ -2782,7 +2943,15 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final isActive = FacilityStatus.fromKey(currentStatus) == FacilityStatus.active;
     final newStatus = isActive ? FacilityStatus.inactive.key : FacilityStatus.active.key;
 
-    final confirmed = await showDialog<bool>(
+    final confirmed = AppLayout.isPhone(context)
+        ? await _phoneQuestion(
+            isActive ? context.l10n.facilities_deactivateConfirmTitle : context.l10n.facilities_reactivateConfirmTitle,
+            isActive
+                ? context.l10n.facilities_deactivateConfirm('${facility['name']}')
+                : context.l10n.facilities_reactivateConfirm('${facility['name']}'),
+            isActive ? context.l10n.team_deactivate : context.l10n.team_reactivate,
+          )
+        : await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(isActive ? context.l10n.facilities_deactivateConfirmTitle : context.l10n.facilities_reactivateConfirmTitle),
@@ -2831,7 +3000,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
   static const List<int> _retentionOptions = AppRules.activityLogRetentionOptions;
 
   Future<void> _showFacilityRetentionDialog(String facilityId, {required int currentRetention}) async {
-    final selected = await showDialog<int>(
+    final selected = AppLayout.isPhone(context)
+        ? await _phoneDaysPicker(context.l10n.facilities_keepLogsFor, _retentionOptions, currentRetention)
+        : await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(context.l10n.facilities_keepLogsFor),
@@ -2863,7 +3034,14 @@ class _FacilityScreenState extends State<FacilityScreen> {
     // window deletes nothing and doesn't need this extra step.
     if (selected < currentRetention) {
       if (!mounted) return;
-      final confirmed = await showDialog<bool>(
+      final confirmed = AppLayout.isPhone(context)
+          ? await _phoneQuestion(
+              context.l10n.facilities_deleteOlderLogsTitle,
+              context.l10n.facilities_deleteOlderLogsMessage(currentRetention, selected),
+              context.l10n.facilities_deleteAndSwitch(selected),
+              danger: true,
+            )
+          : await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(context.l10n.facilities_deleteOlderLogsTitle),
@@ -2924,7 +3102,9 @@ class _FacilityScreenState extends State<FacilityScreen> {
   static const List<int> _debtOverdueOptions = [7, 14, 30, 60, 90];
 
   Future<void> _showDebtOverdueDialog(String facilityId, {required int currentThreshold}) async {
-    final selected = await showDialog<int>(
+    final selected = AppLayout.isPhone(context)
+        ? await _phoneDaysPicker(context.l10n.facilities_overdueAfterTitle, _debtOverdueOptions, currentThreshold)
+        : await showDialog<int>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(context.l10n.facilities_overdueAfterTitle),
