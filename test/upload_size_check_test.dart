@@ -90,8 +90,8 @@ void main() {
     // two facility logos, business logo, payment proof, product image,
     // ProfilePhotoService (every profile photo; the login poster went in G1,
     // the dashboard and register avatar pickers in G2), the announcement
-    // poster (AN1).
-    expect(found, 7);
+    // poster (AN1), the phone Add and Edit Facility forms' logo (PH8b-2).
+    expect(found, 8);
     expect(problems, isEmpty);
   });
 }
