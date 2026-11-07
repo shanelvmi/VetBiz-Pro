@@ -389,6 +389,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     if (key == _bellFeedKey) return _bellFeed;
     _bellFeed?.dispose();
     _phoneGate?.dispose();
+    _wideGate?.dispose();
     _periodAnswered.dispose();
     _bellFeedKey = key;
     if (key == null) return _bellFeed = null;
@@ -615,13 +616,22 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // RV1 (docs/design/screen_reveal.md section 6): Home's primary sources.
   // The period totals answer on their first value or error (the same
   // subscription, no new listener); the providers through the flags they
-  // already keep. The phone Home's gate; it reveals once.
+  // already keep. One gate for the phone Home, one for the wide dashboard
+  // (it also shows product value and clients); each reveals once.
   final ValueNotifier<bool> _periodAnswered = ValueNotifier(false);
   RevealGate? _phoneGate;
+  RevealGate? _wideGate;
 
   RevealGate get _phoneRevealGate => _phoneGate ??= RevealGate(primary: [
         ListenableRevealSource<bool>(_periodAnswered, (v) => v),
         SelectorRevealSource<DebtProvider>(Provider.of<DebtProvider>(context, listen: false), (p) => p.loaded),
+      ]);
+
+  RevealGate get _wideRevealGate => _wideGate ??= RevealGate(primary: [
+        ListenableRevealSource<bool>(_periodAnswered, (v) => v),
+        SelectorRevealSource<DebtProvider>(Provider.of<DebtProvider>(context, listen: false), (p) => p.loaded),
+        SelectorRevealSource<ProductProvider>(Provider.of<ProductProvider>(context, listen: false), (p) => p.loaded),
+        SelectorRevealSource<ClientProvider>(Provider.of<ClientProvider>(context, listen: false), (p) => p.hasLoaded),
       ]);
 
   // PH4: All details is a pushed route, so it does not rebuild with this
@@ -1340,6 +1350,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                   },
                                 ),
                                 const SizedBox(height: AppSpacing.s16),
+                            // RV1: the cards and the lower panels arrive as one group
+                            // (screen_reveal.md): drawn again as the skeleton under a
+                            // SkeletonScope, each block through SkeletonOr.
+                            ScreenReveal(
+                              gate: _wideRevealGate,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
                             LayoutBuilder(
                               builder: (context, gridConstraints) {
                                 final gridWidth = gridConstraints.maxWidth;
@@ -1528,23 +1546,35 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                     mainAxisSpacing: 12,
                                   ),
                                   itemCount: cards.length,
-                                  itemBuilder: (context, index) => cards[index],
+                                  itemBuilder: (context, index) => SkeletonOr(radius: AppRadius.r12, child: cards[index]),
                                 );
                               },
                             ),
                             const SizedBox(height: AppSpacing.s16),
                             DashboardLowerPanels(
-                              glance: TodayGlanceStrip(
+                              glance: SkeletonOr(
+                                radius: AppRadius.r12,
+                                child: TodayGlanceStrip(
                                 saleCount: _glanceSaleCount,
                                 serviceCount: _glanceServiceCount,
                                 collected: _glanceCollected,
                                 isLoading: _isGlanceLoading,
                                 debtorCount: glanceDebtorCount,
                               ),
+                              ),
                               wide: isLargeScreen,
-                              chart: _buildSalesRevenueChart(),
-                              feed: _buildRecentActivityFeed(),
-                              quickActions: _buildQuickActionCards(context),
+                              chart: SkeletonOr(radius: AppRadius.r12, child: _buildSalesRevenueChart()),
+                              // The feed starts its stream and carries a GlobalKey: the
+                              // skeleton draws one with no stream instead.
+                              feed: SkeletonOr(
+                                radius: AppRadius.r12,
+                                placeholder: const RecentActivityFeed(stream: null),
+                                child: _buildRecentActivityFeed(),
+                              ),
+                              quickActions: SkeletonOr(child: _buildQuickActionCards(context)),
+                            ),
+                                ],
+                              ),
                             ),
                           ],
                         ),

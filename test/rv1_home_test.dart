@@ -26,7 +26,7 @@ import 'helpers/tree_fingerprint.dart';
 
 // The phone Home and the wide group are adopted in separate commits.
 const _skipPhone = false;
-const _skipWide = true; // RV1: until the wide dashboard adopts it
+const _skipWide = false;
 
 const _wideSizes = [
   MatrixSize('768x1024', Size(768, 1024)),

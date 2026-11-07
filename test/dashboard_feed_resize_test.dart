@@ -16,6 +16,7 @@ import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/screens/dashboard/dashboard_panels.dart';
 import 'package:vetbiz_pro/theme/app_breakpoints.dart';
+import 'package:vetbiz_pro/widgets/reveal/skeleton_box.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/utils/merged_query_stream.dart';
@@ -132,7 +133,7 @@ void main() {
           await _resize(tester, 1200);
           expect(tester.takeException(), isNull);
           expect(find.text('Entry 3'), findsOneWidget, reason: 'wide again');
-          expect(find.byType(CircularProgressIndicator), findsNothing);
+          expect(find.byType(SkeletonBox), findsNothing);
         },
       );
     }
@@ -153,10 +154,10 @@ void main() {
       await tester.pump(
         AppTimeouts.liveCardFirstAnswer - const Duration(seconds: 1),
       );
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(SkeletonBox), findsOneWidget, reason: 'RV1: the soft skeleton, no spinner');
 
       await tester.pump(const Duration(seconds: 2));
-      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.byType(SkeletonBox), findsNothing);
       expect(find.text("Couldn't load recent activity."), findsOneWidget);
       await tester.tap(find.text('Retry'));
       expect(retried, 1);

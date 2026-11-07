@@ -17,6 +17,7 @@ import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../utils/merged_query_stream.dart';
 import '../../utils/text_sanitizer.dart';
+import '../../widgets/reveal/skeleton_box.dart';
 import '../activity/activity_log_screen.dart';
 import 'insights_screen.dart';
 
@@ -195,7 +196,8 @@ class _RecentActivityFeedState extends State<RecentActivityFeed> {
                   );
                 }
                 if (!snapshot.hasData) {
-                  return _reserved(context, const Center(child: CircularProgressIndicator(strokeWidth: 2)));
+                  // RV1: the shared soft skeleton in the reserved box (a late slot).
+                  return _reserved(context, const SkeletonPulse(child: SkeletonBox()));
                 }
                 final docs = snapshot.data!;
                 if (docs.isEmpty) {

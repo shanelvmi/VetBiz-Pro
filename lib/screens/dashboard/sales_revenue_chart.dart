@@ -8,6 +8,7 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../widgets/reveal/late_slot.dart';
 
 /// The dashboard's Sales & Revenue Overview card: the period's total
 /// revenue, its trend, and sales, collections and services per day. The
@@ -149,11 +150,11 @@ class SalesRevenueChart extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.s16),
-            SizedBox(
+            // RV1: a late slot, the soft skeleton until the data answers.
+            LateSlot(
               height: 220,
-              child: loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : !hasData || (salesByDay.every((v) => v == 0) && collectionsByDay.every((v) => v == 0))
+              ready: !loading,
+              child: !hasData || (salesByDay.every((v) => v == 0) && collectionsByDay.every((v) => v == 0))
                   ? Center(child: Text(context.l10n.dashboard_noActivityInPeriod, style: TextStyle(color: context.colors.textMuted)))
                   : LineChart(
                       LineChartData(
