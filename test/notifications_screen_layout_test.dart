@@ -62,7 +62,7 @@ void main() {
     addTearDown(c.dispose);
     await pumpNotifications(tester, c, width: 390);
 
-    await tester.tap(find.text('Select'));
+    await tapPageAction(tester, 'Select');
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('notification-select-p1')), findsNothing);
     await tester.tap(find.byKey(const ValueKey('notification-select-n1')));
@@ -126,7 +126,7 @@ void main() {
           final size = tester.getSize(moreOf(id));
           expect(size.width >= _minTap && size.height >= _minTap, isTrue, reason: '$id: $size');
         }
-        await tester.tap(find.text('Select'));
+        await tapPageAction(tester, 'Select');
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         final box = tester.getSize(find.byKey(const ValueKey('notification-select-n1')));
@@ -172,7 +172,7 @@ void swahiliTests() {
       expect(tester.takeException(), isNull);
       await tester.tapAt(const Offset(1, 1));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Chagua'));
+      await tapPageAction(tester, 'Chagua');
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
 

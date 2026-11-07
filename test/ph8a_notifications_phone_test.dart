@@ -54,7 +54,7 @@ void main() {
     await checkCase(tester, phone: true, where: 'the menu');
     await tester.tapAt(const Offset(4, 4));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Chagua'));
+    await tapPageAction(tester, 'Chagua');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('notification-select-n4')));
     await tester.pumpAndSettle();

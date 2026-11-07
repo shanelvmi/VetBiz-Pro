@@ -123,7 +123,7 @@ void main() {
     await c.markRead([itemOf(c, 'r1'), itemOf(c, 'r2'), itemOf(c, 'p1')]);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Remove read ones'));
+    await tapPageAction(tester, 'Remove read ones');
     await tester.pumpAndSettle();
     expect(find.text('Remove 2 read notifications? Only you stop seeing them.'), findsOneWidget);
     await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text('Remove')));
@@ -145,7 +145,7 @@ void main() {
     await pumpNotifications(tester, c);
     await c.markRead([itemOf(c, 'r1')]);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Remove read ones'));
+    await tapPageAction(tester, 'Remove read ones');
     await tester.pumpAndSettle();
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();

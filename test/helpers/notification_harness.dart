@@ -108,3 +108,16 @@ Future<void> letToastGo(WidgetTester tester) async {
   await tester.pump(const Duration(seconds: 7));
   await tester.pumpAndSettle();
 }
+
+/// A header action of the full page (Mark all read, Remove read ones,
+/// Select): on a phone they sit in the page's overflow menu (PH8a-fix), on
+/// wider windows they are buttons.
+Future<void> tapPageAction(WidgetTester tester, String label) async {
+  final menu = find.byKey(const ValueKey('notifications-page-more'));
+  if (menu.evaluate().isNotEmpty) {
+    await tester.tap(menu);
+    await tester.pumpAndSettle();
+  }
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+}
