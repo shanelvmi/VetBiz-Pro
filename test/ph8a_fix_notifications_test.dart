@@ -15,7 +15,7 @@ import 'package:vetbiz_pro/services/notification_feed.dart';
 
 import 'helpers/notification_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _menu = ValueKey('notifications-page-more');
 const _summary = ValueKey('notifications-summary');
@@ -101,7 +101,7 @@ void main() {
       expect(x, greaterThan(lastX), reason: 'in the cards\' order');
       lastX = x;
     }
-    expect(tester.widget<ChoiceChip>(find.descendant(of: _chip(null), matching: find.byType(ChoiceChip))).selected, isTrue);
+    expect(tester.widget<ChoiceChip>(_chip(null)).selected, isTrue);
   }, skip: _skip);
 
   testWidgets('each chip filters exactly as its card does on a tablet; tapped again, All', (tester) async {
@@ -129,13 +129,15 @@ void main() {
       await tester.tap(_chip(cat));
       await tester.pumpAndSettle();
       expect(_rows(), tablet[cat], reason: '$cat');
-      expect(tester.widget<ChoiceChip>(find.descendant(of: _chip(cat), matching: find.byType(ChoiceChip))).selected, isTrue);
+      expect(tester.widget<ChoiceChip>(_chip(cat)).selected, isTrue);
       await tester.tap(_chip(cat));
       await tester.pumpAndSettle();
       expect(_rows(), all, reason: '$cat tapped again: All');
     }
+    await tester.ensureVisible(_chip(NotificationCategory.stock));
     await tester.tap(_chip(NotificationCategory.stock));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(_chip(null));
     await tester.tap(_chip(null));
     await tester.pumpAndSettle();
     expect(_rows(), all);
@@ -144,13 +146,14 @@ void main() {
   testWidgets('the selected chip shows a check and says it is selected, not only a colour', (tester) async {
     final c = await _feed(tester);
     await _phone(tester, c);
+    await tester.ensureVisible(_chip(NotificationCategory.stock));
     await tester.tap(_chip(NotificationCategory.stock));
     await tester.pumpAndSettle();
-    final finder = find.descendant(of: _chip(NotificationCategory.stock), matching: find.byType(ChoiceChip));
+    final finder = _chip(NotificationCategory.stock);
     final chip = tester.widget<ChoiceChip>(finder);
     expect(chip.selected, isTrue);
     expect(chip.showCheckmark, isNot(false), reason: 'the check mark, besides the colour');
-    expect(tester.getSemantics(finder), containsSemantics(isSelected: true));
+    expect(tester.getSemantics(finder), isSemantics(isSelected: true));
   }, skip: _skip);
 
   testWidgets('the summary line from the same counts; All read once nothing is unread', (tester) async {

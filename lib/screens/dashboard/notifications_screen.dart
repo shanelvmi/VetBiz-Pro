@@ -18,6 +18,7 @@ import '../../utils/updates_selection.dart';
 import '../../widgets/notification_row.dart';
 import '../../services/notification_feed.dart';
 import '../../widgets/notification_actions.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../ui/feedback/app_feedback.dart';
 import 'notification_targets.dart';
 import '../../config/app_limits.dart';
@@ -314,6 +315,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             Text(context.l10n.notifications_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
           ],
         ),
+        actions: _phone ? [_buildPhoneMenu()] : null,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -429,11 +431,30 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final page = _currentPage > totalPages ? totalPages : _currentPage;
     final pageItems = filtered.skip((page - 1) * _pageSize).take(_pageSize).toList();
 
+    // PH8a-fix (the owner's correction): a phone has no room for the cards;
+    // the same counts give one summary line, and the cards' categories become
+    // chips that filter the same way.
+    final totalUnread = all.where((i) => !i.isRead).length;
     final header = [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
-        child: _buildCategoryCards(counts, unreadCounts),
-      ),
+      if (_phone) ...[
+        if (all.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
+            child: Text(
+              totalUnread > 0 ? context.l10n.notifications_summaryLine(all.length, totalUnread) : context.l10n.notifications_allRead,
+              key: const ValueKey('notifications-summary'),
+              style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.s8),
+          child: _buildCategoryChips(unreadCounts, totalUnread),
+        ),
+      ] else
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
+          child: _buildCategoryCards(counts, unreadCounts),
+        ),
       Padding(
         padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
         child: _buildFilters(),
@@ -471,6 +492,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   // ==================== CARDS ====================
+
+  // PH8a-fix: the phone's cards. All, then the cards' categories in their
+  // order, each with its unread count; a chip sets the same category a card
+  // sets, and tapping the chosen one again goes back to All, as a card does.
+  Widget _buildCategoryChips(Map<NotificationCategory, int> unread, int totalUnread) {
+    const all = 'all';
+    return PhoneQuickChips(
+      keyPrefix: 'notifications-chip-',
+      values: [all, for (final c in _cardCategories) c.name],
+      selected: _selectedCategory?.name ?? all,
+      label: (v) => v == all
+          ? context.l10n.notifications_categoryChip(context.l10n.common_all, totalUnread)
+          : context.l10n.notifications_categoryChip(
+              _categoryName(NotificationCategory.values.byName(v)), unread[NotificationCategory.values.byName(v)] ?? 0),
+      onSelected: (v) {
+        final category = v == all ? null : NotificationCategory.values.byName(v);
+        setState(() {
+          _selectedCategory = category == _selectedCategory ? null : category;
+          _currentPage = 1;
+        });
+      },
+    );
+  }
 
   Widget _buildCategoryCards(Map<NotificationCategory, int> counts, Map<NotificationCategory, int> unread) {
     return LayoutBuilder(
@@ -627,8 +671,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
                 ],
               ),
-            const SizedBox(height: AppSpacing.s10),
-            _buildHeaderActions(),
+            // PH8a-fix: on a phone the actions are in the app bar's menu;
+            // selection mode keeps its Remove selected and Cancel here.
+            if (!_phone || _selecting) ...[
+              const SizedBox(height: AppSpacing.s10),
+              _buildHeaderActions(),
+            ],
           ],
         );
       },
@@ -673,6 +721,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 _items.any((i) => i.canRemove) ? () => setState(() => _selecting = true) : null),
           ];
     return Wrap(alignment: WrapAlignment.end, spacing: AppSpacing.s8, runSpacing: AppSpacing.s8, children: children);
+  }
+
+  // PH8a-fix: the same three actions as [_buildHeaderActions], enabled the
+  // same way, in one overflow menu in a phone's app bar.
+  Widget _buildPhoneMenu() {
+    final l = context.l10n;
+    final feed = _feed;
+    return PopupMenuButton<VoidCallback>(
+      key: const ValueKey('notifications-page-more'),
+      tooltip: l.common_moreActions,
+      icon: const Icon(Icons.more_vert),
+      onSelected: (action) => action(),
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          enabled: feed?.hasUnread ?? false,
+          value: _markAllAsRead,
+          child: Text(l.notifications_markAllRead),
+        ),
+        PopupMenuItem(
+          enabled: feed?.readRemovable.isNotEmpty ?? false,
+          value: _removeReadOnes,
+          child: Text(l.notifications_removeReadOnes),
+        ),
+        PopupMenuItem(
+          enabled: !_selecting && _items.any((i) => i.canRemove),
+          value: () => setState(() => _selecting = true),
+          child: Text(l.notifications_select),
+        ),
+      ],
+    );
   }
 
   Widget _statusDropdown({bool expand = false}) {

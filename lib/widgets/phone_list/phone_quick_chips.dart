@@ -13,12 +13,16 @@ class PhoneQuickChips extends StatelessWidget {
   final String Function(String value) label;
   final ValueChanged<String> onSelected;
 
+  /// PH8a-fix: when set, each chip is keyed '[keyPrefix][value]' (tests).
+  final String? keyPrefix;
+
   const PhoneQuickChips({
     super.key,
     required this.values,
     required this.selected,
     required this.label,
     required this.onSelected,
+    this.keyPrefix,
   });
 
   @override
@@ -34,6 +38,7 @@ class PhoneQuickChips extends StatelessWidget {
             for (var i = 0; i < values.length; i++) ...[
               if (i > 0) const SizedBox(width: PhoneListMetrics.chipGap),
               ChoiceChip(
+                key: keyPrefix == null ? null : ValueKey('$keyPrefix${values[i]}'),
                 label: Text(label(values[i])),
                 selected: values[i] == selected,
                 onSelected: (_) => onSelected(values[i]),
