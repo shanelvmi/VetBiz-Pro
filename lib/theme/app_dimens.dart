@@ -179,6 +179,34 @@ class AuthCardMetrics {
   static const double shadowAlpha = AppAlpha.a20;
 }
 
+/// LG1: the login on phones (AppLayout.isPhone) as one flat page, no frame
+/// and no cards: the content column's width and insets, the brand row, and
+/// the fields' and the Sign in button's size. Wider screens keep the two
+/// cards ([AuthPanelMetrics], [AuthCardMetrics]).
+class PhoneLoginMetrics {
+  PhoneLoginMetrics._();
+
+  /// The content column: at most this wide (side padding included), centred.
+  static const double maxWidth = 420;
+  static const double sidePadding = AppSpacing.s24;
+  static const double topPadding = AppSpacing.s8;
+  static const double bottomPadding = AppSpacing.s24;
+
+  /// The brand row: the VB mark, then the app name.
+  static const double mark = 36;
+  static const double markGap = AppSpacing.s12;
+
+  /// Brand row to the heading; heading to the first field's label (s28 in
+  /// the wide card); the Sign in area to the Updates.
+  static const double brandGap = AppSpacing.s24;
+  static const double headingGap = AppSpacing.s24;
+  static const double updatesGap = AppSpacing.s32;
+
+  static const double fieldHeight = 52;
+  static const double fieldRadius = AppRadius.r14;
+  static const double buttonHeight = 52;
+}
+
 /// The cards inside the signed-out frame (AN4): the login card and, on wide
 /// windows, the Updates card beside it share every size here, so they read
 /// as one pair and one place restyles both (lib/widgets/auth_panel.dart).

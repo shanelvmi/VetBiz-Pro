@@ -35,11 +35,13 @@ class AuthPanel {
 /// line, and an optional [subtitle] under it. The login card's "Sign in to
 /// your account" and the Updates card's welcome note use it, so the two rows
 /// are the same height and line up, and (AN5) the welcome sentence and the
-/// sign-in subtext are one widget, on one horizontal line.
+/// sign-in subtext are one widget, on one horizontal line. With no [icon]
+/// (LG1, the flat phone login) the same title and subtitle without the
+/// circle, the title free to wrap (a long Kiswahili title is not cut).
 class AuthPanelHeading extends StatelessWidget {
-  const AuthPanelHeading({super.key, required this.icon, required this.title, this.subtitle});
+  const AuthPanelHeading({super.key, this.icon, required this.title, this.subtitle});
 
-  final IconData icon;
+  final IconData? icon;
   final String title;
   final String? subtitle;
 
@@ -47,7 +49,9 @@ class AuthPanelHeading extends StatelessWidget {
   Widget build(BuildContext context) {
     final glow = context.colors.brandTealGlow;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final row = Row(
+    final icon = this.icon;
+    final titleStyle = TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.extraBold, color: context.colors.textPrimary);
+    final row = icon == null ? Text(title, style: titleStyle) : Row(
       children: [
         Container(
           width: AuthPanelMetrics.iconCircle,
@@ -70,7 +74,7 @@ class AuthPanelHeading extends StatelessWidget {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.extraBold, color: context.colors.textPrimary),
+            style: titleStyle,
           ),
         ),
       ],

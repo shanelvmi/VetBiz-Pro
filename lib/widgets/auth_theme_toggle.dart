@@ -14,7 +14,11 @@ import '../theme/theme_context.dart';
 /// It reads the brightness on screen, not the saved choice, so with System
 /// it shows what the person sees and switches to the other one.
 class AuthThemeToggle extends StatelessWidget {
-  const AuthThemeToggle({super.key});
+  const AuthThemeToggle({super.key, this.onPage = false});
+
+  /// LG1: on the page itself (the flat phone login, no bar behind it): the
+  /// page's ink on a muted circle instead of light ink on the brand bar.
+  final bool onPage;
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +30,8 @@ class AuthThemeToggle extends StatelessWidget {
       onPressed: () => context.read<UiSettingsProvider>().setThemeMode(isDark ? UiThemeMode.light : UiThemeMode.dark),
       icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined, size: AppIconSize.i18),
       style: IconButton.styleFrom(
-        foregroundColor: context.colors.onBrandSurface,
-        backgroundColor: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a15),
+        foregroundColor: onPage ? context.colors.textPrimary : context.colors.onBrandSurface,
+        backgroundColor: onPage ? context.colors.surfaceMuted : context.colors.onBrandSurface.withValues(alpha: AppAlpha.a15),
         // A small circle to look at, Material's 48 px to tap.
         fixedSize: const Size.square(AppSizes.authHeaderButton),
         minimumSize: const Size.square(AppSizes.authHeaderButton),

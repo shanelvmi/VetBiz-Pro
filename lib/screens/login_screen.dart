@@ -51,6 +51,12 @@ class LoginScreen extends StatefulWidget {
   /// For tests: the sign-in card and its heading row (AN4; "Sign in to your account" since AN5, the key kept).
   static const loginCardKey = ValueKey<String>('login-card');
   static const welcomeBackRowKey = ValueKey<String>('login-welcome-back-row');
+  /// For tests (LG1): the flat phone page's content column, its brand row,
+  /// its Updates section, and the Sign in button (every width).
+  static const phonePageKey = ValueKey<String>('login-phone-page');
+  static const phoneBrandKey = ValueKey<String>('login-phone-brand');
+  static const phoneUpdatesKey = ValueKey<String>('login-phone-updates');
+  static const signInButtonKey = ValueKey<String>('login-sign-in-button');
 
   const LoginScreen({super.key, this.errorMessage, this.initialEmail, this.authService, this.firestore});
 
@@ -87,8 +93,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   static const Duration _shakeDuration = AppMotion.slower;
   static const Duration _alertSwitch = AppMotion.slow;
 
-  OutlineInputBorder _fieldBorder(Color color) =>
-      OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r16), borderSide: BorderSide(color: color));
+  OutlineInputBorder _fieldBorder(Color color, {double radius = AppRadius.r16}) =>
+      OutlineInputBorder(borderRadius: BorderRadius.circular(radius), borderSide: BorderSide(color: color));
 
   @override
   void initState() {
@@ -486,23 +492,36 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     required String hint,
     required IconData icon,
     required bool hasError,
+    required bool flat,
     Widget? suffix,
   }) {
-    final restColor = hasError ? context.colors.dangerAccent.withValues(alpha: AppAlpha.a70) : context.colors.border;
+    // LG1, the flat phone page: the field sits on the page's own background,
+    // so its outline, hint and icon take roles that read on it (3:1 for the
+    // outline and icons, 4.5:1 for the hint) instead of the card's faint ones.
+    final restColor =
+        hasError
+            ? context.colors.dangerAccent.withValues(alpha: AppAlpha.a70)
+            : (flat ? context.colors.textMuted : context.colors.border);
     final focusColor = hasError ? context.colors.dangerAccent : context.colors.primary;
+    final radius = flat ? PhoneLoginMetrics.fieldRadius : AppRadius.r16;
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: context.colors.textDisabled),
-      prefixIcon: Icon(icon, size: AppIconSize.i20, color: hasError ? context.colors.dangerAccent : context.colors.textHint),
+      hintStyle: TextStyle(color: flat ? context.colors.textSecondary : context.colors.textDisabled),
+      prefixIcon: Icon(
+        icon,
+        size: AppIconSize.i20,
+        color: hasError ? context.colors.dangerAccent : (flat ? context.colors.textSecondary : context.colors.textHint),
+      ),
       suffixIcon: suffix,
       filled: true,
       fillColor: context.colors.surfaceMuted,
       isDense: true,
+      constraints: flat ? const BoxConstraints.tightFor(height: PhoneLoginMetrics.fieldHeight) : null,
       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s16),
-      border: _fieldBorder(restColor),
-      enabledBorder: _fieldBorder(restColor),
+      border: _fieldBorder(restColor, radius: radius),
+      enabledBorder: _fieldBorder(restColor, radius: radius),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.r16),
+        borderRadius: BorderRadius.circular(radius),
         borderSide: BorderSide(color: focusColor, width: 1.6),
       ),
     );
@@ -575,10 +594,35 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildLoginForm() {
+  // [flat] (LG1, phones): the same form straight on the page - no card
+  // surface, no accent line, no inset, the heading without its lock circle
+  // (the password field keeps the lock), 52 px fields and button. Everything
+  // it does is the same at every width.
+  Widget _buildLoginForm({required bool flat}) {
     // The flag alone - not 'an alert is showing' - so the outline outlives
     // the alert (see _dismissError).
     final fieldsInError = errorIsAboutCredentials;
+    final linkColor = flat ? context.colors.primary : context.colors.brandTeal;
+    final remember = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 20,
+          height: 20,
+          child: Checkbox(
+            value: rememberMe,
+            onChanged: (value) => setState(() => rememberMe = value ?? false),
+            activeColor: context.colors.primary,
+            checkColor: context.colors.onPrimary,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.s8),
+        Flexible(
+          child: Text(context.l10n.login_rememberMe, style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
+        ),
+      ],
+    );
 
     // A short side-to-side shake on every new error. Driven by _shakeCount
     // rather than a controller: each increment animates the value up by one,
@@ -595,10 +639,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       child: Container(
         key: LoginScreen.loginCardKey,
         // The look the Updates card shares (AuthPanel, AN4).
-        decoration: AuthPanel.decoration(context),
+        decoration: flat ? null : AuthPanel.decoration(context),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AuthPanelMetrics.radius),
+          // Flat: nothing to clip to, and the alert's shadow stays whole.
+          clipBehavior: flat ? Clip.none : Clip.antiAlias,
           child: Stack(
+            clipBehavior: flat ? Clip.none : Clip.hardEdge,
             children: [
               Column(
                 mainAxisSize: MainAxisSize.min,
@@ -606,36 +653,40 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 children: [
                   // Thin gradient accent along the top edge (this card's
                   // alone; the Updates card has none).
-                  Container(
+                  if (!flat) Container(
                     height: AuthPanelMetrics.accentHeight,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(colors: [context.colors.brandSurface, context.colors.brandTealOnBrand, context.colors.brandTealGlow]),
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AuthPanelMetrics.padding,
-                      AuthPanelMetrics.padding,
-                      AuthPanelMetrics.padding,
-                      AuthPanelMetrics.paddingBottom,
-                    ),
+                    padding:
+                        flat
+                            ? EdgeInsets.zero
+                            : const EdgeInsets.fromLTRB(
+                              AuthPanelMetrics.padding,
+                              AuthPanelMetrics.padding,
+                              AuthPanelMetrics.padding,
+                              AuthPanelMetrics.paddingBottom,
+                            ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         AuthPanelHeading(
                           key: LoginScreen.welcomeBackRowKey,
-                          icon: Icons.lock_outline,
+                          icon: flat ? null : Icons.lock_outline,
                           title: context.l10n.login_signInTitle,
                           subtitle: context.l10n.login_signInSubtitle,
                         ),
-                        const SizedBox(height: AppSpacing.s28),
+                        SizedBox(height: flat ? PhoneLoginMetrics.headingGap : AppSpacing.s28),
                         Text(context.l10n.common_email, style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),
                         const SizedBox(height: AppSpacing.s6),
                         TextField(
                           controller: emailController,
                           style: TextStyle(color: context.colors.textPrimary),
                           autofocus: true,
+                          textAlignVertical: flat ? TextAlignVertical.center : null,
                           textInputAction: TextInputAction.next,
                           onChanged: (_) => _onCredentialsEdited(),
                           onSubmitted: (_) => passwordFocusNode.requestFocus(),
@@ -643,6 +694,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             hint: context.l10n.login_emailHint,
                             icon: Icons.mail_outline,
                             hasError: fieldsInError,
+                            flat: flat,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.s18),
@@ -655,6 +707,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           autocorrect: false,
                           enableSuggestions: false,
                           style: TextStyle(color: context.colors.textPrimary),
+                          textAlignVertical: flat ? TextAlignVertical.center : null,
                           textInputAction: TextInputAction.done,
                           onChanged: (_) => _onCredentialsEdited(),
                           onSubmitted: (_) => _login(),
@@ -662,11 +715,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             hint: context.l10n.login_passwordHint,
                             icon: Icons.lock_outline,
                             hasError: fieldsInError,
+                            flat: flat,
                             suffix: GestureDetector(
                               onTap: _password.toggle,
                               child: Icon(
                                 _password.obscured ?Icons.visibility_outlined : Icons.visibility_off_outlined,
-                                color: context.colors.textHint,
+                                color: flat ? context.colors.textSecondary : context.colors.textHint,
                                 size: AppIconSize.i20,
                               ),
                             ),
@@ -688,29 +742,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             spacing: AppSpacing.s16,
                             runSpacing: AppSpacing.s8,
                             children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: Checkbox(
-                                      value: rememberMe,
-                                      onChanged: (value) => setState(() => rememberMe = value ?? false),
-                                      activeColor: context.colors.primary,
-                                      checkColor: context.colors.onPrimary,
-                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              // Flat (phones): the box and its label are one
+                              // 48 px target, so a thumb can tick it.
+                              if (flat)
+                                MergeSemantics(
+                                  child: InkWell(
+                                    onTap: () => setState(() => rememberMe = !rememberMe),
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(minHeight: kMinInteractiveDimension),
+                                      child: remember,
                                     ),
                                   ),
-                                  const SizedBox(width: AppSpacing.s8),
-                                  Flexible(
-                                    child: Text(context.l10n.login_rememberMe, style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13)),
-                                  ),
-                                ],
-                              ),
+                                )
+                              else
+                                remember,
                               HoverLink(
                                 label: context.l10n.login_forgotPassword,
-                                color: context.colors.brandTeal,
+                                color: linkColor,
                                 button: true,
                                 style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold),
                                 onTap: _forgotPassword,
@@ -720,6 +768,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                         const SizedBox(height: AppSpacing.s20),
                         _AnimatedLoginButton(
+                          key: LoginScreen.signInButtonKey,
+                          height: flat ? PhoneLoginMetrics.buttonHeight : kMinInteractiveDimension,
                           isLoading: isLoggingIn,
                           onPressed: isLoggingIn ? null : _login,
                           primaryColor: context.colors.brandSurface,
@@ -734,7 +784,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             Text(context.l10n.login_noAccount, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textPrimary)),
                             HoverLink(
                               label: context.l10n.login_register,
-                              color: context.colors.brandTeal,
+                              color: linkColor,
                               style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold),
                               onTap: () => Navigator.pushNamed(context, '/register'),
                             ),
@@ -749,9 +799,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               // _buildErrorBanner. Positioned children take no part in
               // the Stack's sizing, so this can never resize the card.
               Positioned(
-                top: 14,
-                left: 14,
-                right: 14,
+                top: flat ? 0 : 14,
+                left: flat ? 0 : 14,
+                right: flat ? 0 : 14,
                 child: AnimatedSwitcher(
                   duration: _alertSwitch,
                   switchInCurve: Curves.easeOutCubic,
@@ -775,7 +825,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   // The form keeps its state (focus, typing, the button's animation) when
   // the Updates arrive and the layout around it changes.
   final GlobalKey _loginFormKey = GlobalKey();
-  Widget _loginForm() => KeyedSubtree(key: _loginFormKey, child: _buildLoginForm());
+  Widget _loginForm({bool flat = false}) => KeyedSubtree(key: _loginFormKey, child: _buildLoginForm(flat: flat));
 
   // AN4 (owner): two cards, no grey panel behind the login card (it used
   // to lift the card off a tinted panel; the card's own shadow does that
@@ -853,12 +903,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
 // ==================== ANIMATED LOGIN BUTTON ====================
 class _AnimatedLoginButton extends StatefulWidget {
+  // 48 in the card; 52 on the flat phone page (LG1).
+  final double height;
   final bool isLoading;
   final VoidCallback? onPressed;
   final Color primaryColor;
   final Color accentColor;
 
   const _AnimatedLoginButton({
+    super.key,
+    required this.height,
     required this.isLoading,
     required this.onPressed,
     required this.primaryColor,
@@ -910,7 +964,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
           label: context.l10n.login_loginButton,
           child: SizedBox(
             width: double.infinity,
-            height: 48,
+            height: widget.height,
             child: AnimatedBuilder(
               animation: _controller,
               builder: (context, _) {
