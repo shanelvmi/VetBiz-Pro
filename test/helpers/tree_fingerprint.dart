@@ -19,8 +19,42 @@ String treeFingerprint(WidgetTester tester, Finder root) {
   final rootElement = root.evaluate().single;
   final origin = (rootElement.renderObject! as RenderBox).localToGlobal(Offset.zero);
   final out = StringBuffer();
-  void visit(Element e, int depth) {
+  void visit(Element e, int depth, Offset origin) {
     final w = e.widget;
+    // RV1: a route's page transition counts as its page (the wrappers the
+    // platform's builder adds, Zoom before RV1 or AppPageSlide after, are
+    // left out), so a screen under a Navigator compares across the change;
+    // the page is measured from its own top left, as a covered page is moved
+    // aside by the transition (Zoom and the slide move it differently).
+    if (w.runtimeType.toString().startsWith('_PageTransitionsThemeTransitions')) {
+      final Widget page = (w as dynamic).child as Widget;
+      Element? content;
+      void find(Element c) {
+        if (content != null) return;
+        if (identical(c.widget, page)) {
+          content = c;
+        } else {
+          c.visitChildren(find);
+        }
+      }
+
+      e.visitChildren(find);
+      if (content != null) {
+        RenderBox? box;
+        void firstBox(Element c) {
+          if (box != null) return;
+          final r = c.renderObject;
+          if (r is RenderBox && r.hasSize && r.attached) {
+            box = r;
+          } else {
+            c.visitChildren(firstBox);
+          }
+        }
+
+        firstBox(content!);
+        return visit(content!, depth, box?.localToGlobal(Offset.zero) ?? origin);
+      }
+    }
     out.write('$depth ${w.runtimeType}');
     if (w is Text) out.write(' "${_mask(w.data ?? w.textSpan?.toPlainText() ?? '')}"');
     if (w is RichText) out.write(' "${_mask(w.text.toPlainText())}"');
@@ -31,10 +65,10 @@ String treeFingerprint(WidgetTester tester, Finder root) {
           '@${o.dx.toStringAsFixed(1)},${o.dy.toStringAsFixed(1)}');
     }
     out.writeln();
-    e.visitChildren((c) => visit(c, depth + 1));
+    e.visitChildren((c) => visit(c, depth + 1, origin));
   }
 
-  visit(rootElement, 0);
+  visit(rootElement, 0, origin);
   return out.toString();
 }
 
