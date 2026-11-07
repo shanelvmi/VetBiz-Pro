@@ -19,6 +19,8 @@ class FakeUpload {
 
 class FakeStorage extends Fake implements FirebaseStorage {
   final uploads = <FakeUpload>[];
+  // PH8b-2: the paths deleted, in order.
+  final deletes = <String>[];
 
   @override
   Reference ref([String? path]) => _FakeRef(this, path ?? '');
@@ -43,6 +45,9 @@ class _FakeRef extends Fake implements Reference {
 
   @override
   Future<String> getDownloadURL() async => 'https://storage.test/o/${Uri.encodeComponent(path)}?alt=media&token=t';
+
+  @override
+  Future<void> delete() async => owner.deletes.add(path);
 }
 
 class _FakeSnapshot extends Fake implements TaskSnapshot {}
