@@ -13,11 +13,12 @@ const int kDefaultMaxFacilitiesPerAdmin = AppRules.defaultMaxFacilitiesPerAdmin;
 /// Reads the currently configured facility limit, or the default if
 /// none has been set yet. Falls back to the default on any read
 /// failure (e.g. offline) - the Add Facility flow should never be
-/// blocked just because this specific read had trouble.
-Future<int> loadMaxFacilitiesPerAdmin() async {
+/// blocked just because this specific read had trouble. [db] is for tests;
+/// the app leaves it null.
+Future<int> loadMaxFacilitiesPerAdmin([FirebaseFirestore? db]) async {
   try {
     final doc =
-        await FirebaseFirestore.instance.collection(Collections.platformConfig).doc('settings').get();
+        await (db ?? FirebaseFirestore.instance).collection(Collections.platformConfig).doc('settings').get();
     final configured = (doc.data()?['maxFacilitiesPerAdmin'] as num?)?.toInt();
     return (configured != null && configured > 0) ? configured : kDefaultMaxFacilitiesPerAdmin;
   } catch (_) {

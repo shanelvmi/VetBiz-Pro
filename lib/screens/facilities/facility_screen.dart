@@ -45,7 +45,14 @@ import '../../ui/feedback/friendly_error.dart';
 import '../../l10n/l10n.dart';
 
 class FacilityScreen extends StatefulWidget {
-  const FacilityScreen({super.key});
+  // PH8b seams: tests pass fakes; the app leaves them null (the default
+  // instances and the server calls, as before).
+  final FirebaseFirestore? firestore;
+  final FirebaseAuth? auth;
+  final FirebaseStorage? storage;
+  final MembershipService? membership;
+
+  const FacilityScreen({super.key, this.firestore, this.auth, this.storage, this.membership});
 
   @override
   State<FacilityScreen> createState() => _FacilityScreenState();
@@ -57,7 +64,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
   static const double _listPanelHeight = 360;
   static const double _listPanelWidth = 340;
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  late final FirebaseAuth _auth = widget.auth ?? FirebaseAuth.instance;
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+  FirebaseStorage get _storage => widget.storage ?? FirebaseStorage.instance;
+  MembershipService get _membership => widget.membership ?? MembershipService();
   late final User? currentUser;
   List<Map<String, dynamic>> facilities = [];
   String? activeFacilityId;
@@ -122,7 +132,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   final Map<String, Future<QuerySnapshot>> _productsFutureByFacility = {};
   final Map<String, Future<QuerySnapshot>> _recentSalesFutureByFacility = {};
   final Map<String, Map<String, dynamic>> _statsByFacility = {};
-  final SalesSummaryService _salesSummaryService = SalesSummaryService();
+  late final SalesSummaryService _salesSummaryService = SalesSummaryService(firestore: widget.firestore);
 
   // Logo upload - the ImagePicker instance is shared by both the Add
   // and Edit Facility dialogs.
@@ -157,13 +167,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
       // four depend on another's result, so there's no reason for
       // each to wait on the previous one to finish before starting.
       final facilityDocFuture =
-          FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).get();
+          _db.collection(Collections.facilities).doc(facilityId).get();
       final salesTotalsFuture = _salesSummaryService.getRangeTotals(
         facilityId: facilityId,
         start: monthStart,
         end: now,
       );
-      final clientCountFuture = FirebaseFirestore.instance
+      final clientCountFuture = _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.clients)
@@ -175,7 +185,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       // facility is currently active, not every facility a card in
       // this list represents.
       final productsFuture =
-          FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).collection(Collections.products).get();
+          _db.collection(Collections.facilities).doc(facilityId).collection(Collections.products).get();
 
       final facilityDoc = await facilityDocFuture;
       final logoUrl = facilityDoc.data()?['logoUrl'] as String?;
@@ -287,7 +297,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Future<void> fetchFacilities() async {
     setState(() => isLoading = true);
     try {
-      final userDoc = await FirebaseFirestore.instance.collection(Collections.users).doc(currentUser!.uid).get();
+      final userDoc = await _db.collection(Collections.users).doc(currentUser!.uid).get();
       final userData = userDoc.data();
       if (!mounted) return;
 
@@ -359,7 +369,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchAssistantsForFacility(String facilityId) async {
-    final snapshot = await FirebaseFirestore.instance
+    final snapshot = await _db
         .collection(Collections.users)
         .where(Fields.role, isEqualTo: UserRole.assistant.key)
         .where('facilityIds', arrayContains: facilityId)
@@ -384,7 +394,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   // ==================== ADD FACILITY ====================
 
   Future<void> _showAddFacilityDialog() async {
-    final maxFacilities = await loadMaxFacilitiesPerAdmin();
+    final maxFacilities = await loadMaxFacilitiesPerAdmin(widget.firestore);
     if (facilities.length >= maxFacilities) {
       if (!mounted) return;
       await showDialog(
@@ -585,7 +595,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     // limit, and adds it to this person's lists. None of that can be written
     // from the app any more - it's what stopped people writing themselves
     // into facilities that weren't theirs. (typeDetail is sent only for Other.)
-    final newFacilityEntry = await MembershipService().addFacility(name: name, type: type, typeDetail: typeDetail);
+    final newFacilityEntry = await _membership.addFacility(name: name, type: type, typeDetail: typeDetail);
     final newFacilityId = newFacilityEntry[Fields.facilityId] as String;
 
     // Logo upload needs a facilityId to key the Storage path on, so it can
@@ -593,11 +603,11 @@ class _FacilityScreenState extends State<FacilityScreen> {
     // ordinary facility setting, which an admin of it may write.)
     if (logoBytes != null) {
       try {
-        final storageRef = FirebaseStorage.instance.ref().child('facility_logos/$newFacilityId.png');
+        final storageRef = _storage.ref().child('facility_logos/$newFacilityId.png');
         await storageRef.putData(logoBytes, UploadContentTypes.png);
         final rawDownloadUrl = await storageRef.getDownloadURL();
         final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
-        await FirebaseFirestore.instance
+        await _db
             .collection(Collections.facilities)
             .doc(newFacilityId)
             .set({'logoUrl': downloadUrl}, SetOptions(merge: true));
@@ -993,10 +1003,10 @@ class _FacilityScreenState extends State<FacilityScreen> {
     String? status,
     String? restockFrequency,
   }) async {
-    final firestore = FirebaseFirestore.instance;
+    final firestore = _db;
 
     if (logoBytes != null) {
-      final storageRef = FirebaseStorage.instance.ref().child('facility_logos/$facilityId.png');
+      final storageRef = _storage.ref().child('facility_logos/$facilityId.png');
       await storageRef.putData(logoBytes, UploadContentTypes.png);
       final rawDownloadUrl = await storageRef.getDownloadURL();
       // Same cache-busting reasoning as before: Storage returns the
@@ -1013,7 +1023,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       // Firestore reference to it - otherwise the file sits there
       // forever, orphaned, silently taking up storage space.
       try {
-        await FirebaseStorage.instance.ref().child('facility_logos/$facilityId.png').delete();
+        await _storage.ref().child('facility_logos/$facilityId.png').delete();
       } catch (e) {
         // File may not exist (e.g. this facility never actually had
         // a logo file, just a stale reference) - not fatal either
@@ -1067,7 +1077,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     // facility document does the same for any other way a name changes, as a
     // safety net.) If this call fails the edit itself has still been saved.
     try {
-      await MembershipService().syncFacilityDetails(facilityId);
+      await _membership.syncFacilityDetails(facilityId);
     } catch (e) {
       debugPrint('Could not refresh the facility details on members\' profiles: $e');
     }
@@ -1839,7 +1849,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   Widget _buildActivityList(String facilityId, {required int limit}) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
+      stream: _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.activityLogs)
@@ -2130,7 +2140,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Future<QuerySnapshot> _getProductsFuture(String facilityId) {
     return _productsFutureByFacility.putIfAbsent(
       facilityId,
-      () => FirebaseFirestore.instance
+      () => _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.products)
@@ -2291,7 +2301,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   Future<QuerySnapshot> _getRecentSalesFuture(String facilityId) {
     return _recentSalesFutureByFacility.putIfAbsent(
       facilityId,
-      () => FirebaseFirestore.instance
+      () => _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.sales)
@@ -2626,7 +2636,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     if (confirmed != true) return;
 
     try {
-      await FirebaseFirestore.instance.collection(Collections.facilities).doc(facilityId).update({
+      await _db.collection(Collections.facilities).doc(facilityId).update({
         Fields.status: newStatus,
         Fields.updatedAt: FieldValue.serverTimestamp(),
       });
@@ -2704,7 +2714,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     }
 
     try {
-      await FirebaseFirestore.instance
+      await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .set({'activityLogRetentionDays': selected}, SetOptions(merge: true));
@@ -2716,7 +2726,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       String? problem;
       if (selected < currentRetention) {
         try {
-          deleted = await ActivityLogRetention.deleteExpired(facilityId, selected);
+          deleted = await ActivityLogRetention.deleteExpired(facilityId, selected, firestore: widget.firestore);
         } catch (e) {
           problem = ActivityLogRetention.explainFailure(e);
         }
@@ -2774,7 +2784,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     if (selected == null || selected == currentThreshold) return;
 
     try {
-      await FirebaseFirestore.instance
+      await _db
           .collection(Collections.facilities)
           .doc(facilityId)
           .set({'debtOverdueDays': selected}, SetOptions(merge: true));
