@@ -7,6 +7,7 @@ import 'package:vetbiz_pro/models/product.dart';
 import 'package:vetbiz_pro/screens/dashboard/needs_attention.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 import 'package:vetbiz_pro/screens/dashboard/record_sheet.dart';
+import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'screen_size_matrix.dart';
 
@@ -53,8 +54,12 @@ const ph4BigFigures = PhoneHomeFigures(
 
 const ph4SomeAttention = AttentionCounts(stock: 3, expiry: 2, overdueDebtors: 4, overdueDays: 30);
 
-/// The phone home under its top bar, as the shell shows it.
+/// The phone home under its top bar, as the shell shows it. With [gate]
+/// (RV1), inside its ScreenReveal with its skeleton, as the dashboard builds
+/// it; [attentionReady] is Needs attention's late slot.
 Widget phoneHomeHarness({
+  RevealGate? gate,
+  bool attentionReady = true,
   PhoneHomeFigures figures = ph4BigFigures,
   bool isAdmin = true,
   String period = 'Today',
@@ -77,20 +82,23 @@ Widget phoneHomeHarness({
         ),
         actions: [IconButton(onPressed: () {}, tooltip: 'Help', icon: const Icon(Icons.help_outline))],
       ),
-      body: Builder(
-        builder: (context) => PhoneHome(
-          figures: figures,
-          isAdmin: isAdmin,
-          period: period,
-          onPeriodChanged: onPeriodChanged ?? (_) {},
-          attention: attention,
-          onAllDetails: onAllDetails ?? () {},
-          onQuickAction: (a) => (onQuickAction ?? (_, __) async {})(context, a),
-          onViewAll: () => onViewAll?.call(context),
-          onGoTo: onGoTo ?? (_) {},
-          onAttention: onAttention ?? (_) {},
-        ),
-      ),
+      body: Builder(builder: (context) {
+        PhoneHome home({bool skeleton = false}) => PhoneHome(
+              skeleton: skeleton,
+              attentionReady: attentionReady,
+              figures: figures,
+              isAdmin: isAdmin,
+              period: period,
+              onPeriodChanged: onPeriodChanged ?? (_) {},
+              attention: attention,
+              onAllDetails: onAllDetails ?? () {},
+              onQuickAction: (a) => (onQuickAction ?? (_, __) async {})(context, a),
+              onViewAll: () => onViewAll?.call(context),
+              onGoTo: onGoTo ?? (_) {},
+              onAttention: onAttention ?? (_) {},
+            );
+        return gate == null ? home() : ScreenReveal(gate: gate, skeleton: home(skeleton: true), child: home());
+      }),
     );
 
 Future<void> pumpPhoneHome(WidgetTester tester, Widget screen, {Size size = const Size(390, 844)}) =>
