@@ -726,10 +726,6 @@ class BellMetrics {
 class PhoneBannerMetrics {
   PhoneBannerMetrics._();
 
-  /// A tint of the status role behind the banner, a line of it under.
-  static const double fillAlpha = AppAlpha.a10;
-  static const double borderAlpha = AppAlpha.a40;
-  static const double border = 1;
   static const double paddingStart = AppSpacing.s12;
   static const double paddingV = AppSpacing.s2;
   static const double icon = AppIconSize.i20;

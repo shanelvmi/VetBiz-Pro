@@ -12,6 +12,7 @@ import 'package:vetbiz_pro/providers/subscription_provider.dart';
 import 'package:vetbiz_pro/screens/dashboard/more_screen.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_shell.dart';
 import 'package:vetbiz_pro/screens/dashboard/subscription_banner.dart';
+import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/theme/theme_context.dart';
@@ -176,7 +177,12 @@ void main() {
               SubscriptionBannerKind.calmTrial => colors.info,
               _ => colors.warning,
             };
-            expect(tester.widget<Icon>(find.descendant(of: find.byKey(_banner), matching: find.byType(Icon)).first).color, role);
+            // PH8a-fix: the role is the fill now (it floats over the content);
+            // the icon is the ink that reads on it (ph8a_fix_banner_test.dart).
+            final fill = tester.widget<DecoratedBox>(find.byKey(const ValueKey('phone-subscription-banner-fill')));
+            expect((fill.decoration as BoxDecoration).color, role.withValues(alpha: PhoneBannerMetrics.overlayAlpha));
+            expect(tester.widget<Icon>(find.descendant(of: find.byKey(_banner), matching: find.byType(Icon)).first).color,
+                colors.bannerInk);
           }
         }, skip: _skip);
       }

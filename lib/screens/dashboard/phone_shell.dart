@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_layout.dart';
+import '../../theme/app_motion.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../widgets/app_safe_area.dart';
@@ -40,7 +41,8 @@ class PhoneShell extends StatefulWidget {
   final ValueChanged<PhoneTab>? onTabChanged;
 
   /// PH8a: the subscription banner, at the top of every tab under its app bar
-  /// (Home here; the other tabs through [bodyWithBanner]); null when hidden.
+  /// (Home here; the other tabs through [bodyWithBanner]), floating over the
+  /// content (PH8a-fix); null when hidden.
   /// Deep screens are pushed over the shell, so they never show it.
   final Widget? banner;
 
@@ -71,12 +73,51 @@ class PhoneShell extends StatefulWidget {
     return scope == null ? body : _withBanner(scope.banner, body);
   }
 
-  // Always the same shape, with or without the banner: a snooze must not
-  // rebuild the tab under it (its scroll, its search).
-  static Widget _withBanner(Widget? banner, Widget body) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [banner ?? const SizedBox.shrink(), Expanded(child: body)],
+  // PH8a-fix (the owner's correction): the banner floats OVER the tab, its
+  // top at the app bar's bottom (the top of the body under it), so the
+  // content keeps its full height and never moves when the banner comes,
+  // goes or is snoozed. The Stack clips, so the entrance never draws over the
+  // app bar. Always the same shape, with or without the banner: a snooze must
+  // not rebuild the tab under it (its scroll, its search).
+  static Widget _withBanner(Widget? banner, Widget body) => Stack(
+        children: [
+          Positioned.fill(child: body),
+          Positioned(
+            top: 0,
+            left: PhoneBannerMetrics.overlayMargin,
+            right: PhoneBannerMetrics.overlayMargin,
+            child: _BannerEntrance(key: const ValueKey('phone-subscription-banner-entrance'), banner: banner),
+          ),
+        ],
       );
+}
+
+/// PH8a-fix: the banner slides down a little and fades in when it comes;
+/// at once when the platform asks for reduced motion.
+class _BannerEntrance extends StatelessWidget {
+  final Widget? banner;
+
+  const _BannerEntrance({super.key, required this.banner});
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    return AnimatedSwitcher(
+      duration: still ? Duration.zero : AppMotion.normal,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (current, previous) =>
+          Stack(alignment: Alignment.topCenter, children: [...previous, if (current != null) current]),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween(begin: const Offset(0, -PhoneBannerMetrics.enterSlide), end: Offset.zero).animate(animation),
+          child: child,
+        ),
+      ),
+      child: banner ?? const SizedBox.shrink(),
+    );
+  }
 }
 
 class _PhoneShellState extends State<PhoneShell> {

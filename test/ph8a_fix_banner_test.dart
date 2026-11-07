@@ -22,7 +22,7 @@ import 'package:vetbiz_pro/theme/theme_context.dart';
 import 'package:vetbiz_pro/widgets/phone_list/phone_list_scaffold.dart';
 import 'package:vetbiz_pro/widgets/phone_list/phone_quick_chips.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _banner = ValueKey('phone-subscription-banner');
 const _fill = ValueKey('phone-subscription-banner-fill');
@@ -228,8 +228,11 @@ void main() {
       // The shell's own entrance, not the route's transitions further up.
       final entrance = find.byKey(const ValueKey('phone-subscription-banner-entrance'));
       expect(find.descendant(of: entrance, matching: find.byKey(_banner)), findsOneWidget);
-      final fade = tester.widget<FadeTransition>(find.descendant(of: entrance, matching: find.byType(FadeTransition)).first);
-      final slide = tester.widget<SlideTransition>(find.descendant(of: entrance, matching: find.byType(SlideTransition)).first);
+      // The incoming banner's own transitions (the outgoing empty child has its own).
+      Finder around(Type type) => find.ancestor(
+          of: find.byKey(_banner), matching: find.descendant(of: entrance, matching: find.byType(type)));
+      final fade = tester.widget<FadeTransition>(around(FadeTransition));
+      final slide = tester.widget<SlideTransition>(around(SlideTransition));
       if (reduce) {
         expect(fade.opacity.value, 1);
         expect(slide.position.value, Offset.zero);

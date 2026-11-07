@@ -97,7 +97,8 @@ class SubscriptionBannerSnooze {
 /// it): an icon, the short line, the action (Renew, or Details in the calm
 /// trial, opening Subscription for an admin; Details, the full sentence and who manages it,
 /// for an assistant) and the snooze. The status is in the text and the icon;
-/// its colour comes from the status roles.
+/// its fill is the status role, slightly see-through (PH8a-fix: it floats
+/// over the content).
 class PhoneSubscriptionBanner extends StatelessWidget {
   final SubscriptionBannerState state;
   final bool isAdmin;
@@ -144,50 +145,69 @@ class PhoneSubscriptionBanner extends StatelessWidget {
     final action = isAdmin
         ? (state.kind == SubscriptionBannerKind.calmTrial ? l.common_details : l.subscription_renew)
         : l.common_details;
-    return Material(
-      color: Color.alphaBlend(role.withValues(alpha: PhoneBannerMetrics.fillAlpha), colors.surface),
+    // PH8a-fix: it floats over the content (PhoneShell places it), so the
+    // fill is the role itself, slightly see-through, and the ink is the one
+    // that reads on it over any content (AppColors.bannerInk). A live region:
+    // a screen reader announces it when it comes or its state changes.
+    final ink = colors.bannerInk;
+    final radius = BorderRadius.circular(PhoneBannerMetrics.overlayRadius);
+    return Semantics(
+      container: true,
+      liveRegion: true,
       child: DecoratedBox(
+        key: const ValueKey('phone-subscription-banner-fill'),
         decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: role.withValues(alpha: PhoneBannerMetrics.borderAlpha), width: PhoneBannerMetrics.border),
-          ),
+          color: role.withValues(alpha: PhoneBannerMetrics.overlayAlpha),
+          borderRadius: radius,
+          boxShadow: [
+            BoxShadow(
+              color: colors.shadow.withValues(alpha: PhoneBannerMetrics.shadowAlpha),
+              blurRadius: PhoneBannerMetrics.shadowBlur,
+              offset: const Offset(0, PhoneBannerMetrics.shadowOffsetY),
+            ),
+          ],
         ),
-        child: SafeArea(
-          top: false,
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsetsDirectional.only(
-                start: PhoneBannerMetrics.paddingStart, top: PhoneBannerMetrics.paddingV, bottom: PhoneBannerMetrics.paddingV),
-            child: Row(
-              children: [
-                Icon(icon, color: role, size: PhoneBannerMetrics.icon),
-                const SizedBox(width: PhoneBannerMetrics.gap),
-                Expanded(
-                  child: Text(
-                    subscriptionBannerShortText(l, state),
-                    key: const ValueKey('phone-subscription-banner-text'),
-                    maxLines: PhoneBannerMetrics.maxLines,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                        fontSize: PhoneBannerMetrics.text, fontWeight: AppFontWeight.semibold, color: colors.textPrimary),
+        child: Material(
+          type: MaterialType.transparency,
+          borderRadius: radius,
+          clipBehavior: Clip.antiAlias,
+          child: SafeArea(
+            top: false,
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(
+                  start: PhoneBannerMetrics.paddingStart, top: PhoneBannerMetrics.paddingV, bottom: PhoneBannerMetrics.paddingV),
+              child: Row(
+                children: [
+                  Icon(icon, color: ink, size: PhoneBannerMetrics.icon),
+                  const SizedBox(width: PhoneBannerMetrics.gap),
+                  Expanded(
+                    child: Text(
+                      subscriptionBannerShortText(l, state),
+                      key: const ValueKey('phone-subscription-banner-text'),
+                      maxLines: PhoneBannerMetrics.maxLines,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: PhoneBannerMetrics.text, fontWeight: AppFontWeight.semibold, color: ink),
+                    ),
                   ),
-                ),
-                TextButton(
-                  onPressed: isAdmin ? onOpenSubscription : () => _details(context),
-                  style: TextButton.styleFrom(
-                    foregroundColor: colors.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: PhoneBannerMetrics.actionPaddingH),
-                    textStyle: const TextStyle(fontSize: PhoneBannerMetrics.text, fontWeight: AppFontWeight.bold),
+                  TextButton(
+                    onPressed: isAdmin ? onOpenSubscription : () => _details(context),
+                    style: TextButton.styleFrom(
+                      foregroundColor: ink,
+                      padding: const EdgeInsets.symmetric(horizontal: PhoneBannerMetrics.actionPaddingH),
+                      textStyle: const TextStyle(fontSize: PhoneBannerMetrics.text, fontWeight: AppFontWeight.bold),
+                    ),
+                    child: Text(action),
                   ),
-                  child: Text(action),
-                ),
-                // Snoozes rather than dismisses for good (SubscriptionBannerSnooze).
-                IconButton(
-                  tooltip: l.common_close,
-                  onPressed: onSnooze,
-                  icon: Icon(Icons.close, color: colors.textMuted),
-                ),
-              ],
+                  // Snoozes rather than dismisses for good (SubscriptionBannerSnooze).
+                  IconButton(
+                    tooltip: l.common_close,
+                    onPressed: onSnooze,
+                    icon: Icon(Icons.close, color: ink),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
