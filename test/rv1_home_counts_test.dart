@@ -12,7 +12,7 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'helpers/counting_firestore.dart';
 
-const _skip = true; // RV1: until the implementation
+const _skip = false;
 
 void main() {
   test('the loads are PH4\'s: phone cold open the period totals only, a return to Home nothing', () {

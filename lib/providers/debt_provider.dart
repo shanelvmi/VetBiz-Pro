@@ -40,8 +40,10 @@ class DebtProvider with ChangeNotifier {
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _subscription;
   String? _facilityId;
 
-  // RV1: whether the debts have answered once; stub first.
-  bool get loaded => throw UnimplementedError();
+  // RV1: whether the debts have answered once (first snapshot or an error);
+  // Home's reveal waits for it, so Owed never shows a 0 that is not real.
+  bool _loaded = false;
+  bool get loaded => _loaded;
 
   /// Clear all debts (used when switching facility or logout)
   void clear() {
@@ -49,6 +51,7 @@ class DebtProvider with ChangeNotifier {
     _subscription = null;
     _facilityId = null;
     _debts.clear();
+    _loaded = false;
     notifyListeners();
   }
 
@@ -58,6 +61,7 @@ class DebtProvider with ChangeNotifier {
 
     _facilityId = facilityId;
     _subscription?.cancel();
+    _loaded = false;
 
     if (facilityId.isEmpty) return;
 
@@ -71,12 +75,17 @@ class DebtProvider with ChangeNotifier {
       _debts = snapshot.docs
           .map((doc) => Debt.fromMap(doc.id, doc.data()))
           .toList();
+      _loaded = true;
 
       debugPrint(
           'DebtProvider: loaded ${_debts.length} debts for facility $facilityId');
       notifyListeners();
     }, onError: (error) {
       debugPrint('DebtProvider error: $error');
+      if (!_loaded) {
+        _loaded = true;
+        notifyListeners();
+      }
     });
   }
 

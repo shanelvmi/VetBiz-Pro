@@ -21,6 +21,7 @@ import '../../widgets/summary_card.dart';
 import '../../widgets/support_contact_dialog.dart';
 import '../../widgets/profile/profile_drawer.dart';
 import '../../widgets/profile/profile_menu_button.dart';
+import '../../widgets/reveal/reveal.dart';
 
 import '../products/products_screen.dart';
 import '../clients/clients_screen.dart';
@@ -387,6 +388,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final key = (facilityId.isEmpty || uid == null) ? null : '$facilityId/$uid';
     if (key == _bellFeedKey) return _bellFeed;
     _bellFeed?.dispose();
+    _phoneGate?.dispose();
+    _periodAnswered.dispose();
     _bellFeedKey = key;
     if (key == null) return _bellFeed = null;
     final subscription = Provider.of<SubscriptionProvider>(context, listen: false);
@@ -609,6 +612,18 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   String? _lastLoadedFilter;
   StreamSubscription<DashboardPeriodTotals>? _periodTotalsSub;
 
+  // RV1 (docs/design/screen_reveal.md section 6): Home's primary sources.
+  // The period totals answer on their first value or error (the same
+  // subscription, no new listener); the providers through the flags they
+  // already keep. The phone Home's gate; it reveals once.
+  final ValueNotifier<bool> _periodAnswered = ValueNotifier(false);
+  RevealGate? _phoneGate;
+
+  RevealGate get _phoneRevealGate => _phoneGate ??= RevealGate(primary: [
+        ListenableRevealSource<bool>(_periodAnswered, (v) => v),
+        SelectorRevealSource<DebtProvider>(Provider.of<DebtProvider>(context, listen: false), (p) => p.loaded),
+      ]);
+
   // PH4: All details is a pushed route, so it does not rebuild with this
   // state; it listens to this instead (setState below pings it).
   final _DashboardChanges _changes = _DashboardChanges();
@@ -811,6 +826,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     _periodTotalsSub = _dashboardSummaryService
         .watchDashboardTotals(facilityId: facilityId, start: start, end: end)
         .listen((totals) {
+      _periodAnswered.value = true;
       if (mounted) {
         setState(() {
           _periodTotals = totals;
@@ -819,6 +835,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       }
     }, onError: (e) {
       debugPrint('Error watching dashboard period totals: $e');
+      _periodAnswered.value = true;
       if (mounted) {
         setState(() => _isPeriodLoading = false);
       }
@@ -1564,23 +1581,31 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             // PH8a: the subscription banner at the top of every tab, from here.
             banner: _buildPhoneSubscriptionBanner(context),
             endDrawer: endDrawer,
-            home: (homeContext) => PhoneHome(
-              figures: PhoneHomeFigures.from(_periodTotals,
-                  owed: debtProvider.totalOutstanding(), loading: _isPeriodLoading),
-              isAdmin: isAdmin,
-              period: selectedFilter,
-              onPeriodChanged: (val) => setState(() => selectedFilter = val),
-              attention: attentionCountsFor(
-                products: productProvider.products,
-                debts: debtProvider.debts,
-                overdueDays: facilityProvider.debtOverdueDays,
-              ),
-              onAllDetails: _openAllDetails,
-              onQuickAction: (action) => runRecordAction(homeContext, action, onDone: _returnToHome),
-              onViewAll: () => showRecordSheet(homeContext, all: true, isAdmin: isAdmin, onDone: _returnToHome),
-              onGoTo: (item) => _goTo(homeContext, item),
-              onAttention: (target) => _openAttention(homeContext, target),
-            ),
+            // RV1: the skeleton at once, then Home as one fade and rise when
+            // the period totals and the debts have answered (or 1.2 s);
+            // Needs attention is a late slot.
+            home: (homeContext) {
+              PhoneHome home({required bool skeleton}) => PhoneHome(
+                    skeleton: skeleton,
+                    figures: PhoneHomeFigures.from(_periodTotals,
+                        owed: debtProvider.totalOutstanding(), loading: _isPeriodLoading),
+                    isAdmin: isAdmin,
+                    period: selectedFilter,
+                    onPeriodChanged: (val) => setState(() => selectedFilter = val),
+                    attention: attentionCountsFor(
+                      products: productProvider.products,
+                      debts: debtProvider.debts,
+                      overdueDays: facilityProvider.debtOverdueDays,
+                    ),
+                    attentionReady: productProvider.loaded && debtProvider.loaded,
+                    onAllDetails: _openAllDetails,
+                    onQuickAction: (action) => runRecordAction(homeContext, action, onDone: _returnToHome),
+                    onViewAll: () => showRecordSheet(homeContext, all: true, isAdmin: isAdmin, onDone: _returnToHome),
+                    onGoTo: (item) => _goTo(homeContext, item),
+                    onAttention: (target) => _openAttention(homeContext, target),
+                  );
+              return ScreenReveal(gate: _phoneRevealGate, skeleton: home(skeleton: true), child: home(skeleton: false));
+            },
             sales: (_) => const SalesScreen(asTab: true),
             products: (_) => const ProductsScreen(asTab: true),
             more: (context) => FutureBuilder<bool>(

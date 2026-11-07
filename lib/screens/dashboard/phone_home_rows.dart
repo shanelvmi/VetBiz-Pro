@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../widgets/reveal/skeleton_box.dart';
 import 'more_screen.dart';
 import 'record_sheet.dart';
 
@@ -46,7 +47,10 @@ IconData _goToIcon(GoToItem item) => switch (item) {
 class QuickAccessTiles extends StatefulWidget {
   final Future<void> Function(RecordAction action) onAction;
 
-  const QuickAccessTiles({super.key, required this.onAction});
+  /// RV1: drawn as Home's skeleton (the same tiles, no taps).
+  final bool skeleton;
+
+  const QuickAccessTiles({super.key, required this.onAction, this.skeleton = false});
 
   @override
   State<QuickAccessTiles> createState() => _QuickAccessTilesState();
@@ -79,7 +83,7 @@ class _QuickAccessTilesState extends State<QuickAccessTiles> {
               borderRadius: BorderRadius.circular(AppRadius.r12),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
-                onTap: () => _run(quickAccessActions[i]),
+                onTap: widget.skeleton ? null : () => _run(quickAccessActions[i]),
                 child: SizedBox(
                   height: height,
                   child: _RoundLabel(
@@ -89,6 +93,7 @@ class _QuickAccessTilesState extends State<QuickAccessTiles> {
                     iconSize: PhoneHomeMetrics.tileIcon,
                     busy: _busy == quickAccessActions[i],
                     center: true,
+                    skeleton: widget.skeleton,
                   ),
                 ),
               ),
@@ -108,6 +113,7 @@ class _RoundLabel extends StatelessWidget {
   final double iconSize;
   final bool busy;
   final bool center;
+  final bool skeleton;
 
   const _RoundLabel({
     required this.icon,
@@ -116,11 +122,19 @@ class _RoundLabel extends StatelessWidget {
     required this.iconSize,
     this.busy = false,
     this.center = false,
+    this.skeleton = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final text = Text(
+      label,
+      maxLines: 2,
+      textAlign: TextAlign.center,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.textPrimary),
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s4, vertical: AppSpacing.s4),
       child: Column(
@@ -130,24 +144,20 @@ class _RoundLabel extends StatelessWidget {
             width: circle,
             height: circle,
             decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: PhoneHomeMetrics.circleAlpha),
+              color: skeleton ? colors.surfaceMuted : colors.primary.withValues(alpha: PhoneHomeMetrics.circleAlpha),
               shape: BoxShape.circle,
             ),
-            child: busy
-                ? Padding(
-                    padding: const EdgeInsets.all(AppSpacing.s12),
-                    child: CircularProgressIndicator(strokeWidth: 2, color: colors.primary),
-                  )
-                : Icon(icon, size: iconSize, color: colors.primary),
+            child: skeleton
+                ? null
+                : busy
+                    ? Padding(
+                        padding: const EdgeInsets.all(AppSpacing.s12),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: colors.primary),
+                      )
+                    : Icon(icon, size: iconSize, color: colors.primary),
           ),
           const SizedBox(height: AppSpacing.s4),
-          Text(
-            label,
-            maxLines: 2,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.textPrimary),
-          ),
+          if (skeleton) SkeletonOf(child: text) else text,
         ],
       ),
     );
@@ -160,7 +170,10 @@ class GoToRow extends StatelessWidget {
   final List<GoToItem> items;
   final ValueChanged<GoToItem> onGoTo;
 
-  const GoToRow({super.key, required this.items, required this.onGoTo});
+  /// RV1: drawn as Home's skeleton (the same shortcuts, no taps).
+  final bool skeleton;
+
+  const GoToRow({super.key, required this.items, required this.onGoTo, this.skeleton = false});
 
   @override
   Widget build(BuildContext context) {
@@ -183,12 +196,13 @@ class GoToRow extends StatelessWidget {
                 width: PhoneHomeMetrics.goToItemWidth,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppRadius.r12),
-                  onTap: () => onGoTo(item),
+                  onTap: skeleton ? null : () => onGoTo(item),
                   child: _RoundLabel(
                     icon: _goToIcon(item),
                     label: goToLabel(context, item),
                     circle: PhoneHomeMetrics.goToCircle,
                     iconSize: PhoneHomeMetrics.goToIcon,
+                    skeleton: skeleton,
                   ),
                 ),
               ),

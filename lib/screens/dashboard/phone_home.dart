@@ -5,6 +5,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../widgets/profile/profile_avatar.dart';
+import '../../widgets/reveal/reveal.dart';
 import 'dashboard_figures.dart';
 import 'needs_attention.dart';
 import 'phone_home_rows.dart';
@@ -97,10 +98,12 @@ class PhoneHome extends StatelessWidget {
   /// Drawn over the top of the page (the subscription pill).
   final Widget? overlay;
 
-  /// RV1: Home's skeleton (docs/design/screen_reveal.md); stub first.
+  /// RV1: Home's skeleton, the same layout drawn as soft boxes
+  /// (docs/design/screen_reveal.md).
   final bool skeleton;
 
-  /// RV1: whether Needs attention's data has answered; stub first.
+  /// RV1: whether Needs attention's data (products and debts) has answered;
+  /// until then its late slot keeps a place at the end of the list.
   final bool attentionReady;
 
   const PhoneHome({
@@ -120,28 +123,47 @@ class PhoneHome extends StatelessWidget {
     this.attentionReady = true,
   });
 
+  /// [child] as it is, or as a soft box of its size in the skeleton.
+  Widget skeletonOf(Widget child, {double radius = RevealMetrics.skeletonRadius}) =>
+      skeleton ? SkeletonOf(radius: radius, child: child) : child;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final list = ListView(
       padding: const EdgeInsets.all(PhoneHomeMetrics.pagePadding),
       children: [
-        TodayCard(
-          figures: figures,
-          isAdmin: isAdmin,
-          period: period,
-          onPeriodChanged: onPeriodChanged,
-          onAllDetails: onAllDetails,
+        skeletonOf(
+          TodayCard(
+            figures: figures,
+            isAdmin: isAdmin,
+            period: period,
+            onPeriodChanged: onPeriodChanged,
+            onAllDetails: onAllDetails,
+          ),
+          radius: PhoneHomeMetrics.cardRadius,
         ),
         const SizedBox(height: PhoneHomeMetrics.sectionGap),
-        _SectionTitle(title: l10n.home_quickAccess, link: l10n.subscription_viewAll, onLink: onViewAll),
-        QuickAccessTiles(onAction: onQuickAction),
+        _SectionTitle(title: l10n.home_quickAccess, link: l10n.subscription_viewAll, onLink: onViewAll, skeleton: skeleton),
+        QuickAccessTiles(onAction: onQuickAction, skeleton: skeleton),
         const SizedBox(height: PhoneHomeMetrics.sectionGap),
-        _SectionTitle(title: l10n.home_goTo),
-        GoToRow(items: goToItemsFor(isAdmin: isAdmin), onGoTo: onGoTo),
-        if (!attention.isEmpty) ...[
+        _SectionTitle(title: l10n.home_goTo, skeleton: skeleton),
+        GoToRow(items: goToItemsFor(isAdmin: isAdmin), onGoTo: onGoTo, skeleton: skeleton),
+        // A late slot (secondary): the last block, so while it waits it keeps
+        // a place below everything else, and when it answers with nothing to
+        // show it is not drawn; nothing is below it to move.
+        if (!attentionReady || !attention.isEmpty) ...[
           const SizedBox(height: PhoneHomeMetrics.sectionGap),
-          NeedsAttentionStrip(counts: attention, onOpen: onAttention),
+          if (skeleton)
+            attentionReady
+                ? skeletonOf(NeedsAttentionStrip(counts: attention, onOpen: onAttention))
+                : const SkeletonBox(height: RevealMetrics.attentionReserve)
+          else
+            LateSlot(
+              height: attentionReady ? null : RevealMetrics.attentionReserve,
+              ready: attentionReady,
+              child: NeedsAttentionStrip(counts: attention, onOpen: onAttention),
+            ),
         ],
       ],
     );
@@ -158,34 +180,38 @@ class _SectionTitle extends StatelessWidget {
   final String title;
   final String? link;
   final VoidCallback? onLink;
+  final bool skeleton;
 
-  const _SectionTitle({required this.title, this.link, this.onLink});
+  const _SectionTitle({required this.title, this.link, this.onLink, this.skeleton = false});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final titleText = Text(
+      title,
+      style: TextStyle(
+        fontSize: PhoneHomeMetrics.sectionTitle,
+        fontWeight: AppFontWeight.semibold,
+        color: colors.textPrimary,
+      ),
+    );
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: PhoneHomeMetrics.linkHeight),
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: PhoneHomeMetrics.sectionTitle,
-                fontWeight: AppFontWeight.semibold,
-                color: colors.textPrimary,
-              ),
-            ),
+            child: skeleton
+                ? Align(alignment: AlignmentDirectional.centerStart, child: SkeletonOf(child: titleText))
+                : titleText,
           ),
           if (link != null)
             TextButton(
-              onPressed: onLink,
+              onPressed: skeleton ? null : onLink,
               style: TextButton.styleFrom(
                 foregroundColor: colors.primary,
                 minimumSize: const Size(PhoneHomeMetrics.linkHeight, PhoneHomeMetrics.linkHeight),
               ),
-              child: Text(link!),
+              child: skeleton ? SkeletonOf(child: Text(link!)) : Text(link!),
             ),
         ],
       ),
