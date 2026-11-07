@@ -6,12 +6,15 @@
 // today's confirmations (sheets on a phone), the C2 warning; pull to
 // refresh; six skeleton rows; the empty, error and no-members states. The
 // people shown and the actions allowed are today's, Co-admin rules included.
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/l10n/app_localizations.dart';
 import 'package:vetbiz_pro/services/membership_service.dart';
+import 'package:vetbiz_pro/ui/feedback/app_feedback.dart';
 import 'package:vetbiz_pro/widgets/initials_avatar.dart';
 import 'package:vetbiz_pro/widgets/phone_list/record_tile.dart';
 
@@ -20,8 +23,8 @@ import 'helpers/ph8b_team.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// True until Team Members has its phone list.
-const _skip = true;
+// Was true until Team Members had its phone list.
+const _skip = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 const _everyone = ['user1', ph8bCoAdminId, 'a1', 'a2', 'a3', 'a4', 'x1'];
@@ -61,7 +64,13 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 Future<void> _tap(WidgetTester tester, Finder f) async {
-  await tester.ensureVisible(f.first);
+  // A row below the fold is not built yet; scroll the list to it.
+  if (f.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(f, 100,
+        scrollable: find.descendant(of: find.byKey(const ValueKey('phoneList-scroll')), matching: find.byType(Scrollable)).first);
+  }
+  // Centred, clear of the app bar and of a message at the bottom.
+  unawaited(Scrollable.ensureVisible(tester.element(f.first), alignment: 0.5));
   await tester.pump();
   await tester.tap(f.first);
   await _settle(tester);
@@ -76,7 +85,23 @@ Set<String> _buttons(Finder root) => {
 
 Finder get _page => find.byKey(const ValueKey('team-details'));
 
-Future<void> _openDetails(WidgetTester tester, String id) => _tap(tester, _row(id));
+// Any message from the last action goes first: the last rows sit under it.
+Future<void> _openDetails(WidgetTester tester, String id) async {
+  AppFeedback.messengerKey.currentState?.clearSnackBars();
+  await tester.pump(const Duration(seconds: 1));
+  final row = _row(id);
+  if (row.evaluate().isEmpty) {
+    await tester.scrollUntilVisible(row, 100,
+        scrollable: find.descendant(of: find.byKey(const ValueKey('phoneList-scroll')), matching: find.byType(Scrollable)).first);
+  }
+  // Built (the list builds a little ahead) is not on screen: bring it in.
+  unawaited(Scrollable.ensureVisible(tester.element(row), alignment: 0.5));
+  await tester.pump();
+  // By the avatar: the floating button (wide in the test font) can sit over
+  // the middle of the last rows.
+  await tester.tapAt(tester.getTopLeft(row) + const Offset(30, 30));
+  await _settle(tester);
+}
 
 void main() {
   ph5TestWidgets('a pushed list: back arrow, title only, search, Invite floating, the status chips', (tester) async {

@@ -28,6 +28,11 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/facility_display.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
+import '../../widgets/phone_list/phone_filter_sheet.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
+import '../../widgets/phone_list/record_tile.dart';
 
 /// Who someone is on a facility's team, as this screen shows them. Worked out
 /// from the user record (role, previousRole, who created the facility); not
@@ -132,6 +137,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   MembershipService get _membership => widget.membership ?? MembershipService();
   Future<Map<String, String>> _currentUserInfo() => (widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo)();
 
+  // PH8b: what the phone's details page shows (it is another route, so it
+  // cannot read this screen's build): the latest team, and a tick whenever
+  // someone's "Working..." state changes.
+  final ValueNotifier<List<QueryDocumentSnapshot>> _phoneTeam = ValueNotifier(const []);
+  final ValueNotifier<int> _phoneRevision = ValueNotifier(0);
+
   @override
   void initState() {
     super.initState();
@@ -152,6 +163,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   void dispose() {
     _teamLoadTimer?.cancel();
     _searchController.dispose();
+    _phoneTeam.dispose();
+    _phoneRevision.dispose();
     super.dispose();
   }
 
@@ -231,10 +244,14 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   Future<void> _runBusy(String userId, Future<void> Function() action) async {
     if (_busyUserIds.contains(userId)) return;
     setState(() => _busyUserIds.add(userId));
+    _phoneRevision.value++;
     try {
       await action();
     } finally {
-      if (mounted) setState(() => _busyUserIds.remove(userId));
+      if (mounted) {
+        setState(() => _busyUserIds.remove(userId));
+        _phoneRevision.value++;
+      }
     }
   }
 
@@ -1019,6 +1036,9 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // PH8b: phones get the standard phone list; tablets and computers keep
+    // today's cards, table and panel.
+    if (AppLayout.isPhone(context)) return _buildPhone();
     if (adminUid.isEmpty) {
       return Scaffold(
         backgroundColor: context.colors.background,
@@ -1190,6 +1210,215 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       return (da['fullName'] ?? '').toString().toLowerCase().compareTo((db['fullName'] ?? '').toString().toLowerCase());
     });
     return filtered;
+  }
+
+  // ==================== PHONE (PH8b) ====================
+
+  // The same loading rules as the table: nothing drawn until the server has
+  // answered (or gave up), then exactly the people the table would list.
+  Widget _buildPhone() {
+    final l10n = context.l10n;
+    if (adminUid.isEmpty) return _phoneList(const [], emptyText: l10n.team_noAdmin);
+    if (!_facilitiesLoaded) return _phoneList(const [], loading: true);
+    if (_facilitiesError != null) return _phoneList(const [], error: _facilitiesError);
+    if (adminFacilityIds.isEmpty) return _phoneList(const [], emptyText: l10n.team_noFacilities);
+    return StreamBuilder<QuerySnapshot>(
+      stream: _assistantsStream!,
+      builder: (context, snapshot) {
+        if (snapshot.hasError) return _phoneList(const [], error: snapshot.error);
+        final snap = snapshot.data;
+        if (snap != null && !snap.metadata.isFromCache) _teamServerLoaded = true;
+        if (snap == null || (!_teamServerLoaded && !_teamLoadGaveUp)) return _phoneList(const [], loading: true);
+        final all = snap.docs.where(_isListed).toList();
+        // The details page (another route) follows the team after this frame.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _phoneTeam.value = all;
+        });
+        return _phoneList(all);
+      },
+    );
+  }
+
+  Widget _phoneList(List<QueryDocumentSnapshot> all, {bool loading = false, Object? error, String? emptyText}) {
+    final l10n = context.l10n;
+    final facility = _facilityInUse;
+    final items = _visible(all, facility);
+    final counts = _countsOf(all);
+    final onlySelf = all.isNotEmpty && all.every((d) => d.id == adminUid) && _teamServerLoaded;
+    // Today's Invite Assistant and its guard (_startInviteFlow); nothing to
+    // invite to without a facility.
+    final invite = adminFacilityIds.isEmpty
+        ? null
+        : PhoneListAction(label: l10n.team_inviteAssistant, icon: Icons.person_add_alt, onPressed: _startInviteFlow);
+    final noMatches = all.isNotEmpty && items.isEmpty;
+    return PhoneListScaffold<QueryDocumentSnapshot>(
+      title: l10n.team_title,
+      asTab: false,
+      menu: const [],
+      searchController: _searchController,
+      searchHint: l10n.team_searchHint,
+      onSearchChanged: (val) => setState(() {
+        _searchQuery = val.trim().toLowerCase();
+        _page = 1;
+      }),
+      onSearchClosed: () {
+        _searchController.clear();
+        setState(() {
+          _searchQuery = '';
+          _page = 1;
+        });
+      },
+      // The status cards' filter, as chips (the stored buckets; All is none).
+      quickChips: PhoneQuickChips(
+        key: const ValueKey('phoneList-quickChips'),
+        values: [_allStatuses, UserStatus.pending.key, UserStatus.active.key, UserStatus.deactivated.key],
+        selected: _statusFilter ?? _allStatuses,
+        label: (v) => v == _allStatuses ? l10n.common_all : _statusLabel(v),
+        onSelected: (v) => setState(() {
+          _statusFilter = v == _allStatuses ? null : v;
+          _page = 1;
+        }),
+      ),
+      filtersActive: facility != 'All',
+      // Only worth a filter when there's more than one facility, as today.
+      onFilter: facilityNames.length > 1 ? _openPhoneFilter : null,
+      appliedFilters: [
+        if (facility != 'All')
+          PhoneAppliedFilter(
+            l10n.common_filterValue(l10n.common_facility, facilityNames[facility] ?? l10n.common_unknown),
+            () => setState(() {
+              _facilityFilter = 'All';
+              _page = 1;
+            }),
+          ),
+      ],
+      summaryLine: all.isEmpty ? null : l10n.team_phoneSummaryLine(all.length, counts[UserStatus.pending.key] ?? 0),
+      onSummary: () => _showPhoneSummary(all.length, counts),
+      items: items,
+      idOf: (d) => d.id,
+      // No dates: the list keeps today's order (by authority, then status).
+      dateOf: (_) => DateTime.now(),
+      amountOf: (_) => 0,
+      grouped: false,
+      // Today's hint sits under your own row when nobody else is there yet.
+      tileBuilder: (context, d, {required grouped}) =>
+          onlySelf ? Column(children: [_memberTile(d), _buildOnlySelfHint()]) : _memberTile(d),
+      loading: loading,
+      error: error,
+      onRetry: _fetchAdminFacilities,
+      emptyIcon: noMatches ? Icons.search_off : Icons.groups_outlined,
+      emptyText: emptyText ?? (noMatches ? l10n.team_noMatches : l10n.team_emptyTitle),
+      fab: invite,
+      emptyAction: emptyText != null
+          ? null
+          : noMatches
+              ? PhoneListAction(label: l10n.common_resetFilters, icon: Icons.filter_alt_off, onPressed: _resetFilters)
+              : invite,
+      hasMore: false,
+      loadingMore: false,
+      onLoadMore: () {},
+      // Pull to refresh: today's Refresh button.
+      onRefresh: _fetchAdminFacilities,
+    );
+  }
+
+  static const _allStatuses = 'All';
+
+  Future<void> _openPhoneFilter() async {
+    final l10n = context.l10n;
+    final result = await showPhoneFilterSheet(
+      context,
+      fields: {
+        'facility': PhoneFilterField(
+          title: l10n.common_facility,
+          options: ['All', ...facilityNames.keys],
+          label: (v) => v == 'All' ? l10n.common_all : (facilityNames[v] ?? l10n.common_unknown),
+          defaultValue: 'All',
+        ),
+      },
+      values: {'facility': _facilityInUse},
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _facilityFilter = result['facility'] ?? 'All';
+      _page = 1;
+    });
+  }
+
+  // The four cards, as a list.
+  void _showPhoneSummary(int total, Map<String, int> counts) {
+    final l10n = context.l10n;
+    showPhoneSummarySheet(context, period: l10n.team_title, rows: [
+      ('${l10n.common_total}\n${l10n.team_acrossFacilities}', '$total'),
+      ('${l10n.userStatusLabel(UserStatus.active.key)}\n${l10n.team_haveAccess}', '${counts[UserStatus.active.key] ?? 0}'),
+      ('${l10n.userStatusLabel(UserStatus.deactivated.key)}\n${l10n.team_accessPaused}', '${counts[UserStatus.deactivated.key] ?? 0}'),
+      ('${l10n.team_waitingApproval}\n${l10n.team_needDecision}', '${counts[UserStatus.pending.key] ?? 0}'),
+    ]);
+  }
+
+  Color _roleInk(TeamMemberKind kind) => switch (kind) {
+        TeamMemberKind.assistant => context.colors.roleAssistantStrong,
+        TeamMemberKind.coAdmin => context.colors.roleCoAdminStrong,
+        TeamMemberKind.owner => context.colors.roleOwnerStrong,
+      };
+
+  // A row: the photo or initials, the name and role, the email (or phone)
+  // and status. No buttons: they are on the details page.
+  Widget _memberTile(QueryDocumentSnapshot doc) {
+    final l10n = context.l10n;
+    final data = doc.data() as Map<String, dynamic>;
+    final kind = _kindOf(doc.id, data);
+    final bucket = _bucket(data);
+    final name = '${data['fullName'] ?? ''}';
+    final email = '${data['email'] ?? ''}';
+    final contact = email.isNotEmpty ? email : '${data['phone'] ?? ''}';
+    return RecordTile(
+      title: doc.id == adminUid ? l10n.team_nameYou(name) : name,
+      amount: '',
+      titleStatus: RecordStatus(_kindLabel(kind), _roleInk(kind)),
+      details: [if (contact.isNotEmpty) contact],
+      status: RecordStatus(_statusLabel(bucket), _statusColor(bucket)),
+      leading: InitialsAvatar(
+        avatarUrl: data['avatarUrl'] as String?,
+        name: name,
+        size: PhoneListMetrics.leading,
+        backgroundColor: context.colors.accent.withValues(alpha: AppAlpha.a15),
+        foregroundColor: context.colors.accent,
+      ),
+      colorSeed: name,
+      semanticsLabel: l10n.phoneList_rowSemantics(name, _kindLabel(kind), contact, _statusLabel(bucket)),
+      onTap: () => _openDetailsPage(doc.id),
+    );
+  }
+
+  // Today's details panel as a full page, with its actions. It follows the
+  // team as it changes, and closes when the person is no longer in it
+  // (rejected, removed), as the panel does.
+  Future<void> _openDetailsPage(String userId) {
+    return Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (pageContext) => Scaffold(
+        key: const ValueKey('team-details'),
+        backgroundColor: context.colors.surface,
+        appBar: AppBar(title: Text(context.l10n.team_detailsTitle)),
+        body: ListenableBuilder(
+          listenable: Listenable.merge([_phoneTeam, _phoneRevision]),
+          builder: (_, _) {
+            QueryDocumentSnapshot? doc;
+            for (final d in _phoneTeam.value) {
+              if (d.id == userId) doc = d;
+            }
+            if (doc == null) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                final route = pageContext.mounted ? ModalRoute.of(pageContext) : null;
+                if (route != null && route.isActive) Navigator.of(pageContext).removeRoute(route);
+              });
+              return const SizedBox.shrink();
+            }
+            return SafeArea(top: false, child: _buildDetailsPanel(doc, showActions: true, onPage: true));
+          },
+        ),
+      ),
+    ));
   }
 
   // ==================== CARDS ====================
