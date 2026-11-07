@@ -275,4 +275,67 @@ void main() {
       expect(find.descendant(of: find.byType(BottomSheet), matching: find.text('Kilimo Agrovet')), findsOneWidget);
     }, skip: _skip);
   });
+
+  group('states', () {
+    ph5TestWidgets('six skeleton rows until the team has loaded', (tester) async {
+      await _pump(tester, settle: false);
+      expect(find.byKey(const ValueKey('phoneList-skeleton')), findsOneWidget);
+    }, skip: _skip);
+
+    ph5TestWidgets('just you: your row, then today\'s hint with Invite', (tester) async {
+      await _pump(tester, seed: (fs) async {
+        await ph8bSeedTeam(fs, twoFacilities: false);
+        for (final id in [ph8bCoAdminId, 'a1', 'a2', 'a3', 'x1']) {
+          await fs.collection(Collections.users).doc(id).delete();
+        }
+      });
+      expect(_phoneIds(), [testUserId]);
+      expect(find.text(_en.team_noAssistants), findsOneWidget);
+    }, skip: _skip);
+
+    ph5TestWidgets('no facilities: today\'s sentence', (tester) async {
+      await _pump(tester, seed: (fs) async {});
+      expect(find.text(_en.team_noFacilities), findsOneWidget);
+    }, skip: _skip);
+
+    ph5TestWidgets('no matches: today\'s sentence and Reset filters', (tester) async {
+      await _pump(tester);
+      await _tap(tester, find.byTooltip(_en.common_search));
+      await tester.enterText(find.byKey(const ValueKey('phoneList-searchField')), 'nobody at all');
+      await _settle(tester);
+      expect(find.text(_en.team_noMatches), findsOneWidget);
+      await _tap(tester, find.text(_en.common_resetFilters));
+      expect(_phoneIds(), isNotEmpty);
+    }, skip: _skip);
+
+    ph5TestWidgets('pull to refresh reads the facilities again (the old Refresh button)', (tester) async {
+      final app = await _pump(tester);
+      expect(_row('a5'), findsNothing);
+      await tester.runAsync(() async {
+        await app.fs.collection(Collections.facilities).doc('facility3').set({'name': 'Shamba Hub', 'createdBy': testUserId});
+        await app.fs.collection(Collections.users).doc('a5').set(
+            {'fullName': 'Halima New', 'role': 'assistant', 'status': 'pending', 'facilityIds': ['facility3']});
+      });
+      await _settle(tester);
+      await tester.fling(find.byKey(const ValueKey('phoneList-scroll')), const Offset(0, 400), 1000);
+      await _settle(tester);
+      expect(find.descendant(of: find.byType(RecordTile), matching: find.text('Halima New')), findsOneWidget);
+    }, skip: _skip);
+  });
+
+  for (final size in ph5PhoneSizes) {
+    for (final look in MatrixLook.values) {
+      final where = 'Team Members ${size.label} ${look.name}';
+      ph5TestWidgets('$where, very long names: the list, a details page and a sheet; no overflow, 48 px, 12 px',
+          (tester) async {
+        await _pump(tester, size: size.size, look: look, seed: (fs) => ph8bSeedTeam(fs, longNames: true));
+        await checkCase(tester, phone: true, where: where);
+        await _openDetails(tester, 'a1');
+        await checkCase(tester, phone: true, where: '$where details');
+        final reject = lookupAppLocalizations(Locale(look == MatrixLook.kiswahili ? 'sw' : 'en')).team_reject;
+        await _tap(tester, find.descendant(of: _page, matching: find.text(reject)));
+        await checkCase(tester, phone: true, where: '$where sheet');
+      }, skip: _skip);
+    }
+  }
 }
