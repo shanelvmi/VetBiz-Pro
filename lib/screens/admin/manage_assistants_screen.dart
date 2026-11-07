@@ -22,10 +22,12 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_layout.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/facility_display.dart';
+import '../../widgets/phone_form/sheet_or_dialog.dart';
 
 /// Who someone is on a facility's team, as this screen shows them. Worked out
 /// from the user record (role, previousRole, who created the facility); not
@@ -337,6 +339,22 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   void _showFacilityPickerDialog(String userId, {String? name, String currentFacilityId = ''}) {
     final who = name ?? context.l10n.team_thisAssistant;
     final options = facilityNames.entries.where((e) => e.key != currentFacilityId).toList();
+    // PH8b: a sheet on a phone, Cancel pinned at the bottom.
+    if (AppLayout.isPhone(context)) {
+      showSheetOrDialog<void>(
+        context,
+        title: Text(context.l10n.team_moveTitle(who)),
+        body: (ctx, _) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: _facilityPickerChoices(ctx, userId, options),
+        ),
+        actions: (ctx, _) => [
+          OutlinedButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(context.l10n.common_cancel)),
+        ],
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
@@ -431,8 +449,28 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     }
 
     // More than one facility - ask which one this invite is for, since
-    // there's no way to infer that otherwise.
-    final chosen = await showDialog<String>(
+    // there's no way to infer that otherwise. PH8b: a sheet on a phone.
+    final chosen = AppLayout.isPhone(context)
+        ? await showSheetOrDialog<String>(
+            context,
+            title: Text(context.l10n.team_inviteTo),
+            body: (ctx, _) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final id in adminFacilityIds)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.storefront_outlined, color: ctx.colors.primary),
+                    title: Text(facilityNames[id] ?? ctx.l10n.team_unknownFacility),
+                    onTap: () => Navigator.pop(ctx, id),
+                  ),
+              ],
+            ),
+            actions: (ctx, _) => [
+              OutlinedButton(onPressed: () => Navigator.pop(ctx), child: Text(ctx.l10n.common_cancel)),
+            ],
+          )
+        : await showDialog<String>(
       context: context,
       builder: (context) => SimpleDialog(
         title: Text(context.l10n.team_inviteTo),
@@ -592,6 +630,25 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   Future<void> _confirmDeactivateCoAdmin(QueryDocumentSnapshot doc, Map<String, dynamic> data) async {
     final name = (data['fullName'] ?? context.l10n.team_thisCoAdmin).toString();
+    // PH8b: on a phone a sheet (the 340 px box would crowd it), the same
+    // sentence and buttons, pinned at the bottom.
+    if (AppLayout.isPhone(context)) {
+      final ok = await showSheetOrDialog<bool>(
+        context,
+        title: Text(context.l10n.team_deactivateTitle(name)),
+        body: (ctx, _) => Text(context.l10n.team_deactivateBody, style: const TextStyle(fontSize: AppFontSize.f14)),
+        actions: (ctx, _) => [
+          OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.warning, foregroundColor: context.colors.onPrimary),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(context.l10n.team_deactivate),
+          ),
+        ],
+      );
+      if (ok == true) await _setCoAdminStatus(doc, data, UserStatus.deactivated.key);
+      return;
+    }
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -762,6 +819,50 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     required List<String> points,
     required String confirmLabel,
   }) async {
+    // PH8b: on a phone a sheet: who and what, the points, the two buttons
+    // pinned at the bottom.
+    if (AppLayout.isPhone(context)) {
+      final ok = await showSheetOrDialog<bool>(
+        context,
+        title: Row(
+          children: [
+            Icon(icon, color: color, size: AppIconSize.i22),
+            const SizedBox(width: AppSpacing.s12),
+            Expanded(child: Text(title)),
+          ],
+        ),
+        body: (ctx, _) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final p in points)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.s10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.s8),
+                      child: Icon(Icons.circle, size: AppSizes.statusDot, color: context.colors.textHint),
+                    ),
+                    const SizedBox(width: AppSpacing.s10),
+                    Expanded(child: Text(p, style: const TextStyle(fontSize: AppFontSize.f14, height: 1.4))),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        actions: (ctx, _) => [
+          OutlinedButton(onPressed: () => Navigator.pop(ctx, false), child: Text(context.l10n.common_cancel)),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: color, foregroundColor: context.colors.onPrimary),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      );
+      return ok == true;
+    }
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => Dialog(
