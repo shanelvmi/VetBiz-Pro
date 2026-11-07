@@ -1396,7 +1396,7 @@ login_signInTitle,Sign in to your account,Ingia kwenye akaunti yako,"Sign-in car
 login_signInSubtitle,Use your email and password.,Tumia barua pepe na nenosiri lako.,"Sign-in card: the line under its heading, on the line of the Updates card's welcome sentence (AN5).",draft
 login_emailHint,Enter your email,Weka barua pepe yako,Login email field hint.,draft
 login_passwordHint,Enter your password,Weka nenosiri lako,Login password field hint.,draft
-login_rememberMe,Remember Me,Nikumbuke,Login checkbox: keep the email for next time.,draft
+login_rememberMe,Remember my email,Kumbuka barua pepe yangu,"Login checkbox: keep the email for next time (only the email; AUTH-1).",draft
 login_forgotPassword,Forgot Password?,Umesahau Nenosiri?,Login link that sends a password reset email.,draft
 login_noAccount,"Don't have an account? ","Huna akaunti? ","Login, before the Register link (ends with a space).",draft
 login_register,Register,Jisajili,Login link to the register screen.,draft

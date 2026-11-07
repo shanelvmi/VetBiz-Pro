@@ -213,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
 
     try {
-      // Remember Me only ever stores the email, never the password -
+      // Remember my email only ever stores the email, never the password or a token -
       // just a convenience so it's pre-filled next time, not a
       // session/login bypass of any kind. Done before the sign-in
       // attempt itself so it never depends on anything that could race

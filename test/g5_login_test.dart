@@ -73,7 +73,11 @@ void main() {
           expect(forgot.top, greaterThanOrEqualTo(checkbox.bottom));
           expect(forgot.left, closeTo(field.left, 1));
         }
-        if (width == 1200) expect(oneLine, isTrue, reason: 'room for both on a wide card');
+        // AUTH-1: "Remember my email" is longer, and the test font draws every letter
+        // as a square, so the 1200 card no longer fits both here (Chrome's font
+        // does). The rule kept: one line whenever both fit.
+        final needed = remember.right - checkbox.left + AppSpacing.s16 + forgot.width;
+        if (needed <= field.width) expect(oneLine, isTrue, reason: 'room for both on one line');
         expect(tester.takeException(), isNull);
       }, skip: _skip);
     }
