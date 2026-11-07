@@ -45,7 +45,22 @@ class ManageAssistantsScreen extends StatefulWidget {
   // immediately filtered to that facility's team, rather than the
   // full, unfiltered list of every assistant across every facility.
   final String? initialSearchQuery;
-  const ManageAssistantsScreen({super.key, this.initialSearchQuery});
+
+  // PH8b seams: tests pass fakes; the app leaves them null (the default
+  // instances, the server calls and the signed-in user's name, as before).
+  final FirebaseFirestore? firestore;
+  final FirebaseAuth? auth;
+  final MembershipService? membership;
+  final Future<Map<String, String>> Function()? currentUserInfo;
+
+  const ManageAssistantsScreen({
+    super.key,
+    this.initialSearchQuery,
+    this.firestore,
+    this.auth,
+    this.membership,
+    this.currentUserInfo,
+  });
 
   // The facility's name as typed, never joined with its type (FN1: names
   // such as "Ukuli Animal Care" became "Ukuli Animal Care Agrovet"). Everything
@@ -111,6 +126,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   bool _teamLoadGaveUp = false;
   Timer? _teamLoadTimer;
 
+  FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
+  MembershipService get _membership => widget.membership ?? MembershipService();
+  Future<Map<String, String>> _currentUserInfo() => (widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo)();
+
   @override
   void initState() {
     super.initState();
@@ -118,7 +137,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       _searchQuery = widget.initialSearchQuery!.trim().toLowerCase();
       _searchController.text = widget.initialSearchQuery!.trim();
     }
-    final user = FirebaseAuth.instance.currentUser;
+    final user = (widget.auth ?? FirebaseAuth.instance).currentUser;
     if (user != null) {
       adminUid = user.uid;
       _fetchAdminFacilities();
@@ -136,12 +155,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   Future<void> _fetchAdminFacilities() async {
     try {
-      final facilitiesCollection = FirebaseFirestore.instance.collection(Collections.facilities);
+      final facilitiesCollection = _db.collection(Collections.facilities);
       // Started together: they don't depend on each other, and they used to run
       // one after the other - each a full round trip before the team could
       // even begin to load.
       final createdFuture = facilitiesCollection.where('createdBy', isEqualTo: adminUid).get();
-      final userDocFuture = FirebaseFirestore.instance.collection(Collections.users).doc(adminUid).get();
+      final userDocFuture = _db.collection(Collections.users).doc(adminUid).get();
       final created = await createdFuture;
 
       // Also the facilities this Admin was ADDED to rather than created. A
@@ -180,7 +199,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
             // promoted Assistant (a Co-admin) is an Admin by role, yet must
             // stay in this list. Who actually belongs in it is decided by
             // _isListed - the query can't express "assistant OR co-admin".
-            : FirebaseFirestore.instance
+            : _db
                 .collection(Collections.users)
                 .where('facilityIds', arrayContainsAny: adminFacilityIds)
                 // includeMetadataChanges: so the move from "remembered" to "from the
@@ -246,12 +265,12 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final name = (data['fullName'] ?? 'The assistant').toString();
     final facilityId = _facilityIdOf(data);
     try {
-      final signIn = await MembershipService().setAssistantStatus(assistantUid: userId, action: action.request);
+      final signIn = await _membership.setAssistantStatus(assistantUid: userId, action: action.request);
 
       // Worth a line in the Activity Log - and a rejection especially, since
       // the person disappears from this list.
       if (facilityId.isNotEmpty) {
-        final info = await ActivityLogger.getCurrentUserInfo();
+        final info = await _currentUserInfo();
         final verb = action.key;
         await ActivityLogger.logActivity(
           facilityId: facilityId,
@@ -259,6 +278,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           userName: info['userName'],
           actionType: ActivityType.account.key,
           targetUserId: userId,
+          firestore: widget.firestore,
           description: '${verb[0].toUpperCase()}${verb.substring(1)} assistant $name',
         );
       }
@@ -290,7 +310,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   // show and the one every access rule checks) in step.
   Future<void> _removeFromFacility(String userId, String facilityId) async {
     try {
-      final signIn = await MembershipService().removeAssistantFromFacility(assistantUid: userId, facilityId: facilityId);
+      final signIn = await _membership.removeAssistantFromFacility(assistantUid: userId, facilityId: facilityId);
       if (signIn == MembershipService.signInFailed) {
         AppFeedback.warning(L10n.current.team_signInSwitchFailed);
       } else {
@@ -304,7 +324,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   Future<void> _reassignAssistant(String userId, String newFacilityId) async {
     try {
-      await MembershipService().reassignAssistant(assistantUid: userId, newFacilityId: newFacilityId);
+      await _membership.reassignAssistant(assistantUid: userId, newFacilityId: newFacilityId);
       AppFeedback.success(L10n.current.team_reassigned);
     } catch (e, st) {
       debugPrint('Error reassigning assistant: $e');
@@ -597,8 +617,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     final facilityId = _facilityIdOf(data);
     final activating = newStatus == UserStatus.active.key;
     try {
-      final me = FirebaseAuth.instance.currentUser;
-      await FirebaseFirestore.instance.collection(Collections.users).doc(doc.id).update({
+      final me = (widget.auth ?? FirebaseAuth.instance).currentUser;
+      await _db.collection(Collections.users).doc(doc.id).update({
         Fields.status: newStatus,
         'statusChangedBy': me?.email ?? me?.uid ?? 'Unknown',
         'statusChangedByRole': 'Facility Admin',
@@ -607,13 +627,14 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       // Worth a line in the Activity Log - unlike an Assistant, a Co-admin
       // can do almost everything you can.
       if (facilityId.isNotEmpty) {
-        final info = await ActivityLogger.getCurrentUserInfo();
+        final info = await _currentUserInfo();
         await ActivityLogger.logActivity(
           facilityId: facilityId,
           userId: info[Fields.userId] ?? '',
           userName: info['userName'],
           actionType: ActivityType.account.key,
           targetUserId: doc.id,
+          firestore: widget.firestore,
           description: '${activating ? 'Reactivated' : 'Deactivated'} co-admin $name',
         );
       }

@@ -34,7 +34,9 @@ void main() {
       final lines = src.split('\n');
       for (final line in lines.where(call.hasMatch)) {
         callers.add(f.path);
-        expect(line, contains('final signIn = await MembershipService()'), reason: '${f.path}: $line');
+        // PH8b: Team Members reaches the server through its seam (_membership:
+        // MembershipService() unless a test passes a fake).
+        expect(line, matches(RegExp(r'final signIn = await (MembershipService\(\)|_membership)\.')), reason: '${f.path}: $line');
       }
       if (call.hasMatch(src)) {
         expect(src, contains('signIn == MembershipService.signInFailed'), reason: f.path);
