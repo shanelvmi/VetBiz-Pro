@@ -10,7 +10,7 @@ import 'package:vetbiz_pro/theme/app_motion.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
-const _skip = true; // RV1: until the implementation
+const _skip = false;
 
 final _built = <String, int>{};
 final _taps = <String, int>{};

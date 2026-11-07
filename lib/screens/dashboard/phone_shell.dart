@@ -120,21 +120,46 @@ class _BannerEntrance extends StatelessWidget {
   }
 }
 
-class _PhoneShellState extends State<PhoneShell> {
+class _PhoneShellState extends State<PhoneShell> with SingleTickerProviderStateMixin {
   PhoneTab _tab = PhoneTab.home;
 
   // A plain IndexedStack would build all four at once, and so start every
   // tab's listeners on sign-in: each is built on its first visit instead.
   final Set<PhoneTab> _visited = {PhoneTab.home};
 
+  // RV1: the tab being left fades out under the new one, which fades in
+  // (AppMotion.tabFade); null once the fade is over. Every visited tab stays
+  // built (its state kept, as the IndexedStack did); only the selected one
+  // is hit-testable and seen by screen readers.
+  PhoneTab? _leaving;
+  late final AnimationController _fade = AnimationController(vsync: this, duration: AppMotion.tabFade, value: 1);
+  late final Animation<double> _fadeIn = CurvedAnimation(parent: _fade, curve: Curves.easeOut);
+  late final Animation<double> _fadeOut = ReverseAnimation(_fadeIn);
+
   void _select(PhoneTab tab) {
     if (tab == _tab) return;
+    final still = MediaQuery.disableAnimationsOf(context);
     setState(() {
+      _leaving = still ? null : _tab;
       _tab = tab;
       _visited.add(tab);
     });
+    if (still) {
+      _fade.value = 1;
+    } else {
+      _fade.forward(from: 0).whenCompleteOrCancel(() {
+        if (mounted && _fade.value == 1) setState(() => _leaving = null);
+      });
+    }
     widget.onTabChanged?.call(tab);
   }
+
+  @override
+  void dispose() {
+    _fade.dispose();
+    super.dispose();
+  }
+
 
   WidgetBuilder _builder(PhoneTab tab) => switch (tab) {
         PhoneTab.home => widget.home,
@@ -162,19 +187,40 @@ class _PhoneShellState extends State<PhoneShell> {
         // their own app bar and put it under theirs (PhoneShell.bodyWithBanner).
         body: _PhoneShellBanner(
           banner: widget.banner,
-          child: IndexedStack(
-            index: _tab.index,
+          // The selected tab is painted last, over the one fading out; keys
+          // keep each tab's state when the order changes.
+          child: Stack(
             children: [
-              for (final tab in PhoneTab.values)
+              for (final tab in [
+                ...PhoneTab.values.where((t) => t != _tab && t != _leaving),
+                if (_leaving != null) _leaving!,
+                _tab,
+              ])
                 KeyedSubtree(
                   key: ValueKey(tab),
-                  child: TickerMode(
-                    enabled: tab == _tab,
-                    child: !_visited.contains(tab)
-                        ? const SizedBox.shrink()
-                        : tab == PhoneTab.home
-                            ? PhoneShell._withBanner(widget.banner, Builder(builder: _builder(tab)))
-                            : Builder(builder: _builder(tab)),
+                  child: Offstage(
+                    offstage: tab != _tab && tab != _leaving,
+                    child: TickerMode(
+                      enabled: tab == _tab,
+                      child: IgnorePointer(
+                        ignoring: tab != _tab,
+                        child: ExcludeSemantics(
+                          excluding: tab != _tab,
+                          child: FadeTransition(
+                            opacity: tab == _tab
+                                ? _fadeIn
+                                : tab == _leaving
+                                    ? _fadeOut
+                                    : kAlwaysCompleteAnimation,
+                            child: !_visited.contains(tab)
+                                ? const SizedBox.shrink()
+                                : tab == PhoneTab.home
+                                    ? PhoneShell._withBanner(widget.banner, Builder(builder: _builder(tab)))
+                                    : Builder(builder: _builder(tab)),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
             ],
