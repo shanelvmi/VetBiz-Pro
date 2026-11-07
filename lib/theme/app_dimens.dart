@@ -701,6 +701,17 @@ class PhoneReportMetrics {
   static const double statPaddingV = AppSpacing.s6;
 }
 
+/// PH8b-2 (docs/design/phone_facilities.md P2): a facility's page on a
+/// phone: the header card's logo, a metric card's icon box, a tab row's
+/// height.
+class PhoneFacilityMetrics {
+  PhoneFacilityMetrics._();
+
+  static const double headerLogo = 72;
+  static const double metricIconBox = 32;
+  static const double tabRowHeight = 56;
+}
+
 /// PH8a: the bells (lib/screens/dashboard/notification_bell.dart).
 class BellMetrics {
   BellMetrics._();

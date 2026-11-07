@@ -1663,7 +1663,19 @@ class _FacilityScreenState extends State<FacilityScreen> {
         facility,
         key: const ValueKey('facility-details'),
         title: (current) => _nameOf(current),
-        body: _buildDetailPanelContent,
+        actions: (current) => [_phoneDetailsMenu(current)],
+        body: (current) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildPhoneHeaderCard(current),
+            const SizedBox(height: AppSpacing.s16),
+            _buildPhoneMetrics(current),
+            const SizedBox(height: AppSpacing.s16),
+            _buildOverviewTab(current),
+            const SizedBox(height: AppSpacing.s16),
+            _buildPhoneTabRows(current),
+          ],
+        ),
       ),
     ));
   }
@@ -1705,6 +1717,32 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
+  // Today's More Actions: Edit, Switch to this (not the open one), Delete.
+  Widget _phoneDetailsMenu(Map<String, dynamic> facility) {
+    return PopupMenuButton<String>(
+      key: const ValueKey('facility-details-menu'),
+      tooltip: context.l10n.facilities_moreActionsTooltip,
+      icon: const Icon(Icons.more_vert),
+      onSelected: (value) {
+        if (value == 'edit') {
+          _showEditFacilityDialog(facility);
+        } else if (value == 'switch') {
+          _switchToFacility(facility);
+        } else if (value == 'delete') {
+          _showDeleteFacilityDialog(facility);
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(value: 'edit', child: Text(context.l10n.facilities_editTitle)),
+        if (facility[Fields.facilityId] != activeFacilityId)
+          PopupMenuItem(value: 'switch', child: Text(context.l10n.facilities_switchToThis)),
+        PopupMenuItem(
+          value: 'delete',
+          child: Text(context.l10n.facilities_deleteTitle, style: TextStyle(color: context.colors.dangerSoft)),
+        ),
+      ],
+    );
+  }
 
   /// Opens tab [index] (Team Members 1 to Settings 5): its own page on a
   /// phone, the tab itself elsewhere.
@@ -1739,6 +1777,239 @@ class _FacilityScreenState extends State<FacilityScreen> {
   double _phoneMin(double size) =>
       AppLayout.isPhone(context) && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
 
+  // The header card in one column: the logo beside the name, status and
+  // type; the contact rows; the code and licence with today's Copy buttons.
+  Widget _buildPhoneHeaderCard(Map<String, dynamic> facility) {
+    final facilityId = facility[Fields.facilityId] as String?;
+    final logoUrl = _logoByFacility[facilityId];
+    final contact = _contactByFacility[facilityId];
+    final details = _detailsByFacility[facilityId];
+    final status = details?[Fields.status] as String? ?? FacilityStatus.active.key;
+    final createdAt = details?[Fields.createdAt] as DateTime?;
+    final code = details?[FacilityCodes.field] as String?;
+    final licence = details?['licenseNo'] as String?;
+    final hasLicence = licence?.isNotEmpty == true;
+    final logo = Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i32);
+
+    Widget copyRow(String label, String value, String? copy) => Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: TextStyle(fontSize: PhoneListMetrics.detailLabel, color: context.colors.textMuted)),
+                  Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
+                ],
+              ),
+            ),
+            if (copy != null)
+              IconButton(
+                icon: const Icon(Icons.copy, size: AppIconSize.i16),
+                tooltip: context.l10n.common_copy,
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: copy));
+                  AppFeedback.success(L10n.current.invite_copied);
+                },
+              ),
+          ],
+        );
+
+    return Container(
+      key: const ValueKey('facility-phone-header'),
+      padding: const EdgeInsets.all(AppSpacing.s16),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: PhoneFacilityMetrics.headerLogo,
+                height: PhoneFacilityMetrics.headerLogo,
+                decoration: BoxDecoration(
+                  color: context.colors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(AppRadius.r12),
+                  border: Border.all(color: context.colors.border),
+                ),
+                padding: const EdgeInsets.all(AppSpacing.s6),
+                child: logoUrl != null
+                    ? Image.network(logoUrl, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => logo)
+                    : logo,
+              ),
+              const SizedBox(width: AppSpacing.s12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _nameOf(facility),
+                      style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: PhoneListMetrics.detailsTitle),
+                    ),
+                    const SizedBox(height: AppSpacing.s4),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      runSpacing: AppSpacing.s4,
+                      children: [_typeTag(facility), buildStatusChip(status)],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          if (details?['address'] != null && (details!['address'] as String).isNotEmpty)
+            _infoRow(Icons.location_on_outlined, details['address'] as String),
+          if (contact?['phone'] != null && contact!['phone']!.isNotEmpty) _infoRow(Icons.phone_outlined, contact['phone']!),
+          if (contact?['email'] != null && contact!['email']!.isNotEmpty) _infoRow(Icons.email_outlined, contact['email']!),
+          _infoRow(Icons.person_outline, context.l10n.facilities_managerLine(_adminFullName ?? context.l10n.team_you)),
+          if (createdAt != null) _infoRow(Icons.calendar_today_outlined, context.l10n.facilities_joinedOn(_formatDate(createdAt))),
+          const SizedBox(height: AppSpacing.s6),
+          Container(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.s14, AppSpacing.s6, AppSpacing.s4, AppSpacing.s6),
+            decoration: BoxDecoration(color: context.colors.background, borderRadius: BorderRadius.circular(AppRadius.r10)),
+            child: Column(
+              children: [
+                copyRow(context.l10n.facilities_code, code ?? '-', code ?? ''),
+                copyRow(context.l10n.facilities_licenseNo, hasLicence ? licence! : context.l10n.facilities_notSet,
+                    hasLicence ? licence : null),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // The five metric cards in two columns; a card's link opens its tab's page.
+  Widget _buildPhoneMetrics(Map<String, dynamic> facility) {
+    return LayoutBuilder(
+      key: const ValueKey('facility-phone-metrics'),
+      builder: (context, constraints) {
+        final width = (constraints.maxWidth - AppSpacing.s12) / 2;
+        return Wrap(
+          spacing: AppSpacing.s12,
+          runSpacing: AppSpacing.s12,
+          children: [
+            for (final m in _metricsFor(facility))
+              SizedBox(
+                width: width,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s12, AppSpacing.s12, AppSpacing.s4),
+                  decoration: BoxDecoration(
+                    color: context.colors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.r12),
+                    border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: PhoneFacilityMetrics.metricIconBox,
+                            height: PhoneFacilityMetrics.metricIconBox,
+                            decoration: BoxDecoration(
+                                color: m.$4.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
+                            child: Icon(m.$3, color: m.$4, size: AppIconSize.i16),
+                          ),
+                          const SizedBox(width: AppSpacing.s8),
+                          Expanded(
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(m.$2, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.s6),
+                      Text(m.$1, style: TextStyle(fontSize: PhoneListMetrics.detailLabel, color: context.colors.textMuted)),
+                      InkWell(
+                        onTap: () => _openTab(facility, m.$6),
+                        child: _phoneTarget(Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Flexible(
+                              child: Text(m.$5,
+                                  style: TextStyle(
+                                      fontSize: PhoneListMetrics.detailLabel,
+                                      color: context.colors.primary,
+                                      fontWeight: AppFontWeight.semibold)),
+                            ),
+                            Icon(Icons.arrow_forward, size: AppIconSize.i12, color: context.colors.primary),
+                          ],
+                        )),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  static const _phoneTabIcons = [
+    Icons.dashboard_outlined,
+    Icons.groups_outlined,
+    Icons.inventory_2_outlined,
+    Icons.point_of_sale_outlined,
+    Icons.history,
+    Icons.settings_outlined,
+  ];
+
+  // The tabs after Overview as rows: icon, label (Team Members with its
+  // count), each opening its page.
+  Widget _buildPhoneTabRows(Map<String, dynamic> facility) {
+    final labels = _tabLabels();
+    final assistantCount = _assistantsByFacility[facility[Fields.facilityId]]?.length ?? 0;
+    return Container(
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.r14),
+        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (var i = 1; i < labels.length; i++) ...[
+            if (i > 1) const Divider(height: 1),
+            InkWell(
+              key: ValueKey('facility-tab-row-$i'),
+              onTap: () => _openTab(facility, i),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: PhoneFacilityMetrics.tabRowHeight),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
+                  child: Row(
+                    children: [
+                      Icon(_phoneTabIcons[i], size: AppIconSize.i20, color: context.colors.primary),
+                      const SizedBox(width: AppSpacing.s12),
+                      Expanded(child: Text(labels[i], style: const TextStyle(fontSize: PhoneListMetrics.title))),
+                      if (i == _teamTabIndex && assistantCount > 0)
+                        Container(
+                          margin: const EdgeInsets.only(right: AppSpacing.s8),
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
+                          decoration: BoxDecoration(color: context.colors.divider, borderRadius: BorderRadius.circular(AppRadius.r10)),
+                          child: Text('$assistantCount', style: const TextStyle(fontSize: PhoneListMetrics.chip)),
+                        ),
+                      Icon(Icons.chevron_right, size: AppIconSize.i20, color: context.colors.textDisabled),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   // ==================== PHONE SHEETS (PH8b-2 P4) ====================
   //

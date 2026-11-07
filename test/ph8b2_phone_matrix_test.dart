@@ -10,8 +10,8 @@ import 'helpers/ph8b_facilities.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// True until the phone page, forms and sheets are built.
-const _skip = true;
+// True until the phone forms are built (P3); the page and the sheets pass.
+const _skipForms = true;
 
 /// The part's name, the platform limit it needs and how to open it from the
 /// list (labels found by key or icon, the same in both languages).
@@ -83,7 +83,7 @@ void main() {
             expect(find.text(matrixLongFacilityName), findsWidgets);
             expect(find.byKey(ph8b2Header), findsOneWidget);
           }
-        }, skip: _skip);
+        }, skip: _skipForms && (part == 'add' || part == 'edit'));
       }
     }
   }

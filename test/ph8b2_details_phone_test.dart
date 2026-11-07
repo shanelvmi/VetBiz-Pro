@@ -15,14 +15,14 @@ import 'helpers/ph8b_facilities.dart';
 import 'helpers/phone_list_harness.dart';
 
 // True until the phone page is built (P2).
-const _skip = true;
+const _skip = false;
 
 final _en = ph8b2En;
 
 /// Each tab's index, its label and texts only its content shows.
 final _tabs = <(int, String, List<String>)>[
   (1, _en.team_title, [_en.facilities_teamTabMessage, _en.facilities_openTeamMembers]),
-  (2, _en.facilities_tabInventory, [_en.facilities_byCategory, _en.notifications_needsAttention]),
+  (2, _en.facilities_tabInventory, [_en.facilities_noProducts]),
   (3, _en.facilities_tabSales, [_en.facilities_recentSales]),
   (4, _en.export_activityLog, []),
   (5, _en.settings_title, [_en.facilities_actionsTitle, _en.facilities_retentionTitle, _en.facilities_overdueTitle]),
@@ -39,7 +39,7 @@ void main() {
     final bar = find.descendant(of: find.byKey(ph8b2Details), matching: find.byType(AppBar));
     expect(find.descendant(of: bar, matching: find.text('Kilimo Agrovet')), findsOneWidget);
     expect(find.descendant(of: bar, matching: find.byKey(ph8b2Menu)), findsOneWidget);
-    expect(find.descendant(of: bar, matching: find.byType(IconButton)).evaluate().length, 1, reason: 'the back arrow only');
+    expect(find.descendant(of: bar, matching: find.byType(IconButton)).evaluate().length, 2, reason: 'the back arrow and the menu only');
     expect(find.text(_en.facilities_moreActions), findsNothing);
     expect(find.byKey(ph8b2Header), findsOneWidget);
     expect(find.byKey(ph8b2Metrics), findsOneWidget);

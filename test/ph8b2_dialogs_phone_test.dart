@@ -17,7 +17,7 @@ import 'helpers/ph8b_facilities.dart';
 import 'helpers/phone_list_harness.dart';
 
 // True until the sheets are built (P4).
-const _skip = true;
+const _skip = false;
 
 final _en = ph8b2En;
 
