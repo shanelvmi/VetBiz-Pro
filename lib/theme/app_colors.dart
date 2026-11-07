@@ -108,6 +108,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.authFooterFill,
     required this.authFooterMutedText,
     required this.authPanelIcon,
+    required this.bannerInk,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -364,6 +365,14 @@ class AppColors extends ThemeExtension<AppColors> {
   // and halo colour too (AN5).
   final Color authPanelIcon;
 
+  // PH8a-fix: the ink (text and icons) on the phone subscription banner,
+  // whose fill is a status role (danger, warning, info) at
+  // PhoneBannerMetrics.overlayAlpha over whatever content is under it.
+  // Black in both modes: over pure black and pure white content it reads
+  // 4.9 to 10.3 on the three roles, where white reads 2.0 to 4.3 and
+  // textPrimary fails in dark.
+  final Color bannerInk;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -466,6 +475,7 @@ class AppColors extends ThemeExtension<AppColors> {
         authFooterFill: ThemeDerivation.quickActionTintPrimary(theme.primary),
         authFooterMutedText: ThemeDerivation.textMuted(ThemeDerivation.quickActionTintPrimary(theme.primary)),
         authPanelIcon: theme.primary,
+        bannerInk: Colors.black,
       );
   }
 
@@ -664,6 +674,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? authFooterFill,
     Color? authFooterMutedText,
     Color? authPanelIcon,
+    Color? bannerInk,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -756,6 +767,7 @@ class AppColors extends ThemeExtension<AppColors> {
         authFooterFill: authFooterFill ?? this.authFooterFill,
         authFooterMutedText: authFooterMutedText ?? this.authFooterMutedText,
         authPanelIcon: authPanelIcon ?? this.authPanelIcon,
+        bannerInk: bannerInk ?? this.bannerInk,
       );
 
   @override
@@ -853,6 +865,7 @@ class AppColors extends ThemeExtension<AppColors> {
       authFooterFill: l(authFooterFill, other.authFooterFill),
       authFooterMutedText: l(authFooterMutedText, other.authFooterMutedText),
       authPanelIcon: l(authPanelIcon, other.authPanelIcon),
+      bannerInk: l(bannerInk, other.bannerInk),
     );
   }
 }

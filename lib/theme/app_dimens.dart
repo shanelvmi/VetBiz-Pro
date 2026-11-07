@@ -739,4 +739,19 @@ class PhoneBannerMetrics {
   static const double text = AppFontSize.f14;
   static const int maxLines = 2;
   static const double actionPaddingH = AppSpacing.s8;
+
+  /// PH8a-fix (the owner's correction): the banner floats over the tab
+  /// content, right under the app bar: an 8 px side margin, a 12 px radius,
+  /// a soft shadow, and the status role at 92 percent, slightly see-through
+  /// over the content and never blended into the surface (the ink is
+  /// AppColors.bannerInk, which passes 4.5:1 over black and white content).
+  static const double overlayAlpha = 0.92;
+  static const double overlayMargin = AppSpacing.s8;
+  static const double overlayRadius = AppRadius.r12;
+  static const double shadowAlpha = AppAlpha.a20;
+  static const double shadowBlur = 8;
+  static const double shadowOffsetY = 2;
+
+  /// It comes in sliding down this fraction of its height as it fades in.
+  static const double enterSlide = 0.25;
 }
