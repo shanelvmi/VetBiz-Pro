@@ -4035,5 +4035,7 @@
   "trash_rowSemantics": "{name}, {type}, {deleted}",
   "@trash_rowSemantics": {"description":"Trash on a phone (PH8a): what a screen reader says for a row: the record, its type and who deleted it when.","placeholders":{"name":{"type":"String"},"type":{"type":"String"},"deleted":{"type":"String"}}},
   "activity_rowSemantics": "{who}, {action}, {type}, {time}",
-  "@activity_rowSemantics": {"description":"The Activity log on a phone (PH8a): what a screen reader says for a row: who, what they did, its type and the time.","placeholders":{"who":{"type":"String"},"action":{"type":"String"},"type":{"type":"String"},"time":{"type":"String"}}}
+  "@activity_rowSemantics": {"description":"The Activity log on a phone (PH8a): what a screen reader says for a row: who, what they did, its type and the time.","placeholders":{"who":{"type":"String"},"action":{"type":"String"},"type":{"type":"String"},"time":{"type":"String"}}},
+  "team_phoneSummaryLine": "{count, plural, =1{1 member} other{{count} members}}, {pending} waiting approval",
+  "@team_phoneSummaryLine": {"description":"Team Members on a phone (PH8b): the line under the status chips, in place of the four cards: how many are listed and how many wait for approval (the Waiting Approval card). Its Summary link opens the cards as a list.","placeholders":{"count":{"type":"int"},"pending":{"type":"int"}}}
 }

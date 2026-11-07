@@ -4035,5 +4035,7 @@
   "trash_rowSemantics": "{name}, {type}, {deleted}",
   "@trash_rowSemantics": {"x-review":"draft"},
   "activity_rowSemantics": "{who}, {action}, {type}, {time}",
-  "@activity_rowSemantics": {"x-review":"draft"}
+  "@activity_rowSemantics": {"x-review":"draft"},
+  "team_phoneSummaryLine": "{count, plural, =1{Mfanyakazi 1} other{Wafanyakazi {count}}}, {pending} wanasubiri idhini",
+  "@team_phoneSummaryLine": {"x-review":"draft"}
 }
