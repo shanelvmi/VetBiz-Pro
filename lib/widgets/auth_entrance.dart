@@ -25,7 +25,7 @@ class AuthEntrance extends StatelessWidget {
     final start = delay.inMicroseconds / total.inMicroseconds;
     final end = (delay + AppMotion.authEntrance).inMicroseconds / total.inMicroseconds;
     // drive() listens to the page's animation only while this is shown.
-    final progress = animation.drive(CurveTween(curve: Interval(start, end.clamp(start, 1), curve: Curves.easeOutCubic)));
+    final progress = animation.drive(CurveTween(curve: Interval(start, end.clamp(start, 1), curve: AppMotion.revealCurve)));
     return FadeTransition(
       opacity: progress,
       child: AnimatedBuilder(
@@ -33,7 +33,7 @@ class AuthEntrance extends StatelessWidget {
         child: child,
         builder:
             (context, child) =>
-                Transform.translate(offset: Offset(0, AppMotion.authEntranceRise * (1 - progress.value)), child: child),
+                Transform.translate(offset: Offset(0, AppMotion.revealRise * (1 - progress.value)), child: child),
       ),
     );
   }

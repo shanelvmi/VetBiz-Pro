@@ -11,7 +11,7 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'helpers/tree_fingerprint.dart';
 
-const _skip = true; // RV1: until the implementation
+const _skip = false;
 
 const _skeletonKey = ValueKey('skeleton');
 const _contentKey = ValueKey('content');
