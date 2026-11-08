@@ -4085,5 +4085,9 @@
   "more_keywordsHelp": "usaidizi, wasiliana, piga simu",
   "@more_keywordsHelp": {"x-review":"draft"},
   "more_keywordsPlatformAdmin": "mwendeshaji",
-  "@more_keywordsPlatformAdmin": {"x-review":"draft"}
+  "@more_keywordsPlatformAdmin": {"x-review":"draft"},
+  "home_hideAmounts": "Ficha kiasi",
+  "@home_hideAmounts": {"x-review":"draft"},
+  "home_showAmounts": "Onyesha kiasi",
+  "@home_showAmounts": {"x-review":"draft"}
 }
