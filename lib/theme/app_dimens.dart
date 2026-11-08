@@ -528,6 +528,21 @@ class PhoneShellMetrics {
   static const double recordShadowOffsetY = 4;
   static const double recordOpenTurns = 0.125;
 
+  /// UI2: the trough cut into the bar's top edge at the centre, where the
+  /// round "+" floats: a circle [troughGap] wider than the button all round,
+  /// its bottom [troughDepth] below the edge, met by curves of
+  /// [troughEdgeRadius] so the edge stays smooth (about 89 wide at the top).
+  /// The fill, the hairline border ([barBorderWidth]) and the shadow follow
+  /// it.
+  static const double troughDepth = 34;
+  static const double troughGap = 4;
+  static const double troughEdgeRadius = 14;
+  static const double barBorderWidth = 1;
+
+  /// How far the "+" rises above the bar's top edge: what the trough leaves
+  /// it (56 - (34 - 4) = 26), so it sits in the trough with the gap below.
+  static const double recordLift = recordSize - (troughDepth - troughGap);
+
   /// The "+" sheet's rows.
   static const double sheetRowHeight = 64;
   static const double sheetIconCircle = 40;
