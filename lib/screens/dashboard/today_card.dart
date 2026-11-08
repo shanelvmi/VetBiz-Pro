@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
 
+import '../../config/app_defaults.dart';
 import '../../config/money.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
+import '../../theme/app_motion.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import 'dashboard_figures.dart';
 
 /// The one Today card: Sales large, the period chip, then Collected, Owed and
-/// (admins only, as the Net Profit card's masking today) Net profit.
+/// (admins only, as the Net Profit card's masking today) Net profit, on the
+/// brand gradient (NAV1). The eye at the end of the top row masks every
+/// amount on the card (and only here); the labels stay.
 class TodayCard extends StatelessWidget {
   final PhoneHomeFigures figures;
   final bool isAdmin;
   final String period;
   final ValueChanged<String> onPeriodChanged;
   final VoidCallback onAllDetails;
+
+  /// NAV1: the amounts are masked ([AppDefaults.amountMask]). Only what is
+  /// drawn changes; [figures] are the same either way.
+  final bool amountsHidden;
+
+  /// The eye; null draws none.
+  final VoidCallback? onToggleAmounts;
 
   const TodayCard({
     super.key,
@@ -23,6 +34,8 @@ class TodayCard extends StatelessWidget {
     required this.period,
     required this.onPeriodChanged,
     required this.onAllDetails,
+    this.amountsHidden = false,
+    this.onToggleAmounts,
   });
 
   @override
@@ -38,7 +51,11 @@ class TodayCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(PhoneHomeMetrics.cardPadding),
       decoration: BoxDecoration(
-        color: colors.brandSurface,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colors.brandGradientStart, colors.brandGradientEnd],
+        ),
         borderRadius: BorderRadius.circular(PhoneHomeMetrics.cardRadius),
       ),
       child: Column(
@@ -53,13 +70,15 @@ class TodayCard extends StatelessWidget {
                 ),
               ),
               _PeriodChip(period: period, onChanged: onPeriodChanged),
+              if (onToggleAmounts != null) _EyeButton(hidden: amountsHidden, onPressed: onToggleAmounts!),
             ],
           ),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
-              money(figures.sales),
+            child: _Amount(
+              value: money(figures.sales),
+              hidden: amountsHidden,
               style: TextStyle(
                 fontSize: PhoneHomeMetrics.salesValue,
                 fontWeight: AppFontWeight.bold,
@@ -73,7 +92,7 @@ class TodayCard extends StatelessWidget {
             children: [
               for (var i = 0; i < stats.length; i++) ...[
                 if (i > 0) const SizedBox(width: PhoneHomeMetrics.statGap),
-                Expanded(child: _Stat(label: stats[i].$1, value: stats[i].$2)),
+                Expanded(child: _Stat(label: stats[i].$1, value: stats[i].$2, hidden: amountsHidden)),
               ],
             ],
           ),
@@ -103,8 +122,9 @@ class TodayCard extends StatelessWidget {
 class _Stat extends StatelessWidget {
   final String label;
   final String value;
+  final bool hidden;
 
-  const _Stat({required this.label, required this.value});
+  const _Stat({required this.label, required this.value, required this.hidden});
 
   @override
   Widget build(BuildContext context) {
@@ -121,8 +141,9 @@ class _Stat extends StatelessWidget {
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
-            child: Text(
-              value,
+            child: _Amount(
+              value: value,
+              hidden: hidden,
               style: TextStyle(
                 fontSize: PhoneHomeMetrics.statValue,
                 fontWeight: AppFontWeight.bold,
@@ -134,6 +155,53 @@ class _Stat extends StatelessWidget {
       ),
     );
   }
+}
+
+/// NAV1: an amount, or the soft mask in its place, with a short cross-fade
+/// between the two (not a blur); at once under reduced motion. Keyed on the
+/// mask alone, so a new figure is not faded in.
+class _Amount extends StatelessWidget {
+  final String value;
+  final bool hidden;
+  final TextStyle style;
+
+  const _Amount({required this.value, required this.hidden, required this.style});
+
+  @override
+  Widget build(BuildContext context) => AnimatedSwitcher(
+        duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : AppMotion.fast,
+        layoutBuilder: (current, previous) =>
+            Stack(alignment: Alignment.centerLeft, children: [...previous, if (current != null) current]),
+        child: Text(
+          hidden ? AppDefaults.amountMask : value,
+          key: ValueKey(hidden),
+          style: style,
+        ),
+      );
+}
+
+/// NAV1: the eye at the end of the card's top row: a 48 target whose tooltip
+/// and screen-reader label say what a tap does.
+class _EyeButton extends StatelessWidget {
+  final bool hidden;
+  final VoidCallback onPressed;
+
+  const _EyeButton({required this.hidden, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+        tooltip: hidden ? context.l10n.home_showAmounts : context.l10n.home_hideAmounts,
+        onPressed: onPressed,
+        constraints: const BoxConstraints(
+          minWidth: PhoneHomeMetrics.linkHeight,
+          minHeight: PhoneHomeMetrics.linkHeight,
+        ),
+        icon: Icon(
+          hidden ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          size: PhoneHomeMetrics.eyeIcon,
+          color: context.colors.onBrandSurface,
+        ),
+      );
 }
 
 /// The date chip: today's period picker (Today, This Week, This Month, This

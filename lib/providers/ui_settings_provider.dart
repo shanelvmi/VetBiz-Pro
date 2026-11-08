@@ -18,11 +18,13 @@ class UiSettingsProvider with ChangeNotifier {
   /// language before this provider has loaded.
   static const String languageKey = 'ui_language';
   static const String _themeModeKey = 'ui_theme_mode';
+  static const String _homeAmountsHiddenKey = 'ui_home_amounts_hidden';
 
   bool _layoutFixed = false;
   String _colorThemeId = AppColorTheme.defaultId;
   String _languageCode = AppDefaults.defaultLanguage;
   UiThemeMode _themeMode = UiThemeMode.defaultMode;
+  bool _homeAmountsHidden = false;
   bool _loaded = false;
 
   UiSettingsProvider() {
@@ -49,6 +51,11 @@ class UiSettingsProvider with ChangeNotifier {
   /// setting, live (on the web: the browser's prefers-color-scheme).
   UiThemeMode get themeMode => _themeMode;
 
+  /// NAV1: the phone Today card's eye. True while its amounts are masked;
+  /// visible by default, remembered on this device only (never synced). It
+  /// only changes what the card draws, never a figure.
+  bool get homeAmountsHidden => _homeAmountsHidden;
+
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -70,6 +77,7 @@ class UiSettingsProvider with ChangeNotifier {
       }
       // An unknown or missing value leaves the default.
       _themeMode = UiThemeMode.fromKey(prefs.getString(_themeModeKey));
+      _homeAmountsHidden = prefs.getBool(_homeAmountsHiddenKey) ?? false;
     } catch (e) {
       // Settings are a convenience: if they can't be read, the defaults stand.
       debugPrint('[UI SETTINGS] could not read saved settings: $e');
@@ -87,6 +95,18 @@ class UiSettingsProvider with ChangeNotifier {
       await prefs.setBool(_layoutFixedKey, value);
     } catch (e) {
       debugPrint('[UI SETTINGS] could not save layout setting: $e');
+    }
+  }
+
+  Future<void> setHomeAmountsHidden(bool value) async {
+    if (_homeAmountsHidden == value) return;
+    _homeAmountsHidden = value;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_homeAmountsHiddenKey, value);
+    } catch (e) {
+      debugPrint('[UI SETTINGS] could not save the amounts choice: $e');
     }
   }
 

@@ -597,6 +597,8 @@ class PhoneHomeMetrics {
   static const double statGap = AppSpacing.s8;
   static const double chipHeight = 36;
   static const double chipIcon = AppIconSize.i16;
+  /// NAV1: the eye that masks the card's amounts (in a 48 target).
+  static const double eyeIcon = AppIconSize.i20;
 
   /// Quick access: four tiles in a row.
   static const double tileHeight = 92;

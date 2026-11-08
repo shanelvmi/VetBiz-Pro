@@ -106,6 +106,10 @@ class PhoneHome extends StatelessWidget {
   /// until then its late slot keeps a place at the end of the list.
   final bool attentionReady;
 
+  /// NAV1: the Today card's amounts are masked, and its eye (null: none).
+  final bool amountsHidden;
+  final VoidCallback? onToggleAmounts;
+
   const PhoneHome({
     super.key,
     required this.figures,
@@ -121,6 +125,8 @@ class PhoneHome extends StatelessWidget {
     this.overlay,
     this.skeleton = false,
     this.attentionReady = true,
+    this.amountsHidden = false,
+    this.onToggleAmounts,
   });
 
   /// [child] as it is, or as a soft box of its size in the skeleton.
@@ -140,6 +146,8 @@ class PhoneHome extends StatelessWidget {
             period: period,
             onPeriodChanged: onPeriodChanged,
             onAllDetails: onAllDetails,
+            amountsHidden: amountsHidden,
+            onToggleAmounts: onToggleAmounts,
           ),
           radius: PhoneHomeMetrics.cardRadius,
         ),
