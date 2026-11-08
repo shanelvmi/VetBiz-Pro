@@ -26,7 +26,7 @@ import 'package:vetbiz_pro/utils/facility_display.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true; // UI3: until the implementation
+const _skip = false;
 
 const _figures = PhoneHomeFigures(sales: 1250000, collected: 980000, owed: 310000, netProfit: 145000);
 final _amounts = [_figures.sales, _figures.collected, _figures.owed, _figures.netProfit].map(Money.format).toList();
@@ -46,7 +46,10 @@ Future<FacilityProvider> _card(
   String facility = _facility,
   PhoneHomeFigures figures = _figures,
 }) async {
-  SharedPreferences.setMockInitialValues({'ui_home_amounts_hidden': hidden});
+  // The provider loads the saved facility on creation; saved first, so that
+  // load and setFacility agree.
+  SharedPreferences.setMockInitialValues(
+      {'ui_home_amounts_hidden': hidden, 'facilityId': 'f1', 'facilityName': facility, 'facilityType': 'Agrovet'});
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);

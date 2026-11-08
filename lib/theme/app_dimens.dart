@@ -615,6 +615,21 @@ class PhoneHomeMetrics {
   /// NAV1: the eye that masks the card's amounts (in a 48 target).
   static const double eyeIcon = AppIconSize.i20;
 
+  /// UI3: the facility name, a small line at the top of the card.
+  static const double facilityName = AppFontSize.f12;
+
+  /// UI3: a hidden amount is the currency, then [maskDots] soft dots of
+  /// [maskDot] times the text size, [maskDotGap] dots apart, in the text's
+  /// colour at [maskAlpha], under a Gaussian blur. The small amounts' blur is
+  /// lighter: on 4.5 px dots a blur of 2 leaves their centre at about 2:1 on
+  /// the gradient, 1.4 keeps it at 3:1 or more (ui3_today_card_test).
+  static const int maskDots = 4;
+  static const double maskDot = 0.3;
+  static const double maskDotGap = 0.5;
+  static const double maskAlpha = AppAlpha.a70;
+  static const double maskBlurLarge = 2.5;
+  static const double maskBlurSmall = 1.4;
+
   /// Quick access: four tiles in a row.
   static const double tileHeight = 92;
   static const double tileGap = AppSpacing.s8;

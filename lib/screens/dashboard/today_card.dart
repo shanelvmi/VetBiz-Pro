@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../../config/app_defaults.dart';
@@ -20,8 +22,8 @@ class TodayCard extends StatelessWidget {
   final ValueChanged<String> onPeriodChanged;
   final VoidCallback onAllDetails;
 
-  /// NAV1: the amounts are masked ([AppDefaults.amountMask]). Only what is
-  /// drawn changes; [figures] are the same either way.
+  /// NAV1: the amounts are masked (UI3: soft blurred dots after the
+  /// currency). Only what is drawn changes; [figures] are the same either way.
   final bool amountsHidden;
 
   /// The eye; null draws none.
@@ -66,6 +68,14 @@ class TodayCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // UI3: drawn even when empty, so the card (and its skeleton) keep
+          // one height whatever the name.
+          Text(
+            facilityName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: PhoneHomeMetrics.facilityName, color: colors.onBrandSurfaceMuted),
+          ),
           Row(
             children: [
               Expanded(
@@ -78,17 +88,14 @@ class TodayCard extends StatelessWidget {
               if (onToggleAmounts != null) _EyeButton(hidden: amountsHidden, onPressed: onToggleAmounts!),
             ],
           ),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: _Amount(
-              value: money(figures.sales),
-              hidden: amountsHidden,
-              style: TextStyle(
-                fontSize: PhoneHomeMetrics.salesValue,
-                fontWeight: AppFontWeight.bold,
-                color: colors.onBrandSurface,
-              ),
+          _Amount(
+            value: money(figures.sales),
+            hidden: amountsHidden,
+            blur: PhoneHomeMetrics.maskBlurLarge,
+            style: TextStyle(
+              fontSize: PhoneHomeMetrics.salesValue,
+              fontWeight: AppFontWeight.bold,
+              color: colors.onBrandSurface,
             ),
           ),
           const SizedBox(height: AppSpacing.s12),
@@ -143,17 +150,14 @@ class _Stat extends StatelessWidget {
             maxLines: 2,
             style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.onBrandSurfaceMuted),
           ),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: _Amount(
-              value: value,
-              hidden: hidden,
-              style: TextStyle(
-                fontSize: PhoneHomeMetrics.statValue,
-                fontWeight: AppFontWeight.bold,
-                color: colors.onBrandSurface,
-              ),
+          _Amount(
+            value: value,
+            hidden: hidden,
+            blur: PhoneHomeMetrics.maskBlurSmall,
+            style: TextStyle(
+              fontSize: PhoneHomeMetrics.statValue,
+              fontWeight: AppFontWeight.bold,
+              color: colors.onBrandSurface,
             ),
           ),
         ],
@@ -162,27 +166,91 @@ class _Stat extends StatelessWidget {
   }
 }
 
-/// NAV1: an amount, or the soft mask in its place, with a short cross-fade
-/// between the two (not a blur); at once under reduced motion. Keyed on the
-/// mask alone, so a new figure is not faded in.
+/// NAV1: an amount, or (UI3) the soft blurred dots in its place, with a short
+/// cross-fade between the two; at once under reduced motion. Keyed on the
+/// mask alone, so a new figure is not faded in. The slot is one line of
+/// [style] high either way, so hiding never changes the card's size, even
+/// when a long amount is scaled down to fit.
 class _Amount extends StatelessWidget {
   final String value;
   final bool hidden;
   final TextStyle style;
 
-  const _Amount({required this.value, required this.hidden, required this.style});
+  /// The dots' Gaussian blur (sigma).
+  final double blur;
+
+  const _Amount({required this.value, required this.hidden, required this.style, required this.blur});
 
   @override
-  Widget build(BuildContext context) => AnimatedSwitcher(
-        duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : AppMotion.fast,
-        layoutBuilder: (current, previous) =>
-            Stack(alignment: Alignment.centerLeft, children: [...previous, if (current != null) current]),
-        child: Text(
-          hidden ? AppDefaults.amountMask : value,
-          key: ValueKey(hidden),
-          style: style,
+  Widget build(BuildContext context) {
+    final painter = TextPainter(
+      text: TextSpan(text: AppDefaults.currencySymbol, style: DefaultTextStyle.of(context).style.merge(style)),
+      textScaler: MediaQuery.textScalerOf(context),
+      textDirection: Directionality.of(context),
+      maxLines: 1,
+    )..layout();
+    final lineHeight = painter.height;
+    painter.dispose();
+    return SizedBox(
+      height: lineHeight,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: AnimatedSwitcher(
+          duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : AppMotion.fast,
+          layoutBuilder: (current, previous) =>
+              Stack(alignment: Alignment.centerLeft, children: [...previous, if (current != null) current]),
+          // While hidden the amount's Text is not built at all: the digits
+          // are in neither the widget nor the semantics tree.
+          child: hidden
+              ? _HiddenAmount(key: const ValueKey(true), style: style, blur: blur)
+              : Text(value, key: const ValueKey(false), style: style),
         ),
-      );
+      ),
+    );
+  }
+}
+
+/// UI3: the currency, then four soft blurred dots: a fixed placeholder that
+/// never depends on the amount. The dots are about 0.3 of the text size, in
+/// the text's colour at 70 percent.
+class _HiddenAmount extends StatelessWidget {
+  final TextStyle style;
+  final double blur;
+
+  const _HiddenAmount({super.key, required this.style, required this.blur});
+
+  @override
+  Widget build(BuildContext context) {
+    final dot = MediaQuery.textScalerOf(context).scale(style.fontSize!) * PhoneHomeMetrics.maskDot;
+    final fill = style.color!.withValues(alpha: PhoneHomeMetrics.maskAlpha);
+    return Semantics(
+      label: context.l10n.home_amountHidden,
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(AppDefaults.currencySymbol, style: style),
+          SizedBox(width: dot),
+          ImageFiltered(
+            imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < PhoneHomeMetrics.maskDots; i++) ...[
+                  if (i > 0) SizedBox(width: dot * PhoneHomeMetrics.maskDotGap),
+                  SizedBox.square(
+                    dimension: dot,
+                    child: DecoratedBox(decoration: BoxDecoration(shape: BoxShape.circle, color: fill)),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// NAV1: the eye at the end of the card's top row: a 48 target whose tooltip

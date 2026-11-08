@@ -14,10 +14,6 @@ class AppDefaults {
   /// can still wrap onto one more line.
   static const double glanceAmountPlaceholder = 100000;
 
-  /// NAV1: what the phone Today card shows in place of each amount while
-  /// its eye hides them (a soft mask, the same in every language).
-  static const String amountMask = '••••';
-
   /// Tanzania, without the '+' (client_duplicate_matcher.dart, register_screen.dart).
   static const String countryCallingCode = '255';
 

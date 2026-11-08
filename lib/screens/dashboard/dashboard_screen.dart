@@ -1623,6 +1623,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     skeleton: skeleton,
                     amountsHidden: uiSettings.homeAmountsHidden,
                     onToggleAmounts: () => uiSettings.setHomeAmountsHidden(!uiSettings.homeAmountsHidden),
+                    // UI3: the active facility; this build listens to the
+                    // provider, so a switch shows the new name at once.
+                    facilityName: FacilityDisplay.name(facilityProvider.selectedFacilityName),
                     figures: PhoneHomeFigures.from(_periodTotals,
                         owed: debtProvider.totalOutstanding(), loading: _isPeriodLoading),
                     isAdmin: isAdmin,
@@ -2765,6 +2768,8 @@ Widget _buildDrawerContent() {
       builder: (context, snapshot) {
         final data = _profileData(snapshot);
         final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
+        // UI3: the current facility, followed live (a switch updates it).
+        final facilities = context.watch<FacilityProvider>();
 
         return ProfileDrawerContent(
           avatarUrl: data['avatarUrl'] as String?,
@@ -2772,7 +2777,9 @@ Widget _buildDrawerContent() {
           roleLabel: _profileRoleLabel(data),
           email: (data['email'] ?? '').toString(),
           phone: (data['phone'] ?? '').toString(),
-          facility: context.watch<FacilityProvider>().selectedFacilityName ?? '',
+          facility: FacilityDisplay.name(facilities.selectedFacilityName),
+          facilityType: facilities.selectedFacilityType ?? '',
+          facilityTypeDetail: facilities.selectedFacilityTypeDetail,
           onClose: () => Navigator.of(context).pop(),
           actions: [
             ProfileDrawerAction(

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vetbiz_pro/config/app_defaults.dart';
 import 'package:vetbiz_pro/config/money.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/providers/ui_settings_provider.dart';
@@ -73,6 +72,9 @@ BoxDecoration _decoration(WidgetTester tester) => tester
     .widget<Container>(find.descendant(of: find.byType(TodayCard), matching: find.byType(Container)).first)
     .decoration! as BoxDecoration;
 
+/// UI3: the soft blurred dots in place of each amount.
+Finder get _masks => find.descendant(of: find.byType(TodayCard), matching: find.byType(ImageFiltered));
+
 Future<void> _tapEye(WidgetTester tester, {bool settle = true}) async {
   await tester.tap(find.descendant(of: find.byType(TodayCard), matching: find.byType(IconButton)));
   settle ? await tester.pumpAndSettle() : await tester.pump();
@@ -111,27 +113,26 @@ void main() {
     for (final amount in _amounts) {
       expect(find.text(amount), findsNothing);
     }
-    expect(find.text(AppDefaults.amountMask), findsNWidgets(4));
+    expect(_masks, findsNWidgets(4));
     for (final label in ['Sales', 'Collected', 'Owed', 'Net profit', 'Today', 'All details']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     await _tapEye(tester);
-    expect(find.text(AppDefaults.amountMask), findsNothing);
+    expect(_masks, findsNothing);
     for (final amount in _amounts) {
       expect(find.text(amount), findsOneWidget);
     }
   }, skip: _skip);
 
-  testWidgets('a short cross-fade, not a blur', (tester) async {
+  testWidgets('a short cross-fade, no backdrop blur', (tester) async {
     await _card(tester);
     await _tapEye(tester, settle: false);
     await tester.pump(const Duration(milliseconds: 50));
     expect(find.text(_amounts[0]), findsOneWidget, reason: 'still fading out');
     expect(find.byType(FadeTransition), findsWidgets);
     expect(find.byType(BackdropFilter), findsNothing);
-    expect(find.byType(ImageFiltered), findsNothing);
     await tester.pumpAndSettle();
-    expect(find.text(AppDefaults.amountMask), findsNWidgets(4));
+    expect(_masks, findsNWidgets(4));
   }, skip: _skip);
 
   testWidgets('reduced motion: the mask replaces the amounts in one frame', (tester) async {
@@ -139,7 +140,7 @@ void main() {
     await _tapEye(tester, settle: false);
     await tester.pump();
     expect(find.text(_amounts[0]), findsNothing);
-    expect(find.text(AppDefaults.amountMask), findsNWidgets(4));
+    expect(_masks, findsNWidgets(4));
   }, skip: _skip);
 
   testWidgets('tooltip and Semantics say what a tap does; a 48 target', (tester) async {
@@ -162,10 +163,10 @@ void main() {
     await _tapEye(tester);
     expect((await SharedPreferences.getInstance()).getBool(_key), isTrue);
     await _card(tester, settings: first);
-    expect(find.text(AppDefaults.amountMask), findsNWidgets(4), reason: 'a rebuild');
+    expect(_masks, findsNWidgets(4), reason: 'a rebuild');
     // The next start: a new provider reads the saved choice.
     await _card(tester, settings: UiSettingsProvider());
-    expect(find.text(AppDefaults.amountMask), findsNWidgets(4));
+    expect(_masks, findsNWidgets(4));
     await _tapEye(tester);
     expect((await SharedPreferences.getInstance()).getBool(_key), isFalse);
   }, skip: _skip);
@@ -175,7 +176,7 @@ void main() {
     expect(find.text('Net profit'), findsNothing);
     expect(find.text(_amounts[3]), findsNothing);
     await _tapEye(tester);
-    expect(find.text(AppDefaults.amountMask), findsNWidgets(3));
+    expect(_masks, findsNWidgets(3));
     expect(find.text('Net profit'), findsNothing);
     await _tapEye(tester);
     expect(find.text(_amounts[3]), findsNothing);
@@ -195,7 +196,7 @@ void main() {
               SharedPreferences.setMockInitialValues({_key: hidden});
               await _card(tester, size: size, brightness: brightness, locale: locale);
               expect(tester.takeException(), isNull);
-              expect(find.text(AppDefaults.amountMask), hidden ? findsNWidgets(4) : findsNothing);
+              expect(_masks, hidden ? findsNWidgets(4) : findsNothing);
               final card = tester.getRect(find.byType(TodayCard));
               final eye = tester.getRect(find.descendant(of: find.byType(TodayCard), matching: find.byType(IconButton)));
               expect(card.contains(eye.topLeft) && card.contains(eye.bottomRight - const Offset(1, 1)), isTrue);
