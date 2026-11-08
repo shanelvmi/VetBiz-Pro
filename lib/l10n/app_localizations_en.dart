@@ -7252,6 +7252,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String phoneList_alertsSummaryLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alerts',
+      one: '1 alert',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get phoneList_sort => 'Sort';
 
   @override

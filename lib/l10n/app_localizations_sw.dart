@@ -7297,6 +7297,17 @@ class AppLocalizationsSw extends AppLocalizations {
   }
 
   @override
+  String phoneList_alertsSummaryLine(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'tahadhari $count',
+      one: 'tahadhari 1',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get phoneList_sort => 'Panga';
 
   @override

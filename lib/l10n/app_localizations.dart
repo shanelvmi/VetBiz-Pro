@@ -12152,6 +12152,12 @@ abstract class AppLocalizations {
     String status,
   );
 
+  /// Product Alerts on a phone (UI2): the one summary line under the chips, how many alerts there are in all, for example '3 alerts'.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 alert} other{{count} alerts}}'**
+  String phoneList_alertsSummaryLine(int count);
+
   /// Products and Stock Store on a phone (PH7a): the title of the sort choices in the Filter sheet (the tablet's sort menu).
   ///
   /// In en, this message translates to:
