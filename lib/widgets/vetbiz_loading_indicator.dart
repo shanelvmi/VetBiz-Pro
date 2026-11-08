@@ -41,6 +41,10 @@ class VetBizLoadingIndicator extends StatefulWidget {
   // (main.dart). The indicator itself reads the brand roles from the theme.
   static const Color backgroundColor = AppPalette.background;
 
+  /// UI1: the brand mark and the ring around it.
+  static const markKey = ValueKey<String>('vetbiz-loading-mark');
+  static const ringKey = ValueKey<String>('vetbiz-loading-ring');
+
   @override
   State<VetBizLoadingIndicator> createState() => _VetBizLoadingIndicatorState();
 }
@@ -58,6 +62,21 @@ class VetBizLoadingTheme extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Theme(data: data, child: Builder(builder: builder));
+}
+
+/// UI1: a page that is only the brand loading look, on the theme's background
+/// (Dark mode shows a dark page). Every wait after signing in uses it; only
+/// the startup screen (main.dart) keeps its light page.
+class VetBizLoadingPage extends StatelessWidget {
+  final String? title;
+
+  const VetBizLoadingPage({super.key, this.title});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: context.colors.background,
+        body: SafeArea(child: VetBizLoadingIndicator(title: title)),
+      );
 }
 
 class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with TickerProviderStateMixin {

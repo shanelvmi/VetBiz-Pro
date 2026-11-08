@@ -836,3 +836,22 @@ class RevealMetrics {
   /// While Needs attention waits: its title and one row.
   static const double attentionReserve = PhoneHomeMetrics.linkHeight + PhoneHomeMetrics.rowHeight;
 }
+
+/// UI1: the one brand loading look (vetbiz_loading_indicator.dart): the brand
+/// mark inside a soft ring spinner, a little smaller on a screen under
+/// [shortScreen] high, and the caption under it.
+class LoadingMetrics {
+  LoadingMetrics._();
+
+  static const double mark = 96;
+  static const double markShort = 88;
+  static const double shortScreen = 360;
+
+  /// The ring sits this far outside the mark on each side (120 around 96).
+  static const double ringGap = AppSpacing.s12;
+  static const double ringStroke = 3;
+
+  static const double captionGap = AppSpacing.s24;
+  static const double subtitleGap = AppSpacing.s6;
+  static const double recoveryGap = AppSpacing.s20;
+}
