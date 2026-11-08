@@ -68,6 +68,7 @@ import '../../data/announcement_fields.dart';
 import '../../data/fields.dart';
 import '../../data/user_role.dart';
 import '../../data/user_status.dart';
+import '../../config/app_assets.dart';
 import '../../config/money.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
@@ -2441,9 +2442,9 @@ Widget _buildDrawerContent() {
                 );
               },
               errorBuilder: (context, error, stackTrace) =>
-                  Image.asset('assets/vetbiz_pro_logo.png', fit: BoxFit.contain),
+                  Image.asset(AppAssets.logo, fit: BoxFit.contain),
             )
-          : Image.asset('assets/vetbiz_pro_logo.png', fit: BoxFit.contain),
+          : Image.asset(AppAssets.logo, fit: BoxFit.contain),
     ),
   );
 

@@ -6,6 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../providers/facility_provider.dart';
+import '../../config/app_assets.dart';
 import '../../config/app_limits.dart';
 import '../../utils/upload_size_check.dart';
 import '../../utils/facility_display.dart';
@@ -158,7 +159,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                           ? MemoryImage(_pendingLogoBytes!)
                           : (logoUrl != null
                               ? NetworkImage(logoUrl)
-                              : const AssetImage('assets/vetbiz_pro_logo.png') as ImageProvider),
+                              : const AssetImage(AppAssets.logo) as ImageProvider),
                     ),
                     if (_isUploading)
                       Positioned.fill(

@@ -392,7 +392,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         forceLogoutAndShowLogin(
           message: L10n.current.entry_noProfile,
         );
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const VetBizLoadingPage();
       }
 
       final data = userDoc.data()!;
@@ -435,14 +435,14 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         forceLogoutAndShowLogin(
           message: L10n.current.entry_deactivated,
         );
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const VetBizLoadingPage();
       }
       if (!isPlatformAdminAccount && !removedAssistant && role == UserRole.assistant.key && status != UserStatus.active.key) {
         debugPrint('[AUTH] blocked - assistant not yet active');
         forceLogoutAndShowLogin(
           message: L10n.current.entry_notActiveYet,
         );
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const VetBizLoadingPage();
       }
 
       // Parsed directly from the same read above - never fetched a
@@ -497,7 +497,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
             resume: true,
           );
         }
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const VetBizLoadingPage();
       }
 
       if (facilities.isEmpty) {
@@ -537,7 +537,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
           );
         }
         debugPrint('[AUTH] activateFacilityAndGoToDashboard call returned for uid=$uid');
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const VetBizLoadingPage();
       }
 
       // More than one facility - only realistically happens for an
@@ -613,9 +613,8 @@ class _AppEntryPointState extends State<AppEntryPoint> {
           String innerKey;
           if (snap.connectionState == ConnectionState.waiting) {
             innerKey = 'spinner';
-            inner = const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
+            // UI1: the brand loading page, as every wait after signing in.
+            inner = const VetBizLoadingPage();
           } else if (snap.hasError || !snap.hasData) {
             innerKey = 'error';
             inner = _DecisionErrorScreen(

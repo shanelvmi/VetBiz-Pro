@@ -16,12 +16,10 @@ import '../screens/dashboard/dashboard_screen.dart';
 import '../config/app_timeouts.dart';
 import '../services/active_facility_memory.dart';
 import '../l10n/l10n.dart';
-import '../theme/app_dimens.dart';
 import '../theme/app_layout.dart';
 import '../theme/app_motion.dart';
-import '../theme/app_text.dart';
-import '../theme/theme_context.dart';
 import '../data/fields.dart';
+import '../widgets/vetbiz_loading_indicator.dart';
 
 /// The screen a facility opens on. Tests put a stand-in here (REFRESH-1): the
 /// real DashboardScreen needs the whole signed-in app around it.
@@ -228,23 +226,10 @@ class _DashboardEntryLoaderState extends State<_DashboardEntryLoader> {
       transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
       child: _ready
           ? dashboardScreenBuilder()
-          : Scaffold(
+          // UI1: the brand loading page, its caption naming the facility.
+          : VetBizLoadingPage(
               key: const ValueKey('loading'),
-              backgroundColor: context.colors.background,
-              body: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(color: context.colors.primary),
-                    const SizedBox(height: AppSpacing.s20),
-                    Text(
-                      context.l10n.facilities_settingUp(widget.facilityName ?? context.l10n.facilities_yourFacility),
-                      style: TextStyle(
-                          color: context.colors.primary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f15),
-                    ),
-                  ],
-                ),
-              ),
+              title: context.l10n.facilities_settingUp(widget.facilityName ?? context.l10n.facilities_yourFacility),
             ),
     );
   }

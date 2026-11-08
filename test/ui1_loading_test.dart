@@ -15,7 +15,7 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/widgets/vetbiz_loading_indicator.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _sizes = [Size(360, 740), Size(390, 844), Size(740, 360), Size(768, 1024), Size(1200, 800)];
 
