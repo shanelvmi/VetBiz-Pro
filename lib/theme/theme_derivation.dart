@@ -34,6 +34,7 @@ class ThemeDerivation {
   static const _Rule _brandTealGlow = _Rule(hue: -22.3, sAbs: 0.697, lAbs: 0.702);
   static const _Rule _quickActionTintPrimary = _Rule(hue: -24.34, sAbs: 0.302, lAbs: 0.916);
   static const _Rule _quickActionTintAccent = _Rule(hue: -4.2, sAbs: 0.85, lAbs: 0.92);
+  static const _Rule _brandGradientEnd = _Rule(hue: -15, sDelta: 0, lDelta: -0.08);
 
   /// The sidebar hover and press fills: (hover, press).
   static (Color, Color) sidebarFills(Color primary) {
@@ -58,6 +59,20 @@ class ThemeDerivation {
   /// Accent-derived: the warm guard does not apply (accents are warm on
   /// purpose, and the tint is a pale fill, never near an error red).
   static Color quickActionTintAccent(Color accent) => _quickActionTintAccent.apply(accent, warmGuard: false);
+
+  /// NAV1: how much of the primary tints the phone bottom bar over the
+  /// surface (light: the theme primary; dark: the dark primary).
+  static const double navBarTintLight = 0.05;
+  static const double navBarTintDark = 0.08;
+
+  static Color navBarFill(Color primary, Color surface, double tint) =>
+      Color.alphaBlend(primary.withValues(alpha: tint), surface);
+
+  /// NAV1: the deep end of the Today card's gradient: the primary's hue
+  /// turned a little (as brandTeal is: Pasture's teal goes to a deep green)
+  /// and darker, so the on-brand ink only gains contrast. The warm guard
+  /// keeps Harvest's brown its own hue.
+  static Color brandGradientEnd(Color primary) => _brandGradientEnd.apply(primary, warmGuard: true);
 
   /// Muted text: the lightest neutral grey, starting from grey 600 (today's
   /// value), that still reaches 4.5:1 on [background]. Pasture keeps
