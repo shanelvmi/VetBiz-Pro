@@ -7,41 +7,37 @@ import '../../theme/app_dimens.dart';
 // UI2: the phone bar's outline, one path for its fill, its hairline border
 // and its shadow: the rounded upper corners and, at the centre of the top
 // edge, a smooth trough that holds the round "+" (PhoneShellMetrics).
+// UI4: the trough deeper and wider, cradling the button with
+// [PhoneShellMetrics.troughClearance] all round: its bottom a circle around
+// the button's centre, reached from the flat edge by a long S-curve (one
+// cubic a side, tangent to the edge and to the circle, so no bevel).
 
-double get _troughRadius => PhoneShellMetrics.recordSize / 2 + PhoneShellMetrics.troughGap;
+const double _troughRadius = PhoneShellMetrics.recordSize / 2 + PhoneShellMetrics.troughClearance;
 
 /// Where the trough's circle has its centre, below the top edge (it is the
-/// button's centre too).
-double get phoneTroughCentreY => PhoneShellMetrics.troughDepth - _troughRadius;
-
-/// How far from the centre each edge curve meets the flat top edge.
-double get _edgeCurveOffset {
-  const f = PhoneShellMetrics.troughEdgeRadius;
-  final dy = f - phoneTroughCentreY;
-  return math.sqrt((_troughRadius + f) * (_troughRadius + f) - dy * dy);
-}
-
-/// The trough's width at the top edge, where its curves leave the edge.
-double phoneTroughWidth() => 2 * _edgeCurveOffset;
+/// button's centre too: the button rises [PhoneShellMetrics.buttonRaise]).
+double get phoneTroughCentreY => PhoneShellMetrics.recordSize / 2 - PhoneShellMetrics.buttonRaise;
 
 /// The bar's outline in a box of [size] whose top is the bar's top edge;
 /// the trough is centred on [centerX].
 Path phoneBarPath(Size size, {required double centerX}) {
   const r = PhoneShellMetrics.barRadius;
-  const f = PhoneShellMetrics.troughEdgeRadius;
-  final trough = Offset(centerX, phoneTroughCentreY);
-  final leftCurve = Offset(centerX - _edgeCurveOffset, f);
-  final rightCurve = Offset(centerX + _edgeCurveOffset, f);
-  // An edge curve meets the trough's circle on the line between their centres.
-  Offset meeting(Offset curve) => curve + (trough - curve) * (f / (_troughRadius + f));
+  const k = PhoneShellMetrics.troughCurve;
+  const half = PhoneShellMetrics.troughWidth / 2;
+  final join = PhoneShellMetrics.troughJoinDegrees * math.pi / 180;
+  // Where each S-curve meets the circle, and the circle's direction there
+  // (downwards, towards the bottom), which the curve's last handle follows.
+  final joinX = _troughRadius * math.sin(join);
+  final joinY = phoneTroughCentreY + _troughRadius * math.cos(join);
+  final along = Offset(math.cos(join), math.sin(join)) * k;
   return Path()
     ..moveTo(0, size.height)
     ..lineTo(0, r)
     ..arcToPoint(const Offset(r, 0), radius: const Radius.circular(r))
-    ..lineTo(leftCurve.dx, 0)
-    ..arcToPoint(meeting(leftCurve), radius: const Radius.circular(f))
-    ..arcToPoint(meeting(rightCurve), radius: Radius.circular(_troughRadius), clockwise: false)
-    ..arcToPoint(Offset(rightCurve.dx, 0), radius: const Radius.circular(f))
+    ..lineTo(centerX - half, 0)
+    ..cubicTo(centerX - half + k, 0, centerX - joinX - along.dx, joinY - along.dy, centerX - joinX, joinY)
+    ..arcToPoint(Offset(centerX + joinX, joinY), radius: const Radius.circular(_troughRadius), clockwise: false)
+    ..cubicTo(centerX + joinX + along.dx, joinY - along.dy, centerX + half - k, 0, centerX + half, 0)
     ..lineTo(size.width - r, 0)
     ..arcToPoint(Offset(size.width, r), radius: const Radius.circular(r))
     ..lineTo(size.width, size.height)

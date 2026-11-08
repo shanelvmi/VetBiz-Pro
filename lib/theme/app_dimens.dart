@@ -528,15 +528,8 @@ class PhoneShellMetrics {
   static const double recordShadowOffsetY = 4;
   static const double recordOpenTurns = 0.125;
 
-  /// UI2: the trough cut into the bar's top edge at the centre, where the
-  /// round "+" floats: a circle [troughGap] wider than the button all round,
-  /// its bottom [troughDepth] below the edge, met by curves of
-  /// [troughEdgeRadius] so the edge stays smooth (about 89 wide at the top).
-  /// The fill, the hairline border ([barBorderWidth]) and the shadow follow
-  /// it.
-  static const double troughDepth = 34;
-  static const double troughGap = 4;
-  static const double troughEdgeRadius = 14;
+  /// The bar's hairline border; the fill, the border and the shadow follow
+  /// the trough (UI2: drawn as one shape).
   static const double barBorderWidth = 1;
 
   /// UI4: the deeper, wider trough that cradles the "+": [troughWidth] wide
@@ -545,7 +538,7 @@ class PhoneShellMetrics {
   /// S-curve from the flat edge to that circle, a cubic whose two handles
   /// are [troughCurve] long, meeting the circle [troughJoinDegrees] from its
   /// lowest point, so there is no bevel and no corner.
-  static const double troughWidth = 124;
+  static const double troughWidth = 128;
   static const double troughCurve = 26;
   static const double troughClearance = 8;
   static const double troughJoinDegrees = 50;
@@ -554,13 +547,13 @@ class PhoneShellMetrics {
   /// over the page, in the middle (PhoneShellInsets).
   static const double buttonRaise = 14;
 
+  /// UI4: the trough's depth below the edge: the button's bottom plus the
+  /// clearance (56 - 14 + 8 = 50).
+  static const double troughDepth = recordSize - buttonRaise + troughClearance;
+
   /// UI4: the neighbouring items' icons and labels are never closer than
   /// this to the trough.
   static const double troughItemGap = 12;
-
-  /// How far the "+" rises above the bar's top edge: what the trough leaves
-  /// it (56 - (34 - 4) = 26), so it sits in the trough with the gap below.
-  static const double recordLift = recordSize - (troughDepth - troughGap);
 
   /// The "+" sheet's rows.
   static const double sheetRowHeight = 64;

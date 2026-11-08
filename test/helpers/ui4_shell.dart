@@ -18,6 +18,7 @@ import 'package:vetbiz_pro/widgets/phone_list/phone_list_scaffold.dart';
 import 'package:vetbiz_pro/widgets/phone_list/phone_quick_chips.dart';
 
 import 'phone_home_harness.dart';
+import 'real_font.dart';
 
 const ui4R = PhoneShellMetrics.recordSize / 2;
 
@@ -83,6 +84,7 @@ Future<void> ui4Shell(
   Size size = const Size(390, 844),
   double keyboard = 0,
   bool real = false,
+  bool realFont = false,
   AppColorTheme theme = AppColorTheme.pasture,
   Brightness brightness = Brightness.light,
 }) async {
@@ -95,7 +97,7 @@ Future<void> ui4Shell(
   await tester.pumpWidget(MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
-    theme: AppTheme.build(theme, brightness),
+    theme: realFont ? _realFont(AppTheme.build(theme, brightness)) : AppTheme.build(theme, brightness),
     home: PhoneShell(
       home: (context) {
         ui4SeenOverhang = PhoneShellInsets.overhangOf(context);
@@ -122,6 +124,9 @@ Future<void> ui4Shell(
   ));
   await tester.pumpAndSettle();
 }
+
+// The square test font draws text about twice as wide as real text.
+ThemeData _realFont(ThemeData t) => t.copyWith(textTheme: t.textTheme.apply(fontFamily: realFontFamily));
 
 final ui4Bar = find.byType(PhoneBottomBar);
 final ui4Shape = find.byKey(const ValueKey('phone-bar-shape'));

@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../l10n/l10n.dart';
 import '../../services/active_facility_memory.dart';
@@ -206,7 +208,8 @@ class _PhoneShellState extends State<PhoneShell> with SingleTickerProviderStateM
         endDrawer: widget.endDrawer,
         // PH8a: the banner sits under Home's app bar here; the other tabs draw
         // their own app bar and put it under theirs (PhoneShell.bodyWithBanner).
-        body: _PhoneShellBanner(
+        // UI4: the tabs' scroll views make room for the button's overhang.
+        body: PhoneShellInsets(overhang: keyboardOpen ? 0 : PhoneShellMetrics.buttonRaise, child: _PhoneShellBanner(
           banner: widget.banner,
           // The selected tab is painted last, over the one fading out; keys
           // keep each tab's state when the order changes.
@@ -246,7 +249,7 @@ class _PhoneShellState extends State<PhoneShell> with SingleTickerProviderStateM
                 ),
             ],
           ),
-        ),
+        )),
         bottomNavigationBar: keyboardOpen
             ? null
             : PhoneBottomBar(current: _tab, onSelect: _select, onRecord: _record, recordOpen: _recordOpen),
@@ -328,11 +331,13 @@ class PhoneBottomBar extends StatelessWidget {
     final colors = context.colors;
     final bottom = AppSafeArea.bottomOf(context);
     final still = MediaQuery.disableAnimationsOf(context);
-    const lift = PhoneShellMetrics.recordLift;
-    // UI2: the bar's own box is [lift] taller than the drawn bar, so the "+"
-    // floating in the trough above the top edge is inside it (and takes its
-    // taps); the body ends above it, so nothing hides behind the button.
-    return SizedBox(
+    const lift = PhoneShellMetrics.buttonRaise;
+    // UI4: the shell reserves only the drawn bar (64 plus the home
+    // indicator), so the page reaches its top edge on both sides of the "+".
+    // The "+" rises [lift] above that edge: it is drawn, and takes its taps,
+    // outside the bar's box (_Overhang), over the middle of the page, whose
+    // scroll views add that much under their last row (PhoneShellInsets).
+    return _Overhang(overhang: lift, child: SizedBox(
       height: lift + PhoneShellMetrics.barHeight + bottom,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -396,7 +401,51 @@ class PhoneBottomBar extends StatelessWidget {
           );
         },
       ),
-    );
+    ));
+  }
+}
+
+/// UI4: lays its child out [overhang] taller than itself and draws it that
+/// much higher, so the part above (the "+") overhangs the page. The Scaffold
+/// keeps only this box's height for the bar; a tap on the overhang still
+/// reaches the child, which takes it only on the button (anything else there
+/// goes on to the page).
+class _Overhang extends SingleChildRenderObjectWidget {
+  final double overhang;
+
+  const _Overhang({required this.overhang, required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderOverhang(overhang);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderOverhang renderObject) => renderObject.overhang = overhang;
+}
+
+class _RenderOverhang extends RenderShiftedBox {
+  _RenderOverhang(this._overhang) : super(null);
+
+  double _overhang;
+  set overhang(double value) {
+    if (value == _overhang) return;
+    _overhang = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void performLayout() {
+    final child = this.child!;
+    child.layout(constraints.copyWith(minHeight: 0, maxHeight: double.infinity), parentUsesSize: true);
+    (child.parentData! as BoxParentData).offset = Offset(0, -_overhang);
+    size = constraints.constrain(Size(child.size.width, math.max(0, child.size.height - _overhang)));
+  }
+
+  // Not limited to this box's own size: the overhang lies outside it.
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) {
+    if (!hitTestChildren(result, position: position)) return false;
+    result.add(BoxHitTestEntry(this, position));
+    return true;
   }
 }
 

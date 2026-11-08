@@ -20,11 +20,13 @@ import 'package:vetbiz_pro/theme/color_math.dart';
 
 const _skip = false;
 
+// UI4: a tab's list makes room for the button's overhang, as the app's do.
 Widget _tab(String name) => Scaffold(
-      body: ListView(
+      body: Builder(builder: (context) => ListView(
         key: ValueKey('$name list'),
+        padding: EdgeInsets.only(bottom: PhoneShellInsets.overhangOf(context)),
         children: [for (var i = 0; i < 40; i++) SizedBox(height: 48, child: Text('$name row $i'))],
-      ),
+      )),
     );
 
 Completer<void>? _sheet;
@@ -88,16 +90,16 @@ void main() {
     const size = Size(390, 98);
     final path = phoneBarPath(size, centerX: 195);
 
-    test('a trough at the centre: its bottom about 34 below the top edge, about 92 wide', () {
+    test('UI4: a trough at the centre: its bottom about 50 below the top edge, about 128 wide', () {
       const depth = PhoneShellMetrics.troughDepth;
       expect(path.contains(const Offset(195, depth - 0.5)), isFalse, reason: 'in the trough');
       expect(path.contains(const Offset(195, depth + 0.5)), isTrue, reason: 'the bar under it');
-      expect(depth, closeTo(34, 2));
-      final width = phoneTroughWidth();
-      expect(width, inInclusiveRange(84, 96));
+      expect(depth, closeTo(50, 2));
+      const width = PhoneShellMetrics.troughWidth;
+      expect(width, inInclusiveRange(120, 128));
       expect(path.contains(Offset(195 - width / 2 - 2, 0.5)), isTrue, reason: 'flat top beside it');
       expect(path.contains(Offset(195 + width / 2 + 2, 0.5)), isTrue);
-      expect(path.contains(Offset(195 - width / 2 + 6, 0.5)), isFalse, reason: 'its opening');
+      expect(path.contains(Offset(195 - width / 2 + 20, 2)), isFalse, reason: 'its opening');
       expect(path.contains(const Offset(10, 2)), isFalse, reason: 'the rounded corner');
       expect(path.contains(const Offset(10, 30)), isTrue);
     });
@@ -112,9 +114,9 @@ void main() {
       }
     });
 
-    test('the trough holds the button with the gap all round its lower half', () {
-      final r = PhoneShellMetrics.recordSize / 2 + PhoneShellMetrics.troughGap;
-      final centreY = PhoneShellMetrics.troughDepth - r;
+    test('UI4: the trough holds the button with the clearance all round its lower half', () {
+      const r = PhoneShellMetrics.recordSize / 2 + PhoneShellMetrics.troughClearance;
+      final centreY = phoneTroughCentreY;
       for (var a = 0.0; a <= math.pi; a += math.pi / 36) {
         final p = Offset(195 + (r - 0.5) * math.cos(a), centreY + (r - 0.5) * math.sin(a));
         expect(path.contains(p), isFalse, reason: 'inside the trough at ${(a * 180 / math.pi).round()} degrees');
@@ -130,8 +132,8 @@ void main() {
       final record = tester.getRect(_record);
       expect(record.size, const Size(56, 56));
       expect(record.center.dx, closeTo(width / 2, 1));
-      expect(shape.top - record.top, closeTo(PhoneShellMetrics.recordLift, 0.5), reason: 'raised above the top edge');
-      expect(shape.top + PhoneShellMetrics.troughDepth - record.bottom, closeTo(PhoneShellMetrics.troughGap, 0.5));
+      expect(shape.top - record.top, closeTo(PhoneShellMetrics.buttonRaise, 0.5), reason: 'raised above the top edge');
+      expect(shape.top + PhoneShellMetrics.troughDepth - record.bottom, closeTo(PhoneShellMetrics.troughClearance, 0.5));
       final row = find.descendant(of: _bar, matching: find.byType(Row)).first;
       final slots = find.descendant(of: row, matching: find.byType(Expanded));
       expect(slots, findsNWidgets(5));
@@ -166,7 +168,7 @@ void main() {
     await _shell(tester);
     final colors = AppColors.fromTheme(AppColorTheme.pasture);
     const trough = Offset(195, 20);
-    const under = Offset(195, 50);
+    const under = Offset(195, 56);
     const side = Offset(60, 30);
     expect(
       _shape,

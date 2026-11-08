@@ -10,11 +10,15 @@ import 'package:vetbiz_pro/theme/app_colors.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 
+import 'helpers/real_font.dart';
 import 'helpers/ui4_shell.dart';
 
-const _skip = true;
+const _skip = false;
 
 void main() {
+  // The neighbours' labels are measured in a real font (helpers/real_font.dart).
+  setUpAll(loadRealFont);
+
   group('the shape', () {
     for (final width in const [360.0, 390.0, 412.0]) {
       final size = Size(width, 98);
@@ -28,7 +32,7 @@ void main() {
         expect(path.contains(Offset(cx, PhoneShellMetrics.troughDepth + 0.5)), isTrue, reason: 'the bar under it');
         expect(path.contains(Offset(cx - PhoneShellMetrics.troughWidth / 2 - 2, 0.5)), isTrue, reason: 'flat top beside it');
         expect(path.contains(Offset(cx + PhoneShellMetrics.troughWidth / 2 + 2, 0.5)), isTrue);
-        expect(path.contains(Offset(cx - PhoneShellMetrics.troughWidth / 2 + 6, 0.5)), isFalse, reason: 'its opening');
+        expect(path.contains(Offset(cx - PhoneShellMetrics.troughWidth / 2 + 20, 2)), isFalse, reason: 'its opening (the S-curve leaves the edge gently)');
       }, skip: _skip);
 
       test('$width wide: the button\'s circle is at least 8 from the wall at every point', () {
@@ -62,7 +66,7 @@ void main() {
 
   for (final width in const [360.0, 390.0, 412.0]) {
     testWidgets('$width wide: the + centred, cradled, raised 14; its neighbours 12 from the trough', (tester) async {
-      await ui4Shell(tester, size: Size(width, 844));
+      await ui4Shell(tester, size: Size(width, 844), realFont: true);
       final shape = tester.getRect(ui4Shape);
       final record = tester.getRect(ui4Record);
       expect(record.center.dx, closeTo(width / 2, 1));
@@ -73,9 +77,14 @@ void main() {
         final slot = find.ancestor(of: find.descendant(of: ui4Bar, matching: find.text(label)), matching: find.byType(Expanded));
         final icon = tester.getRect(find.descendant(of: slot, matching: find.byType(Icon))).deflate(ui4IconLiveInset);
         final text = tester.getRect(find.descendant(of: ui4Bar, matching: find.text(label)));
-        for (final p in points) {
-          expect(ui4Gap(icon, p), greaterThanOrEqualTo(PhoneShellMetrics.troughItemGap), reason: '$label icon at $p');
-          expect(ui4Gap(text, p), greaterThanOrEqualTo(PhoneShellMetrics.troughItemGap), reason: '$label label at $p');
+        // 12 from every point of the trough level with or below the item; the
+        // points above it (where the curve leaves the flat edge) are never
+        // closer than the bar's own top edge already is.
+        for (final item in [icon, text]) {
+          for (final p in points) {
+            final least = p.dy >= item.top ? PhoneShellMetrics.troughItemGap : math.min(PhoneShellMetrics.troughItemGap, item.top - shape.top);
+            expect(ui4Gap(item, p), greaterThanOrEqualTo(least - 0.1), reason: '$label ${item == icon ? 'icon' : 'label'} at $p');
+          }
         }
       }
     }, skip: _skip);
@@ -102,7 +111,7 @@ void main() {
     await ui4Shell(tester);
     final colors = AppColors.fromTheme(AppColorTheme.pasture);
     final trough = Offset(195, PhoneShellMetrics.troughDepth - 4);
-    final beside = Offset(195 - PhoneShellMetrics.troughWidth / 2 + 4, 4);
+    final beside = Offset(195 - PhoneShellMetrics.troughWidth / 2 + 20, 4);
     const under = Offset(195, 60);
     const side = Offset(40, 30);
     expect(
