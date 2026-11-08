@@ -305,12 +305,12 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
                     onLoadMore: widget.onLoadMore,
                   ),
                 ),
-              // Room under the last row: the floating button never covers it,
-              // nor, on a tab, the shell's raised "+" above the bar.
+              // Room under the last row: the floating button never covers it
+              // (NAV1: the shell's "+" sits inside the bar, so a tab needs no
+              // extra room above it).
               SliverPadding(
                 padding: EdgeInsets.only(
                   bottom: (fab == null ? PhoneListMetrics.pagePadding : PhoneListMetrics.fabClearance) +
-                      (widget.asTab ? PhoneShellMetrics.recordRaise : 0) +
                       AppSafeArea.bottomOf(context),
                 ),
               ),

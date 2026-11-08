@@ -487,32 +487,53 @@ class AppSheetMetrics {
   static const double dialogMaxHeightFactor = 0.88;
 }
 
-/// The phone shell (PH3, docs/design/phone_shell.md section 3): the bottom
-/// bar, its raised "+", the "+" sheet and the More page. Every size lives
-/// here, so the owner's later style changes are made in one place; colours
-/// come from the context.colors roles.
+/// The phone shell (PH3, docs/design/phone_shell.md section 3; restyled in
+/// NAV1): the bottom bar, its "+", the "+" sheet and the More page. Every
+/// size lives here, so the owner's later style changes are made in one
+/// place; colours come from the context.colors roles.
 class PhoneShellMetrics {
   PhoneShellMetrics._();
 
-  /// The bar, above the home indicator (AppSafeArea.bottomOf is added), and
-  /// its top border (borderStrong).
+  /// The bar, above the home indicator (AppSafeArea.bottomOf is added):
+  /// docked, its upper corners softly rounded, filled with navBarFill, and a
+  /// very light shadow cast upwards (the shadow role).
   static const double barHeight = 64;
-  static const double barBorder = 1;
+  static const double barRadius = AppRadius.r20;
+  static const double barShadowAlpha = 0.06;
+  static const double barShadowBlur = 12;
+  static const double barShadowOffsetY = -2;
 
-  /// A bar item: icon, label (one line), and the pill behind the selected
-  /// item's icon (primary at 12%).
+  /// A bar item: one icon size, one label size (one line), the same spacing
+  /// for every item; the selected item shows the filled icon.
   static const double barIcon = AppIconSize.i24;
   static const double barLabel = AppFontSize.f12;
-  static const double barLabelGap = AppSpacing.s2;
+  static const double barLabelGap = AppSpacing.s4;
+
+  /// The selected item's mark: a short rounded line in primary at the bar's
+  /// top edge, above the icon; it slides and fades between items.
+  static const double indicatorWidth = 20;
+  static const double indicatorHeight = 3;
+
+  /// The tint behind the "+" sheet's icons (primary at 12%).
+  static const double tintAlpha = 0.12;
+
+  /// The central "+": a squircle in accent inside the bar, with a soft
+  /// shadow; its plus turns to a cross ([recordOpenTurns]) while the record
+  /// sheet is open. The whole slot is its tap target.
+  static const double recordSize = 56;
+  static const double recordIcon = 28;
+  static const double recordRadius = AppRadius.r20;
+  static const double recordShadowAlpha = 0.22;
+  static const double recordShadowBlur = 12;
+  static const double recordShadowOffsetY = 4;
+  static const double recordOpenTurns = 0.125;
+
+  /// The PH3 bar's measures, until the restyled bar replaces it.
+  static const double barBorder = 1;
   static const double pillWidth = 56;
   static const double pillHeight = 32;
   static const double pillRadius = AppRadius.r16;
-  static const double pillAlpha = 0.12;
-
-  /// The central "+": a circle in accent, raised so [recordRaise] px sit
-  /// above the bar's top edge; the whole slot is its tap target.
-  static const double recordSize = 56;
-  static const double recordIcon = 28;
+  static const double pillAlpha = tintAlpha;
   static const double recordRaise = 20;
   static const double recordElevation = AppElevation.e6;
 
@@ -541,7 +562,7 @@ class MoreMetrics {
   static const double cellHeight = 100;
   static const double circle = 56;
   static const double icon = AppIconSize.i24;
-  static const double circleAlpha = PhoneShellMetrics.pillAlpha;
+  static const double circleAlpha = PhoneShellMetrics.tintAlpha;
   static const double label = AppFontSize.f12;
   static const double labelGap = AppSpacing.s4;
 

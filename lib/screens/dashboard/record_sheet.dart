@@ -339,7 +339,7 @@ class _RecordRow extends StatelessWidget {
               width: PhoneShellMetrics.sheetIconCircle,
               height: PhoneShellMetrics.sheetIconCircle,
               decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: PhoneShellMetrics.pillAlpha),
+                color: colors.primary.withValues(alpha: PhoneShellMetrics.tintAlpha),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: PhoneShellMetrics.sheetIcon, color: colors.primary),
