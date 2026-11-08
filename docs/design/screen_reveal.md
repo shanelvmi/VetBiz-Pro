@@ -87,3 +87,63 @@ Counts that must not change (PH4 / PH4b, measured on the counting fake): phone c
 ## 7. Tests (written first, committed skipped)
 
 `rv1_reveal_gate_test` (fake clock), `rv1_screen_reveal_test` (once, rebuild, resize, theme, language, reduced motion, semantics, same rects when a slot fills), `rv1_page_transitions_test` (progress 0, 0.5, 1; a pushed route; dialogs and sheets untouched; reduced motion), `rv1_tab_fade_test` (state kept, only the selected tab hit-testable, lazy first visit), `rv1_home_test` (phones 360x740, 390x844, 740x360; wide 768x1024, 1024x768, 1200x800; Light, Dark, Kiswahili; skeleton = content layout), `rv1_home_counts_test`, and the login entrance's existing tests unchanged.
+
+## 8. RV2 audit and plan (at `747f20d`)
+
+Every screen under `lib/screens` and `lib/widgets` that waits for data, phone and wide. "Held" = answered at the first frame on a repeat visit, so the reveal is skipped (rule 3). RV2 adds no Firestore listener and no read: a source only watches what the screen already has, so the counts per screen family stay as today (pinned for the lists by `rv2_list_reveal_test`).
+
+### 8.1 Lists (PhoneListScaffold on phones; the table screens on wide)
+
+| Screen (file) | Primary: rows | Primary: summary figures | Secondary | Held on re-entry | Skeleton |
+|---|---|---|---|---|---|
+| Sales (`sales/sales_screen.dart`) | `SaleProvider.salesListController` first page (cursor read) | `_rangeSummary` (30-day figures) | none | **yes**: the controller lives in the provider; same signature = no read | PH5a six rows + chips + summary line |
+| Services (`services/services_screen.dart`) | `servicesListController` first page | 30-day summary map | none | **yes** (provider controller) | same |
+| Clients (`clients/clients_screen.dart`) | `clientsListController` first page | `ClientProvider.clients` (live, app-level) | none (initials) | **yes** | same |
+| Debtors (`debtors/debtors_screen.dart`) | `debtorsListController` first page | debt metrics (`_isMetricsLoading`) | none | rows yes; metrics re-read | same |
+| Payments (`payments/payments_screen.dart`) | `ledgerController` (SnapshotLedgerController) | the same entries (the total is summed from them) | none | **yes** (provider controller) | same |
+| Transactions (`transactions/transactions_screen.dart`) | `TransactionProvider.transactions` (live) | `_isSummaryLoading` (range totals) | none | rows yes; summary re-read | same |
+| Products (`products/products_screen.dart`) | `ProductProvider.loaded` (live since activation) | the same provider (counts, stock value) | **product thumbnails** (first screenful) | **yes** | same |
+| Stock Store (`store/stockstore_screen.dart`) | `ProductProvider.loaded` / `listenError` | the same provider | product thumbnails | **yes** | same |
+| Product Alerts (`products/stock_alerts_screen.dart`) | `ProductProvider.loaded` / `listenError` | the same provider | product thumbnails | **yes** | same |
+| Trash (`settings/trash_phone.dart`) | `_feed` (one stream per trash kind) | none (no summary line) | none | no (a new feed per visit) | six rows + chips |
+| Activity log (`activity/activity_log_phone.dart`) | the screen's StreamBuilder (scoped query) | none | none | no | six rows + chips |
+| Team Members (`admin/manage_assistants_screen.dart`) | facilities read + team stream (`_teamServerLoaded`) | the same data (counts) | none | no | six rows + chips + summary |
+| Facilities (`facilities/facility_screen.dart`) | `fetchFacilities` (`isLoading` starts true) | none | **facility logos** | no | six rows + chips |
+| Past reports (`reports/past_reports_screen.dart`) | `_loadInitialPage` (`_isLoading` starts true) | `_totalCount` (the same load) | none | no | six rows + chips + summary |
+| Notifications (`dashboard/notifications_screen.dart`) | `NotificationFeedController.isLoading` (the bell's feed) | unread counts (the same feed) | poster images | **yes** when opened from the bell (its feed is passed in) | its own list, not PhoneListScaffold (RV2b) |
+
+Wide (768+): the Sales, Services and Debtors tables use the same controllers with a centred spinner (`sales_screen.dart:282`, `services_screen.dart:244`, `debtors_screen.dart:282`); Payments `payments_screen.dart:507`; Clients `clients_screen.dart:809`; Products and Stock Store card grids (provider); Team Members, Facilities (`facility_screen.dart:1485`), Trash (`trash_screen.dart:148`), Activity log, Past reports (`past_reports_screen.dart:218`), Notifications (`notifications_screen.dart:321`). Plan: the same gate with a table-shaped skeleton (header and six rows at the real column widths); the loaded fingerprints must not change (`stripReveal`).
+
+**How a list adopts it (one place: `PhoneListScaffold`).** The reveal group is the header (chips, applied filters, summary line) and the rows; chrome is the app bar, the floating button and the subscription banner. The rows answer when the screen's `loading` turns false after the first page was asked for, or on an error; an empty page answers too (the empty and error states show inside the revealed list). A screen whose provider already knows (Products, Stock Store, Alerts) passes `firstPageAnswered`. The summary answers when the screen's new `summaryPending` flag is false; while it is pending the summary line keeps its slot (a soft box of the line's real height), so nothing moves when its figures arrive. The gate is made once per scaffold state: Load more, pull to refresh, a filter change and a search change only the in-list states (the PH5a skeleton rows, the Load more spinner), never the reveal.
+
+### 8.2 Details pages, reports, single-document pages
+
+| Page | Record in memory | Extra data (LateSlot, reserved height) |
+|---|---|---|
+| Sale, Service, Payment, Transaction, Activity, Trash item details (phone pages from the lists) | yes (the row) | Payments: the source lookups (`payments_screen.dart:805`, `:1322`, FutureBuilders) |
+| Debtor details (`debtors_screen.dart:1150`, `:1198`, `:1296`) | yes | the client's debts, the payment history, the overdue days: three FutureBuilders with spinners |
+| Client details (`clients_screen.dart:697`) | yes | the totals (count, spent), a FutureBuilder |
+| Product details and View batches (`product_phone_parts.dart`, `view_batches_screen.dart:390`) | yes | the batches stream (one listener, kept) |
+| Team member, Facility details | yes | none |
+| View Reports (`reports/view_reports_screen.dart`, `_isLoading` true at start) | no | primary = the report document and its totals; each tab's heavy lists (`report_phone_tabs.dart:366`, `report_tabbed_content.dart:918`, the activity log loader) secondary, reserved |
+| Subscription (`subscription/subscription_screen.dart:708`) and its history (`subscription_history_screen.dart:190`) | the status is held (SubscriptionProvider); the requests stream is not | a small gate, the page skeleton only when not held |
+| Business hours, Business profile, Settings, Insights | the facility document is held (FacilityProvider) | a gate only where not held |
+| Printer settings | the printer list is a device scan, not data | stays the spinner in its button |
+
+Forms (Add Sale, Add Service, Add Product, Add Batch, Add Transaction, Add Payment, the wizard, dialogs and sheets) have no asynchronous primary data: never wrapped. The operator console (`platform_admin/`) is out of RV2 (English, not on phones).
+
+### 8.3 Navigator routes
+
+79 `MaterialPageRoute` pushes in `lib/`, all through `ThemeData.pageTransitionsTheme`, so all get `AppPageTransitionsBuilder`; the named routes (`main.dart:159`, `/login` and `/register`) are MaterialPageRoutes too, `/login` deliberately keeping Flutter's default (section 5). One bypass: `utils/facility_activation.dart:164`, a `PageRouteBuilder` with its own fade (`transitionsBuilder` at `:169`), kept as RV1 decided (it replaces the whole app after activation). No `CupertinoPageRoute` and no other `PageRouteBuilder`. A source test fails on a new `PageRouteBuilder`, `CupertinoPageRoute` or `transitionsBuilder` outside that one file.
+
+### 8.4 Images
+
+Network images in rows and cards: `ProductLeading` (`products/product_phone_parts.dart:80`; the phone rows of Products, Stock Store and Alerts), `ProductThumbnail` (wide cards, `products_screen.dart:1074`, `stockstore_screen.dart:968`), facility logos (`facility_screen.dart:1655`, `:1852`, `facility_picker_screen.dart:404`). Plan: one `lib/widgets/reveal/reveal_image.dart` (a fixed slot, the initials or a soft box under it, the image fading in on its first frame through `frameBuilder`, no fade under reduced motion, `ResizeImage` at 2x the slot, a failed image keeps the initials); the first eight visible rows' images are a secondary source with a grace inside the same 1200 ms, never longer. Large single images (receipt logos, posters, the product form's preview) are not list images and stay as they are.
+
+### 8.5 Repeat visits
+
+Benefit with no new query: Sales, Services, Clients, Debtors (rows), Payments, Transactions (rows), Products, Stock Store, Alerts, Home (RV1), Notifications from the bell. Cannot without a new cache: Trash, Activity log, Team Members, Facilities, Past reports, View Reports, the subscription history (each opens its own query per visit). No global cache is added.
+
+### 8.6 Order and split
+
+RV2a: this audit; the list tests (skipped first); `PhoneListScaffold` adoption (the fourteen phone lists at once); the route source test. RV2b: the wide table skeletons, Notifications, the details pages' LateSlots, View Reports and its tabs, the single-document pages, `RevealImage` and its grace, the size matrix per family.
