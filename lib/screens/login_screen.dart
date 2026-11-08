@@ -679,6 +679,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           icon: flat ? null : Icons.lock_outline,
                           title: context.l10n.login_signInTitle,
                           subtitle: context.l10n.login_signInSubtitle,
+                          // UI1: centred on the phone; the card keeps it left.
+                          centered: flat,
                         ),
                         SizedBox(height: flat ? PhoneLoginMetrics.headingGap : AppSpacing.s28),
                         Text(context.l10n.common_email, style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),

@@ -12,18 +12,19 @@ import 'package:vetbiz_pro/screens/login_screen.dart';
 
 import 'helpers/login_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
-/// Where the text is drawn (its glyphs, not its box).
+/// Where the text is drawn (its glyphs, not its box; a space left at a line
+/// break is not drawn, so only the words count).
 Rect _ink(WidgetTester tester, Finder text) {
   final paragraph = tester.renderObject<RenderParagraph>(find.descendant(of: text, matching: find.byType(RichText)).first);
-  final length = paragraph.text.toPlainText().length;
-  final boxes = paragraph.getBoxesForSelection(TextSelection(baseOffset: 0, extentOffset: length));
-  var rect = boxes.first.toRect();
-  for (final b in boxes.skip(1)) {
-    rect = rect.expandToInclude(b.toRect());
+  Rect? rect;
+  for (final word in RegExp(r'\S+').allMatches(paragraph.text.toPlainText())) {
+    for (final b in paragraph.getBoxesForSelection(TextSelection(baseOffset: word.start, extentOffset: word.end))) {
+      rect = rect == null ? b.toRect() : rect.expandToInclude(b.toRect());
+    }
   }
-  return rect.shift(paragraph.localToGlobal(Offset.zero));
+  return rect!.shift(paragraph.localToGlobal(Offset.zero));
 }
 
 void main() {

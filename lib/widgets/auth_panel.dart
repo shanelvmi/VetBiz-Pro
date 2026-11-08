@@ -37,13 +37,15 @@ class AuthPanel {
 /// are the same height and line up, and (AN5) the welcome sentence and the
 /// sign-in subtext are one widget, on one horizontal line. With no [icon]
 /// (LG1, the flat phone login) the same title and subtitle without the
-/// circle, the title free to wrap (a long Kiswahili title is not cut).
+/// circle, the title free to wrap (a long Kiswahili title is not cut); with
+/// [centered] (UI1, the phone) both lines centred across the column.
 class AuthPanelHeading extends StatelessWidget {
-  const AuthPanelHeading({super.key, this.icon, required this.title, this.subtitle});
+  const AuthPanelHeading({super.key, this.icon, required this.title, this.subtitle, this.centered = false});
 
   final IconData? icon;
   final String title;
   final String? subtitle;
+  final bool centered;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +53,8 @@ class AuthPanelHeading extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final icon = this.icon;
     final titleStyle = TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.extraBold, color: context.colors.textPrimary);
-    final row = icon == null ? Text(title, style: titleStyle) : Row(
+    final align = centered ? TextAlign.center : null;
+    final row = icon == null ? Text(title, textAlign: align, style: titleStyle) : Row(
       children: [
         Container(
           width: AuthPanelMetrics.iconCircle,
@@ -80,15 +83,18 @@ class AuthPanelHeading extends StatelessWidget {
       ],
     );
     final sub = subtitle;
-    if (sub == null) return row;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        row,
-        const SizedBox(height: AuthPanelMetrics.subtitleGap),
-        Text(sub, style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary)),
-      ],
-    );
+    final heading = sub == null
+        ? row
+        : Column(
+            crossAxisAlignment: centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              row,
+              const SizedBox(height: AuthPanelMetrics.subtitleGap),
+              Text(sub, textAlign: align, style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary)),
+            ],
+          );
+    // The full width of the column it sits in, so its centre is the column's.
+    return centered ? SizedBox(width: double.infinity, child: heading) : heading;
   }
 }
