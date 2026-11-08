@@ -344,5 +344,8 @@
   "services-1200x800-details": "2f1ba63bd79871fd 1804",
   "services-1200x800-list": "32710d23b3cc24d0 1429",
   "services-768x1024-details": "-69fff86ad61ef458 1804",
-  "services-768x1024-list": "-78bbc879db4a579e 1430"
+  "services-768x1024-list": "-78bbc879db4a579e 1430",
+  "ui2-add-product-duplicate-1024x768": "3169b82e203a2f30 1429",
+  "ui2-add-product-duplicate-1200x800": "-6d5db569a87df31d 1429",
+  "ui2-add-product-duplicate-768x1024": "-44b7f5044fa6cfa2 1363"
 }
