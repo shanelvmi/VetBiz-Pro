@@ -1693,13 +1693,6 @@
   "notifications_summaryLine": ["{total, plural, =1{Arifa 1} other{Arifa {total}}}, {unread} hazijasomwa","PH8a-fix: the Notifications page on a phone, the line under the app bar (in place of the category cards) when some are unread; with none unread it shows notifications_allRead.","draft"],
   "notifications_categoryChip": ["{count, plural, =0{{category}} other{{category}, {count} hazijasomwa}}","PH8a-fix: a category chip on the Notifications page on a phone (All, Critical, Stock...), with how many in it are unread.","draft"],
   "notifications_updateFailed": ["Imeshindikana kusasisha arifa","Error toast when marking read or unread, removing or Undo failed.","draft"],
-  "selectFacility_slowLoad": ["Hii inachukua muda mrefu kuliko kawaida. Angalia muunganisho wako kisha ujaribu tena.","Select Facility screen: loading the facilities timed out.","draft"],
-  "selectFacility_loadFailed": ["Imeshindwa kupakia vituo vyako. {error}","Select Facility screen: loading failed; error is the friendly reason.","draft"],
-  "selectFacility_title": ["Chagua Kituo","Select Facility screen title.","draft"],
-  "selectFacility_proceed": ["Endelea","Select Facility screen button after choosing one.","draft"],
-  "selectFacility_unnamed": ["Bila jina","Select Facility card: a facility with no name.","draft"],
-  "selectFacility_selected": ["Imechaguliwa","Select Facility card hint: this one is chosen.","draft"],
-  "selectFacility_clickToSelect": ["Bofya kuchagua","Select Facility card hint on hover.","draft"],
   "facilities_noneFound": ["Hakuna vituo vilivyopatikana.","Facilities and Select Facility screens: the account has no facility.","draft"],
   "facilityPicker_logOut": ["Toka","Facility picker profile menu item.","draft"],
   "facilityPicker_title": ["Chagua Kituo Chako","Facility picker heading.","draft"],
@@ -2045,5 +2038,7 @@
   "more_keywordsPlatformAdmin": ["mwendeshaji","More page search (MR1): extra words, separated by commas, that find Platform Admin. Not shown. Both languages are searched.","draft"],
   "home_hideAmounts": ["Ficha kiasi","Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that replaces every amount on the card with dots. Remembered on this device.","draft"],
   "home_showAmounts": ["Onyesha kiasi","Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that shows the card's amounts again.","draft"],
+  "home_amountHidden": ["Kiasi kimefichwa","Phone home (UI3), the Today card: screen-reader label of the soft blurred dots shown in place of an amount while the eye hides the amounts.","draft"],
+  "profile_currentFacility": ["Kituo cha sasa","Profile menu (UI3): small label above the name of the facility the person is working in now.","draft"],
   "common_versionWithBuild": ["{version} (muundo {stamp})","FIN1: the app version followed by when this build was made, in the sign-in footer (version v1.0.0) and in Settings (version 1.0.0). stamp is a date and time such as 2026-11-09 14:05, or dev. Build means the compiled copy of the app.","draft"]
 }
