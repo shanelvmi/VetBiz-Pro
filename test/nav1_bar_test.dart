@@ -13,7 +13,7 @@ import 'package:vetbiz_pro/theme/app_text.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/theme/color_math.dart';
 
-const _skip = true;
+const _skip = false;
 
 /// The slots, left to right (null is the +), and the cross the plus turns to.
 const _slots = [PhoneTab.home, PhoneTab.sales, null, PhoneTab.products, PhoneTab.more];

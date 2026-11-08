@@ -528,15 +528,6 @@ class PhoneShellMetrics {
   static const double recordShadowOffsetY = 4;
   static const double recordOpenTurns = 0.125;
 
-  /// The PH3 bar's measures, until the restyled bar replaces it.
-  static const double barBorder = 1;
-  static const double pillWidth = 56;
-  static const double pillHeight = 32;
-  static const double pillRadius = AppRadius.r16;
-  static const double pillAlpha = tintAlpha;
-  static const double recordRaise = 20;
-  static const double recordElevation = AppElevation.e6;
-
   /// The "+" sheet's rows.
   static const double sheetRowHeight = 64;
   static const double sheetIconCircle = 40;
