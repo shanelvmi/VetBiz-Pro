@@ -1785,11 +1785,10 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       key: ValueKey(doc.id),
       onTap: () => _openDetails(doc),
       child: Container(
-        // Coloured bar down the left edge - the account's state at a glance -
-        // and a tint when this is the row whose details are open.
+        // A tint when this is the row whose details are open. UI2: no
+        // coloured bar down the left edge; the status chip says the state.
         decoration: BoxDecoration(
           color: selected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
-          border: Border(left: BorderSide(color: _statusColor(bucket), width: 4)),
         ),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s12),
         child: Row(
@@ -1858,7 +1857,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         borderRadius: BorderRadius.circular(AppRadius.r12),
         border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
-      // Clipped so the bar down the left follows the card's rounded corners.
+      // Clipped so the ink follows the card's rounded corners. UI2: no
+      // coloured bar down the left edge; the status chip says the state.
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.r10),
         child: Material(
@@ -1866,7 +1866,6 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           child: InkWell(
             onTap: () => _openDetails(doc),
             child: Container(
-              decoration: BoxDecoration(border: Border(left: BorderSide(color: _statusColor(bucket), width: 4))),
               padding: const EdgeInsets.all(AppSpacing.s12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

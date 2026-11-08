@@ -21,7 +21,7 @@ import 'helpers/screen_size_matrix.dart';
 const _skip = false;
 
 // Until the strips go (UI2 (1), the strip commit).
-const _stripSkip = true;
+const _stripSkip = false;
 
 /// ph7Products with the long-named product low on stock, so it is an alert.
 final ui2AlertProducts = [

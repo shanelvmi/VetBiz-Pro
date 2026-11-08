@@ -1110,13 +1110,11 @@ class _AlertsBodyState extends State<_AlertsBody> {
   // Wide layout: one table row.
   Widget _buildRow(StockAlert a, bool isAdmin) {
     final p = a.product;
-    final color = StockAlertsScreen._color(a.kind, context.colors);
     final details = _details(a);
 
     return Container(
       key: ValueKey('${a.kind.name}-${p.id}'),
-      // Coloured bar down the left edge - severity at a glance.
-      decoration: BoxDecoration(border: Border(left: BorderSide(color: color, width: 4))),
+      // UI2: no coloured bar down the left edge; the alert chip says it.
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -1184,7 +1182,6 @@ class _AlertsBodyState extends State<_AlertsBody> {
   // Narrow layout (phones): the same information as a card per alert.
   Widget _buildNarrowCard(StockAlert a, bool isAdmin) {
     final p = a.product;
-    final color = StockAlertsScreen._color(a.kind, context.colors);
     final details = _details(a);
 
     return Container(
@@ -1193,15 +1190,12 @@ class _AlertsBodyState extends State<_AlertsBody> {
         borderRadius: BorderRadius.circular(AppRadius.r12),
         border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
-      // Clipped so the severity bar down the left follows the card's
-      // rounded corners.
+      // Clipped so the surface follows the card's rounded corners. UI2: no
+      // coloured bar down the left edge; the alert chip says it.
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.r10),
         child: Container(
-          decoration: BoxDecoration(
-            color: context.colors.surface,
-            border: Border(left: BorderSide(color: color, width: 4)),
-          ),
+          decoration: BoxDecoration(color: context.colors.surface),
           padding: const EdgeInsets.all(AppSpacing.s12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

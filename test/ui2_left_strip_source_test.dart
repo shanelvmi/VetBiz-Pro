@@ -28,5 +28,5 @@ void main() {
       }
     }
     expect(found, {for (final e in _kept.entries) e.key: e.value.$1});
-  }, skip: true);
+  });
 }

@@ -1218,7 +1218,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     decoration: BoxDecoration(
                       color: context.colors.accent.withValues(alpha: AppAlpha.a10),
                       borderRadius: BorderRadius.circular(AppRadius.r10),
-                      border: Border(left: BorderSide(color: context.colors.accent, width: 4)),
+                      // UI2: no coloured bar down the left edge; the notice
+                      // says it in words.
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
