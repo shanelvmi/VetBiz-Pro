@@ -4006,6 +4006,8 @@
   "@phoneList_productsSummaryLine": {"description":"Products and Stock Store on a phone (PH7a): the one summary line under the filters, from the old cards: how many products and their stock value (the shelf on Products, the store on Stock Store).","placeholders":{"count":{"type":"int"},"value":{"type":"String"}}},
   "phoneList_productRowSemantics": "{name}, {quantity}, {amount}, {status}",
   "@phoneList_productRowSemantics": {"description":"Products and Stock Store on a phone (PH7a): what a screen reader says for a product row: the name, the quantity with its unit, the price (Stock Store: the stored value) and the stock status, for example 'Albendazole 10%, 40 pcs, Tsh 15,000, In Stock'.","placeholders":{"name":{"type":"String"},"quantity":{"type":"String"},"amount":{"type":"String"},"status":{"type":"String"}}},
+  "phoneList_alertsSummaryLine": "{count, plural, =1{1 alert} other{{count} alerts}}",
+  "@phoneList_alertsSummaryLine": {"description":"Product Alerts on a phone (UI2): the one summary line under the chips, how many alerts there are in all, for example '3 alerts'.","placeholders":{"count":{"type":"int"}}},
   "phoneList_sort": "Sort",
   "@phoneList_sort": {"description":"Products and Stock Store on a phone (PH7a): the title of the sort choices in the Filter sheet (the tablet's sort menu)."},
   "phoneReport_seeAll": "See all ({count})",

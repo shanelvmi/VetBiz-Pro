@@ -4006,6 +4006,8 @@
   "@phoneList_productsSummaryLine": {"x-review":"draft"},
   "phoneList_productRowSemantics": "{name}, {quantity}, {amount}, {status}",
   "@phoneList_productRowSemantics": {"x-review":"draft"},
+  "phoneList_alertsSummaryLine": "{count, plural, =1{tahadhari 1} other{tahadhari {count}}}",
+  "@phoneList_alertsSummaryLine": {"x-review":"draft"},
   "phoneList_sort": "Panga",
   "@phoneList_sort": {"x-review":"draft"},
   "phoneReport_seeAll": "Tazama zote ({count})",
