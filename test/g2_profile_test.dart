@@ -178,7 +178,7 @@ void main() {
 
     testWidgets('the details are labelled rows; the actions keep their order', (tester) async {
       await pumpAt(tester, drawer());
-      for (final t in ['Email', 'Phone', 'Facility', 'shanel@example.com', '+255 712 345 678']) {
+      for (final t in ['Email', 'Phone', 'Current facility', 'shanel@example.com', '+255 712 345 678']) {
         expect(find.text(t), findsOneWidget, reason: t);
       }
       final rows = find.byType(ProfileDrawerRow);

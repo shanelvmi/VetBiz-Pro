@@ -18,7 +18,7 @@ import 'package:vetbiz_pro/widgets/profile/profile_drawer.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'ui3_profile_drawer_wide_test.dart' show ui3DrawerPage;
 
-const _skip = true; // UI3: until the implementation
+const _skip = false;
 
 /// The drawer as the dashboard builds it: the facility from the provider.
 Widget _wired({required bool admin}) => Consumer<FacilityProvider>(
@@ -41,7 +41,9 @@ Widget _wired({required bool admin}) => Consumer<FacilityProvider>(
 
 Future<FacilityProvider> _pump(WidgetTester tester,
     {Size size = const Size(390, 844), bool admin = true, MatrixLook look = MatrixLook.light, String name = 'Mwanzo Agrovet'}) async {
-  SharedPreferences.setMockInitialValues({});
+  // The provider loads the saved facility on creation; saved first, so that
+  // load and setFacility agree.
+  SharedPreferences.setMockInitialValues({'facilityId': 'f1', 'facilityName': name, 'facilityType': 'Agrovet'});
   final facilities = FacilityProvider(firestore: FakeFirebaseFirestore());
   await facilities.setFacility(id: 'f1', name: name, type: 'Agrovet');
   await pumpAtSize(
@@ -91,8 +93,12 @@ void main() {
       testWidgets('a label, as before: no tap target on the row', (tester) async {
         await _pump(tester, size: size);
         for (final t in ['Current facility', 'Mwanzo Agrovet']) {
-          expect(find.ancestor(of: find.text(t), matching: find.byType(InkWell)), findsNothing, reason: t);
-          expect(find.ancestor(of: find.text(t), matching: find.byType(GestureDetector)), findsNothing, reason: t);
+          // Inside the menu (the drawer itself has a drag detector).
+          for (final type in [InkWell, GestureDetector]) {
+            final inMenu = find.descendant(of: find.byType(ProfileDrawerContent), matching: find.byType(type)).evaluate().toSet();
+            final above = find.ancestor(of: find.text(t), matching: find.byType(type)).evaluate().toSet();
+            expect(above.intersection(inMenu), isEmpty, reason: '$t: $type');
+          }
         }
         await tester.tap(find.text('Mwanzo Agrovet'));
         await tester.pumpAndSettle();

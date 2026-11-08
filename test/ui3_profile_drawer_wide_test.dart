@@ -42,6 +42,7 @@ Widget ui3DrawerPage({required bool admin, String facility = 'Mwanzo Agrovet', W
             email: 'shanel@example.com',
             phone: '+255 712 345 678',
             facility: facility,
+            facilityType: 'Agrovet',
             onClose: () {},
             actions: _actions(admin: admin),
           ),

@@ -4,6 +4,7 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../facility_type_tag.dart';
 import 'profile_avatar.dart';
 
 /// One action in the profile drawer.
@@ -123,7 +124,15 @@ class ProfileDrawerContent extends StatelessWidget {
           const SizedBox(height: AppSpacing.s20),
           _DetailRow(icon: Icons.email_outlined, label: context.l10n.common_email, value: email),
           _DetailRow(icon: Icons.phone_outlined, label: context.l10n.common_phone, value: phone),
-          _DetailRow(icon: Icons.store_outlined, label: context.l10n.common_facility, value: facility),
+          // UI3: the facility the person is working in now, with its type.
+          // A label, as before: it has no tap.
+          _DetailRow(
+            icon: Icons.store_outlined,
+            label: context.l10n.profile_currentFacility,
+            value: facility,
+            maxLines: 1,
+            tag: facilityType.isEmpty ? null : FacilityTypeTag(type: facilityType, typeDetail: facilityTypeDetail),
+          ),
           const SizedBox(height: AppSpacing.s8),
           Divider(height: AppSpacing.s16, color: context.colors.divider),
           for (final action in actions) ProfileDrawerRow(action: action),
@@ -133,14 +142,17 @@ class ProfileDrawerContent extends StatelessWidget {
   }
 }
 
-/// Icon, label and value; a long value wraps to two lines, then ellipsis.
-/// An empty value leaves the row out.
+/// Icon, label and value; a long value wraps to [maxLines] lines (two by
+/// default), then ellipsis; an optional [tag] under it (UI3: the facility's
+/// type). An empty value leaves the row out.
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.icon, required this.label, required this.value});
+  const _DetailRow({required this.icon, required this.label, required this.value, this.maxLines = 2, this.tag});
 
   final IconData icon;
   final String label;
   final String value;
+  final int maxLines;
+  final Widget? tag;
 
   @override
   Widget build(BuildContext context) {
@@ -163,10 +175,14 @@ class _DetailRow extends StatelessWidget {
                 const SizedBox(height: AppSpacing.s2),
                 Text(
                   value,
-                  maxLines: 2,
+                  maxLines: maxLines,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textPrimary),
                 ),
+                if (tag != null) ...[
+                  const SizedBox(height: AppSpacing.s4),
+                  Align(alignment: AlignmentDirectional.centerStart, child: tag),
+                ],
               ],
             ),
           ),
