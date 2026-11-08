@@ -119,6 +119,7 @@ Future<void> pumpRegister(
   FakeRegisterMembership? membership,
   Size size = const Size(1200, 900),
   Brightness brightness = Brightness.light,
+  AppColorTheme theme = AppColorTheme.pasture,
   Locale locale = const Locale('en'),
   double keyboard = 0,
   bool overHome = false,
@@ -140,8 +141,8 @@ Future<void> pumpRegister(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     locale: locale,
-    theme: AppTheme.build(AppColorTheme.pasture, brightness),
-    darkTheme: AppTheme.build(AppColorTheme.pasture, Brightness.dark),
+    theme: AppTheme.build(theme, brightness),
+    darkTheme: AppTheme.build(theme, Brightness.dark),
     themeMode: brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light,
     themeAnimationDuration: Duration.zero,
     // Today's register page is pushed over the sign-in page (AppEntryPoint).
@@ -270,4 +271,47 @@ class AssistantInputs {
     'inviteCode': 'jk7-2p4',
     'avatarBytes': null,
   };
+}
+
+/// FIN1: from step 1 (the owner chosen by pumpRegister) to the owner's step
+/// [step] (1 to 5), with [OwnerInputs].
+Future<void> toOwnerStep(WidgetTester tester, int step, [AppLocalizations? l10n]) async {
+  final t = l10n ?? registerEn;
+  if (step == 5) return fillOwnerSteps(tester, l10n: t);
+  if (step < 2) return;
+  await tapContinue(tester, t);
+  if (step == 2) return;
+  await tapText(tester, OwnerInputs.prefix);
+  await typeInto(tester, 'name', OwnerInputs.name);
+  await typeInto(tester, 'phone', OwnerInputs.phone);
+  await tapContinue(tester, t);
+  if (step == 3) return;
+  await typeInto(tester, 'facility-name', OwnerInputs.facilityName);
+  await chooseFacilityType(tester, t.facilityTypeLabel(OwnerInputs.facilityType));
+  await tapText(tester, t.common_add);
+  await tapContinue(tester, t);
+}
+
+/// FIN1: from step 1 to the assistant's step [step] (1 to 5), with
+/// [AssistantInputs]; on step 3 the code is typed and checked.
+Future<void> toAssistantStep(WidgetTester tester, int step, [AppLocalizations? l10n]) async {
+  final t = l10n ?? registerEn;
+  await tapText(tester, t.register_roleAssistantSubtitle);
+  if (step < 2) return;
+  await tapContinue(tester, t);
+  if (step == 2) return;
+  await tapText(tester, AssistantInputs.prefix);
+  await typeInto(tester, 'name', AssistantInputs.name);
+  await typeInto(tester, 'phone', AssistantInputs.phone);
+  await tapContinue(tester, t);
+  await typeInto(tester, 'invite', AssistantInputs.code);
+  await tester.pump(const Duration(seconds: 2));
+  await tester.pumpAndSettle();
+  if (step == 3) return;
+  await tapContinue(tester, t);
+  if (step == 4) return;
+  await typeInto(tester, 'email', AssistantInputs.email);
+  await typeInto(tester, 'password', AssistantInputs.password);
+  await typeInto(tester, 'confirm', AssistantInputs.password);
+  await tapContinue(tester, t);
 }
