@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/facility_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/user_role_provider.dart';
+import '../../widgets/phone_list/phone_filter_sheet.dart';
+import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_summary_sheet.dart';
+import '../../widgets/phone_list/record_tile.dart';
+import 'product_phone_parts.dart';
+import 'products_screen.dart';
 import '../../models/product.dart';
 import '../../models/product_batch.dart';
 import '../../models/notification_model.dart';
@@ -202,6 +210,9 @@ class StockAlertsScreen extends StatelessWidget {
       final alerts = currentAlerts(Provider.of<ProductProvider>(context).products);
       return _buildDropdownChrome(context, alerts);
     }
+
+    // UI2: on a phone, the PH5a list with its own app bar (the title only).
+    if (AppLayout.isPhone(context)) return const _AlertsBody();
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -462,6 +473,9 @@ class _AlertsBodyState extends State<_AlertsBody> {
   int _page = 1;
   int _pageSize = AppLimits.tablePageSize;
 
+  // UI2 (phones): how many pages the list shows; back to one on any filter.
+  int _phonePages = 1;
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -477,6 +491,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
       _kindFilter = null;
       _categoryFilter = 'All';
       _page = 1;
+      _phonePages = 1;
     });
   }
 
@@ -609,6 +624,11 @@ class _AlertsBodyState extends State<_AlertsBody> {
     final page = _page > totalPages ? totalPages : _page;
     final pageItems = filtered.skip((page - 1) * _pageSize).take(_pageSize).toList();
 
+    if (AppLayout.isPhone(context)) {
+      return _buildPhone(
+          all: all, filtered: filtered, counts: counts, categories: categories, category: category, isAdmin: isAdmin);
+    }
+
     return Column(
       children: [
         Padding(
@@ -628,6 +648,137 @@ class _AlertsBodyState extends State<_AlertsBody> {
         ),
         if (all.isNotEmpty) _buildPaginationBar(total: total, page: page, totalPages: totalPages),
       ],
+    );
+  }
+
+  // ==================== PHONE (UI2) ====================
+
+  // docs/design/phone_list_pattern.md on a phone: the five cards are one
+  // summary line and the chips (a chip filters exactly as its card: a tap on
+  // the chosen one clears it), the category dropdown is the Filter sheet, the
+  // rows have no buttons: a tap opens the product's details page (PH7a), with
+  // the row's old action first. The same live products, filters and page size;
+  // the pages reached so far stay on screen (R10).
+
+  void _setPhone(VoidCallback change) => setState(() {
+        change();
+        _phonePages = 1;
+      });
+
+  Future<void> _openDetails(StockAlert a, bool isAdmin) {
+    final action = _actionFor(a, isAdmin);
+    return openProductPhoneDetails(
+      context,
+      a.product,
+      leadAction: ProductPageAction(label: action.label, icon: action.icon, onPressed: action.onPressed, primary: true),
+      // Restock is the page's own Add New Batch call: not twice.
+      withoutAddBatch: a.kind == StockAlertKind.depleted || a.kind == StockAlertKind.lowStock,
+    );
+  }
+
+  Future<void> _refresh() async {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId != null) await Provider.of<ProductProvider>(context, listen: false).fetchProducts(facilityId);
+  }
+
+  Widget _phoneTile(StockAlert a, bool isAdmin) {
+    final l10n = context.l10n;
+    final p = a.product;
+    final quantity = '${p.totalStock} ${l10n.productUnitLabel(p.unit)}';
+    final category = l10n.productCategoryLabel(_categoryOf(p));
+    final title = StockAlertsScreen._title(l10n, a.kind);
+    return RecordTile(
+      title: p.name,
+      amount: quantity,
+      details: [category],
+      status: RecordStatus(title, StockAlertsScreen._color(a.kind, context.colors)),
+      leading: ProductLeading(product: p),
+      colorSeed: p.name,
+      semanticsLabel: l10n.phoneList_productRowSemantics(p.name, quantity, category, title),
+      onTap: () => _openDetails(a, isAdmin),
+    );
+  }
+
+  Widget _buildPhone({
+    required List<StockAlert> all,
+    required List<StockAlert> filtered,
+    required Map<StockAlertKind, int> counts,
+    required List<String> categories,
+    required String category,
+    required bool isAdmin,
+  }) {
+    final l10n = context.l10n;
+    final provider = Provider.of<ProductProvider>(context);
+    String categoryLabel(String v) => v == 'All' ? l10n.common_all : l10n.productCategoryLabel(v);
+    final shown = filtered.take(_phonePages * _pageSize).toList();
+    final filtersOn = _searchQuery.isNotEmpty || _kindFilter != null || category != 'All';
+    return PhoneListScaffold<StockAlert>(
+      title: l10n.alerts_title,
+      asTab: false,
+      menu: const [],
+      searchController: _searchController,
+      searchHint: l10n.alerts_searchHint,
+      onSearchChanged: (val) => _setPhone(() => _searchQuery = val.trim()),
+      onSearchClosed: () {
+        _searchController.clear();
+        _setPhone(() => _searchQuery = '');
+      },
+      quickChips: PhoneQuickChips(
+        key: const ValueKey('phoneList-quickChips'),
+        keyPrefix: 'ui2-alertChip-',
+        values: ['All', for (final k in _cardOrder) k.name],
+        selected: _kindFilter?.name ?? 'All',
+        label: (v) => v == 'All'
+            ? l10n.activity_filterChip(l10n.common_all, all.length)
+            : l10n.activity_filterChip(
+                StockAlertsScreen._title(l10n, StockAlertKind.values.byName(v)), counts[StockAlertKind.values.byName(v)] ?? 0),
+        onSelected: (v) => _setPhone(() {
+          final kind = v == 'All' ? null : StockAlertKind.values.byName(v);
+          _kindFilter = kind == _kindFilter ? null : kind;
+        }),
+      ),
+      filtersActive: category != 'All',
+      onFilter: () async {
+        final values = await showPhoneFilterSheet(context, fields: {
+          'category': PhoneFilterField(
+            title: l10n.common_category,
+            options: ['All', ...categories],
+            label: categoryLabel,
+            defaultValue: 'All',
+          ),
+        }, values: {
+          'category': category,
+        });
+        if (values != null) _setPhone(() => _categoryFilter = values['category']!);
+      },
+      appliedFilters: [
+        if (category != 'All')
+          PhoneAppliedFilter(l10n.common_filterValue(l10n.common_category, categoryLabel(category)),
+              () => _setPhone(() => _categoryFilter = 'All')),
+      ],
+      summaryLine: l10n.phoneList_alertsSummaryLine(all.length),
+      onSummary: () => showPhoneSummarySheet(context, rows: [
+        for (final k in _cardOrder) (StockAlertsScreen._title(l10n, k), '${counts[k] ?? 0}'),
+      ]),
+      items: shown,
+      idOf: (a) => '${a.kind.name}-${a.product.id}',
+      // Not grouped by day (R5): most urgent first, as on the tablet.
+      dateOf: (a) => DateTime(0),
+      amountOf: (a) => 0,
+      grouped: false,
+      tileBuilder: (context, a, {required grouped}) => _phoneTile(a, isAdmin),
+      loading: !provider.loaded,
+      error: provider.listenError,
+      onRetry: provider.retryListening,
+      emptyIcon: filtersOn ? Icons.search_off : Icons.notifications_none,
+      emptyText: filtersOn ? l10n.alerts_noMatches : l10n.alerts_none,
+      emptyAction: filtersOn
+          ? PhoneListAction(label: l10n.common_resetFilters, icon: Icons.filter_alt_off, onPressed: _resetFilters)
+          : null,
+      hasMore: filtered.length > shown.length,
+      loadingMore: false,
+      onLoadMore: () => setState(() => _phonePages++),
+      onRefresh: _refresh,
     );
   }
 

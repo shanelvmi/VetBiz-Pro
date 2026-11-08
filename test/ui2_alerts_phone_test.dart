@@ -18,7 +18,10 @@ import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
+
+// Until the strips go (UI2 (1), the strip commit).
+const _stripSkip = true;
 
 /// ph7Products with the long-named product low on stock, so it is an alert.
 final ui2AlertProducts = [
@@ -30,7 +33,7 @@ Future<void> _seed(dynamic fs) => ph7SeedProducts(fs, ui2AlertProducts);
 
 Widget _alerts(dynamic fs) => const Ph7Listening(child: StockAlertsScreen());
 
-final _rowKey = RegExp(r'^(phoneList-row-)?(depleted|expired|lowStock|expiringSoon|restockShelf)-p\d+$');
+final _rowKey = RegExp(r'^(phoneList-row-)?(depleted|expired|lowStock|expiringSoon|restockShelf)-[a-z]\d+$');
 
 /// The alert rows on screen, as 'kind-productId'.
 Set<String> _rows(WidgetTester tester) => {
@@ -63,7 +66,7 @@ const _kinds = [null, ...StockAlertKind.values];
 void main() {
   for (final kind in _kinds) {
     ph5TestWidgets('chip ${kind?.name ?? 'All'} lists exactly what the tablet card lists', (tester) async {
-      await pumpPh5(tester, _alerts, size: const Size(1024, 768), pushed: true, seed: _seed);
+      await pumpPh5(tester, _alerts, size: const Size(1024, 1400), pushed: true, seed: _seed);
       if (kind != null) {
         await tester.tap(find.descendant(of: find.byType(GridView), matching: find.textContaining(_titleEn(kind))).first);
         await ph5Settle(tester);
@@ -72,6 +75,7 @@ void main() {
 
       await pumpPh5(tester, _alerts, size: const Size(390, 844), pushed: true, seed: _seed);
       if (kind != null) {
+        await tester.ensureVisible(ph5Key('ui2-alertChip-${kind.name}'));
         await tester.tap(ph5Key('ui2-alertChip-${kind.name}'));
         await ph5Settle(tester);
       }
@@ -80,6 +84,7 @@ void main() {
 
       if (kind != null) {
         // A tap on the chosen chip clears it, as on the chosen card.
+        await tester.ensureVisible(ph5Key('ui2-alertChip-${kind.name}'));
         await tester.tap(ph5Key('ui2-alertChip-${kind.name}'));
         await ph5Settle(tester);
         expect(_rows(tester).length, _all(tester).length);
@@ -120,7 +125,8 @@ void main() {
     expect(find.descendant(of: row, matching: find.text('0 pcs')), findsOneWidget);
     expect(find.descendant(of: row, matching: find.textContaining('Vaccines')), findsOneWidget);
     expect(find.descendant(of: row, matching: find.text('Out of Stock')), findsOneWidget);
-    expect(find.descendant(of: find.byType(StockAlertsScreen), matching: find.byType(ButtonStyleButton)), findsNothing);
+    expect(find.descendant(of: row, matching: find.bySubtype<ButtonStyleButton>()), findsNothing);
+    expect(find.descendant(of: row, matching: find.byType(IconButton)), findsNothing);
   }, skip: _skip);
 
   ph5TestWidgets('Restock on the details page opens Add Batch for that product, as the old button', (tester) async {
@@ -136,7 +142,7 @@ void main() {
   }, skip: _skip);
 
   ph5TestWidgets('the tablet Restock button still opens Add Batch for its product', (tester) async {
-    await pumpPh5(tester, _alerts, size: const Size(1024, 768), pushed: true, seed: _seed);
+    await pumpPh5(tester, _alerts, size: const Size(1024, 1400), pushed: true, seed: _seed);
     await tester.tap(find.descendant(of: ph5Key('lowStock-p7'), matching: find.text('Restock')));
     await ph5Settle(tester);
     expect(tester.widget<AddBatchScreen>(find.byType(AddBatchScreen)).product.id, 'p7');
@@ -146,8 +152,8 @@ void main() {
     await pumpPh5(tester, _alerts, pushed: true, seed: _seed, admin: false);
     await tester.tap(ph5Key('phoneList-row-restockShelf-p8'));
     await ph5Settle(tester);
-    final button = find.ancestor(of: find.text('Move to shelf'), matching: find.byType(FilledButton));
-    expect(tester.widget<FilledButton>(button).onPressed, isNull);
+    final button = find.ancestor(of: find.text('Move to shelf'), matching: find.bySubtype<FilledButton>());
+    expect(tester.widget<FilledButton>(button.first).onPressed, isNull);
   }, skip: _skip);
 
   ph5TestWidgets('no alerts: one plain line, no cheerful text', (tester) async {
@@ -158,10 +164,11 @@ void main() {
   }, skip: _skip);
 
   ph5TestWidgets('more alerts than a page: scrolling with Load more, ten at a time', (tester) async {
-    await pumpPh5(tester, _alerts, pushed: true, seed: (fs) => ph7SeedProducts(fs, [
+    await pumpPh5(tester, _alerts, size: const Size(390, 1400), pushed: true, seed: (fs) => ph7SeedProducts(fs, [
           for (var i = 0; i < 12; i++) Ph7Product('q$i', 'Product $i', shelf: 0, store: 0),
         ]));
     expect(_rows(tester).length, 10);
+    await tester.ensureVisible(ph5Key('phoneList-loadMore'));
     await tester.tap(ph5Key('phoneList-loadMore'));
     await ph5Settle(tester);
     expect(_rows(tester).length, 12);
@@ -171,7 +178,7 @@ void main() {
     ph5TestWidgets('no coloured left strip at ${size.width.toInt()} wide', (tester) async {
       await pumpPh5(tester, _alerts, size: size, pushed: true, seed: _seed);
       expect(_strips(tester), 0);
-    }, skip: _skip);
+    }, skip: _stripSkip);
   }
 
   group('Product Alerts phone matrix', () {
