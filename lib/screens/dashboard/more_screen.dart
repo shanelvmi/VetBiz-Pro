@@ -6,6 +6,7 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../utils/facility_display.dart';
 import '../../widgets/app_safe_area.dart';
 import '../../widgets/support_contact_dialog.dart';
 import '../activity/activity_log_screen.dart';
@@ -26,6 +27,7 @@ import '../settings/trash_screen.dart';
 import '../store/stockstore_screen.dart';
 import '../subscription/subscription_screen.dart';
 import '../transactions/transactions_screen.dart';
+import 'more_parts.dart';
 import 'phone_shell.dart';
 import 'insights_screen.dart';
 
@@ -207,9 +209,11 @@ bool moreItemMatches(AppLocalizations shown, MoreItem item, String query) {
   return words.every(text.contains);
 }
 
-/// PH3 (5): the More page, a grid of round icons; each opens the existing
-/// screen as today (pushed, full screen over the bar).
-class MoreScreen extends StatelessWidget {
+/// PH3 (5), MR1: the More page. The app bar (Settings and Help), a profile
+/// card that opens the profile drawer, Find a feature, then the named
+/// sections of round icons; each opens the existing screen as today (pushed,
+/// full screen over the bar).
+class MoreScreen extends StatefulWidget {
   final bool isAdmin;
   final bool isPlatformAdmin;
 
@@ -220,17 +224,71 @@ class MoreScreen extends StatelessWidget {
   /// after the sidebar's screens).
   final VoidCallback? onReturned;
 
-  const MoreScreen({super.key, required this.isAdmin, this.isPlatformAdmin = false, this.onOpen, this.onReturned});
+  /// The profile card: the stored fullName (its title included), the role
+  /// label as the drawer shows it ('' while loading) and the facility's name.
+  final String profileName;
+  final String? profileAvatarUrl;
+  final String profileRoleLabel;
+  final String profileFacilityName;
 
-  Future<void> _open(BuildContext context, MoreItem item) async {
-    await (onOpen ?? openMoreItem)(context, item);
-    onReturned?.call();
+  /// Opens the profile drawer (the shell's).
+  final VoidCallback? onProfile;
+
+  const MoreScreen({
+    super.key,
+    required this.isAdmin,
+    this.isPlatformAdmin = false,
+    this.onOpen,
+    this.onReturned,
+    this.profileName = '',
+    this.profileAvatarUrl,
+    this.profileRoleLabel = '',
+    this.profileFacilityName = '',
+    this.onProfile,
+  });
+
+  @override
+  State<MoreScreen> createState() => _MoreScreenState();
+}
+
+class _MoreScreenState extends State<MoreScreen> {
+  final _query = TextEditingController();
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
+
+  Future<void> _open(MoreItem item) async {
+    await (widget.onOpen ?? openMoreItem)(context, item);
+    widget.onReturned?.call();
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final items = moreItemsFor(isAdmin: isAdmin, isPlatformAdmin: isPlatformAdmin);
+    final l10n = context.l10n;
+    // While a query is typed, only the items it finds, and only the sections
+    // that still have one.
+    final sections = [
+      for (final s in moreSectionsFor(isAdmin: widget.isAdmin, isPlatformAdmin: widget.isPlatformAdmin))
+        (
+          section: s.section,
+          items: [
+            for (final item in s.items)
+              if (moreItemMatches(l10n, item, _query.text)) item,
+          ],
+        ),
+    ].where((s) => s.items.isNotEmpty).toList();
+
+    Widget appBarButton(MoreItem item, IconData icon) => IconButton(
+          key: ValueKey('more-app-${item.name}'),
+          icon: Icon(icon, color: colors.textPrimary),
+          tooltip: _label(l10n, item),
+          onPressed: () => _open(item),
+        );
+
     return Scaffold(
       backgroundColor: colors.background,
       appBar: AppBar(
@@ -239,75 +297,72 @@ class MoreScreen extends StatelessWidget {
         backgroundColor: colors.surface,
         foregroundColor: colors.textPrimary,
         elevation: AppElevation.e1,
-        centerTitle: true,
-        title: Text(context.l10n.shell_tabMore, style: const TextStyle(fontWeight: AppFontWeight.bold)),
+        centerTitle: false,
+        title: Text(l10n.shell_tabMore, style: const TextStyle(fontWeight: AppFontWeight.bold)),
+        actions: [
+          appBarButton(MoreItem.settings, Icons.settings_outlined),
+          appBarButton(MoreItem.help, Icons.help_outline),
+          const SizedBox(width: AppSpacing.s4),
+        ],
       ),
       // PH8a: the subscription banner sits under the app bar (the shell's).
       body: PhoneShell.bodyWithBanner(context, LayoutBuilder(
         builder: (context, constraints) {
-          final width = constraints.maxWidth - 2 * PhoneShellMetrics.morePadding;
+          final width = constraints.maxWidth - 2 * MoreMetrics.padding;
           // Four a row on a phone held upright; more when it is turned.
-          final columns = math.max(PhoneShellMetrics.moreColumns, width ~/ PhoneShellMetrics.moreCellWidth);
-          return GridView.builder(
+          final columns = math.max(MoreMetrics.columns, width ~/ MoreMetrics.cellWidth);
+          // The whole page at once (it reads nothing): a short column, so the
+          // keyboard only shortens the view and the results scroll above it.
+          return SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: EdgeInsets.fromLTRB(
-              PhoneShellMetrics.morePadding,
-              PhoneShellMetrics.morePadding,
-              PhoneShellMetrics.morePadding,
-              PhoneShellMetrics.morePadding + AppSafeArea.bottomOf(context),
+              MoreMetrics.padding,
+              MoreMetrics.padding,
+              MoreMetrics.padding,
+              MoreMetrics.padding + AppSafeArea.bottomOf(context),
             ),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              // Taller with larger text, so two lines of label always fit.
-              mainAxisExtent: MediaQuery.textScalerOf(context).scale(PhoneShellMetrics.moreCellHeight),
-            ),
-            itemCount: items.length,
-            itemBuilder: (context, i) => _MoreCell(
-              icon: _icon(items[i]),
-              label: moreItemLabel(context, items[i]),
-              onTap: () => _open(context, items[i]),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                MoreProfileCard(
+                  name: widget.profileName,
+                  avatarUrl: widget.profileAvatarUrl,
+                  roleLabel: widget.profileRoleLabel,
+                  facilityName: FacilityDisplay.name(widget.profileFacilityName),
+                  onTap: widget.onProfile,
+                ),
+                const SizedBox(height: MoreMetrics.sectionGap),
+                MoreSearchField(controller: _query, onChanged: () => setState(() {})),
+                for (final s in sections)
+                  MoreSectionGrid(
+                    key: ValueKey('more-section-${s.section.name}'),
+                    title: moreSectionTitle(l10n, s.section),
+                    columns: columns,
+                    cells: [
+                      for (final item in s.items)
+                        MoreCell(
+                          key: ValueKey('more-item-${item.name}'),
+                          icon: _icon(item),
+                          label: _label(l10n, item),
+                          onTap: () => _open(item),
+                        ),
+                    ],
+                  ),
+                if (sections.isEmpty)
+                  Padding(
+                    key: const ValueKey('more-no-match'),
+                    padding: const EdgeInsets.only(top: MoreMetrics.sectionGap),
+                    child: Text(
+                      l10n.more_noMatch,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: MoreMetrics.noMatchText, color: colors.textSecondary),
+                    ),
+                  ),
+              ],
             ),
           );
         },
       )),
-    );
-  }
-}
-
-class _MoreCell extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _MoreCell({required this.icon, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.r12),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Container(
-            width: PhoneShellMetrics.moreCircle,
-            height: PhoneShellMetrics.moreCircle,
-            decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: PhoneShellMetrics.pillAlpha),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: PhoneShellMetrics.moreIcon, color: colors.primary),
-          ),
-          const SizedBox(height: PhoneShellMetrics.moreLabelGap),
-          Text(
-            label,
-            maxLines: 2,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: PhoneShellMetrics.moreLabel, color: colors.textPrimary),
-          ),
-        ],
-      ),
     );
   }
 }

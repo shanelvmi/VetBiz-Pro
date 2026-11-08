@@ -524,16 +524,6 @@ class PhoneShellMetrics {
   static const double sheetHint = AppFontSize.f13;
   static const double sheetGap = AppSpacing.s12;
   static const double sheetSpinner = AppIconSize.i20;
-
-  /// The More page: a grid of round icons, four a row on a phone.
-  static const int moreColumns = 4;
-  static const double moreCellWidth = 80;
-  static const double moreCellHeight = 100;
-  static const double moreCircle = 56;
-  static const double moreIcon = AppIconSize.i24;
-  static const double moreLabel = AppFontSize.f12;
-  static const double moreLabelGap = AppSpacing.s4;
-  static const double morePadding = AppSpacing.s16;
 }
 
 /// MR1: the phone More page (Settings and Help in the app bar, a profile
