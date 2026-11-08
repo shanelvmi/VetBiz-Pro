@@ -26,8 +26,7 @@ const mrAssistantSections = {
   'app': ['settings', 'printerSettings', 'manageAccount', 'help'],
 };
 
-/// The page with MR1's profile parameters. Through Function.apply until they
-/// exist (this file compiles skipped before the implementation).
+/// The page with its profile card filled.
 Widget mrMore({
   bool isAdmin = true,
   bool isPlatformAdmin = false,
@@ -38,16 +37,15 @@ Widget mrMore({
   String facilityName = 'Mwanzo Agrovet',
   VoidCallback? onProfile,
 }) =>
-    Function.apply(MoreScreen.new, const [], {
-      #isAdmin: isAdmin,
-      #isPlatformAdmin: isPlatformAdmin,
-      #onOpen: realOpen ? null : (onOpen ?? (_, __) async {}),
-      #profileName: name,
-      #profileAvatarUrl: null,
-      #profileRoleLabel: roleLabel,
-      #profileFacilityName: facilityName,
-      #onProfile: onProfile ?? () {},
-    }) as Widget;
+    MoreScreen(
+      isAdmin: isAdmin,
+      isPlatformAdmin: isPlatformAdmin,
+      onOpen: realOpen ? null : (onOpen ?? (_, __) async {}),
+      profileName: name,
+      profileRoleLabel: roleLabel,
+      profileFacilityName: facilityName,
+      onProfile: onProfile ?? () {},
+    );
 
 Widget mrApp(Widget home, {String locale = 'en', List<NavigatorObserver> observers = const []}) => MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,

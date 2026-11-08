@@ -9,19 +9,17 @@ import 'package:vetbiz_pro/screens/dashboard/more_screen.dart';
 
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
-/// Through Function.apply until MR1's parameters exist.
-Widget _page() => Function.apply(MoreScreen.new, const [], {
-      #isAdmin: true,
-      #isPlatformAdmin: true,
-      #onOpen: (BuildContext _, MoreItem __) async {},
-      #profileName: 'Mr. $matrixLongClientName',
-      #profileAvatarUrl: null,
-      #profileRoleLabel: 'Co-admin',
-      #profileFacilityName: matrixLongFacilityName,
-      #onProfile: () {},
-    }) as Widget;
+Widget _page() => MoreScreen(
+      isAdmin: true,
+      isPlatformAdmin: true,
+      onOpen: (_, __) async {},
+      profileName: 'Mr. $matrixLongClientName',
+      profileRoleLabel: 'Co-admin',
+      profileFacilityName: matrixLongFacilityName,
+      onProfile: () {},
+    );
 
 void main() {
   final stub = {for (final s in matrixSizes) for (final l in MatrixLook.values) matrixCase(s, l): 'MR1 not built yet', matrixTextScaleCase: 'MR1 not built yet'};

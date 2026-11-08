@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers/mr1_more.dart';
 
-const _skip = true;
+const _skip = false;
 
 void main() {
   group('Find a feature', () {

@@ -33,7 +33,7 @@ import 'package:vetbiz_pro/screens/transactions/transactions_screen.dart';
 
 import 'helpers/mr1_more.dart';
 
-const _skip = true;
+const _skip = false;
 
 /// Records each pushed route and removes it before it is built (the real
 /// screens need the app's providers): what was opened is all a spy needs.
