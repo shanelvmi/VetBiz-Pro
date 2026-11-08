@@ -19,6 +19,8 @@ import '../reports/view_reports_screen.dart';
 import '../services/services_screen.dart';
 import '../settings/business_hours_screen.dart';
 import '../settings/export_data_screen.dart';
+import '../settings/manage_account_screen.dart';
+import '../settings/printer_settings_screen.dart';
 import '../settings/settings_screen.dart';
 import '../settings/trash_screen.dart';
 import '../store/stockstore_screen.dart';
@@ -27,81 +29,131 @@ import '../transactions/transactions_screen.dart';
 import 'phone_shell.dart';
 import 'insights_screen.dart';
 
-/// Everything the More page can show (phone_shell.md D5 and section 4).
+/// Everything the More page can show (phone_shell.md D5 and section 4), in
+/// the order of its sections (MR1).
 enum MoreItem {
   clients,
   debtors,
   services,
   payments,
   transactions,
+  stockStore,
   reports,
   insights,
-  stockStore,
+  activityLog,
   team,
   facilities,
-  settings,
-  trash,
-  export,
   businessHours,
   subscription,
-  activityLog,
+  settings,
+  printerSettings,
+  export,
+  trash,
+  manageAccount,
   help,
   platformAdmin,
 }
 
-/// The items the role may use, in order. The gates are today's: the
-/// profile drawer's (Team Members, Facilities, Activity log: admins),
-/// Settings' (Subscription, Trash, Export, Business Hours: admins) and the
-/// sidebar's (Platform Admin: platform admins only).
-///
-/// Clients and Debtors come first: on a phone they were reached only from the
-/// drawer, which the shell removes, until PH4's "Go to" row has them.
-List<MoreItem> moreItemsFor({required bool isAdmin, bool isPlatformAdmin = false}) => [
-      MoreItem.clients,
-      MoreItem.debtors,
-      MoreItem.services,
-      MoreItem.payments,
-      MoreItem.transactions,
-      MoreItem.reports,
-      MoreItem.insights,
-      MoreItem.stockStore,
-      if (isAdmin) ...[MoreItem.team, MoreItem.facilities],
-      MoreItem.settings,
-      if (isAdmin) ...[
-        MoreItem.trash,
-        MoreItem.export,
-        MoreItem.businessHours,
-        MoreItem.subscription,
-        MoreItem.activityLog,
+/// MR1: the More page's named sections, top to bottom.
+enum MoreSection { dailyWork, stockAndReports, teamAndBusiness, app, platform }
+
+/// The sections the role may use, each with its items in order; a section
+/// with nothing for the role is left out. The gates are today's: the profile
+/// drawer's (Team Members, Facilities, Activity log: admins), Settings'
+/// (Subscription, Trash, Export, Business Hours: admins; Printer settings and
+/// Manage Account: everyone) and the sidebar's (Platform Admin: platform
+/// admins only). Business profile is not here: Settings does not open it.
+List<({MoreSection section, List<MoreItem> items})> moreSectionsFor({required bool isAdmin, bool isPlatformAdmin = false}) {
+  final all = [
+    (
+      section: MoreSection.dailyWork,
+      items: [MoreItem.clients, MoreItem.debtors, MoreItem.services, MoreItem.payments, MoreItem.transactions],
+    ),
+    (
+      section: MoreSection.stockAndReports,
+      items: [MoreItem.stockStore, MoreItem.reports, MoreItem.insights, if (isAdmin) MoreItem.activityLog],
+    ),
+    (
+      section: MoreSection.teamAndBusiness,
+      items: [if (isAdmin) ...[MoreItem.team, MoreItem.facilities, MoreItem.businessHours, MoreItem.subscription]],
+    ),
+    (
+      section: MoreSection.app,
+      items: [
+        MoreItem.settings,
+        MoreItem.printerSettings,
+        if (isAdmin) ...[MoreItem.export, MoreItem.trash],
+        MoreItem.manageAccount,
+        MoreItem.help,
       ],
-      MoreItem.help,
-      if (isPlatformAdmin) MoreItem.platformAdmin,
-    ];
+    ),
+    (section: MoreSection.platform, items: [if (isPlatformAdmin) MoreItem.platformAdmin]),
+  ];
+  return [for (final s in all) if (s.items.isNotEmpty) s];
+}
+
+/// The items the role may use, in the order of their sections.
+List<MoreItem> moreItemsFor({required bool isAdmin, bool isPlatformAdmin = false}) =>
+    [for (final s in moreSectionsFor(isAdmin: isAdmin, isPlatformAdmin: isPlatformAdmin)) ...s.items];
 
 /// The item's label: the label the sidebar, drawer or settings already use.
-String moreItemLabel(BuildContext context, MoreItem item) {
-  final l10n = context.l10n;
-  return switch (item) {
-    MoreItem.clients => l10n.clients_title,
-    MoreItem.debtors => l10n.nav_debtors,
-    MoreItem.services => l10n.nav_services,
-    MoreItem.payments => l10n.payments_title,
-    MoreItem.transactions => l10n.transactions_title,
-    MoreItem.reports => l10n.nav_reports,
-    MoreItem.insights => l10n.insights_title,
-    MoreItem.stockStore => l10n.store_title,
-    MoreItem.team => l10n.team_title,
-    MoreItem.facilities => l10n.facilities_title,
-    MoreItem.settings => l10n.settings_title,
-    MoreItem.trash => l10n.activityType_trash,
-    MoreItem.export => l10n.settings_exportData,
-    MoreItem.businessHours => l10n.hours_title,
-    MoreItem.subscription => l10n.subscription_title,
-    MoreItem.activityLog => l10n.export_activityLog,
-    MoreItem.help => l10n.dashboard_help,
-    MoreItem.platformAdmin => l10n.nav_platformAdmin,
-  };
-}
+String moreItemLabel(BuildContext context, MoreItem item) => _label(context.l10n, item);
+
+String _label(AppLocalizations l10n, MoreItem item) => switch (item) {
+      MoreItem.clients => l10n.clients_title,
+      MoreItem.debtors => l10n.nav_debtors,
+      MoreItem.services => l10n.nav_services,
+      MoreItem.payments => l10n.payments_title,
+      MoreItem.transactions => l10n.transactions_title,
+      MoreItem.stockStore => l10n.store_title,
+      MoreItem.reports => l10n.nav_reports,
+      MoreItem.insights => l10n.insights_title,
+      MoreItem.activityLog => l10n.export_activityLog,
+      MoreItem.team => l10n.team_title,
+      MoreItem.facilities => l10n.facilities_title,
+      MoreItem.businessHours => l10n.hours_title,
+      MoreItem.subscription => l10n.subscription_title,
+      MoreItem.settings => l10n.settings_title,
+      MoreItem.printerSettings => l10n.printer_title,
+      MoreItem.export => l10n.settings_exportData,
+      MoreItem.trash => l10n.activityType_trash,
+      MoreItem.manageAccount => l10n.account_title,
+      MoreItem.help => l10n.dashboard_help,
+      MoreItem.platformAdmin => l10n.nav_platformAdmin,
+    };
+
+/// The words, besides the label, that find an item (comma separated).
+String _keywords(AppLocalizations l10n, MoreItem item) => switch (item) {
+      MoreItem.clients => l10n.more_keywordsClients,
+      MoreItem.debtors => l10n.more_keywordsDebtors,
+      MoreItem.services => l10n.more_keywordsServices,
+      MoreItem.payments => l10n.more_keywordsPayments,
+      MoreItem.transactions => l10n.more_keywordsTransactions,
+      MoreItem.stockStore => l10n.more_keywordsStockStore,
+      MoreItem.reports => l10n.more_keywordsReports,
+      MoreItem.insights => l10n.more_keywordsInsights,
+      MoreItem.activityLog => l10n.more_keywordsActivityLog,
+      MoreItem.team => l10n.more_keywordsTeam,
+      MoreItem.facilities => l10n.more_keywordsFacilities,
+      MoreItem.businessHours => l10n.more_keywordsBusinessHours,
+      MoreItem.subscription => l10n.more_keywordsSubscription,
+      MoreItem.settings => l10n.more_keywordsSettings,
+      MoreItem.printerSettings => l10n.more_keywordsPrinter,
+      MoreItem.export => l10n.more_keywordsExport,
+      MoreItem.trash => l10n.more_keywordsTrash,
+      MoreItem.manageAccount => l10n.more_keywordsManageAccount,
+      MoreItem.help => l10n.more_keywordsHelp,
+      MoreItem.platformAdmin => l10n.more_keywordsPlatformAdmin,
+    };
+
+/// The section's title.
+String moreSectionTitle(AppLocalizations l10n, MoreSection section) => switch (section) {
+      MoreSection.dailyWork => l10n.more_sectionDailyWork,
+      MoreSection.stockAndReports => l10n.more_sectionStockReports,
+      MoreSection.teamAndBusiness => l10n.more_sectionTeamBusiness,
+      MoreSection.app => l10n.more_sectionApp,
+      MoreSection.platform => l10n.authFooter_platform,
+    };
 
 IconData _icon(MoreItem item) => switch (item) {
       MoreItem.clients => Icons.people,
@@ -109,20 +161,51 @@ IconData _icon(MoreItem item) => switch (item) {
       MoreItem.services => Icons.design_services,
       MoreItem.payments => Icons.payments,
       MoreItem.transactions => Icons.receipt_long,
+      MoreItem.stockStore => Icons.store,
       MoreItem.reports => Icons.summarize_outlined,
       MoreItem.insights => Icons.insights,
-      MoreItem.stockStore => Icons.store,
+      MoreItem.activityLog => Icons.history,
       MoreItem.team => Icons.group_outlined,
       MoreItem.facilities => Icons.store_outlined,
-      MoreItem.settings => Icons.settings,
-      MoreItem.trash => Icons.delete_outline,
-      MoreItem.export => Icons.import_export,
       MoreItem.businessHours => Icons.schedule_outlined,
       MoreItem.subscription => Icons.workspace_premium_outlined,
-      MoreItem.activityLog => Icons.history,
+      MoreItem.settings => Icons.settings,
+      MoreItem.printerSettings => Icons.print_outlined,
+      MoreItem.export => Icons.import_export,
+      MoreItem.trash => Icons.delete_outline,
+      MoreItem.manageAccount => Icons.manage_accounts_outlined,
       MoreItem.help => Icons.help_outline,
       MoreItem.platformAdmin => Icons.admin_panel_settings_outlined,
     };
+
+/// Lower case, accents dropped, so "Éxport" finds Export.
+String _fold(String s) {
+  const accented = 'àáâãäåçèéêëìíîïñòóôõöùúûüýÿ';
+  const plain = 'aaaaaaceeeeiiiinooooouuuuyy';
+  final out = StringBuffer();
+  for (final ch in s.toLowerCase().split('')) {
+    final i = accented.indexOf(ch);
+    out.write(i < 0 ? ch : plain[i]);
+  }
+  return out.toString();
+}
+
+/// Whether [query] finds [item]: every word of it is in the item's label or
+/// keywords in any language the app has (so a word in English or Kiswahili
+/// finds it whatever the app's language), in any case, accents ignored. An
+/// empty query finds every item.
+bool moreItemMatches(AppLocalizations shown, MoreItem item, String query) {
+  final words = _fold(query).split(RegExp(r'\s+')).where((w) => w.isNotEmpty);
+  if (words.isEmpty) return true;
+  final text = _fold([
+    _label(shown, item),
+    for (final locale in AppLocalizations.supportedLocales) ...[
+      _label(lookupAppLocalizations(locale), item),
+      _keywords(lookupAppLocalizations(locale), item),
+    ],
+  ].join(' | '));
+  return words.every(text.contains);
+}
 
 /// PH3 (5): the More page, a grid of round icons; each opens the existing
 /// screen as today (pushed, full screen over the bar).
@@ -265,6 +348,10 @@ Future<void> openMoreItem(BuildContext context, MoreItem item) async {
       return push(const SubscriptionScreen());
     case MoreItem.activityLog:
       return push(const ActivityLogScreen());
+    case MoreItem.printerSettings:
+      return push(const PrinterSettingsScreen());
+    case MoreItem.manageAccount:
+      return push(const ManageAccountScreen());
     case MoreItem.help:
       return showSupportContactDialog(context);
     case MoreItem.platformAdmin:

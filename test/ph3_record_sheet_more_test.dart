@@ -153,17 +153,21 @@ void main() {
     expect(find.text('Record Sale'), findsOneWidget);
   }, skip: _skip);
 
+  // MR1: in the order of the sections (Daily work, Stock and reports, Team and
+  // business, App, Platform); Printer settings and Manage Account joined as
+  // Settings offers them to every role.
   test('More: the admin items, in order, and the assistant\'s (no admin item)', () {
     const admin = [
       MoreItem.clients, MoreItem.debtors, MoreItem.services, MoreItem.payments, MoreItem.transactions,
-      MoreItem.reports, MoreItem.insights, MoreItem.stockStore, MoreItem.team, MoreItem.facilities,
-      MoreItem.settings, MoreItem.trash, MoreItem.export, MoreItem.businessHours, MoreItem.subscription,
-      MoreItem.activityLog, MoreItem.help,
+      MoreItem.stockStore, MoreItem.reports, MoreItem.insights, MoreItem.activityLog,
+      MoreItem.team, MoreItem.facilities, MoreItem.businessHours, MoreItem.subscription,
+      MoreItem.settings, MoreItem.printerSettings, MoreItem.export, MoreItem.trash, MoreItem.manageAccount, MoreItem.help,
     ];
     expect(moreItemsFor(isAdmin: true), admin);
     expect(moreItemsFor(isAdmin: false), [
       MoreItem.clients, MoreItem.debtors, MoreItem.services, MoreItem.payments, MoreItem.transactions,
-      MoreItem.reports, MoreItem.insights, MoreItem.stockStore, MoreItem.settings, MoreItem.help,
+      MoreItem.stockStore, MoreItem.reports, MoreItem.insights,
+      MoreItem.settings, MoreItem.printerSettings, MoreItem.manageAccount, MoreItem.help,
     ]);
     expect(moreItemsFor(isAdmin: true, isPlatformAdmin: true), [...admin, MoreItem.platformAdmin]);
     expect(moreItemsFor(isAdmin: false, isPlatformAdmin: true).last, MoreItem.platformAdmin);
