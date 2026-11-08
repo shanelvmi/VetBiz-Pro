@@ -265,6 +265,23 @@ class _PhoneShellBanner extends InheritedWidget {
   bool updateShouldNotify(_PhoneShellBanner oldWidget) => banner != oldWidget.banner;
 }
 
+/// UI4: the shell reserves only the bar's own height; the "+" rises
+/// [overhang] above it over the middle of the page. A tab's main scroll view
+/// adds [overhang] under its last row (overhangOf), so the end of the list
+/// clears the button without a band kept empty above the bar. Zero outside
+/// the shell (a pushed screen has no bar) and while the keyboard hides it.
+class PhoneShellInsets extends InheritedWidget {
+  final double overhang;
+
+  const PhoneShellInsets({super.key, required this.overhang, required super.child});
+
+  static double overhangOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<PhoneShellInsets>()?.overhang ?? 0;
+
+  @override
+  bool updateShouldNotify(PhoneShellInsets oldWidget) => overhang != oldWidget.overhang;
+}
+
 /// The bottom bar (phone_shell.md section 3, restyled in NAV1): docked, its
 /// upper corners rounded, a faint primary tint (navBarFill) and a very light
 /// shadow; five equal slots (Home, Sales, the "+", Products, More), 64 high

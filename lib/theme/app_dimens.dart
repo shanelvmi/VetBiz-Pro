@@ -539,6 +539,25 @@ class PhoneShellMetrics {
   static const double troughEdgeRadius = 14;
   static const double barBorderWidth = 1;
 
+  /// UI4: the deeper, wider trough that cradles the "+": [troughWidth] wide
+  /// where it leaves the top edge; its bottom a circle [troughClearance]
+  /// wider than the button all round (the same centre); each side a long
+  /// S-curve from the flat edge to that circle, a cubic whose two handles
+  /// are [troughCurve] long, meeting the circle [troughJoinDegrees] from its
+  /// lowest point, so there is no bevel and no corner.
+  static const double troughWidth = 124;
+  static const double troughCurve = 26;
+  static const double troughClearance = 8;
+  static const double troughJoinDegrees = 50;
+
+  /// UI4: how far the "+" rises above the bar's top edge: its only overhang
+  /// over the page, in the middle (PhoneShellInsets).
+  static const double buttonRaise = 14;
+
+  /// UI4: the neighbouring items' icons and labels are never closer than
+  /// this to the trough.
+  static const double troughItemGap = 12;
+
   /// How far the "+" rises above the bar's top edge: what the trough leaves
   /// it (56 - (34 - 4) = 26), so it sits in the trough with the gap below.
   static const double recordLift = recordSize - (troughDepth - troughGap);
