@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// The app's own name, typed once.
 class AppInfo {
   AppInfo._();
@@ -17,4 +19,16 @@ class AppInfo {
 
   /// The version shown in the login footer.
   static const String versionLabel = 'v$version';
+
+  /// FIN1: when this build was made, so the owner can tell on a phone which
+  /// build is open. tool/serve_web.ps1 passes the local date and time
+  /// (--dart-define=BUILD_STAMP=yyyy-MM-dd HH:mm); any other build says dev.
+  static const String definedBuildStamp = String.fromEnvironment('BUILD_STAMP', defaultValue: 'dev');
+
+  /// Tests only: a stamp to show instead of [definedBuildStamp].
+  @visibleForTesting
+  static String? buildStampOverride;
+
+  /// The stamp the footer and Settings show after the version.
+  static String get buildStamp => buildStampOverride ?? definedBuildStamp;
 }
