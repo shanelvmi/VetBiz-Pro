@@ -18,8 +18,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
 const _skip = false;
-// Until the two keys are retired from both ARB files and the generated code.
-const _skipKeys = true;
+const _skipKeys = false;
 
 // Not UI1: at 768 in Kiswahili a card's staff-and-status row (the cards
 // stay as built) overflows by 37 px; this case waits for a cards batch.

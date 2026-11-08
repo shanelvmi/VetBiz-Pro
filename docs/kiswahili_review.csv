@@ -1707,7 +1707,6 @@ selectFacility_unnamed,Unnamed,Bila jina,Select Facility card: a facility with n
 selectFacility_selected,Selected,Imechaguliwa,Select Facility card hint: this one is chosen.,draft
 selectFacility_clickToSelect,Click to select,Bofya kuchagua,Select Facility card hint on hover.,draft
 facilities_noneFound,No facilities found.,Hakuna vituo vilivyopatikana.,Facilities and Select Facility screens: the account has no facility.,draft
-facilityPicker_tagline,Manage. Care. Grow.,Simamia. Hudumia. Kua.,"Facility picker top bar, under the app name.",draft
 facilityPicker_logOut,Sign out,Toka,Facility picker profile menu item.,draft
 facilityPicker_title,Select Your Facility,Chagua Kituo Chako,Facility picker heading.,draft
 facilityPicker_intro,Choose the facility you want to manage. You can switch between your facilities at any time from the top menu.,Chagua kituo unachotaka kusimamia. Unaweza kuhamia kituo kingine wakati wowote kupitia menyu ya juu.,"Facility picker, under the heading.",draft
@@ -1721,7 +1720,6 @@ facilityPicker_staffCount,{count} Staff,Wafanyakazi {count},Facility picker card
 facilityPicker_openFacility,Open Facility,Fungua Kituo,Facility picker card button.,draft
 facilityPicker_setAsDefault,Set as Default,Weka kama Chaguo-msingi,Facility picker card menu item.,draft
 facilityPicker_default,Default,Chaguo-msingi,Facility picker card badge on the default facility.,draft
-facilityPicker_footer,Secure  •  Reliable  •  Built for Veterinary Businesses,Salama  •  Inaaminika  •  Imejengwa kwa Biashara za Mifugo,Facility picker footer.,draft
 facilityOwnership_owned,Owned,Inamilikiwa,Facility ownership (stored value 'Owned'): Edit Facility dropdown and About card.,draft
 facilityOwnership_rented,Rented,Imekodiwa,Facility ownership (stored value 'Rented'): Edit Facility dropdown and About card.,draft
 facilities_loadFailed,Couldn't load facilities,Imeshindwa kupakia vituo,Facilities screen: loading failed.,draft
