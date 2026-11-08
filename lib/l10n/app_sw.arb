@@ -4089,5 +4089,7 @@
   "home_hideAmounts": "Ficha kiasi",
   "@home_hideAmounts": {"x-review":"draft"},
   "home_showAmounts": "Onyesha kiasi",
-  "@home_showAmounts": {"x-review":"draft"}
+  "@home_showAmounts": {"x-review":"draft"},
+  "common_versionWithBuild": "{version} (muundo {stamp})",
+  "@common_versionWithBuild": {"x-review":"draft"}
 }

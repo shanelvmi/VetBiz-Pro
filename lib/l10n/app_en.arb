@@ -4089,5 +4089,7 @@
   "home_hideAmounts": "Hide amounts",
   "@home_hideAmounts": {"description":"Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that replaces every amount on the card with dots. Remembered on this device."},
   "home_showAmounts": "Show amounts",
-  "@home_showAmounts": {"description":"Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that shows the card's amounts again."}
+  "@home_showAmounts": {"description":"Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that shows the card's amounts again."},
+  "common_versionWithBuild": "{version} (build {stamp})",
+  "@common_versionWithBuild": {"description":"FIN1: the app version followed by when this build was made, in the sign-in footer (version v1.0.0) and in Settings (version 1.0.0). stamp is a date and time such as 2026-11-09 14:05, or dev. Build means the compiled copy of the app.","placeholders":{"version":{"type":"String"},"stamp":{"type":"String"}}}
 }
