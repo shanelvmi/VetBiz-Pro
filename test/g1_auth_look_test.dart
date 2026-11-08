@@ -188,17 +188,13 @@ void main() {
       expect(sizes[0], sizes[1]);
     });
 
-    // LG1 (owner): on phones the login is one flat page with no card;
-    // Register keeps its card, the full width minus the page margins.
-    testWidgets('390.0: the login has no card, Register\'s card is the width minus the margins', (tester) async {
+    // LG1 (owner): on phones the login is one flat page with no card; FIN1:
+    // Register too.
+    testWidgets('390.0: neither the login nor Register has a card, each is one flat page', (tester) async {
       for (final s in _Screen.values) {
         await pump(tester, await settingsIn(tester, {}), s, size: const Size(390, 900));
-        if (s == _Screen.login) {
-          expect(find.byKey(AuthCard.surfaceKey), findsNothing, reason: s.name);
-          expect(find.byKey(LoginScreen.phonePageKey), findsOneWidget);
-        } else {
-          expect(tester.getSize(find.byKey(AuthCard.surfaceKey)).width, lessThan(390), reason: s.name);
-        }
+        expect(find.byKey(AuthCard.surfaceKey), findsNothing, reason: s.name);
+        expect(find.byKey(s == _Screen.login ? LoginScreen.phonePageKey : RegisterScreen.phonePageKey), findsOneWidget, reason: s.name);
         await finish(tester);
       }
     });

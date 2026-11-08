@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vetbiz_pro/l10n/l10n.dart';
+import 'package:vetbiz_pro/screens/register_screen.dart';
 import 'package:vetbiz_pro/widgets/auth_card.dart';
 import 'package:vetbiz_pro/widgets/wizard/wizard_nav_bar.dart';
 
@@ -38,9 +39,9 @@ void main() {
 
   // The card's height, and the bar's top measured from the card's top (the
   // page may scroll to the first error; on phones the bar is pinned, so its
-  // own top).
+  // own top). FIN1: phones have no card; the flat page's column instead.
   (double, double) measure(WidgetTester tester, {required bool phone}) {
-    final card = tester.getRect(find.byKey(AuthCard.surfaceKey));
+    final card = tester.getRect(find.byKey(phone ? RegisterScreen.phonePageKey : AuthCard.surfaceKey));
     final bar = tester.getRect(find.byType(WizardNavBar));
     return (card.height, phone ? bar.top : bar.top - card.top);
   }

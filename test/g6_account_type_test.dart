@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/app_info.dart';
 import 'package:vetbiz_pro/config/app_timeouts.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
+import 'package:vetbiz_pro/screens/register_screen.dart';
 import 'package:vetbiz_pro/widgets/auth_card.dart';
 import 'package:vetbiz_pro/widgets/wizard/wizard_option_card.dart';
 
@@ -62,19 +63,21 @@ void main() {
       await tester.ensureVisible(find.text(en.products_continue).last);
       await tester.pumpAndSettle();
       final cards = [tester.getRect(owner(en)), tester.getRect(assistant(en))];
-      final card = tester.getSize(find.byKey(AuthCard.surfaceKey)).height;
+      // FIN1: phones have no card; the flat page's column instead.
+      final frame = find.byKey(width < 600 ? RegisterScreen.phonePageKey : AuthCard.surfaceKey);
+      final card = tester.getSize(frame).height;
       final continueTop = tester.getRect(find.text(en.products_continue).last).top;
       await tapContinue(tester);
       expect(find.text(step(1)), findsOneWidget);
       expect(find.text(step(2)), findsNothing);
       expect(find.text(error(en)), findsOneWidget);
       expect([tester.getRect(owner(en)), tester.getRect(assistant(en))], cards);
-      expect(tester.getSize(find.byKey(AuthCard.surfaceKey)).height, card);
+      expect(tester.getSize(frame).height, card);
       expect(tester.getRect(find.text(en.products_continue).last).top, continueTop);
       // Choosing one clears the error, in the same line.
       await tapText(tester, en.register_roleAssistantSubtitle);
       expect(find.text(error(en)), findsNothing);
-      expect(tester.getSize(find.byKey(AuthCard.surfaceKey)).height, card);
+      expect(tester.getSize(frame).height, card);
       await tapContinue(tester);
       expect(find.text(step(2)), findsOneWidget);
       await finishRegister(tester);

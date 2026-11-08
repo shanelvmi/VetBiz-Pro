@@ -28,7 +28,7 @@ import 'helpers/register_harness.dart';
 // the other wizard widgets keep their own look; Back and Continue stay pinned
 // above the keyboard; the Sign in link is on step 1; the footer below.
 // Tablets and wide windows: test/fin1_wide_register_unchanged_test.dart.
-const _skip = true;
+const _skip = false;
 
 const _page = ValueKey<String>('register-phone-page');
 const _brand = ValueKey<String>('register-phone-brand');

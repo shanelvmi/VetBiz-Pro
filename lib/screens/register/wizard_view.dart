@@ -7,15 +7,17 @@ extension _WizardView on _RegisterScreenState {
   /// Wide (as the login page arranges its side): the welcome panel at the
   /// left of every step. Narrow: the welcome strip on step 1 only (owner
   /// answer 2). [inlineBar]: Back and Continue as the card's bottom row
-  /// (on phones they are pinned to the screen instead).
-  Widget _buildWizardBody(AuthCardLayout layout, {required bool inlineBar}) {
+  /// (on phones they are pinned to the screen instead). [flat] (FIN1, the
+  /// flat phone page): no welcome strip, the step header and the heading
+  /// centred.
+  Widget _buildWizardBody(AuthCardLayout layout, {required bool inlineBar, bool flat = false}) {
     final wizard = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        WizardStepHeader(current: _step + 1, total: _WizardFlow.stepCount, title: _stepTitle()),
+        WizardStepHeader(current: _step + 1, total: _WizardFlow.stepCount, title: _stepTitle(), centered: flat),
         const SizedBox(height: WizardMetrics.sectionGap),
-        WizardStepIntro(title: _stepQuestion(), subtitle: _stepHint()),
+        WizardStepIntro(title: _stepQuestion(), subtitle: _stepHint(), centered: flat),
         const SizedBox(height: WizardMetrics.sectionGap),
         ..._stepContent(),
         // RW2b2: the header has no Sign in any more, so when the welcome
@@ -27,6 +29,7 @@ extension _WizardView on _RegisterScreenState {
         ],
       ],
     );
+    if (flat) return wizard;
     if (layout.isWide) {
       return IntrinsicHeight(
         child: Row(
@@ -48,6 +51,87 @@ extension _WizardView on _RegisterScreenState {
           const SizedBox(height: AppSpacing.s16),
         ],
         wizard,
+      ],
+    );
+  }
+
+  // ==================== PHONE: ONE FLAT PAGE (FIN1) ====================
+  // The owner: the treatment LG1 gave the login. No frame, header bar, card
+  // or welcome strip: the compact brand row, then the wizard straight on the
+  // page's background in one centred column (at most 420 wide, 24 px sides),
+  // the footer below. Only the frame changes: the steps, their checks and
+  // every call are the card's (_buildWizardBody, flat).
+  Widget _buildPhonePage({required bool inlineBar}) {
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, viewport) => SingleChildScrollView(
+          child: ConstrainedBox(
+            // At least the screen's height, so the footer reaches the bottom.
+            constraints: BoxConstraints(minHeight: viewport.maxHeight),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: PhoneLoginMetrics.maxWidth),
+                    child: Padding(
+                      key: RegisterScreen.phonePageKey,
+                      padding: const EdgeInsets.fromLTRB(
+                        PhoneLoginMetrics.sidePadding,
+                        PhoneLoginMetrics.topPadding,
+                        PhoneLoginMetrics.sidePadding,
+                        PhoneLoginMetrics.bottomPadding,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildPhoneBrandRow(),
+                          const SizedBox(height: PhoneLoginMetrics.brandGap),
+                          _buildWizardBody(
+                            AuthCardLayout(availableWidth: viewport.maxWidth, isWide: false),
+                            inlineBar: inlineBar,
+                            flat: true,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const AuthFooter(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // The login's phone brand row: the VB mark and the app name at the left,
+  // the Light/Dark switch at the right; no bar behind them.
+  Widget _buildPhoneBrandRow() {
+    return Row(
+      key: RegisterScreen.phoneBrandKey,
+      children: [
+        Container(
+          width: PhoneLoginMetrics.mark,
+          height: PhoneLoginMetrics.mark,
+          decoration: BoxDecoration(color: context.colors.brandSurface, shape: BoxShape.circle),
+          alignment: Alignment.center,
+          child: Text(
+            AppInfo.logoMark,
+            style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
+          ),
+        ),
+        const SizedBox(width: PhoneLoginMetrics.markGap),
+        Expanded(
+          child: Text(
+            AppInfo.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: context.colors.textPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
+          ),
+        ),
+        const AuthThemeToggle(onPage: true),
       ],
     );
   }

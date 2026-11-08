@@ -38,6 +38,7 @@ import '../theme/app_text.dart';
 import '../theme/app_dimens.dart';
 import '../theme/theme_context.dart';
 import '../theme/app_breakpoints.dart';
+import '../theme/app_layout.dart';
 import '../theme/app_motion.dart';
 import '../ui/feedback/app_feedback.dart';
 import '../ui/feedback/friendly_error.dart';
@@ -75,6 +76,10 @@ class RegisterScreen extends StatefulWidget {
   final AuthService? authService;
   @visibleForTesting
   final MembershipService? membershipService;
+  /// For tests (FIN1): the flat phone page's content column and its brand
+  /// row.
+  static const phonePageKey = ValueKey<String>('register-phone-page');
+  static const phoneBrandKey = ValueKey<String>('register-phone-brand');
 
   const RegisterScreen({
     super.key,
@@ -936,14 +941,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         body: Stack(
           children: [
             const Positioned.fill(child: AuthBackground()),
-            // The same card as the login page (AuthCard: width, padding,
-            // radius).
-            AuthCard(
-              header: _buildRegisterHeader(),
-              // The same footer as the login page (G3); not in Edit Profile.
-              below: const AuthFooter(),
-              bodyBuilder: (context, layout) => _buildWizardBody(layout, inlineBar: !pinBar),
-            ),
+            // FIN1: phones get one flat page (as LG1 gave the login).
+            if (AppLayout.isPhone(context))
+              _buildPhonePage(inlineBar: !pinBar)
+            else
+              // The same card as the login page (AuthCard: width, padding,
+              // radius).
+              AuthCard(
+                header: _buildRegisterHeader(),
+                // The same footer as the login page (G3); not in Edit Profile.
+                below: const AuthFooter(),
+                bodyBuilder: (context, layout) => _buildWizardBody(layout, inlineBar: !pinBar),
+              ),
             _buildErrorToastLayer(),
           ],
         ),
@@ -1434,7 +1443,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           borderRadius: BorderRadius.circular(AppRadius.r14),
           borderSide: BorderSide(color: color, width: width),
         );
-    final rest = context.colors.border;
+    // FIN1, the flat phone page: the field sits on the page's own background,
+    // so its outline, hint and icon take the login's flat roles (LG1: 3:1 for
+    // the outline and icons, 4.5:1 for the hint) instead of the card's faint
+    // ones. Edit Profile and the wide card keep theirs.
+    final flat = !widget.isUpdating && AppLayout.isPhone(context);
+    final rest = flat ? context.colors.textMuted : context.colors.border;
     final helperStyle = TextStyle(color: helperColor ?? context.colors.textMuted, fontSize: AppFontSize.f12);
     final errorStyle = TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12);
     // G5, the wizard's fields ([reserve] given: _messagesOf): the line under
@@ -1445,8 +1459,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     Widget slot(String? message, TextStyle style) => FieldMessageSlot(message: message, reserve: kept!, style: style, maxLines: maxLines);
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: context.colors.textDisabled, fontSize: AppFontSize.f14),
-      prefixIcon: icon == null ? null : Icon(icon, size: AppIconSize.i20, color: context.colors.textHint),
+      hintStyle: TextStyle(color: flat ? context.colors.textSecondary : context.colors.textDisabled, fontSize: AppFontSize.f14),
+      prefixIcon: icon == null ? null : Icon(icon, size: AppIconSize.i20, color: flat ? context.colors.textSecondary : context.colors.textHint),
       suffixIcon: locked ? Icon(Icons.lock_outline, size: AppIconSize.i16, color: context.colors.textDisabled) : suffix,
       helperText: kept == null ? helper : null,
       helper: kept == null ? null : slot(helper, helperStyle),

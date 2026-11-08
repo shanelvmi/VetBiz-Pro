@@ -9,46 +9,55 @@ import '../../theme/theme_context.dart';
 /// The top of a step-by-step form (register_wizard.md section 3): "Step n
 /// of total" at the left, the step's title at the right (wrapping under it
 /// when the line is too narrow, as Kiswahili titles often are), and a thin
-/// progress bar that slides to the new step.
+/// progress bar that slides to the new step. [centered] (FIN1, the flat phone
+/// page): the count and the title centred, the title under the count.
 class WizardStepHeader extends StatelessWidget {
   final int current;
   final int total;
   final String title;
+  final bool centered;
 
-  const WizardStepHeader({super.key, required this.current, required this.total, required this.title});
+  const WizardStepHeader({super.key, required this.current, required this.total, required this.title, this.centered = false});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final count = Text(
+      context.l10n.wizard_stepOf(current, total),
+      textAlign: centered ? TextAlign.center : null,
+      style: TextStyle(fontSize: WizardFontSize.step, color: colors.textMuted),
+    );
+    final name = Text(
+      title,
+      textAlign: centered ? TextAlign.center : null,
+      style: TextStyle(
+        fontSize: WizardFontSize.stepTitle,
+        fontWeight: AppFontWeight.semibold,
+        color: colors.textPrimary,
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // A Wrap, not a Row: a long title moves to its own line instead of
-        // squeezing the step count. Full width, so spaceBetween pushes the
-        // title to the right edge when both fit.
-        SizedBox(
-          width: double.infinity,
-          child: Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            spacing: WizardMetrics.headerSpacing,
-            runSpacing: WizardMetrics.headerRunSpacing,
-            children: [
-              Text(
-                context.l10n.wizard_stepOf(current, total),
-                style: TextStyle(fontSize: WizardFontSize.step, color: colors.textMuted),
-              ),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: WizardFontSize.stepTitle,
-                  fontWeight: AppFontWeight.semibold,
-                  color: colors.textPrimary,
-                ),
-              ),
-            ],
+        if (centered)
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [count, const SizedBox(height: WizardMetrics.headerRunSpacing), name],
+          )
+        else
+          // A Wrap, not a Row: a long title moves to its own line instead of
+          // squeezing the step count. Full width, so spaceBetween pushes the
+          // title to the right edge when both fit.
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              spacing: WizardMetrics.headerSpacing,
+              runSpacing: WizardMetrics.headerRunSpacing,
+              children: [count, name],
+            ),
           ),
-        ),
         const SizedBox(height: WizardMetrics.headerBarGap),
         // Begin is left empty, so the first build shows the value at once
         // and a later step animates from where the bar was.

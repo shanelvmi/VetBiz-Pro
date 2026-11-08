@@ -63,9 +63,19 @@ void main() {
     await finishRegister(tester);
   }, skip: _skip);
 
+  // FIN1: a narrow card (a tablet) keeps the strip; phones are one flat
+  // page without it (fin1_flat_register_test.dart).
   testWidgets('narrow: the welcome strip on step 1 only', (tester) async {
-    await pumpRegister(tester, size: const Size(390, 844));
+    await pumpRegister(tester, size: const Size(768, 1024));
     expect(find.text(en.register_setUpCentre), findsOneWidget);
+    await continueTo(tester, 2);
+    expect(find.text(en.register_setUpCentre), findsNothing);
+    await finishRegister(tester);
+  }, skip: _skip);
+
+  testWidgets('phones: no welcome strip on any step', (tester) async {
+    await pumpRegister(tester, size: const Size(390, 844));
+    expect(find.text(en.register_setUpCentre), findsNothing);
     await continueTo(tester, 2);
     expect(find.text(en.register_setUpCentre), findsNothing);
     await finishRegister(tester);
