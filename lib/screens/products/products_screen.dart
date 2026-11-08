@@ -49,6 +49,12 @@ class ProductsScreen extends StatefulWidget {
   State<ProductsScreen> createState() => _ProductsScreenState();
 }
 
+/// UI2: a product's phone details page (PH7a), as a Products row opens it,
+/// from another screen: Product Alerts puts the alert's action first.
+Future<void> openProductPhoneDetails(BuildContext context, Product product,
+        {ProductPageAction? leadAction, bool withoutAddBatch = false}) =>
+    _ProductsScreenState._openPhoneDetailsIn(context, product, leadAction: leadAction, withoutAddBatch: withoutAddBatch);
+
 class _ProductsScreenState extends State<ProductsScreen> {
   // Null widget.firestore: the app's own Firestore (PH2a seam).
   FirebaseFirestore get _db => widget.firestore ?? FirebaseFirestore.instance;
@@ -136,7 +142,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   // _getProductStatus's 'text' is also what the counts and the status filter
   // use, so it stays English; this is what a status chip shows.
-  String _statusLabel(String status) => switch (status) {
+  String _statusLabel(String status) => _statusLabelIn(context, status);
+
+  // UI2: the details page's helpers are static (given the context) so Product
+  // Alerts can open that page too; each instance method is the same call.
+  static String _statusLabelIn(BuildContext context, String status) => switch (status) {
         'Not Stocked' => context.l10n.products_statusNotStocked,
         'Depleted' => context.l10n.products_statusDepleted,
         'Expired' => context.l10n.products_statusExpired,
@@ -233,7 +243,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
     );
   }
 
-  Map<String, dynamic> _getProductStatus(Product product) {
+  Map<String, dynamic> _getProductStatus(Product product) => _productStatusIn(context, product);
+
+  static Map<String, dynamic> _productStatusIn(BuildContext context, Product product) {
     // A brand-new product that's never carried any stock reads very
     // differently from one that genuinely ran out - shown neutrally
     // rather than as an alarming "Depleted", matching the agreed design.
@@ -313,7 +325,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
     };
   }
 
-  Future<void> _toggleWatchlist(Product p) async {
+  Future<void> _toggleWatchlist(Product p) => _toggleWatchlistIn(context, p);
+
+  static Future<void> _toggleWatchlistIn(BuildContext context, Product p) async {
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId == null) return;
     try {
@@ -328,7 +342,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   /// [onDeleted] (the phone's details page closing) runs once it is gone.
-  Future<void> _deleteProduct(Product p, {VoidCallback? onDeleted}) async {
+  Future<void> _deleteProduct(Product p, {VoidCallback? onDeleted}) => _deleteProductIn(context, p, onDeleted: onDeleted);
+
+  static Future<void> _deleteProductIn(BuildContext context, Product p, {VoidCallback? onDeleted}) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -353,7 +369,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
     );
 
-    if (confirm != true || !mounted) return;
+    if (confirm != true || !context.mounted) return;
 
     // Read before the await: Undo may run after this screen is gone.
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
@@ -1285,13 +1301,20 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   /// The card's status, with 'Active' read as the In Stock chip it is
   /// filtered by.
-  RecordStatus _phoneStatus(Product p) {
-    final status = _getProductStatus(p);
+  RecordStatus _phoneStatus(Product p) => _phoneStatusIn(context, p);
+
+  static RecordStatus _phoneStatusIn(BuildContext context, Product p) {
+    final status = _productStatusIn(context, p);
     final text = status['text'] as String;
-    return RecordStatus(text == 'Active' ? context.l10n.products_statusInStock : _statusLabel(text), status['color'] as Color);
+    return RecordStatus(text == 'Active' ? context.l10n.products_statusInStock : _statusLabelIn(context, text), status['color'] as Color);
   }
 
-  Future<void> _openPhoneDetails(Product product) {
+  Future<void> _openPhoneDetails(Product product) => _openPhoneDetailsIn(context, product);
+
+  /// [leadAction] (UI2: Product Alerts' action for the alert) comes first and
+  /// filled; [withoutAddBatch] when it is the page's own Add New Batch call.
+  static Future<void> _openPhoneDetailsIn(BuildContext context, Product product,
+      {ProductPageAction? leadAction, bool withoutAddBatch = false}) {
     final l10n = context.l10n;
     final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
     return pushProductDetailsPage(
@@ -1309,12 +1332,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
           IconButton(
             tooltip: l10n.common_delete,
             icon: const Icon(Icons.delete_outline),
-            onPressed: () => _deleteProduct(p, onDeleted: () => Navigator.of(pageContext).pop()),
+            onPressed: () => _deleteProductIn(context, p, onDeleted: () => Navigator.of(pageContext).pop()),
           ),
       ],
       body: (pageContext, p) => ProductDetailsBody(
         product: p,
-        status: _phoneStatus(p),
+        status: _phoneStatusIn(context, p),
         chips: [
           if (p.hasRestockShelfAlert)
             ProductInfoChip(label: l10n.products_restockShelf, icon: Icons.move_up, color: context.colors.infoStrong),
@@ -1331,14 +1354,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
           if (p.expiry != null) l10n.products_expiryDate(AppDateFormat.date.format(p.expiry!)),
         ],
         actions: [
+          if (leadAction != null) leadAction,
           ProductPageAction(
             label: p.sellableQty <= 0 ? l10n.products_nothingSellable : l10n.products_sell,
             icon: Icons.sell,
-            primary: true,
+            primary: leadAction == null,
             onPressed: p.sellableQty <= 0 ? null : () => showAddSaleScreen(context, product: p),
           ),
-          ProductPageAction(
-              label: l10n.products_addNewBatch, icon: Icons.playlist_add, onPressed: () => showAddBatchScreen(context, product: p)),
+          if (!withoutAddBatch)
+            ProductPageAction(
+                label: l10n.products_addNewBatch, icon: Icons.playlist_add, onPressed: () => showAddBatchScreen(context, product: p)),
           ProductPageAction(
               label: l10n.products_viewBatches,
               icon: Icons.inventory_2_outlined,
@@ -1347,7 +1372,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ProductPageAction(
               label: p.isWatchlisted ? l10n.products_removeFromWatchlist : l10n.products_addToWatchlist,
               icon: p.isWatchlisted ? Icons.star : Icons.star_outline,
-              onPressed: () => _toggleWatchlist(p),
+              onPressed: () => _toggleWatchlistIn(context, p),
             ),
         ],
       ),
