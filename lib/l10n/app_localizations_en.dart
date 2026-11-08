@@ -7392,4 +7392,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get more_keywordsReports => 'daily report, summary, pdf';
+
+  @override
+  String get more_keywordsInsights => 'charts, trends, analysis, graphs';
+
+  @override
+  String get more_keywordsActivityLog => 'history, audit, log';
+
+  @override
+  String get more_keywordsTeam => 'staff, assistants, invite, users, co-admin';
+
+  @override
+  String get more_keywordsFacilities => 'branches, locations, switch, agrovet';
+
+  @override
+  String get more_keywordsBusinessHours => 'opening, closing, time, schedule';
+
+  @override
+  String get more_keywordsSubscription =>
+      'plan, payment, renew, billing, trial';
+
+  @override
+  String get more_keywordsSettings => 'preferences, language, theme, dark mode';
+
+  @override
+  String get more_keywordsPrinter => 'receipt, bluetooth, printer, thermal';
+
+  @override
+  String get more_keywordsExport => 'download, csv, excel, backup';
+
+  @override
+  String get more_keywordsTrash => 'deleted, restore, recycle bin';
+
+  @override
+  String get more_keywordsManageAccount =>
+      'delete account, sign out everywhere, erase';
+
+  @override
+  String get more_keywordsHelp => 'support, contact, whatsapp, call';
+
+  @override
+  String get more_keywordsPlatformAdmin => 'operator, console';
 }

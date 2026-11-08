@@ -7438,4 +7438,43 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get more_keywordsReports => 'ripoti ya siku, muhtasari';
+
+  @override
+  String get more_keywordsInsights => 'chati, mwenendo, uchambuzi';
+
+  @override
+  String get more_keywordsActivityLog => 'historia, kumbukumbu';
+
+  @override
+  String get more_keywordsTeam => 'wasaidizi, alika, watumiaji';
+
+  @override
+  String get more_keywordsFacilities => 'matawi, maeneo, badilisha';
+
+  @override
+  String get more_keywordsBusinessHours => 'kufungua, kufunga, muda, ratiba';
+
+  @override
+  String get more_keywordsSubscription => 'kifurushi, lipia, huisha, majaribio';
+
+  @override
+  String get more_keywordsSettings => 'mapendeleo, lugha, mandhari';
+
+  @override
+  String get more_keywordsPrinter => 'risiti, printa';
+
+  @override
+  String get more_keywordsExport => 'pakua, nakala, faili';
+
+  @override
+  String get more_keywordsTrash => 'vilivyofutwa, rejesha';
+
+  @override
+  String get more_keywordsManageAccount => 'futa akaunti, toka kila mahali';
+
+  @override
+  String get more_keywordsHelp => 'usaidizi, wasiliana, piga simu';
+
+  @override
+  String get more_keywordsPlatformAdmin => 'mwendeshaji';
 }

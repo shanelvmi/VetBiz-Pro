@@ -12330,6 +12330,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'daily report, summary, pdf'**
   String get more_keywordsReports;
+
+  /// More page search (MR1): extra words, separated by commas, that find Insights. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'charts, trends, analysis, graphs'**
+  String get more_keywordsInsights;
+
+  /// More page search (MR1): extra words, separated by commas, that find Activity Log. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'history, audit, log'**
+  String get more_keywordsActivityLog;
+
+  /// More page search (MR1): extra words, separated by commas, that find Team Members. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'staff, assistants, invite, users, co-admin'**
+  String get more_keywordsTeam;
+
+  /// More page search (MR1): extra words, separated by commas, that find Facilities. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'branches, locations, switch, agrovet'**
+  String get more_keywordsFacilities;
+
+  /// More page search (MR1): extra words, separated by commas, that find Business Hours. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'opening, closing, time, schedule'**
+  String get more_keywordsBusinessHours;
+
+  /// More page search (MR1): extra words, separated by commas, that find Subscription. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'plan, payment, renew, billing, trial'**
+  String get more_keywordsSubscription;
+
+  /// More page search (MR1): extra words, separated by commas, that find Settings. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'preferences, language, theme, dark mode'**
+  String get more_keywordsSettings;
+
+  /// More page search (MR1): extra words, separated by commas, that find Printer settings. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'receipt, bluetooth, printer, thermal'**
+  String get more_keywordsPrinter;
+
+  /// More page search (MR1): extra words, separated by commas, that find Export Data. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'download, csv, excel, backup'**
+  String get more_keywordsExport;
+
+  /// More page search (MR1): extra words, separated by commas, that find Trash. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'deleted, restore, recycle bin'**
+  String get more_keywordsTrash;
+
+  /// More page search (MR1): extra words, separated by commas, that find Manage Account. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'delete account, sign out everywhere, erase'**
+  String get more_keywordsManageAccount;
+
+  /// More page search (MR1): extra words, separated by commas, that find Help. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'support, contact, whatsapp, call'**
+  String get more_keywordsHelp;
+
+  /// More page search (MR1): extra words, separated by commas, that find Platform Admin. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'operator, console'**
+  String get more_keywordsPlatformAdmin;
 }
 
 class _AppLocalizationsDelegate
