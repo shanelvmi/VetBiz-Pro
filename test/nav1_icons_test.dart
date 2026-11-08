@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/theme/app_icons.dart';
 
 /// NAV1 (A): one icon system. Turned on once every screen reads AppIcons.
-const _pendingSweep = true;
+const _pendingSweep = false;
 
 /// Dollar-sign glyphs (any variant: _outlined, _rounded, _sharp) that must
 /// not appear in lib/: Sales is a receipt, Debtors a wallet.

@@ -19,6 +19,7 @@ import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -342,7 +343,7 @@ class _SalesScreenState extends State<SalesScreen> {
     final metrics = [
       (context.l10n.reports_totalSales, '$count', Icons.receipt_long_outlined, context.colors.primary),
       (context.l10n.reports_colRevenue, Money.format(total), Icons.bar_chart, context.colors.info),
-      (context.l10n.sales_collected, Money.format(collected), Icons.account_balance_wallet_outlined, context.colors.success),
+      (context.l10n.sales_collected, Money.format(collected), AppIcons.payments.outlined, context.colors.success),
       (context.l10n.sales_pending, Money.format(pending), Icons.pending_actions_outlined, context.colors.accent),
     ];
 

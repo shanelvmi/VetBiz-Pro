@@ -16,6 +16,7 @@ import '../products/stock_alerts_screen.dart';
 import '../dashboard/notification_bell.dart';
 import 'release_to_shop_flow.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
@@ -792,7 +793,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<ProductSortOption>(
           value: _query.sortOption,
-          icon: Icon(Icons.swap_vert, size: AppIconSize.i18, color: context.colors.primary),
+          icon: Icon(AppIcons.sort, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: ProductSortOption.values
               .map((s) => DropdownMenuItem(value: s, child: Text(s.label)))

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_layout.dart';
 import 'package:provider/provider.dart';
 import '../../providers/ui_settings_provider.dart';
@@ -95,7 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Column(
                     children: [
                       _buildSettingsItem(
-                        icon: Icons.workspace_premium_outlined,
+                        icon: AppIcons.subscription.outlined,
                         label: context.l10n.settings_subscriptionBilling,
                         isLast: true,
                         onTap: () {
@@ -119,7 +120,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     if (isAdmin)
                       _buildSettingsItem(
-                        icon: Icons.delete_outline,
+                        icon: AppIcons.trash.outlined,
                         label: context.l10n.activityType_trash,
                         isLast: false,
                         onTap: () {
@@ -131,7 +132,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     if (isAdmin)
                       _buildSettingsItem(
-                        icon: Icons.import_export,
+                        icon: AppIcons.export.outlined,
                         label: context.l10n.settings_exportData,
                         isLast: false,
                         onTap: () {
@@ -143,7 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     if (isAdmin)
                       _buildSettingsItem(
-                        icon: Icons.schedule_outlined,
+                        icon: AppIcons.businessHours.outlined,
                         label: context.l10n.hours_title,
                         isLast: false,
                         onTap: () {
@@ -187,7 +188,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       },
                     ),
                     _buildSettingsItem(
-                      icon: Icons.print_outlined,
+                      icon: AppIcons.printer.outlined,
                       label: context.l10n.printer_title,
                       isLast: false,
                       onTap: () {
@@ -198,7 +199,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       },
                     ),
                     _buildSettingsItem(
-                      icon: Icons.help_outline,
+                      icon: AppIcons.help.outlined,
                       label: context.l10n.settings_helpSupport,
                       isLast: false,
                       onTap: () => _showHelpSupportDialog(context),
@@ -228,7 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onTap: () => showUiSettingsDialog(context),
                     ),
                     _buildSettingsItem(
-                      icon: Icons.currency_exchange_outlined,
+                      icon: AppIcons.currency.outlined,
                       label: context.l10n.settings_currency,
                       trailingText: AppDefaults.currencySymbol,
                       isLast: false,
@@ -312,7 +313,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           _buildSectionTitle(context.l10n.subscription_title),
                           const SizedBox(height: AppSpacing.s4),
                           _buildSidebarItem(
-                            icon: Icons.workspace_premium_outlined,
+                            icon: AppIcons.subscription.outlined,
                             label: context.l10n.settings_subscriptionBilling,
                             navigateKey: 'subscription',
                           ),
@@ -322,19 +323,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: AppSpacing.s4),
                         if (isAdmin)
                           _buildSidebarItem(
-                            icon: Icons.delete_outline,
+                            icon: AppIcons.trash.outlined,
                             label: context.l10n.activityType_trash,
                             navigateKey: 'trash',
                           ),
                         if (isAdmin)
                           _buildSidebarItem(
-                            icon: Icons.import_export,
+                            icon: AppIcons.export.outlined,
                             label: context.l10n.settings_exportData,
                             navigateKey: 'export',
                           ),
                         if (isAdmin)
                           _buildSidebarItem(
-                            icon: Icons.schedule_outlined,
+                            icon: AppIcons.businessHours.outlined,
                             label: context.l10n.hours_title,
                             navigateKey: 'business_hours',
                           ),
@@ -352,12 +353,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           navigateKey: 'notifications',
                         ),
                         _buildSidebarItem(
-                          icon: Icons.print_outlined,
+                          icon: AppIcons.printer.outlined,
                           label: context.l10n.printer_title,
                           navigateKey: 'printer',
                         ),
                         _buildSidebarItem(
-                          icon: Icons.help_outline,
+                          icon: AppIcons.help.outlined,
                           label: context.l10n.settings_helpSupport,
                           onTapDialog: () => _showHelpSupportDialog(context),
                         ),
@@ -376,7 +377,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           onTapDialog: () => showUiSettingsDialog(context),
                         ),
                         _buildSidebarItem(
-                          icon: Icons.currency_exchange_outlined,
+                          icon: AppIcons.currency.outlined,
                           label: context.l10n.settings_currency,
                           trailingText: AppDefaults.currencySymbol,
                           onTapDialog: () {}, // not a real choice - no picker to open
@@ -430,7 +431,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.settings_outlined, size: AppIconSize.i56, color: context.colors.border),
+          Icon(AppIcons.settings.outlined, size: AppIconSize.i56, color: context.colors.border),
           const SizedBox(height: AppSpacing.s12),
           Text(
             context.l10n.settings_selectPane,

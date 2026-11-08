@@ -23,6 +23,7 @@ import '../../config/app_date_format.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../services/trash_service.dart';
 import '../../theme/app_text.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
@@ -882,7 +883,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<ProductSortOption>(
           value: _query.sortOption,
-          icon: Icon(Icons.swap_vert, size: AppIconSize.i18, color: context.colors.primary),
+          icon: Icon(AppIcons.sort, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: ProductSortOption.values
               .map((s) => DropdownMenuItem(value: s, child: Text(s.label)))

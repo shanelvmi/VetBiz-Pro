@@ -22,6 +22,7 @@ import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/payment_methods.dart';
 import '../../config/app_date_format.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -291,7 +292,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
     final metrics = [
       (context.l10n.services_totalServices, '$count', Icons.medical_services_outlined, context.colors.primary),
-      (context.l10n.services_paidAmount, Money.format(paidAmount), Icons.account_balance_wallet_outlined, context.colors.info),
+      (context.l10n.services_paidAmount, Money.format(paidAmount), AppIcons.payments.outlined, context.colors.info),
       (context.l10n.payments_outstanding, Money.format(outstanding), Icons.pending_actions_outlined, context.colors.accent),
       (context.l10n.services_digitalPayments, Money.format(nonCashAmount), Icons.phone_iphone_outlined, context.colors.success),
     ];

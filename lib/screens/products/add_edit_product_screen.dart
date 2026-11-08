@@ -32,6 +32,7 @@ import '../../data/activity_type.dart';
 import '../../config/app_defaults.dart';
 import '../../data/data_keys.dart';
 import '../../theme/app_text.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
@@ -1413,7 +1414,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _sectionHeader(context.l10n.products_pricingStock, Icons.attach_money),
+                    _sectionHeader(context.l10n.products_pricingStock, AppIcons.price.outlined),
                     isNarrow
                         ? Column(
                             children: [_buyPriceField(fieldsLocked), const SizedBox(height: AppSpacing.s12), _sellPriceField(fieldsLocked)],

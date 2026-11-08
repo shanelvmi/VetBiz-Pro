@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/activity_type.dart';
 import 'app_colors.dart';
+import 'app_icons.dart';
 
 /// The icon and colour an activity-log entry is shown with, by its stored
 /// `actionType`.
@@ -17,21 +18,21 @@ abstract final class ActivityTypeStyle {
   static IconData icon(String actionType) {
     switch (ActivityType.canonicalKey(actionType).toLowerCase()) {
       case 'products':
-        return Icons.inventory_2;
+        return AppIcons.products.filled;
       case 'inventory move':
         return Icons.swap_horiz;
       case 'sales':
-        return Icons.shopping_cart;
+        return AppIcons.sales.filled;
       case 'services':
-        return Icons.build;
+        return AppIcons.services.filled;
       case 'transactions':
-        return Icons.receipt_long;
+        return AppIcons.transactions.filled;
       case 'clients':
-        return Icons.people;
+        return AppIcons.clients.filled;
       case 'debtors':
-        return Icons.account_balance_wallet;
+        return AppIcons.debtors.filled;
       case 'settings':
-        return Icons.settings;
+        return AppIcons.settings.filled;
       case 'admin':
         return Icons.admin_panel_settings;
       default:
