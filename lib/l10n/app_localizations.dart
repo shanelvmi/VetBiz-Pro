@@ -10332,12 +10332,6 @@ abstract class AppLocalizations {
   /// **'No facilities found.'**
   String get facilities_noneFound;
 
-  /// Facility picker top bar, under the app name.
-  ///
-  /// In en, this message translates to:
-  /// **'Manage. Care. Grow.'**
-  String get facilityPicker_tagline;
-
   /// Facility picker profile menu item.
   ///
   /// In en, this message translates to:
@@ -10415,12 +10409,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Default'**
   String get facilityPicker_default;
-
-  /// Facility picker footer.
-  ///
-  /// In en, this message translates to:
-  /// **'Secure  •  Reliable  •  Built for Veterinary Businesses'**
-  String get facilityPicker_footer;
 
   /// Facility ownership (stored value 'Owned'): Edit Facility dropdown and About card.
   ///

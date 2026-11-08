@@ -6056,9 +6056,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get facilities_noneFound => 'No facilities found.';
 
   @override
-  String get facilityPicker_tagline => 'Manage. Care. Grow.';
-
-  @override
   String get facilityPicker_logOut => 'Sign out';
 
   @override
@@ -6100,10 +6097,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get facilityPicker_default => 'Default';
-
-  @override
-  String get facilityPicker_footer =>
-      'Secure  •  Reliable  •  Built for Veterinary Businesses';
 
   @override
   String get facilityOwnership_owned => 'Owned';

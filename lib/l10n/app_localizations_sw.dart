@@ -6090,9 +6090,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get facilities_noneFound => 'Hakuna vituo vilivyopatikana.';
 
   @override
-  String get facilityPicker_tagline => 'Simamia. Hudumia. Kua.';
-
-  @override
   String get facilityPicker_logOut => 'Toka';
 
   @override
@@ -6134,10 +6131,6 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get facilityPicker_default => 'Chaguo-msingi';
-
-  @override
-  String get facilityPicker_footer =>
-      'Salama  •  Inaaminika  •  Imejengwa kwa Biashara za Mifugo';
 
   @override
   String get facilityOwnership_owned => 'Inamilikiwa';
