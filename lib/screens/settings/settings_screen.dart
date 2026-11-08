@@ -248,7 +248,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: _footerGap),
               Center(
                 child: Text(
-                  context.l10n.settings_versionLine(AppInfo.name, AppInfo.version),
+                  context.l10n.settings_versionLine(AppInfo.name, context.l10n.common_versionWithBuild(AppInfo.version, AppInfo.buildStamp)),
                   style: TextStyle(
                     fontSize: AppFontSize.f12,
                     color: context.colors.textHint,
@@ -641,7 +641,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _infoRow(context.l10n.settings_appName, AppInfo.name),
-            _infoRow(context.l10n.settings_version, '1.0.0'),
+            _infoRow(context.l10n.settings_version, context.l10n.common_versionWithBuild(AppInfo.version, AppInfo.buildStamp)),
             _infoRow(context.l10n.settings_builtFor, context.l10n.settings_builtForValue),
           ],
         ),

@@ -21,7 +21,7 @@ import 'ph8a_settings_wide_test.dart' show seedFacility;
 // the build was given (tool/serve_web.ps1 passes the local date and time),
 // dev without one; the sign-in footer's bottom row and Settings show it
 // after the version. The screens' tests were written before the change.
-const _skipShown = true;
+const _skipShown = false;
 
 const _stamp = '2026-11-09 14:05';
 
@@ -94,8 +94,10 @@ void main() {
       final en = lookupAppLocalizations(const Locale('en'));
       if (size.width < 600) {
         final line = find.text(en.settings_versionLine(AppInfo.name, '${AppInfo.version} (build $_stamp)'));
-        await tester.ensureVisible(line);
+        // The list builds lazily: scroll down to its last line, then back.
+        await tester.dragUntilVisible(line, find.byType(ListView).first, const Offset(0, -200));
         expect(line, findsOneWidget);
+        await tester.dragUntilVisible(find.text(en.settings_appInfo).first, find.byType(ListView).first, const Offset(0, 200));
       }
       final row = find.text(en.settings_appInfo).first;
       await tester.ensureVisible(row);
@@ -110,6 +112,7 @@ void main() {
     AppInfo.buildStampOverride = _stamp;
     await pumpPh5(tester, (fs) => SettingsScreen(firestore: fs, auth: Ph8Auth()),
         size: const Size(390, 844), look: MatrixLook.kiswahili, pushed: true, seed: seedFacility);
+    await tester.dragUntilVisible(find.textContaining(_stamp), find.byType(ListView).first, const Offset(0, -200));
     expect(find.textContaining(_stamp), findsOneWidget);
     expect(tester.takeException(), isNull);
   }, skip: _skipShown);

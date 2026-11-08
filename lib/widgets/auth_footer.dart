@@ -244,7 +244,9 @@ class AuthFooter extends StatelessWidget {
       runSpacing: AppSpacing.s4,
       children: [
         Text(context.l10n.login_copyright(AppInfo.name), style: muted),
-        Text(AppInfo.versionLabel, style: muted),
+        // FIN1: the build stamp after the version, so the owner can tell which
+        // build a phone has open.
+        Text(context.l10n.common_versionWithBuild(AppInfo.versionLabel, AppInfo.buildStamp), style: muted),
       ],
     );
     final icons = ListenableBuilder(

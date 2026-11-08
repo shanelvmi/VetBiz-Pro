@@ -107,3 +107,10 @@ Baseline when this runbook was written: analyze 38 infos (0 errors, 0 warnings);
 ## 7. Corrections protocol
 
 After each session the owner pushes and sends the ledger to the assistant, who audits in bulk and writes `docs/FIXES.md` (a numbered list: file, problem, fix). The next session starts with it (section 1, step 2). When all items are done, mark the file `ALL DONE`.
+
+## 8. Try a build on a phone (FIN1)
+
+- From the repo root: `powershell -ExecutionPolicy Bypass -File tool\serve_web.ps1` (once before: `dart pub global activate dhttpd`).
+- It builds the web release with `BUILD_STAMP` = the PC's local date and time (`yyyy-MM-dd HH:mm`), then serves `build/web` on port 8080.
+- It prints the build stamp and `http://<this PC's Wi-Fi IPv4>:8080`; open that on a phone on the same Wi-Fi (Windows may ask to allow dhttpd through the firewall).
+- The footer and Settings show `v1.0.0 (build <stamp>)`, so the phone shows which build it has open (`dev` for any other build). Ctrl+C stops the server.

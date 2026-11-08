@@ -68,7 +68,8 @@ void main() {
         _en.common_privacyPolicy,
         _en.common_termsOfService,
         _en.login_copyright(AppInfo.name),
-        AppInfo.versionLabel,
+        // FIN1: the version with the build stamp.
+        _en.common_versionWithBuild(AppInfo.versionLabel, AppInfo.buildStamp),
       ]) {
         expect(find.text(text), findsOneWidget, reason: text);
       }
