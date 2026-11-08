@@ -95,9 +95,13 @@ void main() {
       await tester.enterText(reference, '  MP26110312345  ');
       await tester.pump();
       final submit = find.text('Submit Payment for Review');
+      // FIN1 (the flake at 390): the prices arrive, and the claim is written
+      // (the screen clears the reference only after the add succeeded), in
+      // real time; wait for each instead of a fixed budget of it.
+      await ph5SettleUntil(tester, () => submit.evaluate().isNotEmpty);
       await tester.ensureVisible(submit.last);
       await tester.tap(submit.last);
-      await ph5Settle(tester);
+      await ph5SettleUntil(tester, () => tester.widget<TextField>(reference).controller!.text.isEmpty);
       while (tester.takeException() != null) {}
       expectSameSaved('subscription', await savedClaims(tester, app.fs));
     }, skip: skip);

@@ -246,6 +246,18 @@ Future<void> ph5Settle(WidgetTester tester) async {
 }
 
 
+/// [ph5Settle], then more of the same until [done] (at most [maxRounds]):
+/// a fixed budget of real time is too short on a loaded machine. FIN1: the
+/// subscription claim (two awaited fake Firestore calls) was once read in a
+/// full run before it had been written.
+Future<void> ph5SettleUntil(WidgetTester tester, bool Function() done, {int maxRounds = 100}) async {
+  await ph5Settle(tester);
+  for (var i = 0; i < maxRounds && !done(); i++) {
+    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 5)));
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
 /// Ends a test: the tree goes, then the screens' own delayed work runs out
 /// (Sales' summary refresh waits 2 s after the sales change, then retries
 /// for a few seconds: AppTimeouts.salesSummaryRefresh and
