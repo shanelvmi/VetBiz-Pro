@@ -27,6 +27,10 @@ class TodayCard extends StatelessWidget {
   /// The eye; null draws none.
   final VoidCallback? onToggleAmounts;
 
+  /// UI3: the current facility's name alone (FacilityDisplay.name), a small
+  /// line at the top of the card.
+  final String facilityName;
+
   const TodayCard({
     super.key,
     required this.figures,
@@ -36,6 +40,7 @@ class TodayCard extends StatelessWidget {
     required this.onAllDetails,
     this.amountsHidden = false,
     this.onToggleAmounts,
+    this.facilityName = '',
   });
 
   @override

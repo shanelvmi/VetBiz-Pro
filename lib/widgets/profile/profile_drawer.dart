@@ -69,6 +69,8 @@ class ProfileDrawerContent extends StatelessWidget {
     required this.email,
     required this.phone,
     required this.facility,
+    this.facilityType = '',
+    this.facilityTypeDetail,
     required this.actions,
     required this.onClose,
   });
@@ -79,6 +81,11 @@ class ProfileDrawerContent extends StatelessWidget {
   final String email;
   final String phone;
   final String facility;
+
+  /// UI3: the current facility's stored type (and an Other facility's own
+  /// words), shown as its small tag.
+  final String facilityType;
+  final String? facilityTypeDetail;
   final List<ProfileDrawerAction> actions;
   final VoidCallback onClose;
 

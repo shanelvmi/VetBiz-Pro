@@ -110,6 +110,9 @@ class PhoneHome extends StatelessWidget {
   final bool amountsHidden;
   final VoidCallback? onToggleAmounts;
 
+  /// UI3: the current facility's name for the Today card.
+  final String facilityName;
+
   const PhoneHome({
     super.key,
     required this.figures,
@@ -127,6 +130,7 @@ class PhoneHome extends StatelessWidget {
     this.attentionReady = true,
     this.amountsHidden = false,
     this.onToggleAmounts,
+    this.facilityName = '',
   });
 
   /// [child] as it is, or as a soft box of its size in the skeleton.
@@ -148,6 +152,7 @@ class PhoneHome extends StatelessWidget {
             onAllDetails: onAllDetails,
             amountsHidden: amountsHidden,
             onToggleAmounts: onToggleAmounts,
+            facilityName: facilityName,
           ),
           radius: PhoneHomeMetrics.cardRadius,
         ),
