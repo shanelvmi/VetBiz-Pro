@@ -13,7 +13,7 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 
 import 'helpers/real_font.dart';
 
-const _skip = true;
+const _skip = false;
 
 Future<void> _pump(WidgetTester tester, Widget child, {required double width, required String locale}) async {
   tester.view.physicalSize = Size(width, 800);
@@ -65,7 +65,7 @@ void main() {
           await tester.pumpAndSettle();
           final cell = find.ancestor(of: label, matching: find.byType(InkWell));
           final text = tester.widget<Text>(label);
-          final paragraph = tester.renderObject<RenderParagraph>(find.descendant(of: cell, matching: find.byType(RichText)));
+          final paragraph = tester.renderObject<RenderParagraph>(find.descendant(of: label, matching: find.byType(RichText)));
           final last = i == items.length - 1;
           final width = tester.getSize(find.ancestor(of: cell, matching: find.byType(SizedBox)).first).width;
           if (last) {

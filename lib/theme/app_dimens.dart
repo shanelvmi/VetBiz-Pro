@@ -621,9 +621,18 @@ class PhoneHomeMetrics {
   static const double tileCircle = 44;
   static const double tileIcon = AppIconSize.i22;
 
+  /// UI2: every tile keeps room for two label lines (each this many times
+  /// the label size), so a one-line label does not lift its icon.
+  static const double tileLabelLineHeight = 1.25;
+
   /// Go to: a sideways list of round shortcuts, faded at the edge.
   static const double goToHeight = 104;
   static const double goToItemWidth = 72;
+
+  /// UI2: Transactions' cell (the last) is as wide as its label on one line,
+  /// measured, within these bounds; the others keep [goToItemWidth].
+  static const double goToFittedMin = 76;
+  static const double goToFittedMax = 96;
   static const double goToCircle = 56;
   static const double goToIcon = AppIconSize.i24;
   static const double goToFade = 32;

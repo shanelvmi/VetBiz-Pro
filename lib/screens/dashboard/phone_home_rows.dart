@@ -13,7 +13,28 @@ import 'record_sheet.dart';
 /// inside the screens), so both roles get all eight.
 enum GoToItem { products, clients, debtors, reports, transactions, stockStore, services, payments }
 
-List<GoToItem> goToItemsFor({required bool isAdmin}) => GoToItem.values;
+/// UI2 (the owner): Transactions moves to the end of the row.
+List<GoToItem> goToItemsFor({required bool isAdmin}) =>
+    [...GoToItem.values.where((i) => i != GoToItem.transactions), GoToItem.transactions];
+
+/// The text style of a round shortcut's label (Go to and Quick access).
+TextStyle _labelStyle(BuildContext context) => TextStyle(fontSize: PhoneHomeMetrics.label, color: context.colors.textPrimary);
+
+/// UI2: Transactions' cell is as wide as its label on one line (measured in
+/// the label's own style and text size), within the fitted bounds; the other
+/// cells keep the uniform width.
+double _goToCellWidth(BuildContext context, GoToItem item, String label) {
+  if (item != GoToItem.transactions) return PhoneHomeMetrics.goToItemWidth;
+  final painter = TextPainter(
+    text: TextSpan(text: label, style: DefaultTextStyle.of(context).style.merge(_labelStyle(context))),
+    textDirection: Directionality.of(context),
+    textScaler: MediaQuery.textScalerOf(context),
+    maxLines: 1,
+  )..layout();
+  final width = painter.width.ceilToDouble() + 2 * AppSpacing.s4;
+  painter.dispose();
+  return width.clamp(PhoneHomeMetrics.goToFittedMin, PhoneHomeMetrics.goToFittedMax);
+}
 
 /// The More page's item for a shortcut; Products is the Products tab instead.
 MoreItem? goToMoreItem(GoToItem item) => switch (item) {
@@ -94,6 +115,7 @@ class _QuickAccessTilesState extends State<QuickAccessTiles> {
                     iconSize: PhoneHomeMetrics.tileIcon,
                     busy: _busy == quickAccessActions[i],
                     center: true,
+                    reserveTwoLines: true,
                     skeleton: widget.skeleton,
                   ),
                 ),
@@ -116,6 +138,10 @@ class _RoundLabel extends StatelessWidget {
   final bool center;
   final bool skeleton;
 
+  /// UI2 (Quick access): the label always takes two lines' room, so every
+  /// tile's icon sits at the same top whether its label wraps or not.
+  final bool reserveTwoLines;
+
   const _RoundLabel({
     required this.icon,
     required this.label,
@@ -124,18 +150,29 @@ class _RoundLabel extends StatelessWidget {
     this.busy = false,
     this.center = false,
     this.skeleton = false,
+    this.reserveTwoLines = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final text = Text(
+    const lineHeight = PhoneHomeMetrics.tileLabelLineHeight;
+    Widget text = Text(
       label,
       maxLines: 2,
       textAlign: TextAlign.center,
       overflow: TextOverflow.ellipsis,
-      style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.textPrimary),
+      style: _labelStyle(context),
+      strutStyle: reserveTwoLines
+          ? const StrutStyle(fontSize: PhoneHomeMetrics.label, height: lineHeight, forceStrutHeight: true)
+          : null,
     );
+    if (reserveTwoLines) {
+      text = SizedBox(
+        height: MediaQuery.textScalerOf(context).scale(PhoneHomeMetrics.label) * lineHeight * 2,
+        child: Align(alignment: Alignment.topCenter, child: text),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s4, vertical: AppSpacing.s4),
       child: Column(
@@ -194,7 +231,7 @@ class GoToRow extends StatelessWidget {
           children: [
             for (final item in items)
               SizedBox(
-                width: PhoneHomeMetrics.goToItemWidth,
+                width: _goToCellWidth(context, item, goToLabel(context, item)),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(AppRadius.r12),
                   onTap: skeleton ? null : () => onGoTo(item),

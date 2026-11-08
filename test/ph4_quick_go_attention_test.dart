@@ -103,19 +103,20 @@ void main() {
   });
 
   group('Go to', () {
-    const order = ['Products', 'Clients', 'Debtors', 'Reports', 'Transactions', 'Stock Store', 'Services', 'Payments'];
+    // UI2 (the owner): Transactions moved to the end of section 4's order.
+    const order = ['Products', 'Clients', 'Debtors', 'Reports', 'Stock Store', 'Services', 'Payments', 'Transactions'];
 
-    test('section 4\'s order for both roles; nothing is admin-only', () {
+    test('section 4\'s order (Transactions last, UI2) for both roles; nothing is admin-only', () {
       for (final admin in [true, false]) {
         expect(goToItemsFor(isAdmin: admin), [
           GoToItem.products,
           GoToItem.clients,
           GoToItem.debtors,
           GoToItem.reports,
-          GoToItem.transactions,
           GoToItem.stockStore,
           GoToItem.services,
           GoToItem.payments,
+          GoToItem.transactions,
         ]);
       }
     }, skip: _skip);
@@ -137,14 +138,14 @@ void main() {
 
       final first = shown();
       expect(first, order.take(first.length));
-      expect(first, isNot(contains('Payments')), reason: 'the last shortcuts are off screen: the row scrolls');
+      expect(first, isNot(contains('Transactions')), reason: 'the last shortcuts are off screen: the row scrolls');
       await tester.tap(find.descendant(of: row, matching: find.text('Clients')));
       await tester.drag(row, const Offset(-600, 0));
       await tester.pumpAndSettle();
       final last = shown();
       expect(last, order.skip(order.length - last.length));
-      await tester.tap(find.descendant(of: row, matching: find.text('Payments')));
-      expect(went, [GoToItem.clients, GoToItem.payments]);
+      await tester.tap(find.descendant(of: row, matching: find.text('Transactions')));
+      expect(went, [GoToItem.clients, GoToItem.transactions]);
       expect(find.byType(ShaderMask), findsOneWidget, reason: 'the fade at the edge');
     }, skip: _skip);
   });
