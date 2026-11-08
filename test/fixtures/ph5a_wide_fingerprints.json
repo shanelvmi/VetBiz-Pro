@@ -347,5 +347,17 @@
   "services-768x1024-list": "-78bbc879db4a579e 1430",
   "ui2-add-product-duplicate-1024x768": "-259c0627de89f3b1 1429",
   "ui2-add-product-duplicate-1200x800": "4409066e2141a269 1429",
-  "ui2-add-product-duplicate-768x1024": "-29fb6452c556de58 1363"
+  "ui2-add-product-duplicate-768x1024": "-29fb6452c556de58 1363",
+  "ui3-profile-drawer-admin-kiswahili-1024x768": "-6251ac990848004f 476",
+  "ui3-profile-drawer-admin-kiswahili-1200x800": "5b7d38c8b23d1abe 476",
+  "ui3-profile-drawer-admin-kiswahili-768x1024": "46137ca6a23a7265 476",
+  "ui3-profile-drawer-admin-light-1024x768": "64e1e00e2613d6a7 476",
+  "ui3-profile-drawer-admin-light-1200x800": "554075c2c0d4f51a 476",
+  "ui3-profile-drawer-admin-light-768x1024": "136bb42cdb5df37b 476",
+  "ui3-profile-drawer-assistant-kiswahili-1024x768": "48cdc28613f10b9a 368",
+  "ui3-profile-drawer-assistant-kiswahili-1200x800": "13a111b4c888b2cb 368",
+  "ui3-profile-drawer-assistant-kiswahili-768x1024": "-115b4a04c598e98a 368",
+  "ui3-profile-drawer-assistant-light-1024x768": "-3c1c39090d0b4170 368",
+  "ui3-profile-drawer-assistant-light-1200x800": "-20f32fc5ed8b8a41 368",
+  "ui3-profile-drawer-assistant-light-768x1024": "-44b9bf640a39b0b4 368"
 }
