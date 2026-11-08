@@ -6063,30 +6063,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get notifications_updateFailed => 'Imeshindikana kusasisha arifa';
 
   @override
-  String get selectFacility_slowLoad =>
-      'Hii inachukua muda mrefu kuliko kawaida. Angalia muunganisho wako kisha ujaribu tena.';
-
-  @override
-  String selectFacility_loadFailed(String error) {
-    return 'Imeshindwa kupakia vituo vyako. $error';
-  }
-
-  @override
-  String get selectFacility_title => 'Chagua Kituo';
-
-  @override
-  String get selectFacility_proceed => 'Endelea';
-
-  @override
-  String get selectFacility_unnamed => 'Bila jina';
-
-  @override
-  String get selectFacility_selected => 'Imechaguliwa';
-
-  @override
-  String get selectFacility_clickToSelect => 'Bofya kuchagua';
-
-  @override
   String get facilities_noneFound => 'Hakuna vituo vilivyopatikana.';
 
   @override
@@ -7487,6 +7463,12 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get home_showAmounts => 'Onyesha kiasi';
+
+  @override
+  String get home_amountHidden => 'Kiasi kimefichwa';
+
+  @override
+  String get profile_currentFacility => 'Kituo cha sasa';
 
   @override
   String common_versionWithBuild(String version, String stamp) {

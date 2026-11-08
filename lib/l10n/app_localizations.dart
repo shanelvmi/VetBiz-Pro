@@ -10284,48 +10284,6 @@ abstract class AppLocalizations {
   /// **'Couldn\'t update the notifications'**
   String get notifications_updateFailed;
 
-  /// Select Facility screen: loading the facilities timed out.
-  ///
-  /// In en, this message translates to:
-  /// **'This is taking longer than expected. Check your connection and try again.'**
-  String get selectFacility_slowLoad;
-
-  /// Select Facility screen: loading failed; error is the friendly reason.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t load your facilities. {error}'**
-  String selectFacility_loadFailed(String error);
-
-  /// Select Facility screen title.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Facility'**
-  String get selectFacility_title;
-
-  /// Select Facility screen button after choosing one.
-  ///
-  /// In en, this message translates to:
-  /// **'Proceed'**
-  String get selectFacility_proceed;
-
-  /// Select Facility card: a facility with no name.
-  ///
-  /// In en, this message translates to:
-  /// **'Unnamed'**
-  String get selectFacility_unnamed;
-
-  /// Select Facility card hint: this one is chosen.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected'**
-  String get selectFacility_selected;
-
-  /// Select Facility card hint on hover.
-  ///
-  /// In en, this message translates to:
-  /// **'Click to select'**
-  String get selectFacility_clickToSelect;
-
   /// Facilities and Select Facility screens: the account has no facility.
   ///
   /// In en, this message translates to:
@@ -12414,6 +12372,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show amounts'**
   String get home_showAmounts;
+
+  /// Phone home (UI3), the Today card: screen-reader label of the soft blurred dots shown in place of an amount while the eye hides the amounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount hidden'**
+  String get home_amountHidden;
+
+  /// Profile menu (UI3): small label above the name of the facility the person is working in now.
+  ///
+  /// In en, this message translates to:
+  /// **'Current facility'**
+  String get profile_currentFacility;
 
   /// FIN1: the app version followed by when this build was made, in the sign-in footer (version v1.0.0) and in Settings (version 1.0.0). stamp is a date and time such as 2026-11-09 14:05, or dev. Build means the compiled copy of the app.
   ///

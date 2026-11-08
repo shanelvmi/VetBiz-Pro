@@ -6029,30 +6029,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications_updateFailed => 'Couldn\'t update the notifications';
 
   @override
-  String get selectFacility_slowLoad =>
-      'This is taking longer than expected. Check your connection and try again.';
-
-  @override
-  String selectFacility_loadFailed(String error) {
-    return 'Couldn\'t load your facilities. $error';
-  }
-
-  @override
-  String get selectFacility_title => 'Select Facility';
-
-  @override
-  String get selectFacility_proceed => 'Proceed';
-
-  @override
-  String get selectFacility_unnamed => 'Unnamed';
-
-  @override
-  String get selectFacility_selected => 'Selected';
-
-  @override
-  String get selectFacility_clickToSelect => 'Click to select';
-
-  @override
   String get facilities_noneFound => 'No facilities found.';
 
   @override
@@ -7443,6 +7419,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get home_showAmounts => 'Show amounts';
+
+  @override
+  String get home_amountHidden => 'Amount hidden';
+
+  @override
+  String get profile_currentFacility => 'Current facility';
 
   @override
   String common_versionWithBuild(String version, String stamp) {
