@@ -7398,4 +7398,44 @@ class AppLocalizationsSw extends AppLocalizations {
     );
     return '$_temp0, $pending wanasubiri idhini';
   }
+
+  @override
+  String get more_findFeature => 'Tafuta kipengele';
+
+  @override
+  String get more_sectionDailyWork => 'Kazi za kila siku';
+
+  @override
+  String get more_sectionStockReports => 'Stoo na ripoti';
+
+  @override
+  String get more_sectionTeamBusiness => 'Timu na biashara';
+
+  @override
+  String get more_sectionApp => 'Programu';
+
+  @override
+  String get more_noMatch =>
+      'Hakuna kipengele kinacholingana na utafutaji wako';
+
+  @override
+  String get more_keywordsClients => 'mteja, wakulima, wafugaji';
+
+  @override
+  String get more_keywordsDebtors => 'madeni, deni, mkopo, anadaiwa';
+
+  @override
+  String get more_keywordsServices => 'ziara, matibabu, chanjo, kliniki';
+
+  @override
+  String get more_keywordsPayments => 'lipa, pokea, fedha, pesa';
+
+  @override
+  String get more_keywordsTransactions => 'matumizi, mapato, gharama';
+
+  @override
+  String get more_keywordsStockStore => 'bidhaa, ghala, akiba';
+
+  @override
+  String get more_keywordsReports => 'ripoti ya siku, muhtasari';
 }

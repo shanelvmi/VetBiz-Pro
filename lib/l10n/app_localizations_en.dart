@@ -7353,4 +7353,43 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0, $pending waiting approval';
   }
+
+  @override
+  String get more_findFeature => 'Find a feature';
+
+  @override
+  String get more_sectionDailyWork => 'Daily work';
+
+  @override
+  String get more_sectionStockReports => 'Stock and reports';
+
+  @override
+  String get more_sectionTeamBusiness => 'Team and business';
+
+  @override
+  String get more_sectionApp => 'App';
+
+  @override
+  String get more_noMatch => 'No feature matches your search';
+
+  @override
+  String get more_keywordsClients => 'customers, farmers, people';
+
+  @override
+  String get more_keywordsDebtors => 'debts, owe, credit, unpaid, overdue';
+
+  @override
+  String get more_keywordsServices => 'visit, treatment, vaccination, clinic';
+
+  @override
+  String get more_keywordsPayments => 'paid, receive, cash, mobile money';
+
+  @override
+  String get more_keywordsTransactions => 'expenses, income, spending';
+
+  @override
+  String get more_keywordsStockStore => 'stock, inventory, warehouse, store';
+
+  @override
+  String get more_keywordsReports => 'daily report, summary, pdf';
 }

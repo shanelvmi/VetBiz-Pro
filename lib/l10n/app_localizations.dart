@@ -12252,6 +12252,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 member} other{{count} members}}, {pending} waiting approval'**
   String team_phoneSummaryLine(int count, int pending);
+
+  /// More page on a phone (MR1): the hint in the search field that filters the round icons.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a feature'**
+  String get more_findFeature;
+
+  /// More page on a phone (MR1): the title of the section with Clients, Debtors, Services, Payments and Transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily work'**
+  String get more_sectionDailyWork;
+
+  /// More page on a phone (MR1): the title of the section with Stock Store, Reports, Insights and Activity Log.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock and reports'**
+  String get more_sectionStockReports;
+
+  /// More page on a phone (MR1): the title of the section with Team Members, Facilities, Business Hours and Subscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Team and business'**
+  String get more_sectionTeamBusiness;
+
+  /// More page on a phone (MR1): the title of the section with Settings, Printer settings, Export Data, Trash, Manage Account and Help.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get more_sectionApp;
+
+  /// More page on a phone (MR1): the one line shown when the search leaves no icon.
+  ///
+  /// In en, this message translates to:
+  /// **'No feature matches your search'**
+  String get more_noMatch;
+
+  /// More page search (MR1): extra words, separated by commas, that find Clients. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'customers, farmers, people'**
+  String get more_keywordsClients;
+
+  /// More page search (MR1): extra words, separated by commas, that find Debtors. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'debts, owe, credit, unpaid, overdue'**
+  String get more_keywordsDebtors;
+
+  /// More page search (MR1): extra words, separated by commas, that find Services. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'visit, treatment, vaccination, clinic'**
+  String get more_keywordsServices;
+
+  /// More page search (MR1): extra words, separated by commas, that find Payments. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'paid, receive, cash, mobile money'**
+  String get more_keywordsPayments;
+
+  /// More page search (MR1): extra words, separated by commas, that find Transactions. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'expenses, income, spending'**
+  String get more_keywordsTransactions;
+
+  /// More page search (MR1): extra words, separated by commas, that find Stock Store. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'stock, inventory, warehouse, store'**
+  String get more_keywordsStockStore;
+
+  /// More page search (MR1): extra words, separated by commas, that find Reports. Not shown. Both languages are searched.
+  ///
+  /// In en, this message translates to:
+  /// **'daily report, summary, pdf'**
+  String get more_keywordsReports;
 }
 
 class _AppLocalizationsDelegate
