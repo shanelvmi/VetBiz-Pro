@@ -5,8 +5,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
+import 'package:vetbiz_pro/screens/dashboard/phone_bar_shape.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_shell.dart';
 import 'package:vetbiz_pro/theme/app_colors.dart';
+import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_icons.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_text.dart';
@@ -67,6 +69,9 @@ Future<void> _shell(
 }
 
 final _bar = find.byType(PhoneBottomBar);
+// UI2: the drawn bar (the widget's box is taller: the + floats above it).
+final _shape = find.byKey(const ValueKey('phone-bar-shape'));
+PhoneBarPainter _painter(WidgetTester tester) => tester.widget<CustomPaint>(_shape).painter! as PhoneBarPainter;
 Finder _label(String text) => find.descendant(of: _bar, matching: find.text(text));
 final _line = find.byKey(const ValueKey('phone-bar-active-line'));
 final _record = find.byKey(const ValueKey('phone-bar-record'));
@@ -87,21 +92,19 @@ Icon _iconOf(WidgetTester tester, PhoneTab tab) => tester.widget<Icon>(find.desc
 void main() {
   testWidgets('the bar: docked at the bottom, 64 high plus the home indicator, the full width', (tester) async {
     await _shell(tester);
-    expect(tester.getRect(_bar), const Rect.fromLTWH(0, 844 - 64 - 34, 390, 64 + 34));
+    expect(tester.getRect(_shape), const Rect.fromLTWH(0, 844 - 64 - 34, 390, 64 + 34));
   }, skip: _skip);
 
   testWidgets('rounded upper corners (20), the navBarFill tint and a very light shadow', (tester) async {
     await _shell(tester);
     final colors = AppColors.fromTheme(AppColorTheme.pasture);
-    final material = tester.widget<Material>(find.descendant(of: _bar, matching: find.byType(Material)).first);
-    expect(material.color, colors.navBarFill);
-    expect(material.borderRadius, const BorderRadius.vertical(top: Radius.circular(20)));
-    final shadow = (tester.widget<DecoratedBox>(find.descendant(of: _bar, matching: find.byType(DecoratedBox)).first)
-            .decoration as BoxDecoration)
-        .boxShadow!
-        .single;
-    expect(shadow.color.a, lessThanOrEqualTo(0.1), reason: 'very light');
-    expect(shadow.offset.dy, lessThan(0), reason: 'cast upwards');
+    // UI2: drawn by PhoneBarPainter along phoneBarPath (ui2_bar_test).
+    expect(_painter(tester).fill, colors.navBarFill);
+    final path = phoneBarPath(const Size(390, 98), centerX: 195);
+    expect(path.contains(const Offset(20 - 20 * 0.7071 - 1, 20 - 20 * 0.7071 - 1)), isFalse, reason: 'radius 20');
+    expect(path.contains(const Offset(20 - 20 * 0.7071 + 1, 20 - 20 * 0.7071 + 1)), isTrue);
+    expect(_painter(tester).shadow.a, lessThanOrEqualTo(0.1), reason: 'very light');
+    expect(PhoneShellMetrics.barShadowOffsetY, lessThan(0), reason: 'cast upwards');
   }, skip: _skip);
 
   testWidgets('five equal slots; one icon size and one label size; the labels on one baseline', (tester) async {
@@ -142,7 +145,7 @@ void main() {
         }
       }
       final line = tester.getRect(_line);
-      final bar = tester.getRect(_bar);
+      final bar = tester.getRect(_shape);
       final slot = 390 / 5;
       final index = _slots.indexOf(tab);
       expect(line.size, const Size(20, 3));
@@ -178,7 +181,7 @@ void main() {
         testWidgets('${theme.id} ${brightness.name}', (tester) async {
           await _shell(tester, theme: theme, brightness: brightness);
           final colors = AppColors.fromTheme(theme, brightness: brightness);
-          final fill = tester.widget<Material>(find.descendant(of: _bar, matching: find.byType(Material)).first).color!;
+          final fill = _painter(tester).fill;
           expect(fill, colors.navBarFill);
           final active = _iconOf(tester, PhoneTab.home).color!;
           final inactive = _iconOf(tester, PhoneTab.sales).color!;
@@ -189,20 +192,20 @@ void main() {
     }
   });
 
-  testWidgets('the +: a 56 squircle (radius 20) in accent with a soft shadow, a 48+ target labelled Record', (tester) async {
+  // UI2 replaced NAV1's accent squircle inside the bar: a 56 circle on the
+  // brand gradient floating in the trough (ui2_bar_test has the rest).
+  testWidgets('the +: a 56 circle on the brand gradient with a soft shadow, a 48+ target labelled Record', (tester) async {
     await _shell(tester);
     final colors = AppColors.fromTheme(AppColorTheme.pasture);
-    final material = tester.widget<Material>(_record);
-    expect(material.color, colors.accent);
-    final shape = material.shape as RoundedSuperellipseBorder;
-    expect(shape.borderRadius, const BorderRadius.all(Radius.circular(20)));
+    expect(tester.widget<Material>(_record).shape, const CircleBorder());
     expect(tester.getSize(_record), const Size(56, 56));
     final decoration = tester.widget<DecoratedBox>(find.ancestor(of: _record, matching: find.byType(DecoratedBox)).first)
         .decoration as ShapeDecoration;
+    expect((decoration.gradient! as LinearGradient).colors, [colors.brandGradientStart, colors.brandGradientEnd]);
     expect(decoration.shadows, hasLength(1));
     final target = tester.getSize(find.bySemanticsLabel('Record'));
     expect(target.width >= 48 && target.height >= 48, isTrue);
-    expect(tester.getRect(_record).top, greaterThanOrEqualTo(tester.getRect(_bar).top), reason: 'inside the bar');
+    expect(tester.getRect(_record).top, lessThan(tester.getRect(_shape).top), reason: 'floating above the edge');
   }, skip: _skip);
 
   testWidgets('the plus turns to a cross while the sheet is open, and back when it closes', (tester) async {

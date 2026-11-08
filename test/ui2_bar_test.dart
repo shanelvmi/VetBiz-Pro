@@ -18,7 +18,7 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/theme/color_math.dart';
 
-const _skip = true;
+const _skip = false;
 
 Widget _tab(String name) => Scaffold(
       body: ListView(

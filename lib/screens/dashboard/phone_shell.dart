@@ -11,6 +11,7 @@ import '../../theme/app_motion.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../widgets/app_safe_area.dart';
+import 'phone_bar_shape.dart';
 
 /// The four places of the phone shell (docs/design/phone_shell.md D1 and
 /// section 4). The central "+" is not a place: it opens the record sheet.
@@ -270,7 +271,8 @@ class _PhoneShellBanner extends InheritedWidget {
 /// plus the home indicator. It sits below the Scaffold's body, so it never
 /// covers content. Not a pill: the selected item shows its filled icon and a
 /// semibold label in primary, under a short line at the bar's top edge that
-/// slides and fades to the item chosen.
+/// slides and fades to the item chosen. UI2: a smooth trough at the centre
+/// of its top edge holds the round "+" (phone_bar_shape.dart).
 class PhoneBottomBar extends StatelessWidget {
   final PhoneTab current;
   final ValueChanged<PhoneTab> onSelect;
@@ -309,63 +311,73 @@ class PhoneBottomBar extends StatelessWidget {
     final colors = context.colors;
     final bottom = AppSafeArea.bottomOf(context);
     final still = MediaQuery.disableAnimationsOf(context);
-    const corners = BorderRadius.vertical(top: Radius.circular(PhoneShellMetrics.barRadius));
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: corners,
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: PhoneShellMetrics.barShadowAlpha),
-            blurRadius: PhoneShellMetrics.barShadowBlur,
-            offset: const Offset(0, PhoneShellMetrics.barShadowOffsetY),
-          ),
-        ],
-      ),
-      child: Material(
-        color: colors.navBarFill,
-        borderRadius: corners,
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: EdgeInsets.only(bottom: bottom),
-          child: SizedBox(
-            height: PhoneShellMetrics.barHeight,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final slot = constraints.maxWidth / slots.length;
-                return Stack(
+    const lift = PhoneShellMetrics.recordLift;
+    // UI2: the bar's own box is [lift] taller than the drawn bar, so the "+"
+    // floating in the trough above the top edge is inside it (and takes its
+    // taps); the body ends above it, so nothing hides behind the button.
+    return SizedBox(
+      height: lift + PhoneShellMetrics.barHeight + bottom,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final slot = width / slots.length;
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                top: lift,
+                child: CustomPaint(
+                  key: const ValueKey('phone-bar-shape'),
+                  painter: PhoneBarPainter(
+                    fill: colors.navBarFill,
+                    border: colors.border,
+                    shadow: colors.shadow.withValues(alpha: PhoneShellMetrics.barShadowAlpha),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: lift,
+                left: 0,
+                right: 0,
+                height: PhoneShellMetrics.barHeight,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (final tab in slots)
-                          Expanded(
-                            child: tab == null
-                                ? _RecordButton(onTap: onRecord, open: recordOpen)
-                                : _BarItem(
-                                    icon: _icon(tab),
-                                    label: _label(context, tab),
-                                    selected: current == tab,
-                                    onTap: () => onSelect(tab),
-                                  ),
-                          ),
-                      ],
-                    ),
-                    AnimatedPositioned(
-                      key: const ValueKey('phone-bar-active-line'),
-                      duration: still ? Duration.zero : AppMotion.normal,
-                      curve: Curves.easeOutCubic,
-                      top: 0,
-                      left: slot * (slots.indexOf(current) + 0.5) - PhoneShellMetrics.indicatorWidth / 2,
-                      width: PhoneShellMetrics.indicatorWidth,
-                      height: PhoneShellMetrics.indicatorHeight,
-                      child: _ActiveLine(current: current, still: still),
-                    ),
+                    for (final tab in slots)
+                      Expanded(
+                        // The centre slot stays empty: the "+" floats over it.
+                        child: tab == null
+                            ? const SizedBox.shrink()
+                            : _BarItem(
+                                icon: _icon(tab),
+                                label: _label(context, tab),
+                                selected: current == tab,
+                                onTap: () => onSelect(tab),
+                              ),
+                      ),
                   ],
-                );
-              },
-            ),
-          ),
-        ),
+                ),
+              ),
+              AnimatedPositioned(
+                key: const ValueKey('phone-bar-active-line'),
+                duration: still ? Duration.zero : AppMotion.normal,
+                curve: Curves.easeOutCubic,
+                top: lift,
+                left: slot * (slots.indexOf(current) + 0.5) - PhoneShellMetrics.indicatorWidth / 2,
+                width: PhoneShellMetrics.indicatorWidth,
+                height: PhoneShellMetrics.indicatorHeight,
+                child: _ActiveLine(current: current, still: still),
+              ),
+              Positioned(
+                top: 0,
+                left: (width - PhoneShellMetrics.recordSize) / 2,
+                width: PhoneShellMetrics.recordSize,
+                height: PhoneShellMetrics.recordSize,
+                child: _RecordButton(onTap: onRecord, open: recordOpen),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -441,9 +453,11 @@ class _BarItem extends StatelessWidget {
   }
 }
 
-/// The central "+": a squircle in accent with a soft shadow; the plus turns
+/// The central "+" (UI2): a 56 px circle on the theme's brand gradient (the
+/// Today card's pair; the amber accent stays the warning colour) with a soft
+/// shadow, floating in the bar's trough; the plus, in the on-brand ink, turns
 /// to a cross while the sheet is open (at once under reduced motion). The
-/// whole slot is the tap target.
+/// whole circle is the tap target, and only the circle.
 class _RecordButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool open;
@@ -460,38 +474,39 @@ class _RecordButton extends StatelessWidget {
       label: context.l10n.shell_record,
       onTap: onTap,
       excludeSemantics: true,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Center(
-          child: DecoratedBox(
-            decoration: ShapeDecoration(
-              shape: const RoundedSuperellipseBorder(
-                borderRadius: BorderRadius.all(Radius.circular(PhoneShellMetrics.recordRadius)),
-              ),
-              shadows: [
-                BoxShadow(
-                  color: colors.shadow.withValues(alpha: PhoneShellMetrics.recordShadowAlpha),
-                  blurRadius: PhoneShellMetrics.recordShadowBlur,
-                  offset: const Offset(0, PhoneShellMetrics.recordShadowOffsetY),
-                ),
-              ],
+      child: DecoratedBox(
+        key: const ValueKey('phone-bar-record-fill'),
+        decoration: ShapeDecoration(
+          shape: const CircleBorder(),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [colors.brandGradientStart, colors.brandGradientEnd],
+          ),
+          shadows: [
+            BoxShadow(
+              color: colors.shadow.withValues(alpha: PhoneShellMetrics.recordShadowAlpha),
+              blurRadius: PhoneShellMetrics.recordShadowBlur,
+              offset: const Offset(0, PhoneShellMetrics.recordShadowOffsetY),
             ),
-            child: Material(
-              key: const ValueKey('phone-bar-record'),
-              color: colors.accent,
-              shape: const RoundedSuperellipseBorder(
-                borderRadius: BorderRadius.all(Radius.circular(PhoneShellMetrics.recordRadius)),
-              ),
-              child: SizedBox(
-                width: PhoneShellMetrics.recordSize,
-                height: PhoneShellMetrics.recordSize,
-                child: AnimatedRotation(
-                  turns: open ? PhoneShellMetrics.recordOpenTurns : 0,
-                  duration: still ? Duration.zero : AppMotion.normal,
-                  curve: Curves.easeOutCubic,
-                  child: Icon(Icons.add, size: PhoneShellMetrics.recordIcon, color: colors.onAccent),
-                ),
+          ],
+        ),
+        child: Material(
+          key: const ValueKey('phone-bar-record'),
+          type: MaterialType.transparency,
+          shape: const CircleBorder(),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: SizedBox(
+              width: PhoneShellMetrics.recordSize,
+              height: PhoneShellMetrics.recordSize,
+              child: AnimatedRotation(
+                turns: open ? PhoneShellMetrics.recordOpenTurns : 0,
+                duration: still ? Duration.zero : AppMotion.normal,
+                curve: Curves.easeOutCubic,
+                child: Icon(Icons.add, size: PhoneShellMetrics.recordIcon, color: colors.onBrandSurface),
               ),
             ),
           ),

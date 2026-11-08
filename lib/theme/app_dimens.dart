@@ -517,12 +517,12 @@ class PhoneShellMetrics {
   /// The tint behind the "+" sheet's icons (primary at 12%).
   static const double tintAlpha = 0.12;
 
-  /// The central "+": a squircle in accent inside the bar, with a soft
-  /// shadow; its plus turns to a cross ([recordOpenTurns]) while the record
-  /// sheet is open. The whole slot is its tap target.
+  /// The central "+" (UI2): a circle on the brand gradient floating in the
+  /// bar's trough, with a soft shadow; its plus turns to a cross
+  /// ([recordOpenTurns]) while the record sheet is open. The circle is its
+  /// tap target.
   static const double recordSize = 56;
   static const double recordIcon = 28;
-  static const double recordRadius = AppRadius.r20;
   static const double recordShadowAlpha = 0.22;
   static const double recordShadowBlur = 12;
   static const double recordShadowOffsetY = 4;
