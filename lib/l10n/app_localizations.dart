@@ -12408,6 +12408,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show amounts'**
   String get home_showAmounts;
+
+  /// FIN1: the app version followed by when this build was made, in the sign-in footer (version v1.0.0) and in Settings (version 1.0.0). stamp is a date and time such as 2026-11-09 14:05, or dev. Build means the compiled copy of the app.
+  ///
+  /// In en, this message translates to:
+  /// **'{version} (build {stamp})'**
+  String common_versionWithBuild(String version, String stamp);
 }
 
 class _AppLocalizationsDelegate

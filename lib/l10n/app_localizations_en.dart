@@ -7432,4 +7432,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get home_showAmounts => 'Show amounts';
+
+  @override
+  String common_versionWithBuild(String version, String stamp) {
+    return '$version (build $stamp)';
+  }
 }

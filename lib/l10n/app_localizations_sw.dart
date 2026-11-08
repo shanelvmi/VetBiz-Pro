@@ -7476,4 +7476,9 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get home_showAmounts => 'Onyesha kiasi';
+
+  @override
+  String common_versionWithBuild(String version, String stamp) {
+    return '$version (muundo $stamp)';
+  }
 }
