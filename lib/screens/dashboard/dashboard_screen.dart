@@ -1617,8 +1617,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             // the period totals and the debts have answered (or 1.2 s);
             // Needs attention is a late slot.
             home: (homeContext) {
+              // NAV1: the Today card's eye, remembered on this device.
+              final uiSettings = Provider.of<UiSettingsProvider>(homeContext);
               PhoneHome home({required bool skeleton}) => PhoneHome(
                     skeleton: skeleton,
+                    amountsHidden: uiSettings.homeAmountsHidden,
+                    onToggleAmounts: () => uiSettings.setHomeAmountsHidden(!uiSettings.homeAmountsHidden),
                     figures: PhoneHomeFigures.from(_periodTotals,
                         owed: debtProvider.totalOutstanding(), loading: _isPeriodLoading),
                     isAdmin: isAdmin,
