@@ -19,7 +19,6 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
-import '../../theme/app_breakpoints.dart';
 import '../../theme/app_layout.dart';
 import '../../l10n/l10n.dart';
 
@@ -175,8 +174,6 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                           const SizedBox(height: AppSpacing.s20),
                           _buildFacilityGrid(),
                           const SizedBox(height: AppSpacing.s24),
-                          _buildFooter(),
-                          const SizedBox(height: AppSpacing.s24),
                         ],
                       ),
                     ),
@@ -205,31 +202,32 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     return Container(
       color: context.colors.brandSurface,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s14),
+      // UI1: the brand (the mark and the name) at the left, the profile menu
+      // in the right corner. Each side may take half the bar, so on a phone
+      // the names shorten with an ellipsis instead of overflowing (FX1); with
+      // the brand an Expanded, the menu used to sit in the middle.
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Container(
-            width: 34,
-            height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(color: context.colors.onBrandSurface, shape: BoxShape.circle),
-            child: Text(AppInfo.logoInitials,
-                style: TextStyle(color: context.colors.brandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
-          ),
-          const SizedBox(width: AppSpacing.s10),
-          // Takes the room left (it was a Spacer), so on a phone the names
-          // shorten with an ellipsis instead of overflowing (FX1).
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(AppInfo.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-                Text(context.l10n.facilityPicker_tagline,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: context.colors.onBrandSurfaceMuted, fontSize: _phone ? AppFontSize.f12 : AppFontSize.f10_5)),
+                Container(
+                  width: 34,
+                  height: 34,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: context.colors.onBrandSurface, shape: BoxShape.circle),
+                  child: Text(AppInfo.logoInitials,
+                      style: TextStyle(color: context.colors.brandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
+                ),
+                const SizedBox(width: AppSpacing.s10),
+                Flexible(
+                  child: Text(AppInfo.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                ),
               ],
             ),
           ),
@@ -268,76 +266,35 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     );
   }
 
+  // UI1: the page header centred at every width: the store icon in its circle
+  // above, then the title and its subtitle. The decorative icons that sat at
+  // the right on wider screens (a tractor, a rabbit and a paw) are gone.
   Widget _buildHero() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < AppBreakpoints.stackSections;
-        final textRow = Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.s14),
-              decoration: BoxDecoration(
-                color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.storefront_outlined, color: context.colors.primary, size: AppIconSize.i24),
+    return SizedBox(
+      // The page's full width, so the header is centred on the page.
+      width: double.infinity,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.s14),
+            decoration: BoxDecoration(
+              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
+              shape: BoxShape.circle,
             ),
-            const SizedBox(width: AppSpacing.s16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.facilityPicker_title,
-                      style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.primary)),
-                  const SizedBox(height: AppSpacing.s6),
-                  Text(
-                    context.l10n.facilityPicker_intro,
-                    style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13_5),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-
-        // Narrow (phones): the Row alone. It used to return the Expanded below
-        // straight into this LayoutBuilder, which is not a Row or a Column: in a
-        // release build that threw (BoxParentData is not a FlexParentData) and
-        // the whole screen below the header was the grey error box (FX1).
-        if (isNarrow) return textRow;
-
-        return Row(
-          children: [
-            Expanded(child: textRow),
-            const SizedBox(width: AppSpacing.s16),
-            SizedBox(
-              width: 110,
-              height: 70,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned(
-                    left: 0,
-                    bottom: 0,
-                    child: Icon(Icons.agriculture_outlined, color: context.colors.primary.withValues(alpha: AppAlpha.a30), size: AppIconSize.i56),
-                  ),
-                  Positioned(
-                    right: 10,
-                    top: 4,
-                    child: Icon(Icons.cruelty_free, color: context.colors.accent.withValues(alpha: AppAlpha.a50), size: AppIconSize.i32),
-                  ),
-                  Positioned(
-                    right: 0,
-                    bottom: 6,
-                    child: Icon(Icons.pets, color: context.colors.primary.withValues(alpha: AppAlpha.a40), size: AppIconSize.i22),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
+            child: Icon(Icons.storefront_outlined, color: context.colors.primary, size: AppIconSize.i24),
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          Text(context.l10n.facilityPicker_title,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.primary)),
+          const SizedBox(height: AppSpacing.s6),
+          Text(
+            context.l10n.facilityPicker_intro,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13_5),
+          ),
+        ],
+      ),
     );
   }
 
@@ -568,14 +525,5 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
       );
     }
     return Row(children: [...staff, const SizedBox(width: AppSpacing.s12), ...state]);
-  }
-
-  Widget _buildFooter() {
-    return Center(
-      child: Text(
-        context.l10n.facilityPicker_footer,
-        style: TextStyle(color: context.colors.textHint, fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5),
-      ),
-    );
   }
 }

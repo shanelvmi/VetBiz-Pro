@@ -84,7 +84,7 @@ void main() {
         }
         // Before K6 the Other chip (chart4) measured 3.08 to 3.47.
         expect(ColorMath.contrast(c.chart4, tint(c.chart4, AppAlpha.a10, c.surface)), lessThan(4.5));
-        // Header on brandSurface: name, tagline, account; the logo plate.
+        // Header on brandSurface: name, account; the logo plate.
         expect(ColorMath.contrast(c.onBrandSurface, c.brandSurface), greaterThanOrEqualTo(4.5));
         expect(ColorMath.contrast(c.onBrandSurfaceMuted, c.brandSurface), greaterThanOrEqualTo(4.5));
         expect(ColorMath.contrast(c.brandSurface, c.onBrandSurface), greaterThanOrEqualTo(4.5));
@@ -199,7 +199,6 @@ void main() {
         }
         expectReadable(tester, l10n.facilityPicker_title);
         expectReadable(tester, l10n.facilityPicker_intro);
-        expectReadable(tester, l10n.facilityPicker_tagline);
         expectReadable(tester, l10n.facilityPicker_openFacility);
         expectReadable(tester, l10n.facilityPicker_locationNotSet);
       });
