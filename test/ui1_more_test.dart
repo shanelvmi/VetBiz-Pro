@@ -16,7 +16,7 @@ import 'package:vetbiz_pro/screens/dashboard/more_screen.dart';
 import 'helpers/mr1_more.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 /// The profile menu's items that are also More destinations (the drawer
 /// pushes the same screens as these items), and the top bar's two icons.
@@ -36,15 +36,29 @@ const _assistant = {
   'app': ['printerSettings', 'manageAccount'],
 };
 
+/// MR1's grid, before UI1: everything the role could reach from More.
+const _beforeAdmin = {
+  'dailyWork': ['clients', 'debtors', 'services', 'payments', 'transactions'],
+  'stockAndReports': ['stockStore', 'reports', 'insights', 'activityLog'],
+  'teamAndBusiness': ['team', 'facilities', 'businessHours', 'subscription'],
+  'app': ['settings', 'printerSettings', 'export', 'trash', 'manageAccount', 'help'],
+};
+
+const _beforeAssistant = {
+  'dailyWork': ['clients', 'debtors', 'services', 'payments', 'transactions'],
+  'stockAndReports': ['stockStore', 'reports', 'insights'],
+  'app': ['settings', 'printerSettings', 'manageAccount', 'help'],
+};
+
 Widget _page({bool isAdmin = true, bool isPlatformAdmin = false}) =>
     MoreScreen(isAdmin: isAdmin, isPlatformAdmin: isPlatformAdmin, onOpen: (_, __) async {});
 
 void main() {
   test('the partition: no item of the profile menu or the top bar in More; everything still reachable', () {
     for (final (admin, platform, before) in [
-      (true, false, mrAdminSections),
-      (true, true, {...mrAdminSections, 'platform': ['platformAdmin']}),
-      (false, false, mrAssistantSections),
+      (true, false, _beforeAdmin),
+      (true, true, {..._beforeAdmin, 'platform': ['platformAdmin']}),
+      (false, false, _beforeAssistant),
     ]) {
       final now = moreItemsFor(isAdmin: admin, isPlatformAdmin: platform).toSet();
       expect(now.intersection(_profileMenu), isEmpty);

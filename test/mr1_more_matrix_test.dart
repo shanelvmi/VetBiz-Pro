@@ -1,6 +1,6 @@
 // MR1, written before the change: the redesigned More page at every size in
-// Light, Dark and Kiswahili (and 360 at text 1.3), with a very long person
-// and facility name, plus the phone held sideways (740 x 360): no overflow,
+// Light, Dark and Kiswahili (and 360 at text 1.3; UI1 removed the profile
+// card that drew a very long person and facility name), plus the phone held sideways (740 x 360): no overflow,
 // 48 px targets, no text under 12 px. The page exists only in the phone
 // shell; the wider sizes are the screen itself, as PH3's matrix did.
 import 'package:flutter/material.dart';
@@ -11,15 +11,7 @@ import 'helpers/screen_size_matrix.dart';
 
 const _skip = false;
 
-Widget _page() => MoreScreen(
-      isAdmin: true,
-      isPlatformAdmin: true,
-      onOpen: (_, __) async {},
-      profileName: 'Mr. $matrixLongClientName',
-      profileRoleLabel: 'Co-admin',
-      profileFacilityName: matrixLongFacilityName,
-      onProfile: () {},
-    );
+Widget _page() => MoreScreen(isAdmin: true, isPlatformAdmin: true, onOpen: (_, __) async {});
 
 void main() {
   final stub = {for (final s in matrixSizes) for (final l in MatrixLook.values) matrixCase(s, l): 'MR1 not built yet', matrixTextScaleCase: 'MR1 not built yet'};

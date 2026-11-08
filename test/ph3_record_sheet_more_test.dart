@@ -155,19 +155,20 @@ void main() {
 
   // MR1: in the order of the sections (Daily work, Stock and reports, Team and
   // business, App, Platform); Printer settings and Manage Account joined as
-  // Settings offers them to every role.
+  // Settings offers them to every role. UI1: without the profile menu's items
+  // (Team Members, Facilities, Activity log) and the app bar's (Settings, Help).
   test('More: the admin items, in order, and the assistant\'s (no admin item)', () {
     const admin = [
       MoreItem.clients, MoreItem.debtors, MoreItem.services, MoreItem.payments, MoreItem.transactions,
-      MoreItem.stockStore, MoreItem.reports, MoreItem.insights, MoreItem.activityLog,
-      MoreItem.team, MoreItem.facilities, MoreItem.businessHours, MoreItem.subscription,
-      MoreItem.settings, MoreItem.printerSettings, MoreItem.export, MoreItem.trash, MoreItem.manageAccount, MoreItem.help,
+      MoreItem.stockStore, MoreItem.reports, MoreItem.insights,
+      MoreItem.businessHours, MoreItem.subscription,
+      MoreItem.printerSettings, MoreItem.export, MoreItem.trash, MoreItem.manageAccount,
     ];
     expect(moreItemsFor(isAdmin: true), admin);
     expect(moreItemsFor(isAdmin: false), [
       MoreItem.clients, MoreItem.debtors, MoreItem.services, MoreItem.payments, MoreItem.transactions,
       MoreItem.stockStore, MoreItem.reports, MoreItem.insights,
-      MoreItem.settings, MoreItem.printerSettings, MoreItem.manageAccount, MoreItem.help,
+      MoreItem.printerSettings, MoreItem.manageAccount,
     ]);
     expect(moreItemsFor(isAdmin: true, isPlatformAdmin: true), [...admin, MoreItem.platformAdmin]);
     expect(moreItemsFor(isAdmin: false, isPlatformAdmin: true).last, MoreItem.platformAdmin);
@@ -179,7 +180,8 @@ void main() {
     for (final label in ['Team Members', 'Facilities', 'Trash', 'Export Data', 'Business Hours', 'Subscription', 'Activity Log']) {
       expect(find.text(label), findsNothing, reason: label);
     }
-    for (final label in ['Services', 'Payments', 'Transactions', 'Reports', 'Insights', 'Stock Store', 'Settings', 'Help']) {
+    // UI1: Settings and Help are the app bar's icons (tooltips), not cells.
+    for (final label in ['Services', 'Payments', 'Transactions', 'Reports', 'Insights', 'Stock Store', 'Manage Account']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     await tester.tap(find.text('Stock Store'));

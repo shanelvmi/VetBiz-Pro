@@ -545,17 +545,6 @@ class MoreMetrics {
   static const double label = AppFontSize.f12;
   static const double labelGap = AppSpacing.s4;
 
-  /// The profile card: avatar, the name over the role and facility line.
-  static const double profileAvatar = 48;
-  static const double profilePadding = AppSpacing.s12;
-  static const double profileGap = AppSpacing.s12;
-  static const double profileRadius = AppRadius.r16;
-  static const double profileName = AppFontSize.f16;
-  static const double profileLine = AppFontSize.f14;
-  static const double profileDot = 4;
-  static const double profileDotGap = AppSpacing.s6;
-  static const double profileChevron = AppIconSize.i24;
-
   /// Find a feature: a rounded 48 px field. Its text is 16 so that a phone's
   /// browser does not zoom in on focus.
   static const double searchHeight = 48;

@@ -9,14 +9,14 @@
 // role is not drawn. The role gates are today's (PH3's list, the drawer's and
 // Settings'); Printer settings and Manage Account join as Settings offers
 // them to every role; Business profile does not, as Settings never opens it.
+// UI1 changed it: the profile card is gone, and the grid leaves out what the
+// profile menu has (Team Members, Facilities, Activity log) and Settings and
+// Help (the app bar's icons); ui1_more_test.dart checks the partition.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vetbiz_pro/screens/activity/activity_log_screen.dart';
-import 'package:vetbiz_pro/screens/admin/manage_assistants_screen.dart';
 import 'package:vetbiz_pro/screens/clients/clients_screen.dart';
 import 'package:vetbiz_pro/screens/dashboard/insights_screen.dart';
 import 'package:vetbiz_pro/screens/debtors/debtors_screen.dart';
-import 'package:vetbiz_pro/screens/facilities/facility_screen.dart';
 import 'package:vetbiz_pro/screens/payments/payments_screen.dart';
 import 'package:vetbiz_pro/screens/platform_admin/platform_admin_home_screen.dart';
 import 'package:vetbiz_pro/screens/reports/view_reports_screen.dart';
@@ -25,7 +25,6 @@ import 'package:vetbiz_pro/screens/settings/business_hours_screen.dart';
 import 'package:vetbiz_pro/screens/settings/export_data_screen.dart';
 import 'package:vetbiz_pro/screens/settings/manage_account_screen.dart';
 import 'package:vetbiz_pro/screens/settings/printer_settings_screen.dart';
-import 'package:vetbiz_pro/screens/settings/settings_screen.dart';
 import 'package:vetbiz_pro/screens/settings/trash_screen.dart';
 import 'package:vetbiz_pro/screens/store/stockstore_screen.dart';
 import 'package:vetbiz_pro/screens/subscription/subscription_screen.dart';
@@ -54,12 +53,12 @@ void main() {
     }, skip: _skip);
 
     testWidgets('Co-admin (an admin in the app): the admin\'s sections and items', (tester) async {
-      await mrPump(tester, mrMore(roleLabel: 'Co-admin'));
+      await mrPump(tester, mrMore());
       expect(mrDrawn(), mrAdminSections);
     }, skip: _skip);
 
     testWidgets('assistant: no admin item, and Team and business is not drawn', (tester) async {
-      await mrPump(tester, mrMore(isAdmin: false, roleLabel: 'Assistant'));
+      await mrPump(tester, mrMore(isAdmin: false));
       expect(mrDrawn(), mrAssistantSections);
       for (final label in ['Team Members', 'Facilities', 'Trash', 'Export Data', 'Business Hours', 'Subscription', 'Activity Log', 'Team and business']) {
         expect(find.text(label), findsNothing, reason: label);
@@ -79,7 +78,7 @@ void main() {
       for (final t in ['Daily work', 'Stock and reports', 'Team and business', 'App', 'Platform']) {
         expect(find.text(t), findsOneWidget, reason: t);
       }
-      for (final label in ['Clients', 'Debtors', 'Stock Store', 'Team Members', 'Printer & Receipt Settings', 'Manage Account', 'Export Data']) {
+      for (final label in ['Clients', 'Debtors', 'Stock Store', 'Business Hours', 'Printer & Receipt Settings', 'Manage Account', 'Export Data']) {
         expect(find.descendant(of: find.byWidgetPredicate((w) => mrKeyStarts(w, 'more-item-')), matching: find.text(label)), findsOneWidget,
             reason: label);
       }
@@ -99,12 +98,8 @@ void main() {
       'stockStore': StockStoreScreen,
       'reports': ViewReportsScreen,
       'insights': InsightsScreen,
-      'activityLog': ActivityLogScreen,
-      'team': ManageAssistantsScreen,
-      'facilities': FacilityScreen,
       'businessHours': BusinessHoursScreen,
       'subscription': SubscriptionScreen,
-      'settings': SettingsScreen,
       'printerSettings': PrinterSettingsScreen,
       'export': ExportDataScreen,
       'trash': TrashScreen,
@@ -159,27 +154,14 @@ void main() {
         expect(size.width, greaterThanOrEqualTo(48), reason: tip);
         expect(size.height, greaterThanOrEqualTo(48), reason: tip);
         final semantics = tester.ensureSemantics();
-        expect(find.bySemanticsLabel(tip), findsWidgets, reason: tip);
+        // The button itself (UI1: no longer a grid cell of the same name).
+        final node = tester.getSemantics(button);
+        expect('${node.label} ${node.tooltip}', contains(tip), reason: tip);
         semantics.dispose();
         await tester.tap(button);
         await tester.pump();
       }
       expect(opened, ['settings', 'help']);
-    }, skip: _skip);
-  });
-
-  group('the profile card', () {
-    testWidgets('the name with its title, the role and the facility name alone; a tap opens the drawer', (tester) async {
-      var opened = 0;
-      await mrPump(tester, mrMore(facilityName: '  Mwanzo Agrovet ', onProfile: () => opened++));
-      final card = find.byKey(mrProfile);
-      expect(find.descendant(of: card, matching: find.text('Mr. Shanel')), findsOneWidget);
-      expect(find.descendant(of: card, matching: find.text('Admin')), findsOneWidget);
-      expect(find.descendant(of: card, matching: find.text('Mwanzo Agrovet')), findsOneWidget);
-      expect(tester.getSize(card).height, greaterThanOrEqualTo(48));
-      await tester.tap(card);
-      await tester.pump();
-      expect(opened, 1);
     }, skip: _skip);
   });
 }

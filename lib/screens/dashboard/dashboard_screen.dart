@@ -650,10 +650,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // The phone top bar's user document, made once (S9).
   late final Stream<DocumentSnapshot> _userDocStream = userDoc.snapshots();
 
-  // MR1: the More page's profile card, its own stream made once (a second
-  // listener on the one above would wait for the next change).
-  late final Stream<DocumentSnapshot> _moreUserDocStream = userDoc.snapshots();
-
   @override
   void setState(VoidCallback fn) {
     super.setState(fn);
@@ -1645,22 +1641,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             products: (_) => const ProductsScreen(asTab: true),
             more: (context) => FutureBuilder<bool>(
               future: _platformAdminFuture,
-              builder: (context, snapshot) => StreamBuilder<DocumentSnapshot>(
-                stream: _moreUserDocStream,
-                builder: (context, user) {
-                  final data = _profileData(user);
-                  return MoreScreen(
-                    isAdmin: Provider.of<UserRoleProvider>(context).isAdmin,
-                    isPlatformAdmin: snapshot.data == true,
-                    onReturned: _returnToHome,
-                    profileName: (data['fullName'] ?? '').toString(),
-                    profileAvatarUrl: data['avatarUrl'] as String?,
-                    profileRoleLabel: _profileRoleLabel(data),
-                    profileFacilityName: context.watch<FacilityProvider>().selectedFacilityName ?? '',
-                    // The shell's Scaffold owns the profile drawer.
-                    onProfile: () => Scaffold.of(context).openEndDrawer(),
-                  );
-                },
+              builder: (context, snapshot) => MoreScreen(
+                isAdmin: Provider.of<UserRoleProvider>(context).isAdmin,
+                isPlatformAdmin: snapshot.data == true,
+                onReturned: _returnToHome,
               ),
             ),
             onRecord: () => showRecordSheet(context, onDone: _returnToHome),

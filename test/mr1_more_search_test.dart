@@ -25,16 +25,13 @@ void main() {
       'expo': {'app': ['export']},
       'EXPORT': {'app': ['export']},
       'Éxport': {'app': ['export']},
-      'team': {'teamAndBusiness': ['team']},
-      'staff': {'teamAndBusiness': ['team']},
-      'invite': {'teamAndBusiness': ['team']},
+      // UI1: Team Members is in the profile menu, no longer here.
       'printer': {'app': ['printerSettings']},
       'bluetooth': {'app': ['printerSettings']},
       'plan': {'teamAndBusiness': ['subscription']},
       'renew': {'teamAndBusiness': ['subscription']},
       'opening': {'teamAndBusiness': ['businessHours']},
       // Kiswahili keywords match whatever the app's language.
-      'wafanyakazi': {'teamAndBusiness': ['team']},
       'pakua': {'app': ['export']},
       'kifurushi': {'teamAndBusiness': ['subscription']},
     };
@@ -47,8 +44,8 @@ void main() {
 
     testWidgets('in Kiswahili: English and Kiswahili keywords both match', (tester) async {
       expect(await search(tester, 'export', locale: 'sw'), {'app': ['export']});
-      await mrType(tester, 'wafanyakazi');
-      expect(mrDrawn(), {'teamAndBusiness': ['team']});
+      await mrType(tester, 'kifurushi');
+      expect(mrDrawn(), {'teamAndBusiness': ['subscription']});
     }, skip: _skip);
 
     testWidgets('no match: one plain line, the query kept; clear restores every section', (tester) async {

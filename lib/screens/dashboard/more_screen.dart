@@ -6,7 +6,6 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
-import '../../utils/facility_display.dart';
 import '../../widgets/app_safe_area.dart';
 import '../../widgets/support_contact_dialog.dart';
 import '../activity/activity_log_screen.dart';
@@ -60,11 +59,16 @@ enum MoreItem {
 enum MoreSection { dailyWork, stockAndReports, teamAndBusiness, app, platform }
 
 /// The sections the role may use, each with its items in order; a section
-/// with nothing for the role is left out. The gates are today's: the profile
-/// drawer's (Team Members, Facilities, Activity log: admins), Settings'
+/// with nothing for the role is left out. The gates are today's: Settings'
 /// (Subscription, Trash, Export, Business Hours: admins; Printer settings and
 /// Manage Account: everyone) and the sidebar's (Platform Admin: platform
 /// admins only). Business profile is not here: Settings does not open it.
+///
+/// UI1: only what is in neither the bottom bar (Home, Sales, Products) nor
+/// the profile menu (the avatar's drawer: Team Members, Facilities and
+/// Activity log for admins, with Edit profile, Change password and Logout),
+/// and not Settings or Help, the app bar's two icons. Those items stay in
+/// [MoreItem] for the app bar and [openMoreItem].
 List<({MoreSection section, List<MoreItem> items})> moreSectionsFor({required bool isAdmin, bool isPlatformAdmin = false}) {
   final all = [
     (
@@ -73,21 +77,15 @@ List<({MoreSection section, List<MoreItem> items})> moreSectionsFor({required bo
     ),
     (
       section: MoreSection.stockAndReports,
-      items: [MoreItem.stockStore, MoreItem.reports, MoreItem.insights, if (isAdmin) MoreItem.activityLog],
+      items: [MoreItem.stockStore, MoreItem.reports, MoreItem.insights],
     ),
     (
       section: MoreSection.teamAndBusiness,
-      items: [if (isAdmin) ...[MoreItem.team, MoreItem.facilities, MoreItem.businessHours, MoreItem.subscription]],
+      items: [if (isAdmin) ...[MoreItem.businessHours, MoreItem.subscription]],
     ),
     (
       section: MoreSection.app,
-      items: [
-        MoreItem.settings,
-        MoreItem.printerSettings,
-        if (isAdmin) ...[MoreItem.export, MoreItem.trash],
-        MoreItem.manageAccount,
-        MoreItem.help,
-      ],
+      items: [MoreItem.printerSettings, if (isAdmin) ...[MoreItem.export, MoreItem.trash], MoreItem.manageAccount],
     ),
     (section: MoreSection.platform, items: [if (isPlatformAdmin) MoreItem.platformAdmin]),
   ];
@@ -209,10 +207,10 @@ bool moreItemMatches(AppLocalizations shown, MoreItem item, String query) {
   return words.every(text.contains);
 }
 
-/// PH3 (5), MR1: the More page. The app bar (Settings and Help), a profile
-/// card that opens the profile drawer, Find a feature, then the named
-/// sections of round icons; each opens the existing screen as today (pushed,
-/// full screen over the bar).
+/// PH3 (5), MR1: the More page. The app bar (Settings and Help), Find a
+/// feature, then the named sections of round icons; each opens the existing
+/// screen as today (pushed, full screen over the bar). UI1: no profile card;
+/// the avatar's drawer is the profile menu.
 class MoreScreen extends StatefulWidget {
   final bool isAdmin;
   final bool isPlatformAdmin;
@@ -224,27 +222,12 @@ class MoreScreen extends StatefulWidget {
   /// after the sidebar's screens).
   final VoidCallback? onReturned;
 
-  /// The profile card: the stored fullName (its title included), the role
-  /// label as the drawer shows it ('' while loading) and the facility's name.
-  final String profileName;
-  final String? profileAvatarUrl;
-  final String profileRoleLabel;
-  final String profileFacilityName;
-
-  /// Opens the profile drawer (the shell's).
-  final VoidCallback? onProfile;
-
   const MoreScreen({
     super.key,
     required this.isAdmin,
     this.isPlatformAdmin = false,
     this.onOpen,
     this.onReturned,
-    this.profileName = '',
-    this.profileAvatarUrl,
-    this.profileRoleLabel = '',
-    this.profileFacilityName = '',
-    this.onProfile,
   });
 
   @override
@@ -324,14 +307,6 @@ class _MoreScreenState extends State<MoreScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                MoreProfileCard(
-                  name: widget.profileName,
-                  avatarUrl: widget.profileAvatarUrl,
-                  roleLabel: widget.profileRoleLabel,
-                  facilityName: FacilityDisplay.name(widget.profileFacilityName),
-                  onTap: widget.onProfile,
-                ),
-                const SizedBox(height: MoreMetrics.sectionGap),
                 MoreSearchField(controller: _query, onChanged: () => setState(() {})),
                 for (final s in sections)
                   MoreSectionGrid(

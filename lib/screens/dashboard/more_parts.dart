@@ -4,94 +4,10 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
-import '../../widgets/profile/profile_avatar.dart';
 
-// MR1: the parts of the phone More page (more_screen.dart): the profile card,
-// Find a feature, a section of round icons and one icon. Measures from
-// MoreMetrics, colours from context.colors roles only.
-
-/// The person at the top of More: the avatar, the name (with its title) over
-/// the role and the facility's name; a tap opens the profile drawer.
-class MoreProfileCard extends StatelessWidget {
-  final String name;
-  final String? avatarUrl;
-  final String roleLabel;
-  final String facilityName;
-  final VoidCallback? onTap;
-
-  const MoreProfileCard({super.key, required this.name, required this.avatarUrl, required this.roleLabel, required this.facilityName, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final lineStyle = TextStyle(fontSize: MoreMetrics.profileLine, color: colors.textSecondary);
-    return Semantics(
-      button: true,
-      child: Tooltip(
-        message: context.l10n.dashboard_account,
-        excludeFromSemantics: true,
-        child: Material(
-          key: const ValueKey('more-profile-card'),
-          color: colors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(MoreMetrics.profileRadius),
-            side: BorderSide(color: colors.border),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(MoreMetrics.profilePadding),
-              child: Row(
-                children: [
-                  ProfileAvatar(avatarUrl: avatarUrl, name: name, size: MoreMetrics.profileAvatar),
-                  const SizedBox(width: MoreMetrics.profileGap),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: MoreMetrics.profileName,
-                            fontWeight: AppFontWeight.bold,
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            if (roleLabel.isNotEmpty)
-                              Flexible(
-                                child: Text(roleLabel, maxLines: 1, overflow: TextOverflow.ellipsis, style: lineStyle),
-                              ),
-                            if (roleLabel.isNotEmpty && facilityName.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: MoreMetrics.profileDotGap),
-                                child: Icon(Icons.circle, size: MoreMetrics.profileDot, color: colors.textSecondary),
-                              ),
-                            if (facilityName.isNotEmpty)
-                              Flexible(
-                                flex: 2,
-                                child: Text(facilityName, maxLines: 1, overflow: TextOverflow.ellipsis, style: lineStyle),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(Icons.chevron_right, size: MoreMetrics.profileChevron, color: colors.textMuted),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+// MR1: the parts of the phone More page (more_screen.dart): Find a feature,
+// a section of round icons and one icon (UI1: the profile card is gone).
+// Measures from MoreMetrics, colours from context.colors roles only.
 
 /// Find a feature: a rounded 48 px field with a search icon and, while it
 /// has text, a clear button.
