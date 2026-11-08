@@ -14,6 +14,7 @@ import 'provider_reset.dart';
 import 'navigator_key.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../config/app_timeouts.dart';
+import '../services/active_facility_memory.dart';
 import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_layout.dart';
@@ -38,6 +39,9 @@ Future<void> activateFacilityAndGoToDashboard({
   required BuildContext context,
   required Map<String, dynamic> facility,
   String? role,
+  // RELOAD1: the facility a reload in the same session comes back to
+  // (AppEntryPoint); the phone then opens on its remembered tab.
+  bool resume = false,
 }) async {
   debugPrint('[NAV] activateFacilityAndGoToDashboard starting for facility=${facility[Fields.facilityId]} role=$role');
   if (!context.mounted) {
@@ -67,6 +71,15 @@ Future<void> activateFacilityAndGoToDashboard({
     typeDetail: facility['facilityTypeDetail'],
   );
   facilityProvider.listenToFacility(facility[Fields.facilityId]);
+
+  // RELOAD1: every way in (the only facility, the picker, a switch, System
+  // Refresh, registration) passes here, so a reload reopens this one. The id
+  // only, in the session's own store.
+  if (resume) {
+    ActiveFacilityMemory.resumed();
+  } else if (facility[Fields.facilityId] case final String id) {
+    ActiveFacilityMemory.remember(id);
+  }
 
   // PH4b: on a phone the products are a live listener from here on, so the
   // home's Needs attention strip hears a sale's stock change without

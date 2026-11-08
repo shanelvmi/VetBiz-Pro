@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'navigator_key.dart';
 import 'provider_reset.dart';
 import '../config/app_timeouts.dart';
+import '../services/active_facility_memory.dart';
 
 /// Signs the current user out, resets every provider, and gets back to
 /// a real, visible login screen - used anywhere an account needs to be
@@ -32,6 +33,8 @@ FirebaseAuth Function() logoutAuth = () => FirebaseAuth.instance;
 Future<void> forceLogoutAndShowLogin({String? message}) async {
   final uidBeingSignedOut = logoutAuth().currentUser?.uid;
   debugPrint('[LOGOUT] Starting for uid=${uidBeingSignedOut ?? "none"}${message != null ? " (message: $message)" : ""}');
+  // RELOAD1: a reload after any sign-out must never reopen the facility.
+  ActiveFacilityMemory.forget();
 
   final context = navigatorKey.currentContext;
 
@@ -89,6 +92,8 @@ Future<void> forceLogoutAndShowLogin({String? message}) async {
 /// session, and on signing back in they met a bare "no facility" message from
 /// which neither adding a facility nor deleting the account was possible.
 Future<void> returnToAccountDecision() async {
+  // Nothing is open now (RELOAD1): a reload decides afresh too.
+  ActiveFacilityMemory.forget();
   final context = navigatorKey.currentContext;
   if (context != null && context.mounted) {
     try {

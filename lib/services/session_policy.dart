@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart';
 
 import '../config/app_timeouts.dart';
 import '../utils/force_logout.dart';
+import 'active_facility_memory.dart';
 import 'session_marker.dart';
 
 /// The one-time "this session has started" marker. On web it lives in
@@ -43,6 +44,7 @@ class SessionPolicy {
     required this.setSessionPersistence,
     required this.restoredUserPresent,
     required this.signOut,
+    this.onSessionKnown,
   });
 
   final bool isWeb;
@@ -57,6 +59,10 @@ class SessionPolicy {
   /// The app's one sign-out (forceLogoutAndShowLogin).
   final Future<void> Function() signOut;
 
+  /// RELOAD1: told whether this start continues the session (the marker was
+  /// already there: a reload in the same tab), before anything is decided.
+  final void Function(bool sameSession)? onSessionKnown;
+
   /// The real wiring: SESSION persistence and the sessionStorage marker on web,
   /// the in-memory flag elsewhere, the sign-out every other path uses.
   factory SessionPolicy.forThisPlatform() => SessionPolicy(
@@ -65,6 +71,7 @@ class SessionPolicy {
         setSessionPersistence: () => FirebaseAuth.instance.setPersistence(Persistence.SESSION),
         restoredUserPresent: _restoredUserPresent,
         signOut: forceLogoutAndShowLogin,
+        onSessionKnown: (sameSession) => ActiveFacilityMemory.sessionStarted(sameSession: sameSession),
       );
 
   /// Run once, in main() before runApp: before AppEntryPoint listens and
@@ -81,10 +88,13 @@ class SessionPolicy {
         debugPrint('[SESSION] setPersistence(SESSION) failed: $e');
       }
     }
-    if (!marker.isSet && await restoredUserPresent()) {
+    final sameSession = marker.isSet;
+    if (!sameSession && await restoredUserPresent()) {
       debugPrint('[SESSION] A new session found a signed-in user: signing out');
       await signOut();
     }
+    // After the sign-out above, which forgets the memory anyway.
+    onSessionKnown?.call(sameSession);
     marker.set();
   }
 }
