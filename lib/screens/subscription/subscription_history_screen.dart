@@ -633,9 +633,8 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   // Wide layout: one table row.
   Widget _buildRow(_Submission s) {
     final submitted = s.submittedAt;
+    // UI1: no coloured bar down the left; the outcome is in its chip.
     return Container(
-      // Coloured bar down the left edge - the outcome at a glance.
-      decoration: BoxDecoration(border: Border(left: BorderSide(color: submissionStatusColor(s.status, context.colors), width: 4))),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -702,7 +701,6 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   // Narrow layout (phones): the same information as a card per submission.
   Widget _buildNarrowCard(_Submission s) {
     final submitted = s.submittedAt;
-    final color = submissionStatusColor(s.status, context.colors);
     final methodLine = [if (s.method.isNotEmpty) context.l10n.paymentMethodLabel(s.method), if (s.reference.isNotEmpty) s.reference].join(' · ');
 
     return Container(
@@ -710,13 +708,13 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         borderRadius: BorderRadius.circular(AppRadius.r12),
         border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
-      // Clipped so the bar down the left follows the card's rounded corners.
+      // Clipped so the fill follows the card's rounded corners (UI1: no
+      // coloured bar down the left; the outcome is in its chip).
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.r10),
         child: Container(
           decoration: BoxDecoration(
             color: context.colors.surface,
-            border: Border(left: BorderSide(color: color, width: 4)),
           ),
           padding: const EdgeInsets.all(AppSpacing.s12),
           child: Column(

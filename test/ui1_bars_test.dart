@@ -21,7 +21,7 @@ import 'helpers/screen_size_matrix.dart';
 import 'ph8a_seams_test.dart' show Ph8Auth;
 import 'ph8a_subscription_wide_test.dart' show seedSubscription;
 
-const _skip = true;
+const _skip = false;
 
 const _sizes = [Size(360, 740), Size(390, 844), Size(740, 360), Size(768, 1024), Size(1200, 800)];
 
@@ -115,9 +115,13 @@ void main() {
     final c = await _feed(tester);
     await pumpNotifications(tester, c, width: 390, height: 1400);
     expect(_rows(), containsAll(['n1', 'n2']));
+    await tester.ensureVisible(find.byKey(const ValueKey('notifications-chip-payment')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('notifications-chip-payment')));
     await tester.pumpAndSettle();
     expect(_rows(), {'n2'});
+    await tester.ensureVisible(find.byKey(const ValueKey('notifications-chip-all')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('notifications-chip-all')));
     await tester.pumpAndSettle();
     await tapPageAction(tester, 'Select');

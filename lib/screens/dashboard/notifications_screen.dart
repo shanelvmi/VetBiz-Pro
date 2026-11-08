@@ -455,10 +455,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
           child: _buildCategoryCards(counts, unreadCounts),
         ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
-        child: _buildFilters(),
-      ),
+      // UI1 (the owner's correction): a phone has no search and no date or
+      // status filter, only the chips; selection mode keeps its Remove
+      // selected and Cancel here. Wide screens keep the filters.
+      if (!_phone || _selecting)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
+          child: _phone ? _buildHeaderActions() : _buildFilters(),
+        ),
     ];
     final content = all.isEmpty
         ? _buildEmptyState()
@@ -671,12 +675,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
                 ],
               ),
-            // PH8a-fix: on a phone the actions are in the app bar's menu;
-            // selection mode keeps its Remove selected and Cancel here.
-            if (!_phone || _selecting) ...[
-              const SizedBox(height: AppSpacing.s10),
-              _buildHeaderActions(),
-            ],
+            // Wide screens only (UI1): a phone's actions are in the app bar's
+            // menu, and selection mode's are drawn without the filters.
+            const SizedBox(height: AppSpacing.s10),
+            _buildHeaderActions(),
           ],
         );
       },
@@ -994,10 +996,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       key: ValueKey(n.id),
       onTap: () => _onTap(i),
       child: Container(
-      // Coloured bar down the left edge, tinted while unread.
+      // Tinted while unread. UI1: no coloured bar down the left; the
+      // category is in its chip and the icon.
       decoration: BoxDecoration(
         color: unread ? context.colors.primary.withValues(alpha: AppAlpha.a05) : null,
-        border: Border(left: BorderSide(color: _categoryColor(n.category), width: 4)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s12),
       child: Row(
@@ -1073,14 +1075,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         borderRadius: BorderRadius.circular(AppRadius.r12),
         border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
       ),
-      // Clipped so the bar down the left follows the card's rounded corners.
+      // Clipped so the fill and the ripple follow the card's rounded corners
+      // (UI1: no coloured bar down the left; the category is in its chip).
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.r10),
         // Ink, not a Container, so the tap ripple shows on the card.
         child: Ink(
           decoration: BoxDecoration(
             color: unread ? Color.alphaBlend(context.colors.primary.withValues(alpha: AppAlpha.a05), context.colors.surface) : context.colors.surface,
-            border: Border(left: BorderSide(color: _categoryColor(n.category), width: 4)),
           ),
           child: InkWell(
           onTap: () => _onTap(i),
@@ -1538,7 +1540,7 @@ class _AccentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r10),
-        border: Border(left: BorderSide(color: color, width: 4)),
+        // UI1: no coloured bar down the left; the colour stays on the icon.
         boxShadow: [
           BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
         ],
