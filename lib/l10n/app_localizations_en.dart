@@ -7426,4 +7426,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get more_keywordsPlatformAdmin => 'operator, console';
+
+  @override
+  String get home_hideAmounts => 'Hide amounts';
+
+  @override
+  String get home_showAmounts => 'Show amounts';
 }

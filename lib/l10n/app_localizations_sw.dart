@@ -7470,4 +7470,10 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get more_keywordsPlatformAdmin => 'mwendeshaji';
+
+  @override
+  String get home_hideAmounts => 'Ficha kiasi';
+
+  @override
+  String get home_showAmounts => 'Onyesha kiasi';
 }

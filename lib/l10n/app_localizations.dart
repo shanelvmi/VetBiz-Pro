@@ -12396,6 +12396,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'operator, console'**
   String get more_keywordsPlatformAdmin;
+
+  /// Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that replaces every amount on the card with dots. Remembered on this device.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide amounts'**
+  String get home_hideAmounts;
+
+  /// Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that shows the card's amounts again.
+  ///
+  /// In en, this message translates to:
+  /// **'Show amounts'**
+  String get home_showAmounts;
 }
 
 class _AppLocalizationsDelegate
