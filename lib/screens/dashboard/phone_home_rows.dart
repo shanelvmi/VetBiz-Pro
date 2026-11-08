@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../widgets/reveal/skeleton_box.dart';
@@ -32,14 +33,14 @@ String goToLabel(BuildContext context, GoToItem item) {
 }
 
 IconData _goToIcon(GoToItem item) => switch (item) {
-      GoToItem.products => Icons.inventory_2_outlined,
-      GoToItem.clients => Icons.people,
-      GoToItem.debtors => Icons.money_off,
-      GoToItem.reports => Icons.summarize_outlined,
-      GoToItem.transactions => Icons.receipt_long,
-      GoToItem.stockStore => Icons.store,
-      GoToItem.services => Icons.design_services,
-      GoToItem.payments => Icons.payments,
+      GoToItem.products => AppIcons.products.outlined,
+      GoToItem.clients => AppIcons.clients.filled,
+      GoToItem.debtors => AppIcons.debtors.filled,
+      GoToItem.reports => AppIcons.reports.filled,
+      GoToItem.transactions => AppIcons.transactions.filled,
+      GoToItem.stockStore => AppIcons.stockStore.filled,
+      GoToItem.services => AppIcons.services.filled,
+      GoToItem.payments => AppIcons.payments.filled,
     };
 
 /// The four big tiles (the "+" sheet's four). Record Payment finds who owes

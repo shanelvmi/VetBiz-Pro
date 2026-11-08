@@ -8,6 +8,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../l10n/l10n.dart';
 import '../../services/trash_service.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/restore_feedback.dart';
@@ -51,12 +52,12 @@ String _transactionTitle(Map<String, dynamic> data) {
 
 /// The five kinds, in the tabs' order.
 final List<TrashKind> trashKinds = [
-  TrashKind(Collections.trashProducts, Collections.products, Icons.inventory_2_outlined, (l) => l.activityType_products),
-  TrashKind(Collections.trashClients, Collections.clients, Icons.person_outline, (l) => l.clients_title),
-  TrashKind(Collections.trashServices, Collections.services, Icons.medical_services_outlined, (l) => l.common_serviceRecords),
-  TrashKind(Collections.trashSales, Collections.sales, Icons.point_of_sale, (l) => l.payments_typeSales,
+  TrashKind(Collections.trashProducts, Collections.products, AppIcons.products.outlined, (l) => l.activityType_products),
+  TrashKind(Collections.trashClients, Collections.clients, AppIcons.clients.outlined, (l) => l.clients_title),
+  TrashKind(Collections.trashServices, Collections.services, AppIcons.services.outlined, (l) => l.common_serviceRecords),
+  TrashKind(Collections.trashSales, Collections.sales, AppIcons.sales.outlined, (l) => l.payments_typeSales,
       titleBuilder: _saleTitle),
-  TrashKind(Collections.trashTransactions, Collections.transactions, Icons.receipt_long_outlined,
+  TrashKind(Collections.trashTransactions, Collections.transactions, AppIcons.transactions.outlined,
       (l) => l.transactions_title,
       titleBuilder: _transactionTitle),
 ];

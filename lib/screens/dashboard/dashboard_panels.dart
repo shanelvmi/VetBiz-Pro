@@ -12,6 +12,7 @@ import '../../data/collections.dart';
 import '../../data/fields.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/activity_type_style.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
@@ -157,7 +158,7 @@ class _RecentActivityFeedState extends State<RecentActivityFeed> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.history, size: AppIconSize.i18, color: context.colors.primary),
+                  Icon(AppIcons.activityLog.filled, size: AppIconSize.i18, color: context.colors.primary),
                   const SizedBox(width: AppSpacing.s8),
                   Text(context.l10n.dashboard_recentActivity, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14_5)),
                 ],
@@ -311,13 +312,13 @@ class TodayGlanceStrip extends StatelessWidget {
           Text(context.l10n.dashboard_todayAtAGlance, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5, color: context.colors.textPrimary)),
           // While the first load runs the three stats keep their place with the
           // values hidden, so the strip does not grow when they come (DASH-1).
-          _glanceStat(context, Icons.shopping_cart_outlined, '${saleCount ?? 0}', context.l10n.dashboard_sales, context.colors.primary, hideValue: loading),
-          _glanceStat(context, Icons.build_outlined, '${serviceCount ?? 0}', context.l10n.dashboard_services, context.colors.chart1, hideValue: loading),
-          _glanceStat(context, Icons.payments_outlined, Money.format(collected ?? (loading ? AppDefaults.glanceAmountPlaceholder : 0)), context.l10n.sales_collected, context.colors.primary, hideValue: loading),
-          _glanceStat(context, Icons.folder_outlined, '$debtorCount', context.l10n.dashboard_outstandingDebts(debtorCount), context.colors.accent),
+          _glanceStat(context, AppIcons.sales.outlined, '${saleCount ?? 0}', context.l10n.dashboard_sales, context.colors.primary, hideValue: loading),
+          _glanceStat(context, AppIcons.services.outlined, '${serviceCount ?? 0}', context.l10n.dashboard_services, context.colors.chart1, hideValue: loading),
+          _glanceStat(context, AppIcons.payments.outlined, Money.format(collected ?? (loading ? AppDefaults.glanceAmountPlaceholder : 0)), context.l10n.sales_collected, context.colors.primary, hideValue: loading),
+          _glanceStat(context, AppIcons.debtors.outlined, '$debtorCount', context.l10n.dashboard_outstandingDebts(debtorCount), context.colors.accent),
           OutlinedButton.icon(
             onPressed: () => showInsightsScreen(context),
-            icon: Icon(Icons.insights, size: AppIconSize.i16, color: context.colors.primary),
+            icon: Icon(AppIcons.insights.filled, size: AppIconSize.i16, color: context.colors.primary),
             label: Text(context.l10n.insights_title, style: TextStyle(color: context.colors.primary)),
             style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.primary)),
           ),

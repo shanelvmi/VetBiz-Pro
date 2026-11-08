@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
 import '../../services/active_facility_memory.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_layout.dart';
 import '../../theme/app_motion.dart';
@@ -289,11 +290,11 @@ class PhoneBottomBar extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                item(PhoneTab.home, Icons.home_outlined, Icons.home, context.l10n.shell_tabHome),
-                item(PhoneTab.sales, Icons.attach_money, Icons.attach_money, context.l10n.nav_sales),
+                item(PhoneTab.home, AppIcons.home.outlined, AppIcons.home.filled, context.l10n.shell_tabHome),
+                item(PhoneTab.sales, AppIcons.sales.outlined, AppIcons.sales.filled, context.l10n.nav_sales),
                 Expanded(child: _RecordButton(onTap: onRecord)),
-                item(PhoneTab.products, Icons.inventory_2_outlined, Icons.inventory_2, context.l10n.nav_products),
-                item(PhoneTab.more, Icons.grid_view_outlined, Icons.grid_view, context.l10n.shell_tabMore),
+                item(PhoneTab.products, AppIcons.products.outlined, AppIcons.products.filled, context.l10n.nav_products),
+                item(PhoneTab.more, AppIcons.more.outlined, AppIcons.more.filled, context.l10n.shell_tabMore),
               ],
             ),
           ),

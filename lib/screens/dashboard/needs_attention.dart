@@ -4,6 +4,7 @@ import '../../config/app_ranges.dart';
 import '../../l10n/l10n.dart';
 import '../../models/debt.dart';
 import '../../models/product.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
@@ -98,7 +99,7 @@ class NeedsAttentionStrip extends StatelessWidget {
             children: [
               if (counts.stock > 0)
                 _AttentionRow(
-                  icon: Icons.inventory_2_outlined,
+                  icon: AppIcons.products.outlined,
                   text: l10n.home_attentionStock,
                   count: counts.stock,
                   onTap: () => onOpen(AttentionTarget.stockAlerts),
@@ -112,7 +113,7 @@ class NeedsAttentionStrip extends StatelessWidget {
                 ),
               if (counts.overdueDebtors > 0)
                 _AttentionRow(
-                  icon: Icons.money_off,
+                  icon: AppIcons.debtors.outlined,
                   text: l10n.home_attentionDebts(counts.overdueDays),
                   count: counts.overdueDebtors,
                   onTap: () => onOpen(AttentionTarget.debtors),

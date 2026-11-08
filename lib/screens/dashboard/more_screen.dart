@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
@@ -156,25 +157,25 @@ String moreSectionTitle(AppLocalizations l10n, MoreSection section) => switch (s
     };
 
 IconData _icon(MoreItem item) => switch (item) {
-      MoreItem.clients => Icons.people,
-      MoreItem.debtors => Icons.money_off,
-      MoreItem.services => Icons.design_services,
-      MoreItem.payments => Icons.payments,
-      MoreItem.transactions => Icons.receipt_long,
-      MoreItem.stockStore => Icons.store,
-      MoreItem.reports => Icons.summarize_outlined,
-      MoreItem.insights => Icons.insights,
-      MoreItem.activityLog => Icons.history,
-      MoreItem.team => Icons.group_outlined,
-      MoreItem.facilities => Icons.store_outlined,
-      MoreItem.businessHours => Icons.schedule_outlined,
-      MoreItem.subscription => Icons.workspace_premium_outlined,
-      MoreItem.settings => Icons.settings,
-      MoreItem.printerSettings => Icons.print_outlined,
-      MoreItem.export => Icons.import_export,
-      MoreItem.trash => Icons.delete_outline,
+      MoreItem.clients => AppIcons.clients.filled,
+      MoreItem.debtors => AppIcons.debtors.filled,
+      MoreItem.services => AppIcons.services.filled,
+      MoreItem.payments => AppIcons.payments.filled,
+      MoreItem.transactions => AppIcons.transactions.filled,
+      MoreItem.stockStore => AppIcons.stockStore.filled,
+      MoreItem.reports => AppIcons.reports.filled,
+      MoreItem.insights => AppIcons.insights.filled,
+      MoreItem.activityLog => AppIcons.activityLog.filled,
+      MoreItem.team => AppIcons.team.outlined,
+      MoreItem.facilities => AppIcons.facilities.outlined,
+      MoreItem.businessHours => AppIcons.businessHours.outlined,
+      MoreItem.subscription => AppIcons.subscription.outlined,
+      MoreItem.settings => AppIcons.settings.filled,
+      MoreItem.printerSettings => AppIcons.printer.outlined,
+      MoreItem.export => AppIcons.export.outlined,
+      MoreItem.trash => AppIcons.trash.outlined,
       MoreItem.manageAccount => Icons.manage_accounts_outlined,
-      MoreItem.help => Icons.help_outline,
+      MoreItem.help => AppIcons.help.outlined,
       MoreItem.platformAdmin => Icons.admin_panel_settings_outlined,
     };
 
@@ -283,8 +284,8 @@ class _MoreScreenState extends State<MoreScreen> {
         centerTitle: false,
         title: Text(l10n.shell_tabMore, style: const TextStyle(fontWeight: AppFontWeight.bold)),
         actions: [
-          appBarButton(MoreItem.settings, Icons.settings_outlined),
-          appBarButton(MoreItem.help, Icons.help_outline),
+          appBarButton(MoreItem.settings, AppIcons.settings.outlined),
+          appBarButton(MoreItem.help, AppIcons.help.outlined),
           const SizedBox(width: AppSpacing.s4),
         ],
       ),

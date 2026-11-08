@@ -35,6 +35,7 @@ import 'record_sheet.dart';
 import 'all_details_screen.dart';
 import 'needs_attention.dart';
 import 'phone_home.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_layout.dart';
 import '../products/stock_alerts_screen.dart';
 import '../transactions/transactions_screen.dart';
@@ -1242,7 +1243,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               // Contact Details, falling back to a generic message if
               // nothing's configured yet.
               IconButton(
-                icon: Icon(Icons.help_outline, color: context.colors.textPrimary, size: AppIconSize.i22),
+                icon: Icon(AppIcons.help.outlined, color: context.colors.textPrimary, size: AppIconSize.i22),
                 tooltip: context.l10n.dashboard_help,
                 onPressed: () => showSupportContactDialog(context),
               ),
@@ -1377,7 +1378,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       SummaryCard(
                                         title: context.l10n.dashboard_totalProductValue,
                                         value: Money.format(productProvider.totalProductValue),
-                                        icon: Icons.inventory,
+                                        icon: AppIcons.products.filled,
                                         color: context.colors.primary,
                                         shadow: true,
                                         subtitle: context.l10n.dashboard_asOfNow,
@@ -1394,7 +1395,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       SummaryCard(
                                         title: context.l10n.dashboard_totalSales(_periodLabel(selectedFilter)),
                                         value: Money.format(_periodTotals.totalSales),
-                                        icon: Icons.shopping_cart,
+                                        icon: AppIcons.sales.filled,
                                         color: context.colors.accent,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
@@ -1410,7 +1411,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       SummaryCard(
                                         title: context.l10n.dashboard_totalCollected(_periodLabel(selectedFilter)),
                                         value: Money.format(_periodTotals.totalCollected),
-                                        icon: Icons.attach_money,
+                                        icon: AppIcons.payments.filled,
                                         color: context.colors.primary,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
@@ -1467,7 +1468,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       SummaryCard(
                                         title: context.l10n.dashboard_totalExpenses(_periodLabel(selectedFilter)),
                                         value: Money.format(_periodTotals.totalExpenses),
-                                        icon: Icons.trending_down,
+                                        icon: AppIcons.expenses.filled,
                                         color: context.colors.danger,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
@@ -1486,7 +1487,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       SummaryCard(
                                         title: context.l10n.dashboard_outstandingPayment,
                                         value: Money.format(debtProvider.totalOutstanding()),
-                                        icon: Icons.account_balance_wallet,
+                                        icon: AppIcons.debtors.filled,
                                         color: context.colors.accent,
                                         shadow: true,
                                         subtitle: context.l10n.dashboard_asOfNow,
@@ -1505,7 +1506,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       SummaryCard(
                                         title: context.l10n.clients_total,
                                         value: '${clientProvider.clients.length}',
-                                        icon: Icons.people,
+                                        icon: AppIcons.clients.filled,
                                         color: context.colors.accent,
                                         shadow: true,
                                         subtitle: context.l10n.dashboard_asOfNow,
@@ -1522,7 +1523,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                       SummaryCard(
                                         title: context.l10n.dashboard_completedServices(_periodLabel(selectedFilter)),
                                         value: '${_periodTotals.completedServicesCount}',
-                                        icon: Icons.design_services,
+                                        icon: AppIcons.services.filled,
                                         color: context.colors.chart1,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
@@ -1745,7 +1746,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   Icon(
                     isLocked
                         ? Icons.lock_outline
-                        : (isInTrialInfo ? Icons.workspace_premium_outlined : Icons.warning_amber_rounded),
+                        : (isInTrialInfo ? AppIcons.subscription.outlined : Icons.warning_amber_rounded),
                     color: accent,
                     size: AppIconSize.i16,
                   ),
@@ -1832,7 +1833,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       actions: [
         _buildAlertsBell(context),
         IconButton(
-          icon: Icon(Icons.help_outline, color: context.colors.textPrimary, size: AppIconSize.i22),
+          icon: Icon(AppIcons.help.outlined, color: context.colors.textPrimary, size: AppIconSize.i22),
           tooltip: context.l10n.dashboard_help,
           onPressed: () => showSupportContactDialog(context),
         ),
@@ -1971,7 +1972,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     results.add(_DashboardSearchResult(
                       title: p.name,
                       subtitle: context.l10n.reports_colProduct,
-                      icon: Icons.inventory_2_outlined,
+                      icon: AppIcons.products.outlined,
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => ProductsScreen(initialSearchQuery: p.name)),
@@ -2056,7 +2057,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           // Contact Details, falling back to a generic message if
           // nothing's configured yet.
           IconButton(
-            icon: Icon(Icons.help_outline, color: context.colors.textPrimary, size: AppIconSize.i22),
+            icon: Icon(AppIcons.help.outlined, color: context.colors.textPrimary, size: AppIconSize.i22),
             tooltip: context.l10n.dashboard_help,
             onPressed: () => showSupportContactDialog(context),
           ),
@@ -2144,7 +2145,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
     final cards = [
       _quickActionCard(
-        icon: Icons.add_shopping_cart,
+        icon: AppIcons.sales.filled,
         title: context.l10n.sales_recordSale,
         subtitle: context.l10n.dashboard_createNewSale,
         backgroundColor: context.colors.brandSurface,
@@ -2160,7 +2161,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         },
       ),
       _quickActionCard(
-        icon: Icons.design_services,
+        icon: AppIcons.services.filled,
         title: context.l10n.services_recordVisit,
         subtitle: context.l10n.dashboard_addServiceRecord,
         backgroundColor: context.colors.quickActionTintPrimary,
@@ -2436,7 +2437,7 @@ Widget _buildDrawerContent() {
   Widget items = Column(
     children: [
       DrawerHoverItem(
-        icon: Icons.store,
+        icon: AppIcons.stockStore.filled,
         title: context.l10n.nav_stock,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
@@ -2448,7 +2449,7 @@ Widget _buildDrawerContent() {
         },
       ),
       DrawerHoverItem(
-        icon: Icons.inventory,
+        icon: AppIcons.products.filled,
         title: context.l10n.nav_products,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
@@ -2460,7 +2461,7 @@ Widget _buildDrawerContent() {
         },
       ),
       DrawerHoverItem(
-        icon: Icons.attach_money,
+        icon: AppIcons.sales.filled,
         title: context.l10n.nav_sales,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
@@ -2472,7 +2473,7 @@ Widget _buildDrawerContent() {
         },
       ),
       DrawerHoverItem(
-        icon: Icons.design_services,
+        icon: AppIcons.services.filled,
         title: context.l10n.nav_services,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
@@ -2484,7 +2485,7 @@ Widget _buildDrawerContent() {
         },
       ),
       DrawerHoverItem(
-        icon: Icons.people,
+        icon: AppIcons.clients.filled,
         title: context.l10n.clients_title,
         isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
@@ -2493,7 +2494,7 @@ Widget _buildDrawerContent() {
         ),
       ),
       DrawerHoverItem(
-        icon: Icons.payments,
+        icon: AppIcons.payments.filled,
         title: context.l10n.payments_title,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
@@ -2505,7 +2506,7 @@ Widget _buildDrawerContent() {
         },
       ),
       DrawerHoverItem(
-        icon: Icons.money_off,
+        icon: AppIcons.debtors.filled,
         title: context.l10n.nav_debtors,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
@@ -2517,7 +2518,7 @@ Widget _buildDrawerContent() {
         },
       ),
       DrawerHoverItem(
-        icon: Icons.receipt_long,
+        icon: AppIcons.transactions.filled,
         title: context.l10n.transactions_title,
         isCollapsed: effectivelyCollapsed,
         onTap: () async {
@@ -2529,7 +2530,7 @@ Widget _buildDrawerContent() {
         },
       ),
       DrawerHoverItem(
-        icon: Icons.summarize_outlined,
+        icon: AppIcons.reports.filled,
         title: context.l10n.nav_reports,
         isCollapsed: effectivelyCollapsed,
         onTap: () => Navigator.push(
@@ -2542,7 +2543,7 @@ Widget _buildDrawerContent() {
 
   // ---------- SETTINGS ----------
   Widget settings = DrawerHoverItem(
-    icon: Icons.settings,
+    icon: AppIcons.settings.filled,
     title: context.l10n.settings_title,
     isCollapsed: effectivelyCollapsed,
     onTap: () => Navigator.push(
@@ -2789,12 +2790,12 @@ Widget _buildDrawerContent() {
             ),
             if (isAdmin) ...[
               ProfileDrawerAction(
-                icon: Icons.group_outlined,
+                icon: AppIcons.team.outlined,
                 label: context.l10n.team_title,
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ManageAssistantsScreen())),
               ),
               ProfileDrawerAction(
-                icon: Icons.store_outlined,
+                icon: AppIcons.facilities.outlined,
                 label: context.l10n.dashboard_viewFacilities,
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => FacilityScreen())),
               ),
@@ -2809,7 +2810,7 @@ Widget _buildDrawerContent() {
             ),
             if (isAdmin)
               ProfileDrawerAction(
-                icon: Icons.history,
+                icon: AppIcons.activityLog.filled,
                 label: context.l10n.export_activityLog,
                 // Full screen, like the other drawer items (Manage Assistants,
                 // View Facilities).

@@ -9,6 +9,7 @@ import '../../providers/client_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../services/debtor_clients_service.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
@@ -82,13 +83,13 @@ String _hint(BuildContext context, RecordAction action) {
 }
 
 IconData recordActionIcon(RecordAction action) => switch (action) {
-      RecordAction.recordSale => Icons.add_shopping_cart,
-      RecordAction.recordVisit => Icons.design_services,
-      RecordAction.recordPayment => Icons.payments,
+      RecordAction.recordSale => AppIcons.sales.filled,
+      RecordAction.recordVisit => AppIcons.services.filled,
+      RecordAction.recordPayment => AppIcons.payments.filled,
       RecordAction.addClient => Icons.person_add_alt_1,
       RecordAction.addProduct => Icons.add_box,
       RecordAction.addBatch => Icons.playlist_add,
-      RecordAction.recordTransaction => Icons.receipt_long,
+      RecordAction.recordTransaction => AppIcons.expenses.filled,
     };
 
 /// What the guard is shown (it only pushes it when no onNavigate is given,

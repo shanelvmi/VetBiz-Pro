@@ -35,6 +35,7 @@ import '../../config/app_limits.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_rules.dart';
 import '../../theme/activity_type_style.dart';
+import '../../theme/app_icons.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -1965,13 +1966,13 @@ class _FacilityScreenState extends State<FacilityScreen> {
     );
   }
 
-  static const _phoneTabIcons = [
+  static final _phoneTabIcons = [
     Icons.dashboard_outlined,
-    Icons.groups_outlined,
-    Icons.inventory_2_outlined,
-    Icons.point_of_sale_outlined,
-    Icons.history,
-    Icons.settings_outlined,
+    AppIcons.clients.outlined,
+    AppIcons.products.outlined,
+    AppIcons.sales.outlined,
+    AppIcons.activityLog.outlined,
+    AppIcons.settings.outlined,
   ];
 
   // The tabs after Overview as rows: icon, label (Team Members with its
