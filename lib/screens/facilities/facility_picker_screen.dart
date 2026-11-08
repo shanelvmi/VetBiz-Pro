@@ -155,7 +155,7 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
         switchOutCurve: Curves.easeIn,
         transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
         child: _isLoading
-            ? const VetBizLoadingIndicator(key: ValueKey('loading'), style: VetBizLoadingStyle.compact)
+            ? const VetBizLoadingPage(key: ValueKey('loading'))
             : Column(
                 key: const ValueKey('content'),
                 children: [

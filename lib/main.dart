@@ -712,7 +712,8 @@ class _AuthLoadingScreenState extends State<_AuthLoadingScreen> {
       backgroundColor: VetBizLoadingIndicator.backgroundColor,
       body: SafeArea(
         child: VetBizLoadingIndicator(
-          style: VetBizLoadingStyle.full,
+          title: context.l10n.loading_accountTitle,
+          subtitle: context.l10n.loading_accountSubtitle,
           recoveryAction: _showRecovery
               ? Column(
                   children: [

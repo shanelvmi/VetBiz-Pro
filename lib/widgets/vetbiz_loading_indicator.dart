@@ -1,6 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import '../l10n/l10n.dart';
-import '../theme/app_breakpoints.dart';
+import '../config/app_assets.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_palette.dart';
@@ -8,18 +9,14 @@ import '../theme/app_theme.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 
-/// Two weights of the same branded loading treatment - [full] for a
-/// one-time, meaningful wait (right now, only the very first "we're
-/// setting up your account" moment after login), [compact] for the
-/// many small, routine loads that happen throughout ordinary use
-/// (opening a screen, paginating a list). Using the full treatment
-/// everywhere would make the app feel slower and more repetitive, not
-/// more polished - loading UI should be proportional to what's
-/// actually being waited for.
-enum VetBizLoadingStyle { full, compact }
-
+/// UI1: the one brand loading look. It replaced two weights (a full one with
+/// an illustration that was never in the assets, and a compact 40 px logo
+/// over a 26 px spinner that the owner found far too small after signing in):
+/// the brand mark ([AppAssets.logo]) at 96 px, 88 on a screen under 360 high,
+/// inside a soft ring spinner, with the caption under it when there is one.
+/// Centred at every size, and scaled down rather than overflowing when the
+/// room is short (a phone held sideways). Reduced motion: a still ring.
 class VetBizLoadingIndicator extends StatefulWidget {
-  final VetBizLoadingStyle style;
   final String? title;
   final String? subtitle;
   // Slot for a caller-provided "stuck" recovery action (e.g. a "Try
@@ -31,7 +28,6 @@ class VetBizLoadingIndicator extends StatefulWidget {
 
   const VetBizLoadingIndicator({
     super.key,
-    this.style = VetBizLoadingStyle.compact,
     this.title,
     this.subtitle,
     this.recoveryAction,
@@ -81,9 +77,7 @@ class VetBizLoadingPage extends StatelessWidget {
 
 class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with TickerProviderStateMixin {
   late final AnimationController _entranceController;
-  late final Animation<double> _logoOpacity;
-  late final Animation<double> _illustrationOpacity;
-  late final Animation<double> _illustrationScale;
+  late final Animation<double> _markOpacity;
   late final Animation<double> _textOpacity;
 
   // A slow, gentle opacity pulse on the subtitle only - a tasteful way
@@ -102,22 +96,15 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
     );
 
     // Staggered within the same controller via Interval, rather than
-    // several separate controllers - logo first, illustration close
-    // behind with a gentle scale-up, text last, each easing in softly.
-    _logoOpacity = CurvedAnimation(
+    // several separate controllers - the mark first, the caption last,
+    // each easing in softly.
+    _markOpacity = CurvedAnimation(
       parent: _entranceController,
-      curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
-    );
-    _illustrationOpacity = CurvedAnimation(
-      parent: _entranceController,
-      curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
-    );
-    _illustrationScale = Tween<double>(begin: 0.92, end: 1.0).animate(
-      CurvedAnimation(parent: _entranceController, curve: const Interval(0.2, 0.7, curve: Curves.easeOutCubic)),
+      curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
     );
     _textOpacity = CurvedAnimation(
       parent: _entranceController,
-      curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+      curve: const Interval(0.4, 1.0, curve: Curves.easeOut),
     );
 
     _entranceController.forward();
@@ -125,7 +112,21 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
     _pulseController = AnimationController(
       vsync: this,
       duration: AppMotion.float,
-    )..repeat(reverse: true);
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reduced motion: everything in place at once, nothing pulsing.
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _entranceController.value = 1;
+      _pulseController
+        ..stop()
+        ..value = 1;
+    } else if (!_pulseController.isAnimating) {
+      _pulseController.repeat(reverse: true);
+    }
   }
 
   @override
@@ -137,155 +138,105 @@ class _VetBizLoadingIndicatorState extends State<VetBizLoadingIndicator> with Ti
 
   @override
   Widget build(BuildContext context) {
-    if (widget.style == VetBizLoadingStyle.compact) {
-      return _buildCompact(context);
-    }
-    return _buildFull(context);
-  }
+    final still = MediaQuery.disableAnimationsOf(context);
+    final mark = MediaQuery.sizeOf(context).height < LoadingMetrics.shortScreen ? LoadingMetrics.markShort : LoadingMetrics.mark;
+    final ring = mark + 2 * LoadingMetrics.ringGap;
+    final title = widget.title;
+    final subtitle = widget.subtitle;
 
-  Widget _buildCompact(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FadeTransition(
-            opacity: _logoOpacity,
-            child: Image.asset('assets/vetbiz_pro_logo.png', height: 40),
-          ),
-          const SizedBox(height: AppSpacing.s18),
-          SizedBox(
-            width: 26,
-            height: 26,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.6,
-              strokeCap: StrokeCap.round,
-              valueColor: AlwaysStoppedAnimation<Color>(context.colors.primary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFull(BuildContext context) {
-    // Was the brand green at alpha 0x0A (about 0.04); 0.04 snaps to a05.
-    final pawColor = context.colors.primary.withValues(alpha: AppAlpha.a05);
-    return Stack(
-      children: [
-        // Decorative teal/amber curved shapes in the corners - large,
-        // soft-edged circles positioned mostly off-screen, very low
-        // opacity so they read as texture rather than competing with
-        // the actual content.
-        Positioned(
-          top: -80,
-          left: -80,
-          child: _decorativeBlob(220, context.colors.primary.withValues(alpha: AppAlpha.a05)),
-        ),
-        Positioned(
-          bottom: -100,
-          right: -100,
-          child: _decorativeBlob(260, context.colors.accent.withValues(alpha: AppAlpha.a10)),
-        ),
-        // Very subtle scattered paw marks - low opacity background
-        // texture, not meant to be individually noticed.
-        Positioned(top: 60, right: 40, child: Icon(Icons.pets, size: 28, color: pawColor)),
-        Positioned(bottom: 140, left: 30, child: Icon(Icons.pets, size: AppIconSize.i22, color: pawColor)),
-        Positioned(top: 220, left: 60, child: Icon(Icons.pets, size: AppIconSize.i18, color: pawColor)),
-
-        Center(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // Reduce illustration size and spacing on smaller
-              // screens rather than letting content overflow, instead
-              // of just shrinking everything uniformly.
-              final isCompact = constraints.maxWidth < AppBreakpoints.smallPhone;
-              final illustrationHeight = isCompact ? 140.0 : 200.0;
-
-              return ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: AppSizes.dialogLg),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FadeTransition(
-                        opacity: _logoOpacity,
-                        child: Image.asset('assets/vetbiz_pro_logo.png', height: isCompact ? 80 : 100),
-                      ),
-                      SizedBox(height: isCompact ? AppSpacing.s24 : AppSpacing.s32),
-                      FadeTransition(
-                        opacity: _illustrationOpacity,
-                        child: ScaleTransition(
-                          scale: _illustrationScale,
-                          child: Image.asset(
-                            'assets/vetbiz_loading_illustration.png',
-                            height: illustrationHeight,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: isCompact ? 28 : 36),
-                      SizedBox(
-                        width: 36,
-                        height: 36,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3.5,
-                          strokeCap: StrokeCap.round,
-                          valueColor: AlwaysStoppedAnimation<Color>(context.colors.primary),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.s24),
-                      FadeTransition(
-                        opacity: _textOpacity,
-                        child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // As wide as the room (a dialog's width at most), so a caption wraps
+        // instead of shrinking; only a page too short scales the whole down.
+        final width = constraints.hasBoundedWidth ? math.min(constraints.maxWidth, AppSizes.dialogLg) : AppSizes.dialogLg;
+        return Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: SizedBox(
+              width: width,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FadeTransition(
+                      opacity: _markOpacity,
+                      child: SizedBox(
+                        key: VetBizLoadingIndicator.ringKey,
+                        width: ring,
+                        height: ring,
+                        child: Stack(
+                          alignment: Alignment.center,
                           children: [
-                            Text(
-                              widget.title ?? context.l10n.loading_accountTitle,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontWeight: AppFontWeight.bold,
-                                fontSize: AppFontSize.f16,
-                                color: context.colors.primary,
+                            SizedBox.expand(
+                              child: CircularProgressIndicator(
+                                value: still ? 1 : null,
+                                strokeWidth: LoadingMetrics.ringStroke,
+                                strokeCap: StrokeCap.round,
+                                // A soft track under the turning arc.
+                                backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a10),
+                                valueColor: AlwaysStoppedAnimation<Color>(context.colors.primary),
                               ),
                             ),
-                            const SizedBox(height: AppSpacing.s6),
-                            AnimatedBuilder(
-                              animation: _pulseController,
-                              builder: (context, child) {
-                                return Opacity(
-                                  opacity: 0.6 + (_pulseController.value * 0.4),
-                                  child: child,
-                                );
-                              },
-                              child: Text(
-                                widget.subtitle ?? context.l10n.loading_accountSubtitle,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-                              ),
+                            Image.asset(
+                              AppAssets.logo,
+                              key: VetBizLoadingIndicator.markKey,
+                              width: mark,
+                              height: mark,
+                              fit: BoxFit.contain,
                             ),
                           ],
                         ),
                       ),
-                      if (widget.recoveryAction != null) ...[
-                        const SizedBox(height: AppSpacing.s20),
-                        FadeTransition(opacity: _textOpacity, child: widget.recoveryAction!),
-                      ],
+                    ),
+                    if (title != null || subtitle != null) ...[
+                      const SizedBox(height: LoadingMetrics.captionGap),
+                      FadeTransition(
+                        opacity: _textOpacity,
+                        child: Column(
+                          children: [
+                            if (title != null)
+                              Text(
+                                title,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontWeight: AppFontWeight.bold,
+                                  fontSize: AppFontSize.f16,
+                                  color: context.colors.primary,
+                                ),
+                              ),
+                            if (subtitle != null) ...[
+                              const SizedBox(height: LoadingMetrics.subtitleGap),
+                              AnimatedBuilder(
+                                animation: _pulseController,
+                                builder: (context, child) {
+                                  return Opacity(
+                                    opacity: 0.6 + (_pulseController.value * 0.4),
+                                    child: child,
+                                  );
+                                },
+                                child: Text(
+                                  subtitle,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ],
-                  ),
+                    if (widget.recoveryAction != null) ...[
+                      const SizedBox(height: LoadingMetrics.recoveryGap),
+                      FadeTransition(opacity: _textOpacity, child: widget.recoveryAction!),
+                    ],
+                  ],
                 ),
-              );
-            },
+              ),
+            ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _decorativeBlob(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        );
+      },
     );
   }
 }
