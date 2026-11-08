@@ -2043,5 +2043,6 @@
   "more_keywordsHelp": ["usaidizi, wasiliana, piga simu","More page search (MR1): extra words, separated by commas, that find Help. Not shown. Both languages are searched.","draft"],
   "more_keywordsPlatformAdmin": ["mwendeshaji","More page search (MR1): extra words, separated by commas, that find Platform Admin. Not shown. Both languages are searched.","draft"],
   "home_hideAmounts": ["Ficha kiasi","Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that replaces every amount on the card with dots. Remembered on this device.","draft"],
-  "home_showAmounts": ["Onyesha kiasi","Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that shows the card's amounts again.","draft"]
+  "home_showAmounts": ["Onyesha kiasi","Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that shows the card's amounts again.","draft"],
+  "common_versionWithBuild": ["{version} (muundo {stamp})","FIN1: the app version followed by when this build was made, in the sign-in footer (version v1.0.0) and in Settings (version 1.0.0). stamp is a date and time such as 2026-11-09 14:05, or dev. Build means the compiled copy of the app.","draft"]
 }
