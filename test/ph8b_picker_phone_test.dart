@@ -1,15 +1,14 @@
-// PH8b (3): the facility picker and Select Facility on phones. The picker's
+// PH8b (3): the facility picker on phones. The picker's
 // card (360 px ideal) lost its room at 360: a 24 px page gutter on top of the
 // card's own 14 px padding, a staff-and-status row that overflows in
 // Kiswahili, the header's tagline and the footer under 12 px and a 32 px
 // account menu. On a phone: the 16 px gutter, the card's padding kept, the
-// row wrapping, 12 px text and a 48 px menu. Select Facility already passes
-// the size matrix (it runs here, so it stays that way). Wider windows keep
-// today's picker: the ph8b-picker- fingerprints.
+// row wrapping, 12 px text and a 48 px menu. Wider windows keep today's
+// picker: the ph8b-picker- fingerprints. (FIN1: Select Facility, which
+// nothing routed to, was removed with its case here.)
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/screens/facilities/facility_picker_screen.dart';
-import 'package:vetbiz_pro/screens/facilities/select_facility_screen.dart';
 
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
@@ -36,21 +35,6 @@ void main() {
         await checkCase(tester, phone: true, where: 'picker $where');
       }, skip: _skipPicker);
 
-      ph5TestWidgets('Select Facility at $where: no overflow, 48 px, 12 px', (tester) async {
-        final app = await pumpPh5(tester, (_) => const Scaffold(body: Text('UNDER')), size: size.size, look: look, settle: false);
-        app.navigator.currentState!.push(MaterialPageRoute<void>(
-          settings: RouteSettings(arguments: {
-            'facilities': [
-              for (final f in _items)
-                {'facilityId': f['facilityId'], 'name': f['facilityName'], 'type': f['facilityType'], 'typeDetail': f['facilityTypeDetail']},
-            ],
-            'role': 'admin',
-          }),
-          builder: (_) => const SelectFacilityScreen(),
-        ));
-        await ph5Settle(tester);
-        await checkCase(tester, phone: true, where: 'select $where');
-      });
     }
   }
 

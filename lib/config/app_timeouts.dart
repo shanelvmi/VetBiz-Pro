@@ -58,7 +58,7 @@ class AppTimeouts {
   /// The user's role (user_role_provider.dart).
   static const Duration roleLoad = Duration(seconds: 10);
 
-  /// A facility (facility_provider.dart, select_facility_screen.dart).
+  /// A facility (facility_provider.dart; also the Select Facility screen until FIN1 removed it).
   static const Duration facilityLoad = Duration(seconds: 15);
 
   /// Signing out (force_logout.dart).

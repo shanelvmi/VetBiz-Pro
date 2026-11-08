@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/screens/facilities/facility_picker_screen.dart';
-import 'package:vetbiz_pro/screens/facilities/select_facility_screen.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
@@ -17,7 +16,8 @@ const _skip = false;
 void main() {
   final en = lookupAppLocalizations(const Locale('en'));
 
-  group('the facility picker and Select Facility show the words and the new label', () {
+  // FIN1: Select Facility, which nothing routed to, was removed with its case.
+  group('the facility picker shows the words and the new label', () {
     final facilities = [
       {'facilityId': 'f1', 'facilityName': 'Mwanza Pets', 'facilityType': 'Other', 'facilityTypeDetail': 'Pet shop'},
       {'facilityId': 'f2', 'facilityName': 'Moshi Mobile', 'facilityType': 'Ambulatory Vet'},
@@ -42,16 +42,6 @@ void main() {
       expect(find.text('Ambulatory Vet'), findsNothing);
       // The bare Other (no words) still shows Other.
       expect(find.text(en.facilityType_other), findsOneWidget);
-    }, skip: _skip);
-
-    testWidgets('Select Facility', (tester) async {
-      tester.view.physicalSize = const Size(1200, 900);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      await tester.pumpWidget(app(() => const SelectFacilityScreen(), arguments: {'facilities': facilities, 'role': 'admin'}));
-      await tester.pumpAndSettle();
-      expect(find.text('Pet shop'), findsOneWidget);
-      expect(find.text('Ambulatory services'), findsOneWidget);
     }, skip: _skip);
   });
 

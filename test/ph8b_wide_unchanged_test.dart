@@ -3,8 +3,8 @@
 // is compared with the fingerprint recorded from the code before PH8b
 // (test/fixtures/ph5a_wide_fingerprints.json, the ph8b- names): Team Members
 // (the list, the details, every confirmation and picker), Facilities (the
-// list with the details, each tab, every dialog) and the facility picker and
-// Select Facility. Today's overflows in the square test font are part of the
+// list with the details, each tab, every dialog) and the facility picker
+// (FIN1: Select Facility, which nothing routed to, was removed). Today's overflows in the square test font are part of the
 // fingerprint, so they must not change either.
 import 'dart:async';
 
@@ -15,7 +15,6 @@ import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/l10n/app_localizations.dart';
 import 'package:vetbiz_pro/screens/facilities/facility_picker_screen.dart';
 import 'package:vetbiz_pro/screens/facilities/facility_screen.dart';
-import 'package:vetbiz_pro/screens/facilities/select_facility_screen.dart';
 
 import 'helpers/fake_storage.dart';
 import 'helpers/ph8b_facilities.dart';
@@ -161,22 +160,6 @@ void main() {
     ph5TestWidgets('ph8b-picker-$at: the facility picker, as before PH8b', (tester) async {
       final app = await pumpPh5(tester, (_) => FacilityPickerScreen(facilities: _pickerItems, role: 'admin'), size: size);
       _expect(tester, 'ph8b-picker-$at', app.navigator);
-    });
-
-    ph5TestWidgets('ph8b-select-$at: Select Facility, as before PH8b', (tester) async {
-      final app = await pumpPh5(tester, (_) => const Scaffold(body: Text('UNDER')), size: size, settle: false);
-      app.navigator.currentState!.push(MaterialPageRoute<void>(
-        settings: RouteSettings(arguments: {
-          'facilities': [
-            for (final f in _pickerItems)
-              {'facilityId': f['facilityId'], 'name': f['facilityName'], 'type': f['facilityType'], 'typeDetail': f['facilityTypeDetail']},
-          ],
-          'role': 'admin',
-        }),
-        builder: (_) => const SelectFacilityScreen(),
-      ));
-      await ph5Settle(tester);
-      _expect(tester, 'ph8b-select-$at', app.navigator);
     });
   }
 }

@@ -334,7 +334,8 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color statusPendingFill;
   final Color statusOtherFill;
 
-  // The Select Facility card (select_facility_screen). Fill of the selected
+  // The Select Facility card (FIN1 removed that screen; the wizard option cards
+  // and RecordList use the roles). Fill of the selected
   // card: light = accent 30% over the page as before; dark = the dark accent
   // tint (quickActionTintAccent), opaque, as accent 30% over the dark page
   // is bright enough that the primary name read 2.98 to 3.21 on it. Ink of

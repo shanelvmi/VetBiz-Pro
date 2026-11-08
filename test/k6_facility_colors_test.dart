@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/screens/facilities/facility_picker_screen.dart';
-import 'package:vetbiz_pro/screens/facilities/select_facility_screen.dart';
 import 'package:vetbiz_pro/theme/app_colors.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
@@ -156,32 +155,9 @@ void main() {
       {'facilityId': 'f3', 'facilityName': 'Arusha Lab', 'facilityType': 'Lab'},
     ];
 
+    // FIN1: the Select Facility screen was removed (nothing routed to it);
+    // its case went with it.
     for (final theme in AppColorTheme.all) {
-      testWidgets('${theme.id}: Select Facility, unselected and selected', (tester) async {
-        tester.view.physicalSize = const Size(1200, 900);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-        await tester.pumpWidget(app(theme, () => const SelectFacilityScreen(), arguments: {'facilities': facilities, 'role': 'admin'}));
-        await tester.pumpAndSettle();
-
-        final l10n = AppLocalizations.of(tester.element(find.byType(SelectFacilityScreen)))!;
-        for (final f in facilities) {
-          expectReadable(tester, f['facilityName']!);
-          expectReadable(tester, l10n.facilityTypeLabel(f['facilityType']!));
-        }
-        expectReadable(tester, l10n.selectFacility_clickToSelect);
-        expectReadable(tester, l10n.selectFacility_title);
-
-        await tester.tap(find.text('Moshi Vet Centre'));
-        await tester.pumpAndSettle();
-        expect(fillBehind(tester, find.text('Moshi Vet Centre')),
-            AppColors.fromTheme(theme, brightness: Brightness.dark).selectedCardFill);
-        expectReadable(tester, 'Moshi Vet Centre');
-        expectReadable(tester, l10n.facilityTypeLabel('Vet Clinic'));
-        expectReadable(tester, l10n.selectFacility_selected);
-        expectReadable(tester, l10n.selectFacility_proceed);
-      });
-
       testWidgets('${theme.id}: the facility picker', (tester) async {
         tester.view.physicalSize = const Size(1200, 1400);
         tester.view.devicePixelRatio = 1;

@@ -1,5 +1,5 @@
-// FX1: Select Facility and the facility picker (the screen a signed-in
-// admin with several facilities sees) fed web-shaped and odd data. Each case
+// FX1: the facility picker (the screen a signed-in admin with several
+// facilities sees; FIN1 removed Select Facility, which nothing routed to) fed web-shaped and odd data. Each case
 // must show the cards (with safe text for what is usable) or the friendly
 // empty or error state, and never throw. In a release build a throw is the
 // grey box the owner saw on the phone.
@@ -10,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/screens/facilities/facility_picker_screen.dart';
-import 'package:vetbiz_pro/screens/facilities/select_facility_screen.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
@@ -18,8 +17,6 @@ const _failsToday = <String>{};
 
 Map<dynamic, dynamic> _item(Object? id, Object? name, {Object? type = 'Agrovet', Object? typeDetail}) =>
     <dynamic, dynamic>{'facilityId': id, 'name': name, 'type': type, 'typeDetail': typeDetail};
-
-final _two = <dynamic>[_item('f1', 'Kilimo Agrovet'), _item('f2', 'Mifugo Clinic', type: 'Vet Clinic')];
 
 Widget _app(Widget Function() screen, {Object? arguments}) => MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -41,20 +38,6 @@ Future<Object?> _pump(WidgetTester tester, Widget app, Size size) async {
   return tester.takeException();
 }
 
-/// Select Facility through its route arguments.
-void _select(String name, Object? arguments, {List<String> cards = const [], bool emptyOrError = false}) {
-  testWidgets('Select Facility: $name', (tester) async {
-    final error = await _pump(tester, _app(() => const SelectFacilityScreen(), arguments: arguments), const Size(390, 844));
-    expect(error, isNull, reason: '$error');
-    for (final card in cards) {
-      expect(find.text(card), findsOneWidget, reason: card);
-    }
-    if (emptyOrError) {
-      expect(find.text('No facilities found.').evaluate().isNotEmpty || find.text('Try Again').evaluate().isNotEmpty, isTrue);
-    }
-  }, skip: _failsToday.contains('Select Facility: $name'));
-}
-
 /// The facility picker, given [facilities] as its caller would.
 void _picker(String name, List<Object?> facilities, Size size, {List<String> cards = const []}) {
   testWidgets('Facility picker at ${size.width.toInt()}: $name', (tester) async {
@@ -69,32 +52,6 @@ void _picker(String name, List<Object?> facilities, Size size, {List<String> car
 }
 
 void main() {
-  _select('two Map<dynamic, dynamic> items as the web gives them', {'facilities': _two, 'role': 'admin'},
-      cards: ['Kilimo Agrovet', 'Mifugo Clinic']);
-  _select('the arguments themselves a Map<dynamic, dynamic>', <dynamic, dynamic>{'facilities': _two},
-      cards: ['Kilimo Agrovet', 'Mifugo Clinic']);
-  _select('odd names, types and details', {
-    'facilities': <dynamic>[
-      _item('f1', null, type: null),
-      _item('f2', 12, type: 3, typeDetail: 4),
-      _item('f3', {'en': 'x'}, type: {'a': 1}, typeDetail: {'b': 2}),
-      _item('f4', ['x'], type: 'Agrovet'),
-    ],
-  }, cards: ['12']);
-  _select('ids missing, a number or a map; a non-map item', {
-    'facilities': <dynamic>[
-      _item(null, 'No id'),
-      _item({'x': 1}, 'Map id'),
-      _item(7, 'Number id'),
-      'not a map',
-      null,
-      _item('f1', 'Kilimo Agrovet'),
-    ],
-  }, cards: ['Number id', 'Kilimo Agrovet']);
-  _select('an empty list', {'facilities': <dynamic>[]}, emptyOrError: true);
-  _select('facilities not a list', {'facilities': {'facilityId': 'f1'}}, emptyOrError: true);
-  _select('no arguments', null, emptyOrError: true);
-
   for (final size in [const Size(390, 844), const Size(1200, 800)]) {
     _picker('two facilities', <Map<String, dynamic>>[
       {'facilityId': 'f1', 'facilityName': 'Kilimo Agrovet', 'facilityType': 'Agrovet', 'facilityTypeDetail': null},
