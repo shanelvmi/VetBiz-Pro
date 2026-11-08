@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
+import '../../services/active_facility_memory.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_layout.dart';
 import '../../theme/app_motion.dart';
@@ -121,11 +122,13 @@ class _BannerEntrance extends StatelessWidget {
 }
 
 class _PhoneShellState extends State<PhoneShell> with SingleTickerProviderStateMixin {
-  PhoneTab _tab = PhoneTab.home;
+  // RELOAD1: Home, or after a reload in the same session the tab that was
+  // open (a value it does not know is Home).
+  PhoneTab _tab = PhoneTab.values.asNameMap()[ActiveFacilityMemory.takeTabToRestore()] ?? PhoneTab.home;
 
   // A plain IndexedStack would build all four at once, and so start every
   // tab's listeners on sign-in: each is built on its first visit instead.
-  final Set<PhoneTab> _visited = {PhoneTab.home};
+  late final Set<PhoneTab> _visited = {_tab};
 
   // RV1: the tab being left fades out under the new one, which fades in
   // (AppMotion.tabFade); null once the fade is over. Every visited tab stays
@@ -151,6 +154,7 @@ class _PhoneShellState extends State<PhoneShell> with SingleTickerProviderStateM
         if (mounted && _fade.value == 1) setState(() => _leaving = null);
       });
     }
+    ActiveFacilityMemory.rememberTab(tab.name);
     widget.onTabChanged?.call(tab);
   }
 

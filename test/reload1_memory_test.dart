@@ -12,7 +12,7 @@ import 'package:vetbiz_pro/services/session_policy.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
-const _skip = true;
+const _skip = false;
 
 Map<String, dynamic> _facility(String id) => {Fields.facilityId: id, 'facilityName': 'Name of $id', 'facilityType': 'agrovet'};
 
@@ -101,14 +101,14 @@ void main() {
     test('the session policy tells the memory whether this start is the same session', () async {
       for (final markerSet in [true, false]) {
         bool? told;
-        final policy = Function.apply(SessionPolicy.new, const [], {
-          #isWeb: true,
-          #marker: _Marker(markerSet),
-          #setSessionPersistence: () async {},
-          #restoredUserPresent: () async => true,
-          #signOut: () async {},
-          #onSessionKnown: (bool same) => told = same,
-        }) as SessionPolicy;
+        final policy = SessionPolicy(
+          isWeb: true,
+          marker: _Marker(markerSet),
+          setSessionPersistence: () async {},
+          restoredUserPresent: () async => true,
+          signOut: () async {},
+          onSessionKnown: (same) => told = same,
+        );
         await policy.applyAtStart();
         expect(told, markerSet);
       }

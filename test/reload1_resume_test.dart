@@ -35,7 +35,7 @@ import 'package:vetbiz_pro/widgets/signed_in_home_host.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/fake_firestore.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _dashboard = 'DASHBOARD (stand-in)';
 const _picker = 'PICKER (stand-in)';
@@ -99,12 +99,7 @@ class _FrontDoorState extends State<_FrontDoor> {
   Future<void> _decide() async {
     final resume = ActiveFacilityMemory.facilityToResume(widget.facilities);
     if (resume != null) {
-      await Function.apply(activateFacilityAndGoToDashboard, const [], {
-        #context: context,
-        #facility: resume,
-        #role: 'admin',
-        #resume: true,
-      });
+      await activateFacilityAndGoToDashboard(context: context, facility: resume, role: 'admin', resume: true);
     } else if (widget.facilities.length == 1) {
       await activateFacilityAndGoToDashboard(context: context, facility: widget.facilities.first, role: 'admin');
     } else {
@@ -137,6 +132,9 @@ Future<(_Stack, CountingFirestore, MemorySessionStore)> _start(
   required List<Map<String, dynamic>> facilities,
   Map<String, String> stored = const {},
 }) async {
+  // A new app: the previous start's providers go, or the same tree shape
+  // would keep them (and their Firestore) instead of creating these.
+  await tester.pumpWidget(const SizedBox());
   SharedPreferences.setMockInitialValues({});
   final fs = newFakeFirestore();
   for (final f in facilities) {
@@ -277,8 +275,8 @@ void main() {
     expect(resume, greaterThan(main.indexOf('entry_notActiveYet')));
     expect(resume, lessThan(main.indexOf('facilities.length == 1')));
     expect(main, contains('resume: true'));
-    expect(main.indexOf('ActiveFacilityMemory.forget()'), greaterThan(main.indexOf('_currentUser == null')),
-        reason: 'any sign-out seen by the front door forgets');
+    expect(main, contains('if (_currentUser != null && user == null) ActiveFacilityMemory.forget();'),
+        reason: 'any sign-out seen by the front door forgets, a reload\'s first null does not');
     expect(File('lib/utils/force_logout.dart').readAsStringSync(), contains('ActiveFacilityMemory.forget()'));
     final policy = File('lib/services/session_policy.dart').readAsStringSync();
     expect(policy, contains('ActiveFacilityMemory.sessionStarted'));

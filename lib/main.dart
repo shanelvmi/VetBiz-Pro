@@ -26,6 +26,7 @@ import 'services/membership_service.dart';
 import 'services/support_contact_store.dart';
 import 'services/updates_store.dart';
 import 'services/session_policy.dart';
+import 'services/active_facility_memory.dart';
 import 'constants/facility_types.dart';
 
 import 'providers/product_provider.dart';
@@ -289,6 +290,10 @@ class _AppEntryPointState extends State<AppEntryPoint> {
       return;
     }
     final changed = user?.uid != _currentUser?.uid;
+    // RELOAD1: a signed-in user gone, whatever ended it (not only
+    // forceLogoutAndShowLogin): a reload must not reopen their facility. Only
+    // on that change, never on a reload's first, not-yet-restored null.
+    if (_currentUser != null && user == null) ActiveFacilityMemory.forget();
     if (!_authInitialized || changed) {
       debugPrint('[AUTH] Updating auth state: '
           '${_currentUser?.uid ?? "none"} -> ${user?.uid ?? "none"} (was initialized=$_authInitialized)');
@@ -472,6 +477,27 @@ class _AppEntryPointState extends State<AppEntryPoint> {
           );
           facilities = parseUserFacilities(retryDoc.data());
         }
+      }
+
+      // RELOAD1: a reload in the same session reopens the facility that was
+      // open, straight to its dashboard, with no picker. Only after every
+      // check above (profile, deactivated, not yet active) and only when it
+      // is still in this person's own list, just read; the normal activation
+      // then runs every other check (subscription, the force-logout
+      // listeners). Taken here, even with no facility left, so it is used
+      // once: a later decision in this session keeps today's rules.
+      final resume = ActiveFacilityMemory.facilityToResume(facilities);
+      if (resume != null) {
+        debugPrint('[AUTH] Reload - reopening facility=${resume[Fields.facilityId]} for uid=$uid');
+        if (mounted) {
+          await activateFacilityAndGoToDashboard(
+            context: context,
+            facility: resume,
+            role: role,
+            resume: true,
+          );
+        }
+        return const Scaffold(body: Center(child: CircularProgressIndicator()));
       }
 
       if (facilities.isEmpty) {
