@@ -12,7 +12,7 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 
 import 'helpers/ui4_shell.dart';
 
-const _skip = true;
+const _skip = false;
 
 void main() {
   group('no dead band: the page reaches the bar\'s top edge beside the +', () {

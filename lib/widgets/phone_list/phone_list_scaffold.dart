@@ -306,12 +306,13 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
                   ),
                 ),
               // Room under the last row: the floating button never covers it
-              // (NAV1: the shell's "+" sits inside the bar, so a tab needs no
-              // extra room above it).
+              // (UI4: as a tab, nor does the shell's "+", which rises above
+              // the bar over the middle of the page).
               SliverPadding(
                 padding: EdgeInsets.only(
                   bottom: (fab == null ? PhoneListMetrics.pagePadding : PhoneListMetrics.fabClearance) +
-                      AppSafeArea.bottomOf(context),
+                      AppSafeArea.bottomOf(context) +
+                      PhoneShellInsets.overhangOf(context),
                 ),
               ),
             ],

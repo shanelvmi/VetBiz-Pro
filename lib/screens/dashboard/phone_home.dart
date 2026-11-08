@@ -9,6 +9,7 @@ import '../../widgets/reveal/reveal.dart';
 import 'dashboard_figures.dart';
 import 'needs_attention.dart';
 import 'phone_home_rows.dart';
+import 'phone_shell.dart';
 import 'record_sheet.dart';
 import 'today_card.dart';
 
@@ -141,7 +142,13 @@ class PhoneHome extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final list = ListView(
-      padding: const EdgeInsets.all(PhoneHomeMetrics.pagePadding),
+      // UI4: the end of the page clears the shell's raised "+".
+      padding: EdgeInsets.fromLTRB(
+        PhoneHomeMetrics.pagePadding,
+        PhoneHomeMetrics.pagePadding,
+        PhoneHomeMetrics.pagePadding,
+        PhoneHomeMetrics.pagePadding + PhoneShellInsets.overhangOf(context),
+      ),
       children: [
         skeletonOf(
           TodayCard(

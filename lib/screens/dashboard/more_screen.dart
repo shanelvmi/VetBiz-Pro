@@ -303,7 +303,8 @@ class _MoreScreenState extends State<MoreScreen> {
               MoreMetrics.padding,
               MoreMetrics.padding,
               MoreMetrics.padding,
-              MoreMetrics.padding + AppSafeArea.bottomOf(context),
+              // UI4: the end of the page clears the shell's raised "+".
+              MoreMetrics.padding + AppSafeArea.bottomOf(context) + PhoneShellInsets.overhangOf(context),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
