@@ -2048,3 +2048,5 @@ more_keywordsTrash,"deleted, restore, recycle bin","vilivyofutwa, rejesha","More
 more_keywordsManageAccount,"delete account, sign out everywhere, erase","futa akaunti, toka kila mahali","More page search (MR1): extra words, separated by commas, that find Manage Account. Not shown. Both languages are searched.",draft
 more_keywordsHelp,"support, contact, whatsapp, call","usaidizi, wasiliana, piga simu","More page search (MR1): extra words, separated by commas, that find Help. Not shown. Both languages are searched.",draft
 more_keywordsPlatformAdmin,"operator, console",mwendeshaji,"More page search (MR1): extra words, separated by commas, that find Platform Admin. Not shown. Both languages are searched.",draft
+home_hideAmounts,Hide amounts,Ficha kiasi,"Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that replaces every amount on the card with dots. Remembered on this device.",draft
+home_showAmounts,Show amounts,Onyesha kiasi,"Phone home (NAV1), the Today card: tooltip and screen-reader label of the eye button that shows the card's amounts again.",draft
