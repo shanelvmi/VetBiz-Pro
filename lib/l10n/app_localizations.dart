@@ -12468,6 +12468,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show fewer actions'**
   String get hub_showFewerActions;
+
+  /// Phone Home (HUB2), the card: the second option of the switch at its top (the first is Sales); also the title of the chart page of service revenue.
+  ///
+  /// In en, this message translates to:
+  /// **'Vet services'**
+  String get home_vetServices;
+
+  /// Phone Home (HUB2), the card with Vet services chosen: the label over the number of services performed in the period.
+  ///
+  /// In en, this message translates to:
+  /// **'Visits'**
+  String get home_visits;
+
+  /// Phone Home (HUB2), the card with Vet services chosen: shown under the amount when no service was recorded in the period.
+  ///
+  /// In en, this message translates to:
+  /// **'No visits yet'**
+  String get home_noVisitsYet;
+
+  /// Phone Home (HUB2), the Sales chart legend: the solid line, the last 7 days.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get home_chartThisWeek;
+
+  /// Phone Home (HUB2), the Sales chart legend: the dashed line, the 7 days before.
+  ///
+  /// In en, this message translates to:
+  /// **'Last week'**
+  String get home_chartLastWeek;
+
+  /// Phone Home (HUB2), a chart page with nothing to draw for the last 7 days.
+  ///
+  /// In en, this message translates to:
+  /// **'No data yet for this week'**
+  String get home_chartNoData;
+
+  /// Phone Home (HUB2), the title of the chart page of the 5 products sold in the largest quantity in the last 7 days.
+  ///
+  /// In en, this message translates to:
+  /// **'Product movement'**
+  String get home_chartProducts;
 }
 
 class _AppLocalizationsDelegate

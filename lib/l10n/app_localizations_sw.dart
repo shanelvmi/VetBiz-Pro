@@ -7575,4 +7575,25 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get hub_showFewerActions => 'Onyesha vitendo vichache';
+
+  @override
+  String get home_vetServices => 'Huduma za mifugo';
+
+  @override
+  String get home_visits => 'Ziara';
+
+  @override
+  String get home_noVisitsYet => 'Bado hakuna ziara';
+
+  @override
+  String get home_chartThisWeek => 'Wiki hii';
+
+  @override
+  String get home_chartLastWeek => 'Wiki iliyopita';
+
+  @override
+  String get home_chartNoData => 'Bado hakuna data ya wiki hii';
+
+  @override
+  String get home_chartProducts => 'Mwenendo wa bidhaa';
 }

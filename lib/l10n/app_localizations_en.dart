@@ -7531,4 +7531,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hub_showFewerActions => 'Show fewer actions';
+
+  @override
+  String get home_vetServices => 'Vet services';
+
+  @override
+  String get home_visits => 'Visits';
+
+  @override
+  String get home_noVisitsYet => 'No visits yet';
+
+  @override
+  String get home_chartThisWeek => 'This week';
+
+  @override
+  String get home_chartLastWeek => 'Last week';
+
+  @override
+  String get home_chartNoData => 'No data yet for this week';
+
+  @override
+  String get home_chartProducts => 'Product movement';
 }
