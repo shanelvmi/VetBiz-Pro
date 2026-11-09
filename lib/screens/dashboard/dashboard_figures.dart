@@ -12,6 +12,18 @@ String dashboardPeriodLabel(AppLocalizations l, String period) => switch (period
       _ => l.common_today,
     };
 
+/// UI5: the (start, end) the dashboard watches its period totals over, the
+/// one place it is worked out: the Today card's label shows this same range.
+(DateTime, DateTime) dashboardPeriodRange(String period, {DateTime? now}) =>
+    throw UnimplementedError('UI5: the period range');
+
+/// UI5: [range] as the Today card's short label in [locale]: Today the day
+/// ("Mon 9 Nov"), This Week the days ("3–9 Nov"), This Month the month
+/// ("Nov 2026"), This Year the year ("2026").
+String dashboardPeriodRangeLabel(AppLocalizations l, String period, (DateTime, DateTime) range,
+        {required String locale}) =>
+    throw UnimplementedError('UI5: the period label');
+
 /// PH4: what the dashboard loads at each moment. Tablets and computers keep
 /// today's loads; on a phone, Home shows only the live period totals and the
 /// app-level providers, and the rest loads when All details opens
