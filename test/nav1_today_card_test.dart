@@ -68,9 +68,10 @@ Future<UiSettingsProvider> _card(
   return provider;
 }
 
+/// UI5: the card's gradient is a DecoratedBox under its PressScale.
 BoxDecoration _decoration(WidgetTester tester) => tester
-    .widget<Container>(find.descendant(of: find.byType(TodayCard), matching: find.byType(Container)).first)
-    .decoration! as BoxDecoration;
+    .widget<DecoratedBox>(find.descendant(of: find.byType(TodayCard), matching: find.byType(DecoratedBox)).first)
+    .decoration as BoxDecoration;
 
 /// UI3: the soft blurred dots in place of each amount.
 Finder get _masks => find.descendant(of: find.byType(TodayCard), matching: find.byType(ImageFiltered));
@@ -94,7 +95,7 @@ void main() {
           expect(gradient.colors, [colors.brandGradientStart, colors.brandGradientEnd]);
           expect(_decoration(tester).color, isNull);
           final sales = tester.widget<Text>(find.text(_amounts[0]));
-          final label = tester.widget<Text>(find.text('Sales'));
+          final label = tester.widget<Text>(find.textContaining('Sales'));
           for (final end in gradient.colors) {
             expect(ColorMath.contrast(sales.style!.color!, end), greaterThanOrEqualTo(4.5));
             expect(ColorMath.contrast(Color.alphaBlend(label.style!.color!, end), end), greaterThanOrEqualTo(4.5));
@@ -114,7 +115,9 @@ void main() {
       expect(find.text(amount), findsNothing);
     }
     expect(_masks, findsNWidgets(4));
-    for (final label in ['Sales', 'Collected', 'Owed', 'Net profit', 'Today', 'All details']) {
+    expect(find.textContaining('Sales'), findsOneWidget);
+    // UI5: no "All details" line (the card is the button).
+    for (final label in ['Collected', 'Owed', 'Net profit', 'Today']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     await _tapEye(tester);

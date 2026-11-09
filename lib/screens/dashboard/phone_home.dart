@@ -159,7 +159,6 @@ class PhoneHome extends StatelessWidget {
             onAllDetails: onAllDetails,
             amountsHidden: amountsHidden,
             onToggleAmounts: onToggleAmounts,
-            facilityName: facilityName,
           ),
           radius: PhoneHomeMetrics.cardRadius,
         ),

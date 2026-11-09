@@ -1,4 +1,4 @@
-import 'dart:ui' show ImageFilter;
+import 'dart:ui' show FontFeature, ImageFilter;
 
 import 'package:flutter/material.dart';
 
@@ -9,18 +9,29 @@ import '../../theme/app_dimens.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../widgets/press_scale.dart';
 import 'dashboard_figures.dart';
 
-/// The one Today card: Sales large, the period chip, then Collected, Owed and
-/// (admins only, as the Net Profit card's masking today) Net profit, on the
-/// brand gradient (NAV1). The eye at the end of the top row masks every
-/// amount on the card (and only here); the labels stay.
+/// Amounts in tabular figures, so digits do not shift as they change.
+const _tabular = [FontFeature.tabularFigures()];
+
+/// The one Today card on the brand gradient (NAV1), UI5's three rows: "Sales
+/// · the exact range" with the period chip; the big amount with the eye at
+/// the row's right end (it hides every amount on the card, and only here);
+/// Collected, Owed and (admins only, as the Net Profit card's masking today)
+/// Net profit, then a chevron. The whole card is one tap target opening All
+/// details; the chip and the eye are their own buttons. Its loaded size is
+/// the same hidden or shown, with or without sales, in every period.
 class TodayCard extends StatelessWidget {
   final PhoneHomeFigures figures;
   final bool isAdmin;
   final String period;
   final ValueChanged<String> onPeriodChanged;
   final VoidCallback onAllDetails;
+
+  /// UI5: the exact range the figures cover ("Mon 9 Nov", "3–9 Nov"), from
+  /// dashboardPeriodRangeLabel over the range the totals are watched over.
+  final String periodLabel;
 
   /// NAV1: the amounts are masked (UI3: soft blurred dots after the
   /// currency). Only what is drawn changes; [figures] are the same either way.
@@ -29,10 +40,6 @@ class TodayCard extends StatelessWidget {
   /// The eye; null draws none.
   final VoidCallback? onToggleAmounts;
 
-  /// UI3: the current facility's name alone (FacilityDisplay.name), a small
-  /// line at the top of the card.
-  final String facilityName;
-
   const TodayCard({
     super.key,
     required this.figures,
@@ -40,9 +47,9 @@ class TodayCard extends StatelessWidget {
     required this.period,
     required this.onPeriodChanged,
     required this.onAllDetails,
+    this.periodLabel = '',
     this.amountsHidden = false,
     this.onToggleAmounts,
-    this.facilityName = '',
   });
 
   @override
@@ -55,77 +62,107 @@ class TodayCard extends StatelessWidget {
       (l10n.home_owed, Money.format(figures.owed)),
       if (isAdmin) (l10n.home_netProfit, money(figures.netProfit)),
     ];
-    return Container(
-      padding: const EdgeInsets.all(PhoneHomeMetrics.cardPadding),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [colors.brandGradientStart, colors.brandGradientEnd],
-        ),
-        borderRadius: BorderRadius.circular(PhoneHomeMetrics.cardRadius),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // UI3: drawn even when empty, so the card (and its skeleton) keep
-          // one height whatever the name.
-          Text(
-            facilityName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: PhoneHomeMetrics.facilityName, color: colors.onBrandSurfaceMuted),
+    final noSales = !figures.loading && figures.sales == 0;
+    return PressScale(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [colors.brandGradientStart, colors.brandGradientEnd],
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.nav_sales,
-                  style: TextStyle(fontSize: PhoneHomeMetrics.rowLabel, color: colors.onBrandSurfaceMuted),
+          borderRadius: BorderRadius.circular(PhoneHomeMetrics.cardRadius),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: Semantics(
+            button: true,
+            label: l10n.home_allDetails,
+            child: InkWell(
+              key: const ValueKey('phone-home-today-card'),
+              borderRadius: BorderRadius.circular(PhoneHomeMetrics.cardRadius),
+              onTap: onAllDetails,
+              child: Padding(
+                // The chip and the eye bring their own 48 px targets, so the
+                // card's top and right edges are mostly theirs.
+                padding: const EdgeInsets.fromLTRB(
+                  PhoneHomeMetrics.cardPadding,
+                  AppSpacing.s4,
+                  AppSpacing.s4,
+                  PhoneHomeMetrics.cardPadding,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.home_salesPeriod(periodLabel),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: PhoneHomeMetrics.cardLine, color: colors.onBrandSurfaceMuted),
+                          ),
+                        ),
+                        _PeriodChip(period: period, onChanged: onPeriodChanged),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _Amount(
+                                value: money(figures.sales),
+                                hidden: amountsHidden,
+                                blur: PhoneHomeMetrics.maskBlurLarge,
+                                style: TextStyle(
+                                  fontSize: PhoneHomeMetrics.salesValue,
+                                  fontWeight: AppFontWeight.semibold,
+                                  fontFeatures: _tabular,
+                                  color: colors.onBrandSurface,
+                                ),
+                              ),
+                              // Always laid out, shown only without sales, so
+                              // the card keeps one height.
+                              Visibility(
+                                visible: noSales,
+                                maintainSize: true,
+                                maintainAnimation: true,
+                                maintainState: true,
+                                child: Text(
+                                  l10n.home_noSalesYet,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.onBrandSurfaceMuted),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (onToggleAmounts != null) _EyeButton(hidden: amountsHidden, onPressed: onToggleAmounts!),
+                      ],
+                    ),
+                    const SizedBox(height: PhoneHomeMetrics.cardRowGap),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        for (var i = 0; i < stats.length; i++) ...[
+                          if (i > 0) const SizedBox(width: PhoneHomeMetrics.statGap),
+                          Expanded(child: _Stat(label: stats[i].$1, value: stats[i].$2, hidden: amountsHidden)),
+                        ],
+                        ExcludeSemantics(
+                          child: Icon(Icons.chevron_right, size: PhoneHomeMetrics.rowIcon, color: colors.onBrandSurface),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              _PeriodChip(period: period, onChanged: onPeriodChanged),
-              if (onToggleAmounts != null) _EyeButton(hidden: amountsHidden, onPressed: onToggleAmounts!),
-            ],
-          ),
-          _Amount(
-            value: money(figures.sales),
-            hidden: amountsHidden,
-            blur: PhoneHomeMetrics.maskBlurLarge,
-            style: TextStyle(
-              fontSize: PhoneHomeMetrics.salesValue,
-              fontWeight: AppFontWeight.bold,
-              color: colors.onBrandSurface,
             ),
           ),
-          const SizedBox(height: AppSpacing.s12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (var i = 0; i < stats.length; i++) ...[
-                if (i > 0) const SizedBox(width: PhoneHomeMetrics.statGap),
-                Expanded(child: _Stat(label: stats[i].$1, value: stats[i].$2, hidden: amountsHidden)),
-              ],
-            ],
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: onAllDetails,
-              style: TextButton.styleFrom(
-                foregroundColor: colors.onBrandSurface,
-                minimumSize: const Size(PhoneHomeMetrics.linkHeight, PhoneHomeMetrics.linkHeight),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(l10n.home_allDetails, style: const TextStyle(fontWeight: AppFontWeight.semibold)),
-                  const Icon(Icons.chevron_right, size: PhoneHomeMetrics.rowIcon),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -147,16 +184,21 @@ class _Stat extends StatelessWidget {
         children: [
           Text(
             label,
-            maxLines: 2,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.onBrandSurfaceMuted),
           ),
           _Amount(
             value: value,
             hidden: hidden,
             blur: PhoneHomeMetrics.maskBlurSmall,
+            // UI5 made the values 14: the dots keep UI3's size (0.3 of 15), so
+            // the 1.4 blur keeps its centre at 3:1 (at 14 it fell to 2.98).
+            dotBase: PhoneHomeMetrics.statValue,
             style: TextStyle(
-              fontSize: PhoneHomeMetrics.statValue,
-              fontWeight: AppFontWeight.bold,
+              fontSize: PhoneHomeMetrics.cardValue,
+              fontWeight: AppFontWeight.semibold,
+              fontFeatures: _tabular,
               color: colors.onBrandSurface,
             ),
           ),
@@ -179,7 +221,10 @@ class _Amount extends StatelessWidget {
   /// The dots' Gaussian blur (sigma).
   final double blur;
 
-  const _Amount({required this.value, required this.hidden, required this.style, required this.blur});
+  /// The text size the dots are a fraction of (null: the style's).
+  final double? dotBase;
+
+  const _Amount({required this.value, required this.hidden, required this.style, required this.blur, this.dotBase});
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +248,7 @@ class _Amount extends StatelessWidget {
           // While hidden the amount's Text is not built at all: the digits
           // are in neither the widget nor the semantics tree.
           child: hidden
-              ? _HiddenAmount(key: const ValueKey(true), style: style, blur: blur)
+              ? _HiddenAmount(key: const ValueKey(true), style: style, blur: blur, dotBase: dotBase)
               : Text(value, key: const ValueKey(false), style: style),
         ),
       ),
@@ -218,11 +263,14 @@ class _HiddenAmount extends StatelessWidget {
   final TextStyle style;
   final double blur;
 
-  const _HiddenAmount({super.key, required this.style, required this.blur});
+  /// The text size the dots are a fraction of (null: the style's).
+  final double? dotBase;
+
+  const _HiddenAmount({super.key, required this.style, required this.blur, this.dotBase});
 
   @override
   Widget build(BuildContext context) {
-    final dot = MediaQuery.textScalerOf(context).scale(style.fontSize!) * PhoneHomeMetrics.maskDot;
+    final dot = MediaQuery.textScalerOf(context).scale(dotBase ?? style.fontSize!) * PhoneHomeMetrics.maskDot;
     final fill = style.color!.withValues(alpha: PhoneHomeMetrics.maskAlpha);
     return Semantics(
       label: context.l10n.home_amountHidden,
@@ -313,7 +361,7 @@ class _PeriodChip extends StatelessWidget {
                 const SizedBox(width: AppSpacing.s6),
                 Text(
                   dashboardPeriodLabel(l10n, period),
-                  style: TextStyle(fontSize: PhoneHomeMetrics.rowLabel, color: colors.onBrandSurface),
+                  style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.onBrandSurface),
                 ),
                 Icon(Icons.arrow_drop_down, size: PhoneHomeMetrics.rowIcon, color: colors.onBrandSurface),
               ],

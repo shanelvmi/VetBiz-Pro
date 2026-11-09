@@ -18,10 +18,8 @@ import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 import 'package:vetbiz_pro/theme/app_colors.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
-import 'package:vetbiz_pro/theme/app_text.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/theme/color_math.dart';
-import 'package:vetbiz_pro/utils/facility_display.dart';
 
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
@@ -81,7 +79,7 @@ Future<FacilityProvider> _card(
               onAllDetails: () {},
               amountsHidden: ui.homeAmountsHidden,
               onToggleAmounts: () => ui.setHomeAmountsHidden(!ui.homeAmountsHidden),
-              facilityName: FacilityDisplay.name(f.selectedFacilityName),
+              periodLabel: 'Mon 9 Nov',
             ),
           ),
         ),
@@ -159,21 +157,23 @@ void main() {
     testWidgets('the real digits are never built: no text and no semantics label holds a digit', (tester) async {
       final semantics = tester.ensureSemantics();
       await _card(tester, hidden: true);
-      for (final t in _cardTexts(tester)) {
+      // UI5: the period line ("Sales · Mon 9 Nov") is a date, not an amount.
+      for (final t in _cardTexts(tester).where((t) => !t.startsWith('Sales · '))) {
         expect(RegExp(r'\d').hasMatch(t), isFalse, reason: t);
       }
       for (final amount in _amounts) {
         expect(find.textContaining(amount), findsNothing);
       }
-      expect(find.bySemanticsLabel(RegExp(r'\d')), findsNothing);
+      expect(find.bySemanticsLabel(RegExp(r'^(?!Sales · )[^\n]*\d')), findsNothing);
       expect(find.bySemanticsLabel(RegExp('Amount hidden')), findsNWidgets(4));
       semantics.dispose();
     }, skip: _skip);
 
-    testWidgets('the eye masks the four amounts and nothing else; the labels and the name stay', (tester) async {
+    testWidgets('the eye masks the four amounts and nothing else; the labels stay', (tester) async {
       await _card(tester);
       await _tapEye(tester);
-      for (final label in ['Sales', 'Collected', 'Owed', 'Net profit', 'Today', 'All details', _facility]) {
+      // UI5: the period line, and no "All details" line or facility name.
+      for (final label in ['Sales · Mon 9 Nov', 'Collected', 'Owed', 'Net profit', 'Today']) {
         expect(find.text(label), findsOneWidget, reason: label);
       }
       await _tapEye(tester);
@@ -238,30 +238,15 @@ void main() {
     });
   });
 
+  // UI5 moved the facility name from the card to Home's top bar (once, there:
+  // ui5_home_layout_test); these replace UI3's two tests of the card's line.
   group('(2) the facility name', () {
-    testWidgets('the name alone, a small muted line at the top, above the Sales row', (tester) async {
-      await _card(tester);
-      final name = find.text(_facility);
-      expect(name, findsOneWidget);
-      final text = tester.widget<Text>(name);
-      expect(text.style!.fontSize, AppFontSize.f12);
-      expect(text.maxLines, 1);
-      expect(text.overflow, TextOverflow.ellipsis);
-      final colors = AppColors.fromTheme(AppColorTheme.pasture);
-      expect(text.style!.color, colors.onBrandSurfaceMuted);
-      expect(tester.getRect(name).bottom, lessThanOrEqualTo(tester.getRect(find.text('Sales')).top));
-      expect(find.descendant(of: find.byType(TodayCard), matching: find.byIcon(Icons.store_outlined)), findsNothing);
-      // One small line only: the card's top padding, the line, then the row.
-      final card = tester.getRect(find.byType(TodayCard));
-      expect(tester.getRect(name).top - card.top, closeTo(PhoneHomeMetrics.cardPadding, 0.5));
-    }, skip: _skip);
-
-    testWidgets('follows the active facility: changes at once after a switch', (tester) async {
+    testWidgets('UI5: no longer inside the card, even after a switch', (tester) async {
       final facilities = await _card(tester);
+      expect(find.descendant(of: find.byType(TodayCard), matching: find.text(_facility)), findsNothing);
       await facilities.setFacility(id: 'f2', name: 'Kliniki ya Mifugo Arusha', type: 'Vet Clinic');
       await tester.pump();
-      expect(find.text('Kliniki ya Mifugo Arusha'), findsOneWidget);
-      expect(find.text(_facility), findsNothing);
+      expect(find.text('Kliniki ya Mifugo Arusha'), findsNothing);
     }, skip: _skip);
 
     testWidgets('the skeleton has the same height as the card (no shift when the content arrives)', (tester) async {
@@ -307,8 +292,6 @@ void main() {
             await _card(tester, size: size, brightness: brightness, locale: locale, facility: matrixLongFacilityName);
             expect(tester.takeException(), isNull);
             final shown = tester.getRect(find.byType(TodayCard));
-            final name = tester.getRect(find.text(matrixLongFacilityName));
-            expect(name.right, lessThanOrEqualTo(shown.right));
             await _tapEye(tester);
             expect(tester.takeException(), isNull);
             expect(tester.getRect(find.byType(TodayCard)), shown, reason: 'the card keeps its size hidden');

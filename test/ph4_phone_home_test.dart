@@ -111,11 +111,13 @@ void main() {
       expect(find.text('Net profit'), findsNothing);
       expect(drawnTexts(tester).where((t) => t.contains(Money.format(987654))), isEmpty);
       expect(find.textContaining('Expenses'), findsNothing);
-      for (final label in ['Sales', 'Collected', 'Owed']) {
+      expect(find.textContaining('Sales'), findsWidgets);
+      for (final label in ['Collected', 'Owed']) {
         expect(find.text(label), findsWidgets);
       }
       final collected = tester.getSize(find.ancestor(of: find.text('Collected'), matching: find.byType(Expanded)).first);
-      expect(collected.width, greaterThan((390 - 64) / 2 - 8), reason: 'two columns');
+      // UI5: the chevron takes the row's end; three columns would be about 100.
+      expect(collected.width, greaterThan(140), reason: 'two columns');
     }, skip: _skip);
 
     testWidgets('an admin sees Net profit in a third column', (tester) async {
@@ -125,10 +127,11 @@ void main() {
       expect(find.text(Money.format(987654)), findsOneWidget);
     }, skip: _skip);
 
+    // UI5: the whole card is the button (no "All details" line).
     testWidgets('All details opens from the card', (tester) async {
       var opened = 0;
       await pumpPhoneHome(tester, phoneHomeHarness(onAllDetails: () => opened++));
-      await tester.tap(find.text('All details'));
+      await tester.tap(find.text('Collected'));
       expect(opened, 1);
     }, skip: _skip);
   });
