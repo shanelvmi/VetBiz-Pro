@@ -12390,6 +12390,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{version} (build {stamp})'**
   String common_versionWithBuild(String version, String stamp);
+
+  /// Phone home (UI5), the Today card's first row: Sales, then the exact range its figures cover (period is a short date such as Mon 9 Nov, 3–9 Nov, Nov 2026 or 2026).
+  ///
+  /// In en, this message translates to:
+  /// **'Sales · {period}'**
+  String home_salesPeriod(String period);
+
+  /// Phone home (UI5): a range of days in the Today card, joined with an en dash, for example 3–9 Nov or 28 Dec 2026–1 Jan 2027. start and end are already formatted dates.
+  ///
+  /// In en, this message translates to:
+  /// **'{start}–{end}'**
+  String home_periodRange(String start, String end);
+
+  /// Phone home (UI5), the Today card: a muted line under the amount when the chosen period has no sales.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales yet'**
+  String get home_noSalesYet;
+
+  /// Phone home (UI5), Needs attention: products past their expiry date that are still on hand.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Expired stock: 1 product} other{Expired stock: {count} products}}'**
+  String home_attentionExpired(int count);
+
+  /// Phone home (UI5), Needs attention: products with no stock left.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Out of stock: 1 product} other{Out of stock: {count} products}}'**
+  String home_attentionOutOfStock(int count);
+
+  /// Phone home (UI5), Needs attention: clients whose debt is older than the facility's overdue setting.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Overdue debts: 1 client} other{Overdue debts: {count} clients}}'**
+  String home_attentionOverdue(int count);
+
+  /// Phone home (UI5), Needs attention: products that expire soon.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Expiring soon: 1 product} other{Expiring soon: {count} products}}'**
+  String home_attentionExpiring(int count);
+
+  /// Phone home (UI5), Needs attention: products at or below their low-stock level.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Low stock: 1 product} other{Low stock: {count} products}}'**
+  String home_attentionLowStock(int count);
+
+  /// Phone home (UI5), Needs attention (admins only): people who asked to join the team and wait for approval.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Waiting for approval: 1 person} other{Waiting for approval: {count} people}}'**
+  String home_attentionPending(int count);
+
+  /// Phone home (UI5), Needs attention: a small badge saying how many other items need attention besides the one shown, for example +2.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String home_attentionMoreBadge(int count);
+
+  /// Phone home (UI5): what a screen reader says for the +2 badge.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more needs attention} other{{count} more need attention}}'**
+  String home_attentionMoreLabel(int count);
 }
 
 class _AppLocalizationsDelegate

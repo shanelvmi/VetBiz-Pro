@@ -7430,4 +7430,99 @@ class AppLocalizationsEn extends AppLocalizations {
   String common_versionWithBuild(String version, String stamp) {
     return '$version (build $stamp)';
   }
+
+  @override
+  String home_salesPeriod(String period) {
+    return 'Sales · $period';
+  }
+
+  @override
+  String home_periodRange(String start, String end) {
+    return '$start–$end';
+  }
+
+  @override
+  String get home_noSalesYet => 'No sales yet';
+
+  @override
+  String home_attentionExpired(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Expired stock: $count products',
+      one: 'Expired stock: 1 product',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_attentionOutOfStock(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Out of stock: $count products',
+      one: 'Out of stock: 1 product',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_attentionOverdue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Overdue debts: $count clients',
+      one: 'Overdue debts: 1 client',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_attentionExpiring(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Expiring soon: $count products',
+      one: 'Expiring soon: 1 product',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_attentionLowStock(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Low stock: $count products',
+      one: 'Low stock: 1 product',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_attentionPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Waiting for approval: $count people',
+      one: 'Waiting for approval: 1 person',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_attentionMoreBadge(int count) {
+    return '+$count';
+  }
+
+  @override
+  String home_attentionMoreLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more need attention',
+      one: '1 more needs attention',
+    );
+    return '$_temp0';
+  }
 }
