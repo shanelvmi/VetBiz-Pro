@@ -671,6 +671,38 @@ class PhoneHomeMetrics {
   static const double rowValue = AppFontSize.f15;
   static const double countChipPadding = AppSpacing.s8;
   static const double circleAlpha = 0.12;
+
+  /// UI5: the top bar: the facility name (16, semibold) over the greeting
+  /// (12, muted), each one line.
+  static const double topBarName = AppFontSize.f16;
+  static const double topBarGreeting = AppFontSize.f12;
+
+  /// UI5: the Today card: the period line and the figures' values at 14, the
+  /// labels and the chip at 12, the big amount at [salesValue] semibold; the
+  /// three rows [cardRowGap] apart.
+  static const double cardLine = AppFontSize.f14;
+  static const double cardValue = AppFontSize.f14;
+  static const double cardRowGap = AppSpacing.s8;
+
+  /// UI5: the one Needs attention strip, always this high, [stripGap] below
+  /// the Today card and above the grid.
+  static const double attentionStripHeight = 56;
+  static const double stripGap = AppSpacing.s12;
+
+  /// UI5: the action grid: [gridColumns] equal tiles a row, [gridGap] apart,
+  /// at least [gridTileHeight] high, a [gridIcon] icon over two reserved
+  /// label lines.
+  static const int gridColumns = 4;
+  /// 6, not 8, and no side padding in a tile: "Transactions" at 12 (Roboto,
+  /// the theme's 0.25 letter spacing) is about 72 wide, and a 360 phone's tile
+  /// is then 77.5 (ui5_action_grid_test fails if a one-word label wraps).
+  static const double gridGap = AppSpacing.s6;
+  static const double gridTileHeight = 84;
+  static const double gridIcon = AppIconSize.i24;
+  static const double gridIconGap = AppSpacing.s8;
+  static const double gridRadius = AppRadius.r12;
+  static const double gridTilePaddingH = 0;
+  static const double gridTilePaddingTop = AppSpacing.s12;
 }
 
 /// PH5a: the standard phone list (docs/design/phone_list_pattern.md, rules R1

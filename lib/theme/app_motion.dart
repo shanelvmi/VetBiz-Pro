@@ -76,4 +76,11 @@ class AppMotion {
 
   /// RV1: the phone's bottom-bar tabs cross-fade.
   static const Duration tabFade = Duration(milliseconds: 180);
+
+  /// UI5: the press feedback of Home's tiles, Today card and attention strip
+  /// (PressScale): down to [pressScale] while pressed; and the strip's height
+  /// when it appears or goes later.
+  static const Duration press = Duration(milliseconds: 100);
+  static const double pressScale = 0.97;
+  static const Duration attentionResize = normal;
 }
