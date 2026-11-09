@@ -4109,5 +4109,19 @@
   "hub_showAllActions": "Onyesha vitendo vyote",
   "@hub_showAllActions": {"x-review":"draft"},
   "hub_showFewerActions": "Onyesha vitendo vichache",
-  "@hub_showFewerActions": {"x-review":"draft"}
+  "@hub_showFewerActions": {"x-review":"draft"},
+  "home_vetServices": "Huduma za mifugo",
+  "@home_vetServices": {"x-review":"draft"},
+  "home_visits": "Ziara",
+  "@home_visits": {"x-review":"draft"},
+  "home_noVisitsYet": "Bado hakuna ziara",
+  "@home_noVisitsYet": {"x-review":"draft"},
+  "home_chartThisWeek": "Wiki hii",
+  "@home_chartThisWeek": {"x-review":"draft"},
+  "home_chartLastWeek": "Wiki iliyopita",
+  "@home_chartLastWeek": {"x-review":"draft"},
+  "home_chartNoData": "Bado hakuna data ya wiki hii",
+  "@home_chartNoData": {"x-review":"draft"},
+  "home_chartProducts": "Mwenendo wa bidhaa",
+  "@home_chartProducts": {"x-review":"draft"}
 }

@@ -4109,5 +4109,19 @@
   "hub_showAllActions": "Show all actions",
   "@hub_showAllActions": {"description":"Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel shows its two rows; opens every action."},
   "hub_showFewerActions": "Show fewer actions",
-  "@hub_showFewerActions": {"description":"Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel is open; folds it back to two rows."}
+  "@hub_showFewerActions": {"description":"Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel is open; folds it back to two rows."},
+  "home_vetServices": "Vet services",
+  "@home_vetServices": {"description":"Phone Home (HUB2), the card: the second option of the switch at its top (the first is Sales); also the title of the chart page of service revenue."},
+  "home_visits": "Visits",
+  "@home_visits": {"description":"Phone Home (HUB2), the card with Vet services chosen: the label over the number of services performed in the period."},
+  "home_noVisitsYet": "No visits yet",
+  "@home_noVisitsYet": {"description":"Phone Home (HUB2), the card with Vet services chosen: shown under the amount when no service was recorded in the period."},
+  "home_chartThisWeek": "This week",
+  "@home_chartThisWeek": {"description":"Phone Home (HUB2), the Sales chart legend: the solid line, the last 7 days."},
+  "home_chartLastWeek": "Last week",
+  "@home_chartLastWeek": {"description":"Phone Home (HUB2), the Sales chart legend: the dashed line, the 7 days before."},
+  "home_chartNoData": "No data yet for this week",
+  "@home_chartNoData": {"description":"Phone Home (HUB2), a chart page with nothing to draw for the last 7 days."},
+  "home_chartProducts": "Product movement",
+  "@home_chartProducts": {"description":"Phone Home (HUB2), the title of the chart page of the 5 products sold in the largest quantity in the last 7 days."}
 }
