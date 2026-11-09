@@ -83,4 +83,10 @@ class AppMotion {
   static const Duration press = Duration(milliseconds: 100);
   static const double pressScale = 0.97;
   static const Duration attentionResize = normal;
+
+  /// HUB1: the action panel snapping open or closed (a drag's end, a tap on
+  /// its handle); under reduced motion [panelSnapStill], the shortest the
+  /// sheet accepts (it refuses zero), so the snap is instant.
+  static const Duration panelSnap = normal;
+  static const Duration panelSnapStill = Duration(milliseconds: 1);
 }

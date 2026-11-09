@@ -681,6 +681,52 @@ class PhoneHomeMetrics {
   static const double gridTilePaddingTop = AppSpacing.s12;
 }
 
+/// HUB1: the action panel docked at the bottom of the phone Home (the hub
+/// that replaced the bottom bar, the "+" and the More page). Its tiles keep
+/// UI5's grid measures (PhoneHomeMetrics.grid*). Colours come from
+/// context.colors roles only.
+class HomePanelMetrics {
+  HomePanelMetrics._();
+
+  /// The panel: the page surface, rounded upper corners, a hairline top
+  /// border and a very light shadow cast upwards (the shadow role).
+  static const double radius = AppRadius.r20;
+  static const double borderWidth = 1;
+  static const double shadowAlpha = 0.06;
+  static const double shadowBlur = 12;
+  static const double shadowOffsetY = -2;
+
+  /// The drag handle: a 36 x 4 bar centred in a full-width 48 px button at
+  /// the panel's top (never at the screen's bottom edge, so it does not
+  /// fight the system gesture bar).
+  static const double handleWidth = 36;
+  static const double handleHeight = 4;
+  static const double handleArea = 48;
+
+  /// The tiles' side padding, and the room under the last row (the home
+  /// indicator's inset is added).
+  static const double padding = AppSpacing.s16;
+  static const double bottomPadding = AppSpacing.s12;
+
+  /// Collapsed: exactly this many rows of PhoneHomeMetrics.gridColumns.
+  static const int collapsedRows = 2;
+
+  /// A drag on the handle faster than this (px/s) snaps the way it went;
+  /// slower, to the nearer state.
+  static const double flingVelocity = 300;
+
+  /// Expanded: Find a feature (MR1's field: 48 high, text 16 so a phone
+  /// browser does not zoom), then the named groups.
+  static const double searchHeight = 48;
+  static const double searchRadius = AppRadius.r24;
+  static const double searchText = AppFontSize.f16;
+  static const double searchIcon = AppIconSize.i22;
+  static const double groupTitle = AppFontSize.f14;
+  static const double groupTitleGap = AppSpacing.s8;
+  static const double groupGap = AppSpacing.s16;
+  static const double noMatchText = AppFontSize.f14;
+}
+
 /// PH5a: the standard phone list (docs/design/phone_list_pattern.md, rules R1
 /// to R12). Colours come from context.colors roles only.
 class PhoneListMetrics {
