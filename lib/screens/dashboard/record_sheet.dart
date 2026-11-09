@@ -57,8 +57,10 @@ List<RecordAction> recordMoreActionsFor({required bool isAdmin}) => [
     ];
 
 /// The app's existing labels for each action.
-String recordActionLabel(BuildContext context, RecordAction action) {
-  final l10n = context.l10n;
+String recordActionLabel(BuildContext context, RecordAction action) => recordActionLabelOf(context.l10n, action);
+
+/// The same, without a context (HUB1: Find a feature searches every language).
+String recordActionLabelOf(AppLocalizations l10n, RecordAction action) {
   return switch (action) {
     RecordAction.recordSale => l10n.sales_recordSale,
     RecordAction.recordVisit => l10n.services_recordVisit,
@@ -70,8 +72,10 @@ String recordActionLabel(BuildContext context, RecordAction action) {
   };
 }
 
-String _hint(BuildContext context, RecordAction action) {
-  final l10n = context.l10n;
+String _hint(BuildContext context, RecordAction action) => recordActionHintOf(context.l10n, action);
+
+/// The action's one-line hint (HUB1: also Find a feature's search words).
+String recordActionHintOf(AppLocalizations l10n, RecordAction action) {
   return switch (action) {
     RecordAction.recordSale => l10n.dashboard_createNewSale,
     RecordAction.recordVisit => l10n.dashboard_addServiceRecord,

@@ -20,8 +20,7 @@ import 'package:vetbiz_pro/screens/services/services_screen.dart';
 import 'package:vetbiz_pro/screens/store/stockstore_screen.dart';
 import 'package:vetbiz_pro/screens/transactions/transactions_screen.dart';
 
-// HUB1: true until the engine lands (the next commit).
-const _skip = true;
+const _skip = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));
