@@ -359,5 +359,17 @@
   "ui3-profile-drawer-assistant-kiswahili-768x1024": "029a9e50ac0d3ac9 376",
   "ui3-profile-drawer-assistant-light-1024x768": "-6a9770951356782a 376",
   "ui3-profile-drawer-assistant-light-1200x800": "-509ff46942aa4045 376",
-  "ui3-profile-drawer-assistant-light-768x1024": "-7a03f53356d471d6 376"
+  "ui3-profile-drawer-assistant-light-768x1024": "-7a03f53356d471d6 376",
+  "ui5-wide-dashboard-1024x768-dark": "-675df8d1496b0613 1059",
+  "ui5-wide-dashboard-1024x768-dark-colours": "-70ef2ceec525f4e1 156",
+  "ui5-wide-dashboard-1024x768-light": "-675df8d1496b0613 1059",
+  "ui5-wide-dashboard-1024x768-light-colours": "4fd16914ee05081e 156",
+  "ui5-wide-dashboard-1200x800-dark": "7f0e2d582ff7f2f0 1059",
+  "ui5-wide-dashboard-1200x800-dark-colours": "-70ef2ceec525f4e1 156",
+  "ui5-wide-dashboard-1200x800-light": "7f0e2d582ff7f2f0 1059",
+  "ui5-wide-dashboard-1200x800-light-colours": "4fd16914ee05081e 156",
+  "ui5-wide-dashboard-768x1024-dark": "-101f143c1d2a02f0 1056",
+  "ui5-wide-dashboard-768x1024-dark-colours": "-70ef2ceec525f4e1 156",
+  "ui5-wide-dashboard-768x1024-light": "-101f143c1d2a02f0 1056",
+  "ui5-wide-dashboard-768x1024-light-colours": "4fd16914ee05081e 156"
 }
