@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 
+import '../../config/app_timeouts.dart';
 import '../../screens/dashboard/phone_shell.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
@@ -66,6 +67,10 @@ class PhoneListScaffold<T> extends StatefulWidget {
   /// knows (Products: `provider.loaded`). Null: answered once [loading] has
   /// been true and is false again, or on an error, or with rows.
   final bool? firstPageAnswered;
+
+  /// RV2b: the rows show photos (RevealImage): the first screenful may hold
+  /// the reveal for AppTimeouts.revealImageGrace, never past its 1200 ms.
+  final bool imageGrace;
 
   /// Shown above the rows (the "new records - Refresh" banner).
   final Widget? banner;
@@ -142,6 +147,7 @@ class PhoneListScaffold<T> extends StatefulWidget {
     this.dayTotals = true,
     this.summaryPending = false,
     this.firstPageAnswered,
+    this.imageGrace = false,
   });
 
   @override
@@ -162,7 +168,7 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
   late final RevealGate _gate = RevealGate(primary: [
     ListenableRevealSource<bool>(_rowsAnswered, (v) => v),
     ListenableRevealSource<bool>(_summaryAnswered, (v) => v),
-  ]);
+  ], imageGrace: widget.imageGrace ? AppTimeouts.revealImageGrace : null);
 
   // An empty list before any load was asked for is not an answer: a screen
   // whose controller starts its first read after the first frame would

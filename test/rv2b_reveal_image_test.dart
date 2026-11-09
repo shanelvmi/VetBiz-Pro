@@ -90,12 +90,16 @@ Map<String, Rect> _rects(WidgetTester tester) => {
       for (final k in ['above', 'slot', 'below']) k: tester.getRect(find.byKey(ValueKey(k))),
     };
 
-double? _imageOpacity(WidgetTester tester) {
-  final fade = find.ancestor(of: find.byKey(const ValueKey('revealImage-image')), matching: find.byType(AnimatedOpacity));
-  final inner = find.descendant(of: find.byKey(const ValueKey('revealImage-image')), matching: find.byType(AnimatedOpacity));
-  final f = inner.evaluate().isNotEmpty ? inner : fade;
-  return f.evaluate().isEmpty ? null : tester.widget<AnimatedOpacity>(f.first).opacity;
-}
+Finder _imageFade() =>
+    find.descendant(of: find.byKey(const ValueKey('revealImage-image')), matching: find.byType(AnimatedOpacity));
+
+double? _imageOpacity(WidgetTester tester) =>
+    _imageFade().evaluate().isEmpty ? null : tester.widget<AnimatedOpacity>(_imageFade().first).opacity;
+
+// The placeholder's own fade (out, under the image).
+double _placeholderOpacity(WidgetTester tester) => tester
+    .widget<AnimatedOpacity>(find.ancestor(of: find.byKey(const ValueKey('initials')), matching: find.byType(AnimatedOpacity)).first)
+    .opacity;
 
 Future<ui.Image> _png(WidgetTester tester) async => (await tester.runAsync(() => createTestImage(width: 8, height: 8)))!;
 
@@ -104,7 +108,7 @@ void main() {
     _images.clear();
     RevealImage.providerFor = _provider;
   });
-  tearDown(() => RevealImage.providerFor = NetworkImage.new);
+  // The global test config sets the default again before every test.
 
   testWidgets('the slot has its fixed size and the initials at once; nothing moves when the image arrives', (tester) async {
     await tester.pumpWidget(_app(_slot('a')));
@@ -125,15 +129,24 @@ void main() {
     _images['a']!.decode(await _png(tester));
     await tester.pump();
     expect(_imageOpacity(tester), 1);
-    final fading = tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity).first);
-    expect(fading.duration, greaterThan(Duration.zero));
+    expect(tester.widget<AnimatedOpacity>(_imageFade().first).duration, greaterThan(Duration.zero));
+    // The initials fade out under it, so a logo with transparent parts
+    // never shows them through: over the same duration, from the same frame.
+    expect(_placeholderOpacity(tester), 0);
+    expect(
+        tester.widget<AnimatedOpacity>(find.ancestor(of: find.byKey(const ValueKey('initials')), matching: find.byType(AnimatedOpacity)).first).duration,
+        greaterThan(Duration.zero));
   }, skip: _skip);
 
   testWidgets('reduced motion: the image shows at once, with no fade', (tester) async {
     await tester.pumpWidget(_app(_slot('a'), still: true));
     _images['a']!.decode(await _png(tester));
     await tester.pump();
-    expect(find.byType(AnimatedOpacity), findsNothing);
+    expect(_imageFade(), findsNothing);
+    await tester.pump();
+    expect(_placeholderOpacity(tester), 0);
+    expect(tester.widget<AnimatedOpacity>(find.ancestor(of: find.byKey(const ValueKey('initials')), matching: find.byType(AnimatedOpacity)).first).duration,
+        Duration.zero);
     expect(find.byKey(const ValueKey('revealImage-image')), findsOneWidget);
   }, skip: _skip);
 
