@@ -38,7 +38,7 @@ Future<void> activateFacilityAndGoToDashboard({
   required Map<String, dynamic> facility,
   String? role,
   // RELOAD1: the facility a reload in the same session comes back to
-  // (AppEntryPoint); the phone then opens on its remembered tab.
+  // (AppEntryPoint); its id is already remembered.
   bool resume = false,
 }) async {
   debugPrint('[NAV] activateFacilityAndGoToDashboard starting for facility=${facility[Fields.facilityId]} role=$role');
@@ -72,11 +72,10 @@ Future<void> activateFacilityAndGoToDashboard({
 
   // RELOAD1: every way in (the only facility, the picker, a switch, System
   // Refresh, registration) passes here, so a reload reopens this one. The id
-  // only, in the session's own store.
-  if (resume) {
-    ActiveFacilityMemory.resumed();
-  } else if (facility[Fields.facilityId] case final String id) {
-    ActiveFacilityMemory.remember(id);
+  // only, in the session's own store. A resumed reload's id is already there.
+  // (HUB1: the phone's tab is no longer remembered; the hub has no tabs.)
+  if (!resume) {
+    if (facility[Fields.facilityId] case final String id) ActiveFacilityMemory.remember(id);
   }
 
   // PH4b: on a phone the products are a live listener from here on, so the

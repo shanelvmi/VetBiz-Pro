@@ -237,9 +237,8 @@ void main() {
     expect(store.values, {ActiveFacilityMemory.facilityKey: 'fac-a'});
   }, skip: _skip);
 
-  testWidgets('switching facility updates the memory and opens the phone at Home', (tester) async {
+  testWidgets('switching facility updates the memory', (tester) async {
     final (_, _, store) = await _start(tester, sameSession: false, facilities: [_facility('fac-a')]);
-    ActiveFacilityMemory.rememberTab('more');
     activateFacilityAndGoToDashboard(context: navigatorKey.currentContext!, facility: _facility('fac-b'), role: 'admin');
     await _wait(tester);
     expect(_open(tester), 'fac-b');
@@ -250,7 +249,6 @@ void main() {
       (tester) async {
     for (final message in [null, 'deactivated', 'session timed out', 'account deleted']) {
       final (_, _, store) = await _start(tester, sameSession: false, facilities: [_facility('fac-a')]);
-      ActiveFacilityMemory.rememberTab('sales');
       forceLogoutAndShowLogin(message: message);
       await _wait(tester);
       expect(store.values, isEmpty, reason: 'message: $message');
