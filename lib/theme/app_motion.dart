@@ -74,9 +74,6 @@ class AppMotion {
   static const double pageSlideOffset = 0.06;
   static const double pageSlideOutgoingOffset = 0.03;
 
-  /// RV1: the phone's bottom-bar tabs cross-fade.
-  static const Duration tabFade = Duration(milliseconds: 180);
-
   /// UI5: the press feedback of Home's tiles, Today card and attention strip
   /// (PressScale): down to [pressScale] while pressed; and the strip's height
   /// when it appears or goes later.

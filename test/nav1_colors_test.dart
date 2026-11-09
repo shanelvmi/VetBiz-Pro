@@ -5,8 +5,8 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/color_math.dart';
 import 'package:vetbiz_pro/theme/theme_derivation.dart';
 
-/// NAV1: the bottom bar's fill and inks, and the Today card's gradient, in
-/// all four themes, Light and Dark.
+/// NAV1: the Today card's gradient, in all four themes, Light and Dark (HUB1:
+/// the bottom bar's fill and inks went with the bar).
 void main() {
   double on(Color fg, Color bg) => ColorMath.contrast(Color.alphaBlend(fg, bg), bg);
 
@@ -14,21 +14,6 @@ void main() {
     for (final brightness in Brightness.values) {
       final c = AppColors.fromTheme(theme, brightness: brightness);
       final name = '${theme.id} ${brightness.name}';
-
-      test('$name: the bar is the surface with a faint primary tint', () {
-        final tint = brightness == Brightness.light ? ThemeDerivation.navBarTintLight : ThemeDerivation.navBarTintDark;
-        final tintFrom = brightness == Brightness.light ? theme.primary : c.primary;
-        expect(c.navBarFill, Color.alphaBlend(tintFrom.withValues(alpha: tint), c.surface));
-        expect(c.navBarFill, isNot(c.surface));
-        // Faint: still close to the surface.
-        expect(ColorMath.deltaE(c.navBarFill, c.surface), lessThan(8));
-      });
-
-      test('$name: the bar\'s inks reach 4.5 (labels) and so 3 (icons) on its fill', () {
-        expect(on(c.primary, c.navBarFill), greaterThanOrEqualTo(4.5), reason: 'active');
-        expect(on(c.navBarInactive, c.navBarFill), greaterThanOrEqualTo(4.5), reason: 'inactive');
-        expect(on(c.onAccent, c.accent), greaterThanOrEqualTo(4.5), reason: 'the + on its squircle');
-      });
 
       test('$name: the Today card gradient runs from the primary to a deeper tone', () {
         expect(c.brandGradientStart, theme.primary);

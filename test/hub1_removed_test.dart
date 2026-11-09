@@ -6,8 +6,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-// HUB1: true until the old navigation is removed.
-const _skip = true;
+const _skip = false;
 
 const _deletedFiles = [
   'lib/screens/dashboard/phone_shell.dart',

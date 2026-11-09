@@ -60,14 +60,6 @@ class ThemeDerivation {
   /// purpose, and the tint is a pale fill, never near an error red).
   static Color quickActionTintAccent(Color accent) => _quickActionTintAccent.apply(accent, warmGuard: false);
 
-  /// NAV1: how much of the primary tints the phone bottom bar over the
-  /// surface (light: the theme primary; dark: the dark primary).
-  static const double navBarTintLight = 0.05;
-  static const double navBarTintDark = 0.08;
-
-  static Color navBarFill(Color primary, Color surface, double tint) =>
-      Color.alphaBlend(primary.withValues(alpha: tint), surface);
-
   /// NAV1: the deep end of the Today card's gradient: the primary's hue
   /// turned a little (as brandTeal is: Pasture's teal goes to a deep green)
   /// and darker, so the on-brand ink only gains contrast. The warm guard

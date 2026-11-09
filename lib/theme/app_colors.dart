@@ -109,8 +109,6 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.authFooterMutedText,
     required this.authPanelIcon,
     required this.bannerInk,
-    required this.navBarFill,
-    required this.navBarInactive,
     required this.brandGradientStart,
     required this.brandGradientEnd,
   });
@@ -378,15 +376,6 @@ class AppColors extends ThemeExtension<AppColors> {
   // textPrimary fails in dark.
   final Color bannerInk;
 
-  // NAV1: the phone bottom bar. navBarFill: the surface with a faint tint of
-  // the primary (light: the theme primary at ThemeDerivation.navBarTintLight;
-  // dark: the dark primary at navBarTintDark), so each theme gets its own.
-  // navBarInactive: the outlined icons and labels of the items not selected,
-  // the lightest grey that reaches 4.5 on navBarFill (light textMuted reads
-  // only 4.28 to 4.44 there). The selected item is primary.
-  final Color navBarFill;
-  final Color navBarInactive;
-
   // NAV1: the phone Today card's linear gradient, from the theme primary
   // (brandSurface) to a deeper tone of a near hue (ThemeDerivation
   // .brandGradientEnd: Pasture teal to deep green). The same in dark, as
@@ -498,9 +487,6 @@ class AppColors extends ThemeExtension<AppColors> {
         authFooterMutedText: ThemeDerivation.textMuted(ThemeDerivation.quickActionTintPrimary(theme.primary)),
         authPanelIcon: theme.primary,
         bannerInk: Colors.black,
-        navBarFill: ThemeDerivation.navBarFill(theme.primary, Colors.white, ThemeDerivation.navBarTintLight),
-        navBarInactive: ThemeDerivation.textMuted(
-            ThemeDerivation.navBarFill(theme.primary, Colors.white, ThemeDerivation.navBarTintLight)),
         brandGradientStart: theme.primary,
         brandGradientEnd: ThemeDerivation.brandGradientEnd(theme.primary),
       );
@@ -515,8 +501,6 @@ class AppColors extends ThemeExtension<AppColors> {
     final surfaceMuted = DarkDerivation.surfaceMuted(theme.primary);
     final mark = DarkDerivation.liftMark;
     final text = DarkDerivation.liftText;
-    final navBarFill =
-        ThemeDerivation.navBarFill(DarkDerivation.primary(theme.primary), surface, ThemeDerivation.navBarTintDark);
     return light.copyWith(
       primary: DarkDerivation.primary(theme.primary),
       background: background,
@@ -610,8 +594,6 @@ class AppColors extends ThemeExtension<AppColors> {
       authPanelIcon: Colors.white,
       // brandGradientStart and brandGradientEnd keep their light values, as
       // brandSurface does.
-      navBarFill: navBarFill,
-      navBarInactive: DarkDerivation.lift(Colors.grey.shade500, 4.5, navBarFill),
     );
   }
 
@@ -708,8 +690,6 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? authFooterMutedText,
     Color? authPanelIcon,
     Color? bannerInk,
-    Color? navBarFill,
-    Color? navBarInactive,
     Color? brandGradientStart,
     Color? brandGradientEnd,
   }) =>
@@ -805,8 +785,6 @@ class AppColors extends ThemeExtension<AppColors> {
         authFooterMutedText: authFooterMutedText ?? this.authFooterMutedText,
         authPanelIcon: authPanelIcon ?? this.authPanelIcon,
         bannerInk: bannerInk ?? this.bannerInk,
-        navBarFill: navBarFill ?? this.navBarFill,
-        navBarInactive: navBarInactive ?? this.navBarInactive,
         brandGradientStart: brandGradientStart ?? this.brandGradientStart,
         brandGradientEnd: brandGradientEnd ?? this.brandGradientEnd,
       );
@@ -907,8 +885,6 @@ class AppColors extends ThemeExtension<AppColors> {
       authFooterMutedText: l(authFooterMutedText, other.authFooterMutedText),
       authPanelIcon: l(authPanelIcon, other.authPanelIcon),
       bannerInk: l(bannerInk, other.bannerInk),
-      navBarFill: l(navBarFill, other.navBarFill),
-      navBarInactive: l(navBarInactive, other.navBarInactive),
       brandGradientStart: l(brandGradientStart, other.brandGradientStart),
       brandGradientEnd: l(brandGradientEnd, other.brandGradientEnd),
     );
