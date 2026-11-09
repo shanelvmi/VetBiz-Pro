@@ -28,12 +28,20 @@ class HomeActionPanel extends StatefulWidget {
 
   const HomeActionPanel({super.key, required this.isAdmin, this.isPlatformAdmin = false, required this.onTile});
 
-  /// The collapsed panel's height: the handle, the two rows, the room under
-  /// them and the home indicator.
+  /// The folded panel's rows: two of four on a phone held upright; one row of
+  /// the same tiles when it is held sideways (two rows would leave Home a
+  /// strip of about 70 px at 740 x 360).
+  static int collapsedRowsOf(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    return size.width > size.height ? HomePanelMetrics.collapsedRowsLandscape : HomePanelMetrics.collapsedRows;
+  }
+
+  /// The collapsed panel's height: the handle, the rows, the room under them
+  /// and the home indicator.
   static double collapsedHeightOf(BuildContext context) =>
       HomePanelMetrics.handleArea +
-      HomePanelMetrics.collapsedRows * hubTileHeight(context) +
-      (HomePanelMetrics.collapsedRows - 1) * PhoneHomeMetrics.gridGap +
+      collapsedRowsOf(context) * hubTileHeight(context) +
+      (collapsedRowsOf(context) - 1) * PhoneHomeMetrics.gridGap +
       HomePanelMetrics.bottomPadding +
       AppSafeArea.bottomOf(context);
 
@@ -217,11 +225,15 @@ class _HomeActionPanelState extends State<HomeActionPanel> {
                       // take focus or be read out.
                       child: _expanded
                           ? _expandedBody(context)
-                          : HubTileGrid(
-                              key: const ValueKey('hub-collapsed'),
-                              tiles: hubCollapsedTilesFor(isAdmin: widget.isAdmin),
-                              onTile: _tap,
-                            ),
+                          : Builder(builder: (context) {
+                              final tiles = hubCollapsedTilesFor(isAdmin: widget.isAdmin);
+                              return HubTileGrid(
+                                key: const ValueKey('hub-collapsed'),
+                                tiles: tiles,
+                                columns: (hubCollapsedTiles.length / HomeActionPanel.collapsedRowsOf(context)).ceil(),
+                                onTile: _tap,
+                              );
+                            }),
                     ),
                     SizedBox(height: HomePanelMetrics.bottomPadding + AppSafeArea.bottomOf(context)),
                   ],

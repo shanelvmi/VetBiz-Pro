@@ -14,15 +14,16 @@ import 'hub_destinations.dart';
 /// collapsed height is known before it is laid out.
 double hubTileHeight(BuildContext context) => MediaQuery.textScalerOf(context).scale(PhoneHomeMetrics.gridTileHeight);
 
-/// Rows of [PhoneHomeMetrics.gridColumns] equal tiles,
+/// Rows of [columns] equal tiles (PhoneHomeMetrics.gridColumns by default),
 /// [PhoneHomeMetrics.gridGap] apart (UI5's grid); a short last row stays
 /// left-aligned. A tile shows a spinner while its action runs (Record Payment
 /// first finds who owes) and the grid ignores taps meanwhile.
 class HubTileGrid extends StatefulWidget {
   final List<HubTile> tiles;
   final Future<void> Function(HubTile tile) onTile;
+  final int columns;
 
-  const HubTileGrid({super.key, required this.tiles, required this.onTile});
+  const HubTileGrid({super.key, required this.tiles, required this.onTile, this.columns = PhoneHomeMetrics.gridColumns});
 
   @override
   State<HubTileGrid> createState() => _HubTileGridState();
@@ -43,7 +44,7 @@ class _HubTileGridState extends State<HubTileGrid> {
 
   @override
   Widget build(BuildContext context) {
-    const columns = PhoneHomeMetrics.gridColumns;
+    final columns = widget.columns;
     final tiles = widget.tiles;
     final rows = (tiles.length / columns).ceil();
     return Column(

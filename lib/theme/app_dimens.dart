@@ -597,8 +597,11 @@ class HomePanelMetrics {
   static const double padding = AppSpacing.s16;
   static const double bottomPadding = AppSpacing.s12;
 
-  /// Collapsed: exactly this many rows of PhoneHomeMetrics.gridColumns.
+  /// Collapsed: exactly this many rows of PhoneHomeMetrics.gridColumns; a
+  /// phone held sideways (wider than tall) folds the same tiles into
+  /// [collapsedRowsLandscape] row, so Home keeps room above it.
   static const int collapsedRows = 2;
+  static const int collapsedRowsLandscape = 1;
 
   /// A drag on the handle faster than this (px/s) snaps the way it went;
   /// slower, to the nearer state.

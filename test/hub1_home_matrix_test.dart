@@ -16,8 +16,7 @@ import 'helpers/hub1_hub.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// HUB1: true until the panel folds to one row sideways (the next commit).
-const _skip = true;
+const _skip = false;
 
 const _sizes = [
   MatrixSize('360x740', Size(360, 740), phone: true),
