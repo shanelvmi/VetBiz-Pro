@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_defaults.dart';
+import '../data/home_card_mode.dart';
 import '../data/ui_theme_mode.dart';
 import '../l10n/l10n.dart';
 import '../theme/app_palette.dart';
@@ -19,12 +20,14 @@ class UiSettingsProvider with ChangeNotifier {
   static const String languageKey = 'ui_language';
   static const String _themeModeKey = 'ui_theme_mode';
   static const String _homeAmountsHiddenKey = 'ui_home_amounts_hidden';
+  static const String _homeCardModeKey = 'ui_home_card_mode';
 
   bool _layoutFixed = false;
   String _colorThemeId = AppColorTheme.defaultId;
   String _languageCode = AppDefaults.defaultLanguage;
   UiThemeMode _themeMode = UiThemeMode.defaultMode;
   bool _homeAmountsHidden = false;
+  HomeCardMode _homeCardMode = HomeCardMode.defaultMode;
   bool _loaded = false;
 
   UiSettingsProvider() {
@@ -56,6 +59,10 @@ class UiSettingsProvider with ChangeNotifier {
   /// only changes what the card draws, never a figure.
   bool get homeAmountsHidden => _homeAmountsHidden;
 
+  /// HUB2: the phone Home card's switch, Sales or Vet services; Sales by
+  /// default, remembered on this device only.
+  HomeCardMode get homeCardMode => _homeCardMode;
+
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -78,6 +85,7 @@ class UiSettingsProvider with ChangeNotifier {
       // An unknown or missing value leaves the default.
       _themeMode = UiThemeMode.fromKey(prefs.getString(_themeModeKey));
       _homeAmountsHidden = prefs.getBool(_homeAmountsHiddenKey) ?? false;
+      _homeCardMode = HomeCardMode.fromKey(prefs.getString(_homeCardModeKey));
     } catch (e) {
       // Settings are a convenience: if they can't be read, the defaults stand.
       debugPrint('[UI SETTINGS] could not read saved settings: $e');
@@ -107,6 +115,18 @@ class UiSettingsProvider with ChangeNotifier {
       await prefs.setBool(_homeAmountsHiddenKey, value);
     } catch (e) {
       debugPrint('[UI SETTINGS] could not save the amounts choice: $e');
+    }
+  }
+
+  Future<void> setHomeCardMode(HomeCardMode value) async {
+    if (_homeCardMode == value) return;
+    _homeCardMode = value;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_homeCardModeKey, value.key);
+    } catch (e) {
+      debugPrint('[UI SETTINGS] could not save the Home card choice: $e');
     }
   }
 

@@ -92,11 +92,15 @@ Set<DashboardLoad> dashboardLoadsFor(DashboardMoment moment, {required bool phon
 /// The Today card's figures, as the old cards show them: Sales, Collected
 /// and Net profit from the period totals, Owed from DebtProvider's
 /// totalOutstanding (everything owed now, the Outstanding Payment card).
+/// HUB2: with Vet services chosen, the period's service revenue and visits
+/// (totalServiceRevenue, completedServicesCount: the same totals, no read).
 class PhoneHomeFigures {
   final double sales;
   final double collected;
   final double owed;
   final double netProfit;
+  final double serviceRevenue;
+  final int visits;
   final bool loading;
 
   const PhoneHomeFigures({
@@ -104,6 +108,8 @@ class PhoneHomeFigures {
     required this.collected,
     required this.owed,
     required this.netProfit,
+    this.serviceRevenue = 0,
+    this.visits = 0,
     this.loading = false,
   });
 
@@ -113,6 +119,8 @@ class PhoneHomeFigures {
         collected: totals.totalCollected,
         owed: owed,
         netProfit: totals.netProfit,
+        serviceRevenue: totals.totalServiceRevenue,
+        visits: totals.completedServicesCount,
         loading: loading,
       );
 }

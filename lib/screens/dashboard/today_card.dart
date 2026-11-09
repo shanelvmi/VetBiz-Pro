@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../config/app_defaults.dart';
 import '../../config/money.dart';
+import '../../data/home_card_mode.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_motion.dart';
@@ -40,6 +41,11 @@ class TodayCard extends StatelessWidget {
   /// The eye; null draws none.
   final VoidCallback? onToggleAmounts;
 
+  /// HUB2: what the card shows, Sales or Vet services, and the switch's
+  /// choice (a tap on an option or a horizontal swipe on the card).
+  final HomeCardMode mode;
+  final ValueChanged<HomeCardMode>? onModeChanged;
+
   const TodayCard({
     super.key,
     required this.figures,
@@ -50,6 +56,8 @@ class TodayCard extends StatelessWidget {
     this.periodLabel = '',
     this.amountsHidden = false,
     this.onToggleAmounts,
+    this.mode = HomeCardMode.sales,
+    this.onModeChanged,
   });
 
   @override
