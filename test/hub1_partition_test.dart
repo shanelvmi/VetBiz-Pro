@@ -36,7 +36,7 @@ String _read(String path) => File(path).readAsStringSync();
 
 Set<String> _panel() => {
       ..._destinations(_read('lib/screens/dashboard/hub_destinations.dart')),
-      ..._destinations(_read('lib/screens/dashboard/record_sheet.dart')),
+      ..._destinations(_read('lib/screens/dashboard/record_actions.dart')),
     };
 
 Set<String> _profileMenu() =>

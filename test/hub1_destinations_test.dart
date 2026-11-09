@@ -9,7 +9,7 @@ import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/models/client.dart';
 import 'package:vetbiz_pro/screens/clients/clients_screen.dart';
 import 'package:vetbiz_pro/screens/dashboard/hub_destinations.dart';
-import 'package:vetbiz_pro/screens/dashboard/record_sheet.dart';
+import 'package:vetbiz_pro/screens/dashboard/record_actions.dart';
 import 'package:vetbiz_pro/screens/debtors/debtors_screen.dart';
 import 'package:vetbiz_pro/screens/payments/payments_screen.dart';
 import 'package:vetbiz_pro/screens/platform_admin/platform_admin_home_screen.dart';

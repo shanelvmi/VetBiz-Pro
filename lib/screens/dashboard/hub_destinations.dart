@@ -14,7 +14,7 @@ import '../services/services_screen.dart';
 import '../store/stockstore_screen.dart';
 import '../transactions/transactions_screen.dart';
 import 'insights_screen.dart';
-import 'record_sheet.dart';
+import 'record_actions.dart';
 
 /// HUB1: every tile of the phone hub's action panel (phone_shell.md D1
 /// SUPERSEDED): the record actions, then the places of daily work, then the
