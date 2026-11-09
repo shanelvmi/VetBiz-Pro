@@ -12,7 +12,7 @@ import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/screens/dashboard/all_details_screen.dart';
 import 'package:vetbiz_pro/screens/dashboard/dashboard_panels.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
-import 'package:vetbiz_pro/screens/dashboard/phone_shell.dart';
+import 'package:vetbiz_pro/screens/dashboard/phone_hub.dart';
 import 'package:vetbiz_pro/services/dashboard_summary_service.dart';
 import 'package:vetbiz_pro/services/sales_summary_service.dart';
 

@@ -93,7 +93,7 @@ class SubscriptionBannerSnooze {
   void snooze(DateTime now) => _until = now.add(AppTimeouts.subscriptionNoticeSnooze);
 }
 
-/// PH8a: the slim banner at the top of every phone tab (PhoneShell places
+/// PH8a: the slim banner at the top of the phone Home (HUB1: PhoneHub places
 /// it): an icon, the short line, the action (Renew, or Details in the calm
 /// trial, opening Subscription for an admin; Details, the full sentence and who manages it,
 /// for an assistant) and the snooze. The status is in the text and the icon;
@@ -145,7 +145,7 @@ class PhoneSubscriptionBanner extends StatelessWidget {
     final action = isAdmin
         ? (state.kind == SubscriptionBannerKind.calmTrial ? l.common_details : l.subscription_renew)
         : l.common_details;
-    // PH8a-fix: it floats over the content (PhoneShell places it), so the
+    // PH8a-fix: it floats over the content (PhoneHub places it), so the
     // fill is the role itself, slightly see-through, and the ink is the one
     // that reads on it over any content (AppColors.bannerInk). A live region:
     // a screen reader announces it when it comes or its state changes.

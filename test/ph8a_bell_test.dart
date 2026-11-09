@@ -13,7 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/screens/dashboard/notification_bell.dart';
 import 'package:vetbiz_pro/screens/dashboard/notifications_screen.dart';
-import 'package:vetbiz_pro/screens/dashboard/phone_shell.dart';
+import 'package:vetbiz_pro/screens/dashboard/home_action_panel.dart';
+import 'package:vetbiz_pro/screens/dashboard/phone_hub.dart';
 import 'package:vetbiz_pro/services/notification_feed.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
@@ -175,18 +176,15 @@ void main() {
       );
     }
 
-    testWidgets('in the phone shell the page covers the bar; Back returns to the same tab', (tester) async {
+    testWidgets('on the hub the page covers Home and the panel; Back returns to the same Home', (tester) async {
       _size(tester, const Size(390, 844));
       final c = await _feed(tester);
       await tester.pumpWidget(
         _app(
-          PhoneShell(
-            homeAppBar: AppBar(actions: [_bell(c)]),
+          PhoneHub(
+            appBar: AppBar(actions: [_bell(c)]),
             home: (_) => _rows('home'),
-            sales: (_) => _rows('sales'),
-            products: (_) => _rows('products'),
-            more: (_) => _rows('more'),
-            onRecord: () {},
+            panel: HomeActionPanel(isAdmin: true, onTile: (_) async {}),
           ),
         ),
       );
@@ -197,10 +195,10 @@ void main() {
       await tester.tap(find.byTooltip('BELL'));
       await tester.pumpAndSettle();
       expect(_shown(tester).isDropdown, isFalse);
-      expect(find.byType(PhoneBottomBar), findsNothing, reason: 'the page is pushed over the bar');
+      expect(find.byType(HomeActionPanel), findsNothing, reason: 'the page is pushed over the hub');
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
-      expect(find.byType(PhoneBottomBar), findsOneWidget);
+      expect(find.byType(HomeActionPanel), findsOneWidget);
       expect(_offset(tester, 'home'), before);
     }, skip: _skip);
 

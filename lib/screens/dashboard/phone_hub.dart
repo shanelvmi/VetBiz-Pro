@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_dimens.dart';
+import '../../theme/app_layout.dart';
 import '../../theme/app_motion.dart';
 import 'home_action_panel.dart';
 
@@ -107,4 +108,16 @@ class HomePanelInsets extends InheritedWidget {
 
   @override
   bool updateShouldNotify(HomePanelInsets oldWidget) => bottom != oldWidget.bottom;
+}
+
+/// The hub on a phone, today's layout everywhere else, from the one signal
+/// (AppLayout.isPhone).
+class PhoneOrWide extends StatelessWidget {
+  final WidgetBuilder phone;
+  final WidgetBuilder wide;
+
+  const PhoneOrWide({super.key, required this.phone, required this.wide});
+
+  @override
+  Widget build(BuildContext context) => AppLayout.isPhone(context) ? phone(context) : wide(context);
 }

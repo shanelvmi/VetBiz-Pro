@@ -31,7 +31,6 @@ import 'home_action_panel.dart';
 import 'hub_destinations.dart';
 import 'notification_bell.dart';
 import 'phone_hub.dart';
-import 'phone_shell.dart' show PhoneOrWide;
 import 'subscription_banner.dart';
 import 'all_details_screen.dart';
 import 'needs_attention.dart';
