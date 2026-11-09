@@ -134,6 +134,7 @@ class RevealGate extends ChangeNotifier {
     required List<RevealSource> primary,
     RevealClock clock = const _RealClock(),
     this.timeout = AppTimeouts.revealGate,
+    this.imageGrace,
   })  : _primary = List.unmodifiable(primary),
         _clock = clock {
     for (final s in _primary) {
@@ -148,6 +149,10 @@ class RevealGate extends ChangeNotifier {
   final List<RevealSource> _primary;
   final RevealClock _clock;
   final Duration timeout;
+
+  /// RV2b: how long the first screenful of images (RevealImage) may hold the
+  /// open after the primary sources answered (not wired yet).
+  final Duration? imageGrace;
 
   RevealState _state = RevealState.pending;
   bool _openedBeforeFirstFrame = false;
@@ -169,6 +174,13 @@ class RevealGate extends ChangeNotifier {
     if (_disposed || isOpen || _timer != null) return;
     _timer = _clock.start(timeout, () => _open(RevealState.timedOut));
   }
+
+  /// RV2b: an image of the first screenful asks to hold the open (not wired
+  /// yet: refused).
+  bool holdForImage(RevealSource image) => false;
+
+  /// RV2b: an image that will not count after all.
+  void releaseImage(RevealSource image) {}
 
   void _onAnswered() {
     if (_allAnswered) _open(RevealState.revealed);

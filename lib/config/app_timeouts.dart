@@ -44,6 +44,13 @@ class AppTimeouts {
   /// before it reveals what it has (docs/design/screen_reveal.md).
   static const Duration revealGate = Duration(milliseconds: 1200);
 
+  /// RV2b: how long a list's first screenful of images may hold its reveal
+  /// after the rows answered; never past [revealGate] (RevealImage).
+  static const Duration revealImageGrace = Duration(milliseconds: 300);
+
+  /// RV2b: at most this many images (the first visible rows) hold a reveal.
+  static const int revealImageGraceSlots = 8;
+
   /// Login button safety net: re-enabled if nothing happened by then
   /// (login_screen.dart).
   static const Duration loginSafetyNet = Duration(seconds: 6);
