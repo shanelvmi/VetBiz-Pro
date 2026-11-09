@@ -22,6 +22,7 @@ import 'package:vetbiz_pro/services/debtor_clients_service.dart';
 
 import 'helpers/fake_firestore.dart';
 import 'helpers/screen_size_matrix.dart';
+import 'helpers/wait_until.dart';
 
 const _skip = false;
 
@@ -62,11 +63,7 @@ void main() {
     await tester.runAsync(() => _seed(fs));
     final facility = FacilityProvider(firestore: fs);
     final ui = UiSettingsProvider();
-    await tester.runAsync(() async {
-      while (facility.selectedFacilityId == null || !ui.loaded) {
-        await Future<void>.delayed(Duration.zero);
-      }
-    });
+    await waitUntil(tester, () => facility.selectedFacilityId != null && ui.loaded, what: 'the facility and UI settings');
     final debts = DebtProvider(firestore: fs);
     await pumpAtSize(
       tester,

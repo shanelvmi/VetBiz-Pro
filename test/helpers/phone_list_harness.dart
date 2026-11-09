@@ -26,6 +26,7 @@ import 'package:vetbiz_pro/ui/feedback/app_feedback.dart';
 
 import 'fake_firestore.dart';
 import 'screen_size_matrix.dart';
+import 'wait_until.dart';
 
 class _NoAuth implements AuthService {
   @override
@@ -184,11 +185,8 @@ Future<Ph5App> pumpPh5(
   final facility = FacilityProvider(firestore: fs);
   final ui = UiSettingsProvider();
   final role = UserRoleProvider(firestore: fs, currentUid: () => testUserId)..listenToCurrentUser();
-  await tester.runAsync(() async {
-    while (facility.selectedFacilityId == null || !ui.loaded || role.isAdmin != admin) {
-      await Future<void>.delayed(Duration.zero);
-    }
-  });
+  await waitUntil(tester, () => facility.selectedFacilityId != null && ui.loaded && role.isAdmin == admin,
+      what: 'the facility, UI settings and role');
   final debts = DebtProvider(firestore: fs);
   final navigator = GlobalKey<NavigatorState>();
   // A fresh tree each time: a second pump in one test must not keep the

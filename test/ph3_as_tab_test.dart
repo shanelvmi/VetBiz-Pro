@@ -27,6 +27,7 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
 import 'helpers/fake_firestore.dart';
+import 'helpers/wait_until.dart';
 
 const _skip = false;
 
@@ -52,11 +53,7 @@ Future<bool> _hasBackArrow(WidgetTester tester, Widget Function(FirebaseFirestor
   });
   final facility = FacilityProvider(firestore: fs);
   final ui = UiSettingsProvider();
-  await tester.runAsync(() async {
-    while (facility.selectedFacilityId == null || !ui.loaded) {
-      await Future<void>.delayed(Duration.zero);
-    }
-  });
+  await waitUntil(tester, () => facility.selectedFacilityId != null && ui.loaded, what: 'the facility and UI settings');
   final debts = DebtProvider(firestore: fs);
   final navigator = GlobalKey<NavigatorState>();
   await tester.pumpWidget(MultiProvider(

@@ -28,6 +28,7 @@ import 'package:vetbiz_pro/services/auth_service.dart';
 
 import 'helpers/fake_firestore.dart';
 import 'helpers/screen_size_matrix.dart';
+import 'helpers/wait_until.dart';
 
 // PH2a seams for the money screens (phone_foundations.md section 10): each
 // takes an optional firestore (and Add Transaction an authService), as
@@ -55,11 +56,7 @@ Future<Widget Function(Widget)> _providers(WidgetTester tester, FirebaseFirestor
   });
   final facility = FacilityProvider(firestore: fs);
   final ui = UiSettingsProvider();
-  await tester.runAsync(() async {
-    while (facility.selectedFacilityId == null || !ui.loaded) {
-      await Future<void>.delayed(Duration.zero);
-    }
-  });
+  await waitUntil(tester, () => facility.selectedFacilityId != null && ui.loaded, what: 'the facility and UI settings');
   final debts = DebtProvider(firestore: fs);
   return (app) => MultiProvider(providers: [
         Provider<AuthService>.value(value: _NoAuth()),
