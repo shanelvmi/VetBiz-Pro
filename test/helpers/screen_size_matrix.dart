@@ -64,6 +64,7 @@ Future<void> pumpAtSize(
   MatrixLook look = MatrixLook.light,
   double textScale = 1,
   Widget Function(Widget app)? wrap,
+  AppColorTheme colorTheme = AppColorTheme.pasture,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -77,7 +78,7 @@ Future<void> pumpAtSize(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     locale: locale,
-    theme: AppTheme.build(AppColorTheme.pasture, look == MatrixLook.dark ? Brightness.dark : Brightness.light),
+    theme: AppTheme.build(colorTheme, look == MatrixLook.dark ? Brightness.dark : Brightness.light),
     builder: (context, child) => MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)),
       child: child!,
