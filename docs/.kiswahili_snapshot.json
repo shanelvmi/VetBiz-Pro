@@ -2051,5 +2051,7 @@
   "home_attentionLowStock": ["{count, plural, =1{Stoo chache: bidhaa 1} other{Stoo chache: bidhaa {count}}}","Phone home (UI5), Needs attention: products at or below their low-stock level.","draft"],
   "home_attentionPending": ["{count, plural, =1{Wanasubiri kuidhinishwa: mtu 1} other{Wanasubiri kuidhinishwa: watu {count}}}","Phone home (UI5), Needs attention (admins only): people who asked to join the team and wait for approval.","draft"],
   "home_attentionMoreBadge": ["+{count}","Phone home (UI5), Needs attention: a small badge saying how many other items need attention besides the one shown, for example +2.","draft"],
-  "home_attentionMoreLabel": ["{count, plural, =1{Kingine 1 kinahitaji umakini} other{Vingine {count} vinahitaji umakini}}","Phone home (UI5): what a screen reader says for the +2 badge.","draft"]
+  "home_attentionMoreLabel": ["{count, plural, =1{Kingine 1 kinahitaji umakini} other{Vingine {count} vinahitaji umakini}}","Phone home (UI5): what a screen reader says for the +2 badge.","draft"],
+  "hub_showAllActions": ["Onyesha vitendo vyote","Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel shows its two rows; opens every action.","draft"],
+  "hub_showFewerActions": ["Onyesha vitendo vichache","Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel is open; folds it back to two rows.","draft"]
 }
