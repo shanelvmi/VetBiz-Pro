@@ -10,7 +10,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:vetbiz_pro/l10n/app_localizations.dart';
 import 'package:vetbiz_pro/screens/dashboard/dashboard_figures.dart';
 
-const _skip = true;
+const _skip = false;
 
 String _label(String locale, String period, DateTime now) => dashboardPeriodRangeLabel(
       lookupAppLocalizations(Locale(locale)),

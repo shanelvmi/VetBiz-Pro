@@ -723,28 +723,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   Map<String, dynamic>? _previousSnapshot;
   bool _isPreviousSnapshotLoading = false;
 
-  /// Turns the selected chip ('Today'/'This Week'/'This Month'/'This Year')
-  /// into a concrete (start, end) date range.
-  (DateTime, DateTime) _dateRangeForFilter(String filter) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    switch (filter) {
-      case 'Today':
-        return (today, now);
-      case 'This Week':
-        // Monday as the start of the week.
-        final startOfWeek = today.subtract(Duration(days: now.weekday - 1));
-        return (startOfWeek, now);
-      case 'This Month':
-        return (DateTime(now.year, now.month, 1), now);
-      case 'This Year':
-        return (DateTime(now.year, 1, 1), now);
-      default:
-        return (today, now);
-    }
-  }
-
   /// The immediately-preceding equivalent period, for trend
   /// comparisons - the full prior period (yesterday, last week, last
   /// calendar month, last calendar year), not a time-of-day-prorated
@@ -828,7 +806,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   void _loadPeriodTotals(String facilityId) {
     if (!_hasLoadedDashboardOnce) setState(() => _isPeriodLoading = true);
 
-    final (start, end) = _dateRangeForFilter(selectedFilter);
+    final (start, end) = dashboardPeriodRange(selectedFilter);
     _periodTotalsDay = _today();
 
     // Cancel whatever was watching before - a stale subscription from

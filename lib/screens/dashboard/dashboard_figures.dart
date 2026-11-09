@@ -1,3 +1,7 @@
+import 'package:intl/intl.dart';
+
+import '../../config/app_date_format.dart';
+import '../../config/app_ranges.dart';
 import '../../l10n/l10n.dart';
 import '../../services/dashboard_summary_service.dart';
 
@@ -14,15 +18,44 @@ String dashboardPeriodLabel(AppLocalizations l, String period) => switch (period
 
 /// UI5: the (start, end) the dashboard watches its period totals over, the
 /// one place it is worked out: the Today card's label shows this same range.
-(DateTime, DateTime) dashboardPeriodRange(String period, {DateTime? now}) =>
-    throw UnimplementedError('UI5: the period range');
+/// Monday starts the week; an unknown period is Today.
+(DateTime, DateTime) dashboardPeriodRange(String period, {DateTime? now}) {
+  final at = now ?? DateTime.now();
+  final today = DateTime(at.year, at.month, at.day);
+  return switch (period) {
+    'This Week' => (today.subtract(AppRanges.day * (at.weekday - 1)), at),
+    'This Month' => (DateTime(at.year, at.month, 1), at),
+    'This Year' => (DateTime(at.year, 1, 1), at),
+    _ => (today, at),
+  };
+}
 
 /// UI5: [range] as the Today card's short label in [locale]: Today the day
-/// ("Mon 9 Nov"), This Week the days ("3–9 Nov"), This Month the month
-/// ("Nov 2026"), This Year the year ("2026").
+/// ("Mon 9 Nov"), This Week the days ("3–9 Nov", "30 Nov–2 Dec", "28 Dec
+/// 2026–1 Jan 2027"; its Monday alone "9 Nov"), This Month the month ("Nov
+/// 2026"), This Year the year ("2026").
 String dashboardPeriodRangeLabel(AppLocalizations l, String period, (DateTime, DateTime) range,
-        {required String locale}) =>
-    throw UnimplementedError('UI5: the period label');
+    {required String locale}) {
+  final (start, end) = range;
+  String format(String pattern, DateTime d) => DateFormat(pattern, locale).format(d);
+  switch (period) {
+    case 'This Week':
+      if (start.year != end.year) {
+        return l.home_periodRange(
+            format(AppDateFormat.dateNoPadYPattern, start), format(AppDateFormat.dateNoPadYPattern, end));
+      }
+      final last = format(AppDateFormat.dateShortPattern, end);
+      if (start.month != end.month) return l.home_periodRange(format(AppDateFormat.dateShortPattern, start), last);
+      if (start.day != end.day) return l.home_periodRange(format(AppDateFormat.dayPattern, start), last);
+      return last;
+    case 'This Month':
+      return format(AppDateFormat.monthYearShortPattern, start);
+    case 'This Year':
+      return format(AppDateFormat.yearPattern, start);
+    default:
+      return format(AppDateFormat.weekdayDayMonthShortPattern, start);
+  }
+}
 
 /// PH4: what the dashboard loads at each moment. Tablets and computers keep
 /// today's loads; on a phone, Home shows only the live period totals and the

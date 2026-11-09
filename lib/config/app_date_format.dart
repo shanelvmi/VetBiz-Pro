@@ -38,6 +38,12 @@ class AppDateFormat {
   static const String dateNoPadYPattern = 'd MMM y';
   static const String dayMonthNumericPattern = 'd/M';
 
+  /// UI5: the Today card's period label ("Mon 9 Nov", the "3" of "3–9 Nov",
+  /// "2026"), always formatted in the current locale.
+  static const String weekdayDayMonthShortPattern = 'EEE d MMM';
+  static const String dayPattern = 'd';
+  static const String yearPattern = 'y';
+
   static DateFormat get date => DateFormat(datePattern);
   static DateFormat get dateNoPad => DateFormat(dateNoPadPattern);
   static DateFormat get dateShort => DateFormat(dateShortPattern);
