@@ -99,7 +99,7 @@ class PhoneListScaffold<T> extends StatefulWidget {
   final IconData emptyIcon;
   final String emptyText;
 
-  /// The floating button (null: none, as on Sales) and the empty state's.
+  /// The floating button (null: none) and the empty state's.
   final PhoneListAction? fab;
   final PhoneListAction? emptyAction;
 

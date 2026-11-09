@@ -56,7 +56,7 @@ List<String> _valuesBeside(WidgetTester tester, Finder label, Type box, {Set<Str
 }
 
 void main() {
-  group('the app bar (R1) and no record button (R2)', () {
+  group('the app bar (R1) and the record button (R2)', () {
     ph5TestWidgets('as a tab: the title only, a search icon and one overflow menu with Archive; nothing else', (tester) async {
       await _sales(tester);
       expect(find.text('Sales Records'), findsOneWidget);
@@ -64,8 +64,8 @@ void main() {
       expect(find.byType(BackButton), findsNothing);
       expect(find.byTooltip('Search'), findsOneWidget);
       expect(find.byTooltip('Refresh'), findsNothing);
-      expect(find.text('Record Sale'), findsNothing, reason: 'the bar\'s "+" records a sale');
-      expect(_key('phoneList-fab'), findsNothing);
+      // HUB1: the bar's "+" is gone; Sales has its own button (hub1_sales_fab_test).
+      expect(_key('phoneList-fab'), findsOneWidget);
       await tester.tap(find.byTooltip('Show menu'));
       await ph5Settle(tester);
       expect(find.text('Archive'), findsOneWidget);
@@ -227,7 +227,9 @@ void main() {
         await tester.drag(_list, const Offset(0, -3000));
         await ph5Settle(tester);
       }
-      await tester.scrollUntilVisible(_key('phoneList-row-y9'), 200, scrollable: _list);
+      // y9 is yesterday's newest row, above the end (HUB1: the Record Sale
+      // button's room under the last row moved it out of the built range).
+      await tester.scrollUntilVisible(_key('phoneList-row-y9'), -200, scrollable: _list);
       expect(find.descendant(of: _key('phoneList-day-$yesterday'), matching: find.text(Money.format(10000))), findsOneWidget);
       expect(_key('phoneList-loadMore'), findsNothing);
     }, skip: _skip);

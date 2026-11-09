@@ -994,6 +994,8 @@ class _SalesScreenState extends State<SalesScreen> {
         onRetry: controller.refreshSession,
         emptyIcon: Icons.shopping_cart_outlined,
         emptyText: filtered ? l10n.sales_emptyFiltered : l10n.sales_empty,
+        // HUB1: the bar's "+" is gone, so Sales has its own button (PH5a R2).
+        fab: PhoneListAction(label: l10n.sales_recordSale, icon: Icons.add, onPressed: _recordSale),
         emptyAction: PhoneListAction(label: l10n.sales_recordSale, icon: Icons.add, onPressed: _recordSale),
         hasMore: controller.hasNextPage,
         loadingMore: controller.isLoading && controller.loadedItems.isNotEmpty,

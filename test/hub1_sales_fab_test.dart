@@ -11,8 +11,7 @@ import 'package:vetbiz_pro/widgets/phone_list/collapsing_fab.dart';
 
 import 'helpers/phone_list_harness.dart';
 
-// HUB1: true until Sales has its button.
-const _skip = true;
+const _skip = false;
 
 Finder _key(String k) => find.byKey(ValueKey(k));
 
