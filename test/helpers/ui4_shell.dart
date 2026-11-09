@@ -109,10 +109,8 @@ Future<void> ui4Shell(
                 onPeriodChanged: (_) {},
                 attention: ph4SomeAttention,
                 onAllDetails: () {},
-                onQuickAction: (_) async {},
-                onViewAll: () {},
-                onGoTo: (_) {},
-                onAttention: (_) {},
+                onTile: (_) async {},
+                onAttention: () {},
               )
             : ui4Plain('home');
       },

@@ -11,7 +11,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/screens/dashboard/dashboard_panels.dart';
 import 'package:vetbiz_pro/screens/dashboard/needs_attention.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
-import 'package:vetbiz_pro/screens/dashboard/phone_home_rows.dart';
 import 'package:vetbiz_pro/screens/dashboard/sales_revenue_chart.dart';
 import 'package:vetbiz_pro/theme/app_breakpoints.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
@@ -58,7 +57,8 @@ void main() {
           await pumpAtSize(tester, screen: phoneHomeHarness(gate: gate), size: s.size, look: look);
           expect(find.byType(SkeletonPulse), findsWidgets, reason: 'the skeleton at once');
           await checkCase(tester, phone: true, where: '$where skeleton');
-          const slots = [TodayCard, QuickAccessTiles, GoToRow];
+          // UI5: the card, the attention strip and the action grid.
+          const slots = [TodayCard, AttentionStrip, HomeActionGrid];
           final skeleton = _rects(tester, slots);
           expect(skeleton.keys, contains(TodayCard));
           answered.value = true;
@@ -78,19 +78,21 @@ void main() {
       expect(find.byType(TodayCard), findsOneWidget);
     }, skip: _skipPhone);
 
-    testWidgets('Needs attention: a late slot at the end that keeps its place, then fills without moving the rest',
+    // UI5: the strip sits under the card, its slot reserved at the strip's
+    // height, so the grid below does not move when it fills.
+    testWidgets('Needs attention: a late slot under the card that keeps its place, then fills without moving the rest',
         (tester) async {
       final gate = RevealGate(primary: const []);
       addTearDown(gate.dispose);
       await pumpAtSize(tester, screen: phoneHomeHarness(gate: gate, attentionReady: false), size: const Size(390, 1400));
-      expect(find.byType(NeedsAttentionStrip), findsNothing);
+      expect(find.byType(AttentionStrip), findsNothing);
       final slot = tester.getRect(find.byType(LateSlot));
-      expect(slot.height, RevealMetrics.attentionReserve);
-      const above = [TodayCard, QuickAccessTiles, GoToRow];
+      expect(slot.height, PhoneHomeMetrics.attentionStripHeight);
+      const above = [TodayCard, HomeActionGrid];
       final before = _rects(tester, above);
       await pumpAtSize(tester, screen: phoneHomeHarness(gate: gate), size: const Size(390, 1400));
       await tester.pumpAndSettle();
-      expect(find.byType(NeedsAttentionStrip), findsOneWidget);
+      expect(find.byType(AttentionStrip), findsOneWidget);
       expect(tester.getRect(find.byType(LateSlot)).top, slot.top);
       expect(_rects(tester, above), before);
     }, skip: _skipPhone);
@@ -100,11 +102,11 @@ void main() {
       addTearDown(gate.dispose);
       await pumpAtSize(
         tester,
-        screen: phoneHomeHarness(gate: gate, attention: const AttentionCounts(stock: 0, expiry: 0, overdueDebtors: 0, overdueDays: 30)),
+        screen: phoneHomeHarness(gate: gate, attention: const []),
         size: const Size(390, 844),
       );
       expect(find.byType(LateSlot), findsNothing);
-      expect(find.byType(NeedsAttentionStrip), findsNothing);
+      expect(find.byType(AttentionStrip), findsNothing);
     }, skip: _skipPhone);
 
     testWidgets('the loaded Home lays out exactly as before RV1', (tester) async {

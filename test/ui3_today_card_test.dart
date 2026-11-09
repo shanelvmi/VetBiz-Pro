@@ -257,17 +257,14 @@ void main() {
           screen: Scaffold(
             body: PhoneHome(
               skeleton: skeleton,
-              facilityName: matrixLongFacilityName,
               figures: _figures,
               isAdmin: true,
               period: 'Today',
               onPeriodChanged: (_) {},
               attention: ph4SomeAttention,
               onAllDetails: () {},
-              onQuickAction: (_) async {},
-              onViewAll: () {},
-              onGoTo: (_) {},
-              onAttention: (_) {},
+              onTile: (_) async {},
+              onAttention: () {},
             ),
           ),
         );
@@ -277,9 +274,11 @@ void main() {
       expect(await height(skeleton: true), await height(skeleton: false));
     }, skip: _skip);
 
-    test('the dashboard passes the provider\'s current name to the phone Home', () {
+    // UI5: the provider's current name goes to Home's top bar instead.
+    test('the dashboard passes the provider\'s current name to Home\'s top bar', () {
       final source = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync();
-      expect(source, contains('facilityName: FacilityDisplay.name(facilityProvider.selectedFacilityName)'));
+      expect(source, contains('FacilityDisplay.name(Provider.of<FacilityProvider>(context).selectedFacilityName)'));
+      expect(source, contains('facilityName: facilityName,'));
     }, skip: _skip);
   });
 

@@ -137,13 +137,15 @@ void main() {
   });
 
 
-  testWidgets('the top bar: a small greeting over the name with its title', (tester) async {
-    await pumpPhoneHome(tester, phoneHomeHarness());
-    final greeting = tester.getTopLeft(find.text('Good afternoon'));
-    final name = tester.getTopLeft(find.text('Mr. Mwanaisha'));
-    expect(greeting.dy, lessThan(name.dy));
-    expect(tester.widget<Text>(find.text('Good afternoon')).style!.fontSize, 13);
-    expect(tester.widget<Text>(find.text('Mr. Mwanaisha')).style!.fontSize, 16);
+  // UI5: the facility name (16, semibold) over the greeting with the name
+  // (12, muted).
+  testWidgets('the top bar: the facility name over the greeting', (tester) async {
+    await pumpPhoneHome(tester, phoneHomeHarness(facilityName: 'Kilimo Agrovet'));
+    final name = tester.getTopLeft(find.text('Kilimo Agrovet'));
+    final greeting = tester.getTopLeft(find.text(ph4Greeting));
+    expect(name.dy, lessThan(greeting.dy));
+    expect(tester.widget<Text>(find.text(ph4Greeting)).style!.fontSize, 12);
+    expect(tester.widget<Text>(find.text('Kilimo Agrovet')).style!.fontSize, 16);
   }, skip: _skip);
 
   test('the period chip offers the dashboard\'s four periods, stored in English', () {

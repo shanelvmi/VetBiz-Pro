@@ -5,7 +5,7 @@ import 'package:flutter/gestures.dart' show HitTestResult;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/screens/dashboard/more_parts.dart';
-import 'package:vetbiz_pro/screens/dashboard/needs_attention.dart';
+import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_shell.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
@@ -48,7 +48,8 @@ void main() {
       await tester.pumpAndSettle();
       final last = switch (tab) {
         'Sales' => tester.getRect(find.text('Sales row 29')),
-        'Home' => tester.getRect(find.byType(NeedsAttentionStrip)),
+        // UI5: the action grid is Home's last block (the strip is under the card).
+        'Home' => tester.getRect(find.byType(HomeActionGrid)),
         _ => tester.getRect(find.byWidgetPredicate((w) => w is MoreSectionGrid).last),
       };
       final record = tester.getRect(ui4Record);

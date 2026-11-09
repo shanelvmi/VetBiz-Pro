@@ -505,7 +505,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               final ts = doc.data()[Fields.createdAt];
               return ts is Timestamp && ts.toDate().isAfter(_lastNotificationsViewedAt!);
             });
-        if (mounted) setState(() => _hasNewPendingAssistantSinceViewed = isNew);
+        if (mounted) {
+          setState(() {
+            _hasNewPendingAssistantSinceViewed = isNew;
+            _pendingApprovals = snapshot.docs.length;
+          });
+        }
       });
     }
   }
@@ -647,6 +652,14 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // The day the period totals were subscribed for: a return to Home after
   // midnight subscribes again (the range would be yesterday's).
   DateTime? _periodTotalsDay;
+
+  // UI5: the (start, end) the period totals are watched over, for the Today
+  // card's label (set again whenever the period changes or is reloaded).
+  (DateTime, DateTime)? _periodRange;
+
+  // UI5: how many members wait for approval (admins), from the bell's own
+  // pending watch: Needs attention adds no listener.
+  int _pendingApprovals = 0;
 
   // The phone top bar's user document, made once (S9).
   late final Stream<DocumentSnapshot> _userDocStream = userDoc.snapshots();
@@ -806,7 +819,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   void _loadPeriodTotals(String facilityId) {
     if (!_hasLoadedDashboardOnce) setState(() => _isPeriodLoading = true);
 
-    final (start, end) = dashboardPeriodRange(selectedFilter);
+    final (start, end) = _periodRange = dashboardPeriodRange(selectedFilter);
     _periodTotalsDay = _today();
 
     // Cancel whatever was watching before - a stale subscription from
@@ -1142,6 +1155,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       _hasLoadedDashboardOnce = _lastLoadedFacilityId == currentFacilityId;
       _lastLoadedFacilityId = currentFacilityId;
       _lastLoadedFilter = selectedFilter;
+      // UI5: the card's label shows the new range at once (the totals follow
+      // after this frame, over the same function's range).
+      _periodRange = dashboardPeriodRange(selectedFilter);
       // PH4: a phone loads only what Home shows; tablets and computers all
       // five, as before.
       final phone = AppLayout.isPhone(context);
@@ -1597,29 +1613,40 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             home: (homeContext) {
               // NAV1: the Today card's eye, remembered on this device.
               final uiSettings = Provider.of<UiSettingsProvider>(homeContext);
+              // UI5: what needs attention, from held data only (the
+              // products, the debts, the bell's pending members).
+              final attention = attentionItemsFor(
+                products: productProvider.products,
+                debts: debtProvider.debts,
+                overdueDays: facilityProvider.debtOverdueDays,
+                isAdmin: isAdmin,
+                pendingApprovals: _pendingApprovals,
+              );
               PhoneHome home({required bool skeleton}) => PhoneHome(
                     skeleton: skeleton,
                     amountsHidden: uiSettings.homeAmountsHidden,
                     onToggleAmounts: () => uiSettings.setHomeAmountsHidden(!uiSettings.homeAmountsHidden),
-                    // UI3: the active facility; this build listens to the
-                    // provider, so a switch shows the new name at once.
-                    facilityName: FacilityDisplay.name(facilityProvider.selectedFacilityName),
                     figures: PhoneHomeFigures.from(_periodTotals,
                         owed: debtProvider.totalOutstanding(), loading: _isPeriodLoading),
                     isAdmin: isAdmin,
                     period: selectedFilter,
-                    onPeriodChanged: (val) => setState(() => selectedFilter = val),
-                    attention: attentionCountsFor(
-                      products: productProvider.products,
-                      debts: debtProvider.debts,
-                      overdueDays: facilityProvider.debtOverdueDays,
+                    // UI5: the exact range the totals are watched over.
+                    periodLabel: dashboardPeriodRangeLabel(
+                      context.l10n,
+                      selectedFilter,
+                      _periodRange ?? dashboardPeriodRange(selectedFilter),
+                      locale: Localizations.localeOf(context).toLanguageTag(),
                     ),
+                    onPeriodChanged: (val) => setState(() => selectedFilter = val),
+                    attention: attention,
                     attentionReady: productProvider.loaded && debtProvider.loaded,
                     onAllDetails: _openAllDetails,
-                    onQuickAction: (action) => runRecordAction(homeContext, action, onDone: _returnToHome),
-                    onViewAll: () => showRecordSheet(homeContext, isAdmin: isAdmin, onDone: _returnToHome),
-                    onGoTo: (item) => _goTo(homeContext, item),
-                    onAttention: (target) => _openAttention(homeContext, target),
+                    onTile: (tile) => _openTile(homeContext, tile),
+                    onAttention: () => showAttentionSheet(
+                      homeContext,
+                      items: attention,
+                      onOpen: (item) => _openAttention(homeContext, item),
+                    ),
                   );
               return ScreenReveal(gate: _phoneRevealGate, skeleton: home(skeleton: true), child: home(skeleton: false));
             },
@@ -1795,21 +1822,30 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
   // --------------------- PH4: THE PHONE HOME ---------------------
 
-  /// Home's top bar on a phone: the avatar (the profile drawer), a small
-  /// greeting over the name with its title, the bell and Help.
+  /// Home's top bar on a phone (UI5): the avatar (the profile drawer), the
+  /// current facility's name over the greeting, and the bell; Help is on the
+  /// More page. The page's background with a 1 px hairline below it.
   PreferredSizeWidget _buildPhoneHomeAppBar(BuildContext context) {
+    // The active facility; this build listens to the provider, so a switch
+    // shows the new name at once (UI3, now in the bar).
+    final facilityName = FacilityDisplay.name(Provider.of<FacilityProvider>(context).selectedFacilityName);
     return AppBar(
-      backgroundColor: context.colors.surface,
-      elevation: AppElevation.e1,
+      backgroundColor: context.colors.background,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      shape: Border(bottom: BorderSide(color: context.colors.divider)),
       automaticallyImplyLeading: false,
       titleSpacing: AppSpacing.s8,
       title: StreamBuilder<DocumentSnapshot>(
         stream: _userDocStream,
         builder: (context, snapshot) {
           final data = _profileData(snapshot);
+          final name = (data['fullName'] ?? '').toString();
           return PhoneHomeTopBar(
-            greeting: greetingTime(),
-            name: (data['fullName'] ?? '').toString(),
+            facilityName: facilityName,
+            greeting: name.isEmpty ? greetingTime() : context.l10n.dashboard_greeting(greetingTime(), name),
+            name: name,
             avatarUrl: data['avatarUrl'] as String?,
             onAvatar: () => Scaffold.of(context).openEndDrawer(),
           );
@@ -1817,30 +1853,28 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       ),
       actions: [
         _buildAlertsBell(context),
-        IconButton(
-          icon: Icon(AppIcons.help.outlined, color: context.colors.textPrimary, size: AppIconSize.i22),
-          tooltip: context.l10n.dashboard_help,
-          onPressed: () => showSupportContactDialog(context),
-        ),
         const SizedBox(width: AppSpacing.s4),
       ],
     );
   }
 
-  Future<void> _goTo(BuildContext context, GoToItem item) async {
-    final more = goToMoreItem(item);
-    if (more == null) {
-      // Products is a tab: switching keeps its place.
-      PhoneShell.selectTab(context, PhoneTab.products);
-      return;
-    }
-    await openMoreItem(context, more);
+  /// UI5: a grid tile: a record action through the "+" sheet's guards and
+  /// forms, or a place opened as More opens it.
+  Future<void> _openTile(BuildContext context, HomeTile tile) async {
+    final action = homeTileAction(tile);
+    if (action != null) return runRecordAction(context, action, onDone: _returnToHome);
+    await openMoreItem(context, homeTilePlace(tile)!);
     _returnToHome();
   }
 
-  Future<void> _openAttention(BuildContext context, AttentionTarget target) async {
+  /// UI5: an item of the Needs attention sheet opens its screen.
+  Future<void> _openAttention(BuildContext context, AttentionItem item) async {
     await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => target == AttentionTarget.debtors ? DebtorsScreen() : const StockAlertsScreen(),
+      builder: (_) => switch (attentionItemTarget(item.kind)) {
+        AttentionTarget.debtors => DebtorsScreen(),
+        AttentionTarget.team => ManageAssistantsScreen(),
+        AttentionTarget.stockAlerts => const StockAlertsScreen(),
+      },
     ));
     _returnToHome();
   }

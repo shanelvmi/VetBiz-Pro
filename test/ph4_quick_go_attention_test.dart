@@ -1,8 +1,11 @@
-// PH4 (1), (5): the phone home's Quick access (through the "+" sheet's guard)
-// and View all, the Go to row, and the Needs attention strip.
+// PH4 (1), (5), as UI5 reshaped them: the record tiles of Home's grid (once
+// Quick access, through the "+" sheet's guard), what View all offered (now
+// the "+" sheet's More group), the places (once Go to: the grid's second
+// row, the bottom bar and More) and the one Needs attention strip.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/models/client.dart';
+import 'package:vetbiz_pro/screens/dashboard/more_screen.dart';
 import 'package:vetbiz_pro/screens/dashboard/needs_attention.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 import 'package:vetbiz_pro/screens/dashboard/record_sheet.dart';
@@ -11,8 +14,13 @@ import 'helpers/phone_home_harness.dart';
 
 const _skip = false;
 
+/// A page with one button that opens the "+" sheet as the shell does.
+Widget _sheetHost(Future<void> Function(BuildContext) open) => Scaffold(
+      body: Builder(builder: (context) => TextButton(onPressed: () => open(context), child: const Text('open'))),
+    );
+
 void main() {
-  group('Quick access', () {
+  group('the record tiles (Quick access before UI5)', () {
     const tiles = ['Record Sale', 'Record Visit', 'Record Payment', 'Add Client'];
 
     RecordSheetActions actions(List<String> opened) => RecordSheetActions(
@@ -23,21 +31,25 @@ void main() {
           fetchDebtors: (_) async => [Client.fromMap('c1', {'name': 'Juma', 'phone': '0712000000', 'balance': 500})],
         );
 
-    testWidgets('the four tiles, in the sheet\'s order with its labels', (tester) async {
+    Future<void> run(BuildContext context, HomeTile tile, RecordSheetActions a, RecordGuard guard) =>
+        runRecordAction(context, homeTileAction(tile)!, actions: a, guard: guard);
+
+    testWidgets('the four tiles, in the sheet\'s order with its labels, on the first row', (tester) async {
       await pumpPhoneHome(tester, phoneHomeHarness());
       final xs = [for (final t in tiles) tester.getCenter(find.text(t)).dx];
       expect(xs, [...xs]..sort());
+      final ys = {for (final t in tiles) tester.getTopLeft(find.text(t)).dy};
+      expect(ys, hasLength(1));
     }, skip: _skip);
 
-    testWidgets('each tile goes through the "+" sheet\'s guard; locked, no form opens', (tester) async {
+    testWidgets('each goes through the "+" sheet\'s guard; locked, no form opens', (tester) async {
       final guarded = <String>[];
       final opened = <String>[];
       await pumpPhoneHome(
         tester,
         phoneHomeHarness(
-          onQuickAction: (context, a) => runRecordAction(context, a,
-              actions: actions(opened),
-              guard: (context, destination, {onNavigate}) async => guarded.add(destination.runtimeType.toString())),
+          onTile: (context, t) => run(context, t, actions(opened),
+              (context, destination, {onNavigate}) async => guarded.add(destination.runtimeType.toString())),
         ),
       );
       for (final t in tiles) {
@@ -48,13 +60,13 @@ void main() {
       expect(opened, isEmpty);
     }, skip: _skip);
 
-    testWidgets('unlocked, each tile opens its form (Record Payment with the debtors)', (tester) async {
+    testWidgets('unlocked, each opens its form (Record Payment with the debtors)', (tester) async {
       final opened = <String>[];
       await pumpPhoneHome(
         tester,
         phoneHomeHarness(
-          onQuickAction: (context, a) => runRecordAction(context, a,
-              actions: actions(opened), guard: (context, destination, {onNavigate}) async => onNavigate?.call()),
+          onTile: (context, t) =>
+              run(context, t, actions(opened), (context, destination, {onNavigate}) async => onNavigate?.call()),
         ),
       );
       for (final t in tiles) {
@@ -64,36 +76,52 @@ void main() {
       expect(opened, ['sale', 'visit', 'payment', 'client']);
     }, skip: _skip);
 
+    testWidgets('no "View all" and no section titles on Home', (tester) async {
+      await pumpPhoneHome(tester, phoneHomeHarness());
+      for (final t in ['View all', 'Quick access', 'Go to', 'Needs attention']) {
+        expect(find.text(t), findsNothing, reason: t);
+      }
+    }, skip: _skip);
+  });
+
+  group('what View all offered: the "+" sheet\'s More group', () {
     for (final admin in [true, false]) {
-      testWidgets('View all: the sheet with the other actions (${admin ? 'admin' : 'assistant'})', (tester) async {
-        await pumpPhoneHome(tester, phoneHomeHarness(isAdmin: admin, onViewAll: (context) => showRecordSheet(context, isAdmin: admin)));
-        await tester.tap(find.text('View all'));
+      testWidgets('the four, then More with the role\'s extras (${admin ? 'admin' : 'assistant'})', (tester) async {
+        await pumpPhoneHome(tester, _sheetHost((context) => showRecordSheet(context, isAdmin: admin)));
+        await tester.tap(find.text('open'));
         await tester.pumpAndSettle();
-        final expected = [...tiles, if (admin) 'Add Product', 'Add New Batch', 'Record Transaction'];
+        final expected = [
+          'Record Sale',
+          'Record Visit',
+          'Record Payment',
+          'Add Client',
+          if (admin) 'Add Product',
+          'Add New Batch',
+          'Record Transaction',
+        ];
         final sheet = find.byType(BottomSheet);
         for (final row in expected) {
           expect(find.descendant(of: sheet, matching: find.text(row)), findsOneWidget, reason: row);
         }
         if (!admin) expect(find.descendant(of: sheet, matching: find.text('Add Product')), findsNothing);
-        expect(find.descendant(of: sheet, matching: find.text('More')), findsOneWidget, reason: 'UI5: the More group');
+        expect(find.descendant(of: sheet, matching: find.text('More')), findsOneWidget);
+        expect(tester.getTopLeft(find.text('More')).dy, greaterThan(tester.getTopLeft(find.text('Add Client')).dy));
         expect([...recordActionsFor(isAdmin: admin), ...recordMoreActionsFor(isAdmin: admin)], hasLength(expected.length));
       }, skip: _skip);
     }
 
-    testWidgets('View all rows go through the guard too; locked, no form opens', (tester) async {
+    testWidgets('the More rows go through the guard too; locked, no form opens', (tester) async {
       final guarded = <String>[];
       await pumpPhoneHome(
         tester,
-        phoneHomeHarness(
-          onViewAll: (context) => showRecordSheet(context,
-              isAdmin: true,
-              actions: actions([]),
-              guard: (context, destination, {onNavigate}) async => guarded.add(destination.runtimeType.toString())),
-        ),
+        _sheetHost((context) => showRecordSheet(context,
+            isAdmin: true,
+            guard: (context, destination, {onNavigate}) async => guarded.add(destination.runtimeType.toString()))),
       );
-      await tester.tap(find.text('View all'));
+      await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       for (final row in ['Add Product', 'Add New Batch', 'Record Transaction']) {
+        await tester.ensureVisible(find.text(row));
         await tester.tap(find.text(row));
         await tester.pumpAndSettle();
       }
@@ -102,56 +130,29 @@ void main() {
     }, skip: _skip);
   });
 
-  group('Go to', () {
-    // UI2 (the owner): Transactions moved to the end of section 4's order.
-    const order = ['Products', 'Clients', 'Debtors', 'Reports', 'Stock Store', 'Services', 'Payments', 'Transactions'];
-
-    test('section 4\'s order (Transactions last, UI2) for both roles; nothing is admin-only', () {
+  group('the places (Go to before UI5)', () {
+    test('the grid\'s second row: Debtors, Stock Store, Reports, Transactions; the rest stay reachable', () {
+      expect([for (final t in homeTilesFor(isAdmin: true)) homeTilePlace(t)].whereType<MoreItem>(),
+          [MoreItem.debtors, MoreItem.stockStore, MoreItem.reports, MoreItem.transactions]);
+      // Go to's Clients, Services and Payments are on the More page for both
+      // roles; Products is the bottom bar's tab.
       for (final admin in [true, false]) {
-        expect(goToItemsFor(isAdmin: admin), [
-          GoToItem.products,
-          GoToItem.clients,
-          GoToItem.debtors,
-          GoToItem.reports,
-          GoToItem.stockStore,
-          GoToItem.services,
-          GoToItem.payments,
-          GoToItem.transactions,
-        ]);
+        expect(moreItemsFor(isAdmin: admin), containsAll([MoreItem.clients, MoreItem.services, MoreItem.payments]));
       }
     }, skip: _skip);
 
-    testWidgets('the row shows them in order, scrolls sideways, and a tap opens its place', (tester) async {
-      final went = <GoToItem>[];
-      await pumpPhoneHome(tester, phoneHomeHarness(onGoTo: went.add));
-      final row = find.byKey(const ValueKey('phone-home-go-to'));
-      await tester.ensureVisible(row);
-      await tester.pumpAndSettle();
-      // Labels in the row, left to right, as it scrolls (a ListView builds
-      // only what is near the screen).
-      List<String> shown() {
-        final items = find.descendant(of: row, matching: find.byType(Text)).evaluate().toList()
-          ..sort((a, b) => tester.getTopLeft(find.byElementPredicate((e) => e == a)).dx
-              .compareTo(tester.getTopLeft(find.byElementPredicate((e) => e == b)).dx));
-        return [for (final e in items) (e.widget as Text).data!];
+    testWidgets('a place tile opens its place', (tester) async {
+      final went = <HomeTile>[];
+      await pumpPhoneHome(tester, phoneHomeHarness(onTile: (_, t) async => went.add(t)));
+      for (final t in ['Debtors', 'Stock Store', 'Reports', 'Transactions']) {
+        await tester.tap(find.text(t));
       }
-
-      final first = shown();
-      expect(first, order.take(first.length));
-      expect(first, isNot(contains('Transactions')), reason: 'the last shortcuts are off screen: the row scrolls');
-      await tester.tap(find.descendant(of: row, matching: find.text('Clients')));
-      await tester.drag(row, const Offset(-600, 0));
-      await tester.pumpAndSettle();
-      final last = shown();
-      expect(last, order.skip(order.length - last.length));
-      await tester.tap(find.descendant(of: row, matching: find.text('Transactions')));
-      expect(went, [GoToItem.clients, GoToItem.transactions]);
-      expect(find.byType(ShaderMask), findsOneWidget, reason: 'the fade at the edge');
+      expect(went, [HomeTile.debtors, HomeTile.stockStore, HomeTile.reports, HomeTile.transactions]);
     }, skip: _skip);
   });
 
   group('Needs attention', () {
-    test('counts from memory: low or out of stock, expired or expiring, debts older than the setting', () {
+    test('counts from memory: overdue debtors by the facility\'s setting (attentionCountsFor)', () {
       final products = [
         ph4Product('fine'),
         ph4Product('low', qty: 3),
@@ -173,40 +174,31 @@ void main() {
       expect(counts.expiry, 3);
       expect(counts.overdueDebtors, 2);
       expect(attentionCountsFor(products: products, debts: debts, overdueDays: 60, now: ph4Now).overdueDebtors, 0);
-      expect(attentionCountsFor(products: [ph4Product('fine')], debts: [ph4Debt('c', 9, 1)], overdueDays: 30).isEmpty, isTrue);
+      // UI5: the same data as items, most urgent first.
+      expect(attentionItemsFor(products: products, debts: debts, overdueDays: 30, isAdmin: true, now: ph4Now), const [
+        AttentionItem(AttentionKind.expired, 1),
+        AttentionItem(AttentionKind.outOfStock, 1),
+        AttentionItem(AttentionKind.overdueDebts, 2),
+        AttentionItem(AttentionKind.expiringSoon, 2),
+        AttentionItem(AttentionKind.lowStock, 2),
+      ]);
     }, skip: _skip);
 
     testWidgets('absent when nothing needs attention', (tester) async {
-      await pumpPhoneHome(tester, phoneHomeHarness(attention: const AttentionCounts()));
-      expect(find.text('Needs attention'), findsNothing);
-      expect(find.byType(NeedsAttentionStrip), findsNothing);
+      await pumpPhoneHome(tester, phoneHomeHarness(attention: const []));
+      expect(find.byType(AttentionStrip), findsNothing);
     }, skip: _skip);
 
-    testWidgets('one strip with the counts; each row opens its screen', (tester) async {
-      final opened = <AttentionTarget>[];
-      await pumpPhoneHome(tester, phoneHomeHarness(onAttention: opened.add));
-      await tester.scrollUntilVisible(find.text('Owed for more than 30 days'), 200, scrollable: find.byType(Scrollable).first);
-      await tester.pumpAndSettle();
-      expect(find.text('Needs attention'), findsOneWidget);
-      for (final (text, count) in [
-        ('Low or out of stock', '3'),
-        ('Expired or expiring soon', '2'),
-        ('Owed for more than 30 days', '4'),
-      ]) {
-        final row = find.ancestor(of: find.text(text), matching: find.byType(InkWell)).first;
-        expect(find.descendant(of: row, matching: find.text(count)), findsOneWidget, reason: text);
-        expect(tester.getSize(row).height, greaterThanOrEqualTo(56));
-        await tester.tap(find.text(text));
-      }
-      expect(opened, [AttentionTarget.stockAlerts, AttentionTarget.stockAlerts, AttentionTarget.debtors]);
-    }, skip: _skip);
-
-    testWidgets('only the rows with something to report', (tester) async {
-      await pumpPhoneHome(tester, phoneHomeHarness(attention: const AttentionCounts(overdueDebtors: 1, overdueDays: 14)));
-      await tester.scrollUntilVisible(find.text('Owed for more than 14 days'), 200, scrollable: find.byType(Scrollable).first);
-      expect(find.text('Low or out of stock'), findsNothing);
-      expect(find.text('Expired or expiring soon'), findsNothing);
+    testWidgets('one strip under the card with the first item and +N; its tap opens the sheet', (tester) async {
+      var taps = 0;
+      await pumpPhoneHome(tester, phoneHomeHarness(onAttention: (_) => taps++));
+      expect(find.byType(AttentionStrip), findsOneWidget);
+      expect(find.text('Out of stock: 3 products'), findsOneWidget);
+      expect(find.text('+2'), findsOneWidget);
+      expect(tester.getTopLeft(find.byType(AttentionStrip)).dy,
+          greaterThan(tester.getBottomLeft(find.byType(TodayCard)).dy));
+      await tester.tap(find.byType(AttentionStrip));
+      expect(taps, 1);
     }, skip: _skip);
   });
-
 }
