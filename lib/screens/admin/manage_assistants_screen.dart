@@ -53,6 +53,10 @@ class ManageAssistantsScreen extends StatefulWidget {
   // full, unfiltered list of every assistant across every facility.
   final String? initialSearchQuery;
 
+  // UI5: the status chip chosen when the screen opens ('pending' from Home's
+  // Needs attention sheet); null: all, as before.
+  final String? initialStatus;
+
   // PH8b seams: tests pass fakes; the app leaves them null (the default
   // instances, the server calls and the signed-in user's name, as before).
   final FirebaseFirestore? firestore;
@@ -63,6 +67,7 @@ class ManageAssistantsScreen extends StatefulWidget {
   const ManageAssistantsScreen({
     super.key,
     this.initialSearchQuery,
+    this.initialStatus,
     this.firestore,
     this.auth,
     this.membership,
@@ -113,7 +118,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
 
   String _searchQuery = ''; // trimmed + lowercased
   final TextEditingController _searchController = TextEditingController();
-  String? _statusFilter; // 'active' | 'deactivated' | 'pending', null = all
+  late String? _statusFilter = widget.initialStatus; // 'active' | 'deactivated' | 'pending', null = all
   String _facilityFilter = 'All'; // a facility id, or 'All'
   int _page = 1;
   int _pageSize = AppLimits.tablePageSize;

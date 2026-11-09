@@ -42,7 +42,15 @@ class DebtorsScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
   final FirebaseFirestore? firestore;
 
-  const DebtorsScreen({super.key, this.firestore});
+  /// UI5: the status filter chosen when the screen opens ('Overdue' from
+  /// Home's Needs attention sheet); a stored value, null: All.
+  final String? initialStatus;
+
+  /// The stored status filter value for overdue debtors (one of the filter's
+  /// options), for [initialStatus].
+  static const String statusOverdue = 'Overdue';
+
+  const DebtorsScreen({super.key, this.firestore, this.initialStatus});
 
   @override
   State<DebtorsScreen> createState() => _DebtorsScreenState();
@@ -55,7 +63,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
 
   String _searchQuery = '';
-  String _statusFilter = 'All';
+  late String _statusFilter = widget.initialStatus ?? 'All';
   String _overdueRangeFilter = 'All';
   final TextEditingController _searchController = TextEditingController();
 
@@ -496,7 +504,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   // ==================== FILTERS TOOLBAR ====================
 
-  static const List<String> _statusFilterOptions = ['All', 'Overdue', 'Current'];
+  static const List<String> _statusFilterOptions = ['All', DebtorsScreen.statusOverdue, 'Current'];
   // Stable keys - never shown directly. bucket1 = 1x the facility's
   // threshold past due, bucket2 = 1x-2x past due, bucket3 = beyond 2x.
   static const List<String> _overdueRangeOptions = ['All', 'bucket1', 'bucket2', 'bucket3'];

@@ -71,7 +71,11 @@ class StockAlert {
 /// NotificationsScreen in screens/dashboard/.
 class StockAlertsScreen extends StatelessWidget {
   final bool isDropdown;
-  const StockAlertsScreen({super.key, this.isDropdown = false});
+
+  /// UI5: the kind chip chosen when the screen opens (Home's Needs attention
+  /// sheet); null: All, as before.
+  final StockAlertKind? initialKind;
+  const StockAlertsScreen({super.key, this.isDropdown = false, this.initialKind});
 
   static const int expiryWarningDays = 30;
 
@@ -212,7 +216,7 @@ class StockAlertsScreen extends StatelessWidget {
     }
 
     // UI2: on a phone, the PH5a list with its own app bar (the title only).
-    if (AppLayout.isPhone(context)) return const _AlertsBody();
+    if (AppLayout.isPhone(context)) return _AlertsBody(initialKind: initialKind);
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -230,7 +234,7 @@ class StockAlertsScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: const _AlertsBody(),
+      body: _AlertsBody(initialKind: initialKind),
     );
   }
 
@@ -434,7 +438,9 @@ class _SectionHeader {
 // ======================================================================
 
 class _AlertsBody extends StatefulWidget {
-  const _AlertsBody();
+  final StockAlertKind? initialKind;
+
+  const _AlertsBody({this.initialKind});
 
   @override
   State<_AlertsBody> createState() => _AlertsBodyState();
@@ -468,7 +474,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
   final DateFormat _dateFormat = AppDateFormat.date;
 
   String _searchQuery = '';
-  StockAlertKind? _kindFilter; // null = all kinds
+  late StockAlertKind? _kindFilter = widget.initialKind; // null = all kinds
   String _categoryFilter = 'All';
   int _page = 1;
   int _pageSize = AppLimits.tablePageSize;

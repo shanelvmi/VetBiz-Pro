@@ -1867,13 +1867,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     _returnToHome();
   }
 
-  /// UI5: an item of the Needs attention sheet opens its screen.
+  /// UI5: an item of the Needs attention sheet opens its screen with its
+  /// chip chosen: Product Alerts with the item's kind, Debtors with Overdue,
+  /// Team Members with Pending.
   Future<void> _openAttention(BuildContext context, AttentionItem item) async {
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => switch (attentionItemTarget(item.kind)) {
-        AttentionTarget.debtors => DebtorsScreen(),
-        AttentionTarget.team => ManageAssistantsScreen(),
-        AttentionTarget.stockAlerts => const StockAlertsScreen(),
+        AttentionTarget.debtors => const DebtorsScreen(initialStatus: DebtorsScreen.statusOverdue),
+        AttentionTarget.team => ManageAssistantsScreen(initialStatus: UserStatus.pending.key),
+        AttentionTarget.stockAlerts => StockAlertsScreen(initialKind: attentionStockKind(item.kind)),
       },
     ));
     _returnToHome();
