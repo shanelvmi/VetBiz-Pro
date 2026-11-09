@@ -19,6 +19,8 @@ import '../../widgets/notification_row.dart';
 import '../../services/notification_feed.dart';
 import '../../widgets/notification_actions.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_list_skeleton.dart';
+import '../../widgets/reveal/reveal.dart';
 import '../../ui/feedback/app_feedback.dart';
 import 'notification_targets.dart';
 import '../../config/app_limits.dart';
@@ -80,6 +82,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   bool get _isLoading => _feed?.isLoading ?? false;
 
+  // RV2b (docs/design/screen_reveal.md 8.1): the page (and the dropdown)
+  // arrives as one piece once the first page and my state are in (or an
+  // error); a feed already loaded (the bell's, passed in) shows at once.
+  // Later loads (Load older, a refresh, an action) never replay it.
+  late final RevealGate _gate = RevealGate(primary: [
+    if (_feed case final feed?) SelectorRevealSource<NotificationFeedController>(feed, (f) => !f.isLoading || f.error != null),
+  ]);
+
   // PH8a: on a phone (AppLayout.isPhone) the page meets the size matrix: 48 px
   // filter boxes, text 12 px or more (14 for what is typed and chosen).
   // Tablets and computers keep today's sizes.
@@ -98,6 +108,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       feed.start();
       // The urgent announcements come with the feed (AN3), read once there.
     }
+    _gate; // made now, so a feed already loaded opens it before the first frame
     _expiryTicker = Timer.periodic(AppTimeouts.noticeExpiryTick, (_) => _feed?.refresh());
     // The device's "last viewed" time, for the bell's blink on urgent
     // announcements and pending assistants (dashboard_screen.dart).
@@ -132,6 +143,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   void dispose() {
+    _gate.dispose();
     _feed?.removeListener(_onFeedChanged);
     if (_ownsFeed) _feed?.dispose();
     _expiryTicker?.cancel();
@@ -317,11 +329,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
         actions: _phone ? [_buildPhoneMenu()] : null,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text(context.l10n.notifications_loadFailed('$_error'))))
-              : _buildFullScreenBody(),
+      body: ScreenReveal(
+        gate: _gate,
+        skeleton: _buildPageSkeleton(),
+        child: _isLoading
+            ? _buildStillLoading()
+            : _error != null
+                ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text(context.l10n.notifications_loadFailed('$_error'))))
+                : _buildFullScreenBody(),
+      ),
     );
   }
 
@@ -494,6 +510,65 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ],
     );
   }
+
+  // ==================== REVEAL (RV2b) ====================
+
+  /// The page's skeleton: the header at its real sizes (on a phone the
+  /// summary line and the chips; wider, the category cards and the filters)
+  /// and the six PH5a rows, from the page's top, so nothing moves when the
+  /// page arrives. Hidden from screen readers by the reveal.
+  Widget _buildPageSkeleton() {
+    final none = <NotificationCategory, int>{for (final c in NotificationCategory.values) c: 0};
+    return SizedBox.expand(
+      child: SingleChildScrollView(
+        key: const ValueKey('notifications-revealSkeleton'),
+        physics: const NeverScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (_phone) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
+                child: SkeletonOf(
+                  key: const ValueKey('notifications-skeleton-summary'),
+                  child: Text(context.l10n.notifications_allRead,
+                      style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary)),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.s8),
+                child: SkeletonOf(key: const ValueKey('notifications-skeleton-chips'), child: _buildCategoryChips(none, 0)),
+              ),
+            ] else ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
+                child: SkeletonOf(child: _buildCategoryCards(none, none)),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
+                child: SkeletonOf(child: _buildFilters()),
+              ),
+            ],
+            const PhoneListSkeleton(pulse: false),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The dropdown's skeleton: the rows' soft boxes under its own header.
+  Widget _buildDropdownSkeleton() => const SingleChildScrollView(
+        key: ValueKey('notifications-revealSkeleton'),
+        physics: NeverScrollableScrollPhysics(),
+        child: PhoneListSkeleton(pulse: false),
+      );
+
+  /// Still waiting after the reveal's 1200 ms: the rows' soft boxes in
+  /// place, never a spinner.
+  Widget _buildStillLoading() => const SingleChildScrollView(
+        physics: NeverScrollableScrollPhysics(),
+        child: PhoneListSkeleton(),
+      );
 
   // ==================== CARDS ====================
 
@@ -1278,20 +1353,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         ),
         Flexible(
-          child: _isLoading
-              ? const Padding(
-                  padding: EdgeInsets.all(AppSpacing.s32),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              : _error != null
-                  ? Padding(
+          child: ScreenReveal(
+            gate: _gate,
+            skeleton: _buildDropdownSkeleton(),
+            child: _isLoading
+                ? _buildStillLoading()
+                : _error != null
+                    ? Padding(
                       padding: const EdgeInsets.all(AppSpacing.s24),
                       child: Text(context.l10n.notifications_loadFailed('$_error')),
                     )
-                  : SingleChildScrollView(
+                    : SingleChildScrollView(
                       padding: const EdgeInsets.all(AppSpacing.s12),
                       child: _buildAlertsList(nothingToShow),
                     ),
+          ),
         ),
       ],
     );

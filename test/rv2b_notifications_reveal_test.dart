@@ -22,7 +22,7 @@ import 'helpers/notification_harness.dart';
 import 'helpers/phone_list_harness.dart' show ph5PhoneSizes;
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _skeleton = ValueKey('notifications-revealSkeleton');
 

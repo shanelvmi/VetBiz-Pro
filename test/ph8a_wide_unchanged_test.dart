@@ -27,8 +27,10 @@ String _errors(WidgetTester tester) {
   return out.toString();
 }
 
+// RV2b: Notifications arrive through a reveal; its wrappers are stripped, so
+// the loaded page compares with the one before.
 void _expect(WidgetTester tester, String name, Finder root) =>
-    expectSameFingerprint(name, '${_errors(tester)}${treeFingerprint(tester, root.first)}');
+    expectSameFingerprint(name, '${_errors(tester)}${treeFingerprint(tester, root.first, stripReveal: true)}');
 
 /// The notifications every look shows: one of each class, with a long text.
 Future<NotificationFeedController> _feed(WidgetTester tester) async {
