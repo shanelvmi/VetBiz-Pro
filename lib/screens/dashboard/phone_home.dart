@@ -9,18 +9,17 @@ import '../../widgets/profile/profile_avatar.dart';
 import '../../widgets/reveal/reveal.dart';
 import 'dashboard_figures.dart';
 import 'needs_attention.dart';
-import 'phone_home_rows.dart';
-import 'phone_shell.dart';
+import 'phone_hub.dart';
 import 'today_card.dart';
 
 export 'dashboard_figures.dart';
-export 'phone_home_rows.dart' show HomeActionGrid, HomeTile, homeTilesFor, homeTileAction, homeTilePlace, homeTileLabel;
 export 'today_card.dart' show TodayCard;
 
 /// UI5: Home's top bar content: the avatar (opens the profile drawer), then
 /// the current facility's name (FacilityDisplay.name, 16 semibold) over the
 /// greeting ("Good afternoon, Mr. Time", 12 muted), each one line. The
-/// dashboard wraps it in its AppBar with the bell (no Help: More has it).
+/// dashboard wraps it in its AppBar with the bell (no Help: HUB1 put it in
+/// the profile menu).
 class PhoneHomeTopBar extends StatelessWidget {
   final String facilityName;
   final String greeting;
@@ -86,9 +85,10 @@ class PhoneHomeTopBar extends StatelessWidget {
   }
 }
 
-/// UI5: the phone's Home tab body, calm and meant to fit between the bars
+/// UI5: the phone's Home body, calm and meant to fit above the action panel
 /// without scrolling: the Today card, then (only when something needs it)
-/// ONE Needs attention strip, then the 4 x 2 action grid. The list stays a
+/// ONE Needs attention strip. HUB1: the 4 x 2 grid became the action panel
+/// (home_action_panel.dart), docked over Home's bottom. The list stays a
 /// scroll view only as a safety net (large text, landscape). It reads nothing
 /// itself: the dashboard hands it its figures.
 class PhoneHome extends StatelessWidget {
@@ -106,9 +106,6 @@ class PhoneHome extends StatelessWidget {
 
   /// The strip's tap: the sheet of every item.
   final VoidCallback onAttention;
-
-  /// A grid tile's tap (a record action or a place).
-  final Future<void> Function(HomeTile tile) onTile;
 
   /// Drawn over the top of the page (the subscription pill).
   final Widget? overlay;
@@ -134,7 +131,6 @@ class PhoneHome extends StatelessWidget {
     required this.attention,
     required this.onAllDetails,
     required this.onAttention,
-    required this.onTile,
     this.periodLabel = '',
     this.overlay,
     this.skeleton = false,
@@ -190,18 +186,16 @@ class PhoneHome extends StatelessWidget {
     );
     final list = ListView(
       key: const ValueKey('phone-home-list'),
-      // UI4: the end of the page clears the shell's raised "+".
+      // HUB1: the end of the page clears the folded action panel.
       padding: EdgeInsets.fromLTRB(
         PhoneHomeMetrics.pagePadding,
         PhoneHomeMetrics.pagePadding,
         PhoneHomeMetrics.pagePadding,
-        PhoneHomeMetrics.pagePadding + PhoneShellInsets.overhangOf(context),
+        PhoneHomeMetrics.pagePadding + HomePanelInsets.bottomOf(context),
       ),
       children: [
         if (skeleton) SkeletonOf(radius: PhoneHomeMetrics.cardRadius, child: card) else card,
         _attentionSlot(context),
-        const SizedBox(height: PhoneHomeMetrics.stripGap),
-        HomeActionGrid(tiles: homeTilesFor(isAdmin: isAdmin), onTile: onTile, skeleton: skeleton),
       ],
     );
     return ColoredBox(

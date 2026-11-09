@@ -263,7 +263,6 @@ void main() {
               onPeriodChanged: (_) {},
               attention: ph4SomeAttention,
               onAllDetails: () {},
-              onTile: (_) async {},
               onAttention: () {},
             ),
           ),

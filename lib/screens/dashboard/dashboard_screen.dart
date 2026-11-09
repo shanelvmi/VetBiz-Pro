@@ -27,11 +27,12 @@ import '../products/products_screen.dart';
 import '../clients/clients_screen.dart';
 import '../services/services_screen.dart';
 import '../sales/sales_screen.dart';
-import 'more_screen.dart';
+import 'home_action_panel.dart';
+import 'hub_destinations.dart';
 import 'notification_bell.dart';
-import 'phone_shell.dart';
+import 'phone_hub.dart';
+import 'phone_shell.dart' show PhoneOrWide;
 import 'subscription_banner.dart';
-import 'record_sheet.dart';
 import 'all_details_screen.dart';
 import 'needs_attention.dart';
 import 'phone_home.dart';
@@ -342,7 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // screen needs the same check.
   bool? _isPlatformAdminCache;
 
-  // Made once, for the phone's More page: a FutureBuilder given a new future
+  // Made once, for the phone's action panel: a FutureBuilder given a new future
   // on every build would blink its Platform Admin item.
   late final Future<bool> _platformAdminFuture = _isPlatformAdmin();
 
@@ -1596,15 +1597,16 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             ],
           );
 
-        // PH3: phones get the shell; PH4: its Home is the phone home, which
-        // reads nothing itself (the figures below come from this state's
-        // period totals and the app-level providers). Tablets and computers
-        // keep exactly today's layout.
+        // PH3: phones get the shell; HUB1: the shell is just Home (the phone
+        // home, which reads nothing itself: the figures below come from this
+        // state's period totals and the app-level providers) with the action
+        // panel docked over its bottom. Tablets and computers keep exactly
+        // today's layout.
         final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
         return PhoneOrWide(
-          phone: (_) => PhoneShell(
-            homeAppBar: _buildPhoneHomeAppBar(context),
-            // PH8a: the subscription banner at the top of every tab, from here.
+          phone: (_) => PhoneHub(
+            appBar: _buildPhoneHomeAppBar(context),
+            // PH8a: the subscription banner over Home's top, from here.
             banner: _buildPhoneSubscriptionBanner(context),
             endDrawer: endDrawer,
             // RV1: the skeleton at once, then Home as one fade and rise when
@@ -1641,7 +1643,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     attention: attention,
                     attentionReady: productProvider.loaded && debtProvider.loaded,
                     onAllDetails: _openAllDetails,
-                    onTile: (tile) => _openTile(homeContext, tile),
                     onAttention: () => showAttentionSheet(
                       homeContext,
                       items: attention,
@@ -1650,20 +1651,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   );
               return ScreenReveal(gate: _phoneRevealGate, skeleton: home(skeleton: true), child: home(skeleton: false));
             },
-            sales: (_) => const SalesScreen(asTab: true),
-            products: (_) => const ProductsScreen(asTab: true),
-            more: (context) => FutureBuilder<bool>(
+            // HUB1: static content (no data), so not part of Home's reveal.
+            // A record action goes through the old "+" sheet's guard and
+            // forms; a place is pushed; Home refreshes as after any return.
+            panel: FutureBuilder<bool>(
               future: _platformAdminFuture,
-              builder: (context, snapshot) => MoreScreen(
-                isAdmin: Provider.of<UserRoleProvider>(context).isAdmin,
+              builder: (panelContext, snapshot) => HomeActionPanel(
+                isAdmin: isAdmin,
                 isPlatformAdmin: snapshot.data == true,
-                onReturned: _returnToHome,
+                onTile: (tile) => runHubTile(panelContext, tile, onDone: _returnToHome),
               ),
             ),
-            onRecord: () => showRecordSheet(context, isAdmin: isAdmin, onDone: _returnToHome),
-            onTabChanged: (tab) {
-              if (tab == PhoneTab.home) _returnToHome();
-            },
           ),
           wide: (_) => Scaffold(
             backgroundColor: context.colors.background,
@@ -1823,8 +1821,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // --------------------- PH4: THE PHONE HOME ---------------------
 
   /// Home's top bar on a phone (UI5): the avatar (the profile drawer), the
-  /// current facility's name over the greeting, and the bell; Help is on the
-  /// More page. The page's background with a 1 px hairline below it.
+  /// current facility's name over the greeting, and the bell; Help is in the
+  /// profile menu (HUB1). The page's background with a 1 px hairline below it.
   PreferredSizeWidget _buildPhoneHomeAppBar(BuildContext context) {
     // The active facility; this build listens to the provider, so a switch
     // shows the new name at once (UI3, now in the bar).
@@ -1856,15 +1854,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         const SizedBox(width: AppSpacing.s4),
       ],
     );
-  }
-
-  /// UI5: a grid tile: a record action through the "+" sheet's guards and
-  /// forms, or a place opened as More opens it.
-  Future<void> _openTile(BuildContext context, HomeTile tile) async {
-    final action = homeTileAction(tile);
-    if (action != null) return runRecordAction(context, action, onDone: _returnToHome);
-    await openMoreItem(context, homeTilePlace(tile)!);
-    _returnToHome();
   }
 
   /// UI5: an item of the Needs attention sheet opens its screen with its
@@ -1911,13 +1900,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
   /// A row of All details opens the list its figure comes from.
-  Future<void> _openDetailsTarget(DetailsTarget target) async {
-    final more = detailsTargetMoreItem(target);
-    if (more != null) return openMoreItem(context, more);
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => target == DetailsTarget.products ? const ProductsScreen() : const SalesScreen(),
-    ));
-  }
+  Future<void> _openDetailsTarget(DetailsTarget target) => openHubPlace(context, detailsTargetPlace(target));
 
   // [key] and [isAdmin]: All details (PH4) builds its own copy from its page,
   // where this state's context may not listen to a provider.

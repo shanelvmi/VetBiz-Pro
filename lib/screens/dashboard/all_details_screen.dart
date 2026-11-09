@@ -6,7 +6,7 @@ import '../../services/dashboard_summary_service.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
-import 'more_screen.dart' show MoreItem;
+import 'hub_destinations.dart' show HubTile;
 import 'phone_home.dart';
 
 /// The screen a row opens. Today's cards open nothing, so each row opens the
@@ -70,19 +70,20 @@ List<DetailRow> allDetailRows(AppLocalizations l, AllDetailsFigures f, {required
   ];
 }
 
-/// The More place a row opens; null for Products and Sales, which open their
-/// own screens (the bar's tabs). Every place is in both roles' More.
-MoreItem? detailsTargetMoreItem(DetailsTarget target) => switch (target) {
-      DetailsTarget.payments => MoreItem.payments,
-      DetailsTarget.reports => MoreItem.reports,
-      DetailsTarget.transactions => MoreItem.transactions,
-      DetailsTarget.debtors => MoreItem.debtors,
-      DetailsTarget.clients => MoreItem.clients,
-      DetailsTarget.services => MoreItem.services,
-      DetailsTarget.products || DetailsTarget.sales => null,
+/// The place a row opens (HUB1: as the action panel opens it). Every one is in
+/// both roles' panel.
+HubTile detailsTargetPlace(DetailsTarget target) => switch (target) {
+      DetailsTarget.products => HubTile.products,
+      DetailsTarget.sales => HubTile.sales,
+      DetailsTarget.payments => HubTile.payments,
+      DetailsTarget.reports => HubTile.reports,
+      DetailsTarget.transactions => HubTile.transactions,
+      DetailsTarget.debtors => HubTile.debtors,
+      DetailsTarget.clients => HubTile.clients,
+      DetailsTarget.services => HubTile.services,
     };
 
-/// PH4 (phone_shell.md D4): All details, a full page over the bar. The
+/// PH4 (phone_shell.md D4): All details, a full page over Home. The
 /// period chip, the eight figures as a full-width list (titles wrap, never
 /// truncate), then the chart and Recent Activity as the dashboard shows them.
 ///

@@ -14,7 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/money.dart';
 import 'package:vetbiz_pro/screens/dashboard/all_details_screen.dart';
 import 'package:vetbiz_pro/screens/dashboard/dashboard_figures.dart';
-import 'package:vetbiz_pro/screens/dashboard/more_screen.dart';
+import 'package:vetbiz_pro/screens/dashboard/hub_destinations.dart';
 import 'package:vetbiz_pro/services/dashboard_summary_service.dart';
 
 import 'helpers/screen_size_matrix.dart';
@@ -121,30 +121,25 @@ void main() {
         if (!isAdmin) expect(find.text(_expenses), findsNothing);
       }, skip: _skip);
 
-      test('$role: every row\'s list is one the role can open (a phone tab, or a place in More)', () {
-        final more = moreItemsFor(isAdmin: isAdmin);
+      // HUB1: the places are the action panel's now (no bar, no More).
+      test('$role: every row\'s list is one the role can open from the action panel', () {
+        final panel = [for (final g in hubGroupsFor(isAdmin: isAdmin)) ...g.tiles];
         for (final e in shown) {
-          final item = detailsTargetMoreItem(e.key);
-          if (item == null) {
-            // Products and Sales: the bar's own tabs, for both roles.
-            expect(e.key, isIn([DetailsTarget.products, DetailsTarget.sales]), reason: e.value);
-          } else {
-            expect(more, contains(item), reason: e.value);
-          }
+          expect(panel, contains(detailsTargetPlace(e.key)), reason: e.value);
         }
       }, skip: _skip);
     }
 
     test('the rows lead where their figures come from', () {
-      expect({for (final t in DetailsTarget.values) t: detailsTargetMoreItem(t)}, {
-        DetailsTarget.products: null,
-        DetailsTarget.sales: null,
-        DetailsTarget.payments: MoreItem.payments,
-        DetailsTarget.reports: MoreItem.reports,
-        DetailsTarget.transactions: MoreItem.transactions,
-        DetailsTarget.debtors: MoreItem.debtors,
-        DetailsTarget.clients: MoreItem.clients,
-        DetailsTarget.services: MoreItem.services,
+      expect({for (final t in DetailsTarget.values) t: detailsTargetPlace(t)}, {
+        DetailsTarget.products: HubTile.products,
+        DetailsTarget.sales: HubTile.sales,
+        DetailsTarget.payments: HubTile.payments,
+        DetailsTarget.reports: HubTile.reports,
+        DetailsTarget.transactions: HubTile.transactions,
+        DetailsTarget.debtors: HubTile.debtors,
+        DetailsTarget.clients: HubTile.clients,
+        DetailsTarget.services: HubTile.services,
       });
     }, skip: _skip);
   });

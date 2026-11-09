@@ -9,6 +9,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/screens/dashboard/dashboard_panels.dart';
+import 'package:vetbiz_pro/screens/dashboard/home_action_panel.dart';
 import 'package:vetbiz_pro/screens/dashboard/needs_attention.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 import 'package:vetbiz_pro/screens/dashboard/sales_revenue_chart.dart';
@@ -57,8 +58,9 @@ void main() {
           await pumpAtSize(tester, screen: phoneHomeHarness(gate: gate), size: s.size, look: look);
           expect(find.byType(SkeletonPulse), findsWidgets, reason: 'the skeleton at once');
           await checkCase(tester, phone: true, where: '$where skeleton');
-          // UI5: the card, the attention strip and the action grid.
-          const slots = [TodayCard, AttentionStrip, HomeActionGrid];
+          // UI5: the card and the attention strip; HUB1: the action panel (it
+          // is not part of the reveal: the same in both).
+          const slots = [TodayCard, AttentionStrip, HomeActionPanel];
           final skeleton = _rects(tester, slots);
           expect(skeleton.keys, contains(TodayCard));
           answered.value = true;
@@ -79,7 +81,8 @@ void main() {
     }, skip: _skipPhone);
 
     // UI5: the strip sits under the card, its slot reserved at the strip's
-    // height, so the grid below does not move when it fills.
+    // height, so nothing moves when it fills (HUB1: the panel is docked
+    // apart, over Home's bottom).
     testWidgets('Needs attention: a late slot under the card that keeps its place, then fills without moving the rest',
         (tester) async {
       final gate = RevealGate(primary: const []);
@@ -88,7 +91,7 @@ void main() {
       expect(find.byType(AttentionStrip), findsNothing);
       final slot = tester.getRect(find.byType(LateSlot));
       expect(slot.height, PhoneHomeMetrics.attentionStripHeight);
-      const above = [TodayCard, HomeActionGrid];
+      const above = [TodayCard, HomeActionPanel];
       final before = _rects(tester, above);
       await pumpAtSize(tester, screen: phoneHomeHarness(gate: gate), size: const Size(390, 1400));
       await tester.pumpAndSettle();

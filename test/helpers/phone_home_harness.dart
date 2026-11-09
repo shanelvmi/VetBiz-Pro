@@ -5,7 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/models/debt.dart';
 import 'package:vetbiz_pro/models/product.dart';
 import 'package:vetbiz_pro/screens/dashboard/needs_attention.dart';
+import 'package:vetbiz_pro/screens/dashboard/home_action_panel.dart';
+import 'package:vetbiz_pro/screens/dashboard/hub_destinations.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
+import 'package:vetbiz_pro/screens/dashboard/phone_hub.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'screen_size_matrix.dart';
@@ -62,7 +65,8 @@ const ph4SomeAttention = [
 final ph4Greeting = 'Good afternoon, Mr. ${matrixLongClientName.split(' ').first}';
 
 /// The phone home under its top bar (UI5: the facility name over the
-/// greeting, the bell, no Help), as the shell shows it. With [gate] (RV1),
+/// greeting, the bell, no Help) with the action panel docked over its bottom,
+/// as the hub shows it (HUB1). With [gate] (RV1),
 /// inside its ScreenReveal with its skeleton, as the dashboard builds it;
 /// [attentionReady] is Needs attention's late slot.
 Widget phoneHomeHarness({
@@ -75,13 +79,13 @@ Widget phoneHomeHarness({
   String facilityName = matrixLongFacilityName,
   ValueChanged<String>? onPeriodChanged,
   List<AttentionItem> attention = ph4SomeAttention,
-  Future<void> Function(BuildContext, HomeTile)? onTile,
+  Future<void> Function(BuildContext, HubTile)? onTile,
   void Function(BuildContext)? onAttention,
   VoidCallback? onAllDetails,
   bool amountsHidden = false,
   VoidCallback? onToggleAmounts,
 }) =>
-    Scaffold(
+    PhoneHub(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: PhoneHomeTopBar(
@@ -93,7 +97,10 @@ Widget phoneHomeHarness({
         ),
         actions: [IconButton(onPressed: () {}, tooltip: 'Notifications', icon: const Icon(Icons.notifications_none))],
       ),
-      body: Builder(builder: (context) {
+      panel: Builder(
+        builder: (context) => HomeActionPanel(isAdmin: isAdmin, onTile: (t) => (onTile ?? (_, __) async {})(context, t)),
+      ),
+      home: (context) {
         PhoneHome home({bool skeleton = false}) => PhoneHome(
               skeleton: skeleton,
               attentionReady: attentionReady,
@@ -104,13 +111,12 @@ Widget phoneHomeHarness({
               onPeriodChanged: onPeriodChanged ?? (_) {},
               attention: attention,
               onAllDetails: onAllDetails ?? () {},
-              onTile: (t) => (onTile ?? (_, __) async {})(context, t),
               onAttention: () => onAttention?.call(context),
               amountsHidden: amountsHidden,
               onToggleAmounts: onToggleAmounts ?? () {},
             );
         return gate == null ? home() : ScreenReveal(gate: gate, skeleton: home(skeleton: true), child: home());
-      }),
+      },
     );
 
 Future<void> pumpPhoneHome(WidgetTester tester, Widget screen, {Size size = const Size(390, 844)}) =>
