@@ -565,39 +565,6 @@ class PhoneShellMetrics {
   static const double sheetSpinner = AppIconSize.i20;
 }
 
-/// MR1: the phone More page (Settings and Help in the app bar, a profile
-/// card, Find a feature, named sections of round icons). The grid keeps PH3's
-/// measures. Colours come from context.colors roles only.
-class MoreMetrics {
-  MoreMetrics._();
-
-  static const double padding = AppSpacing.s16;
-
-  /// Round icons: four a row on a phone held upright (360 and 390), more
-  /// when it is turned; a label of at most two lines.
-  static const int columns = 4;
-  static const double cellWidth = 80;
-  static const double cellHeight = 100;
-  static const double circle = 56;
-  static const double icon = AppIconSize.i24;
-  static const double circleAlpha = PhoneShellMetrics.tintAlpha;
-  static const double label = AppFontSize.f12;
-  static const double labelGap = AppSpacing.s4;
-
-  /// Find a feature: a rounded 48 px field. Its text is 16 so that a phone's
-  /// browser does not zoom in on focus.
-  static const double searchHeight = 48;
-  static const double searchRadius = AppRadius.r24;
-  static const double searchText = AppFontSize.f16;
-  static const double searchIcon = AppIconSize.i22;
-
-  /// Sections: a 14 px semibold title over its icons.
-  static const double sectionTitle = AppFontSize.f14;
-  static const double sectionTitleGap = AppSpacing.s8;
-  static const double sectionGap = AppSpacing.s20;
-  static const double noMatchText = AppFontSize.f14;
-}
-
 /// PH4: the phone home and All details (docs/design/phone_shell.md D2, D4
 /// and section 3). Colours come from context.colors roles only.
 class PhoneHomeMetrics {
