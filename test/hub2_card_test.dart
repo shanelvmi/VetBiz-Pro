@@ -23,7 +23,7 @@ import 'package:vetbiz_pro/widgets/press_scale.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _totals = DashboardPeriodTotals(
   totalSales: 1250000,

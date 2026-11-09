@@ -93,7 +93,9 @@ void main() {
   group('the Today card', () {
     testWidgets('row 1 says Sales and the exact range; no "All details" line; a chevron', (tester) async {
       await pumpPhoneHome(tester, phoneHomeHarness(periodLabel: '3–9 Nov', period: 'This Week'));
-      expect(find.text('Sales · 3–9 Nov'), findsOneWidget);
+      // HUB2: the switch's Sales, the exact range under it.
+      expect(find.descendant(of: find.byType(TodayCard), matching: find.text('Sales')), findsOneWidget);
+      expect(find.text('3–9 Nov'), findsOneWidget);
       expect(find.descendant(of: find.byType(TodayCard), matching: find.text('All details')), findsNothing);
       expect(find.descendant(of: find.byType(TodayCard), matching: find.byIcon(Icons.chevron_right)), findsOneWidget);
     }, skip: _skip);
@@ -114,7 +116,8 @@ void main() {
         tester,
         phoneHomeHarness(onAllDetails: () => details++, onToggleAmounts: () => toggles++),
       );
-      await tester.tap(find.text('Sales · Mon 9 Nov'));
+      // HUB2: the range line (the switch is its own button).
+      await tester.tap(find.text('Mon 9 Nov'));
       expect(details, 1);
       await tester.tap(find.byTooltip('Hide amounts'));
       expect((details, toggles), (1, 1));

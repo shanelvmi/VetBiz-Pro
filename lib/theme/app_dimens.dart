@@ -570,6 +570,22 @@ class PhoneHomeMetrics {
   static const double gridTilePaddingTop = AppSpacing.s12;
 }
 
+/// HUB2: the phone Home card's switch (Sales | Vet services) at its top left:
+/// a [segmentHeight] pill (the options [segmentPadding] from their edges,
+/// [segmentInset] inside the track) in a 48 target row, the chosen option
+/// filled; the exact range under it at [rangeLabel]. A horizontal fling on
+/// the card faster than [swipeVelocity] (logical px a second) switches too.
+class HomeCardMetrics {
+  HomeCardMetrics._();
+
+  static const double segmentHeight = 32;
+  static const double segmentInset = AppSpacing.s3;
+  static const double segmentPadding = AppSpacing.s12;
+  static const double segmentLabel = AppFontSize.f13;
+  static const double rangeLabel = AppFontSize.f12;
+  static const double swipeVelocity = 300;
+}
+
 /// HUB1: the action panel docked at the bottom of the phone Home (the hub
 /// that replaced the bottom bar, the "+" and the More page). Its tiles keep
 /// UI5's grid measures (PhoneHomeMetrics.grid*). Colours come from

@@ -1627,6 +1627,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     skeleton: skeleton,
                     amountsHidden: uiSettings.homeAmountsHidden,
                     onToggleAmounts: () => uiSettings.setHomeAmountsHidden(!uiSettings.homeAmountsHidden),
+                    // HUB2: the card's switch, remembered on this device.
+                    mode: uiSettings.homeCardMode,
+                    onModeChanged: uiSettings.setHomeCardMode,
                     figures: PhoneHomeFigures.from(_periodTotals,
                         owed: debtProvider.totalOutstanding(), loading: _isPeriodLoading),
                     isAdmin: isAdmin,

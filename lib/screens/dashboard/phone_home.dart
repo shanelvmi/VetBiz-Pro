@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/home_card_mode.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_motion.dart';
@@ -122,6 +123,10 @@ class PhoneHome extends StatelessWidget {
   final bool amountsHidden;
   final VoidCallback? onToggleAmounts;
 
+  /// HUB2: the card's Sales | Vet services switch (null: no switching).
+  final HomeCardMode mode;
+  final ValueChanged<HomeCardMode>? onModeChanged;
+
   const PhoneHome({
     super.key,
     required this.figures,
@@ -137,6 +142,8 @@ class PhoneHome extends StatelessWidget {
     this.attentionReady = true,
     this.amountsHidden = false,
     this.onToggleAmounts,
+    this.mode = HomeCardMode.sales,
+    this.onModeChanged,
   });
 
   /// The strip's slot: while its data has not answered, a reserved place of
@@ -183,6 +190,8 @@ class PhoneHome extends StatelessWidget {
       onAllDetails: onAllDetails,
       amountsHidden: amountsHidden,
       onToggleAmounts: onToggleAmounts,
+      mode: mode,
+      onModeChanged: onModeChanged,
     );
     final list = ListView(
       key: const ValueKey('phone-home-list'),

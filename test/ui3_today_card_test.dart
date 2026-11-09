@@ -157,14 +157,15 @@ void main() {
     testWidgets('the real digits are never built: no text and no semantics label holds a digit', (tester) async {
       final semantics = tester.ensureSemantics();
       await _card(tester, hidden: true);
-      // UI5: the period line ("Sales · Mon 9 Nov") is a date, not an amount.
-      for (final t in _cardTexts(tester).where((t) => !t.startsWith('Sales · '))) {
+      // UI5: the period line is a date, not an amount (HUB2: "Mon 9 Nov"
+      // alone, under the switch).
+      for (final t in _cardTexts(tester).where((t) => t != 'Mon 9 Nov')) {
         expect(RegExp(r'\d').hasMatch(t), isFalse, reason: t);
       }
       for (final amount in _amounts) {
         expect(find.textContaining(amount), findsNothing);
       }
-      expect(find.bySemanticsLabel(RegExp(r'^(?!Sales · )[^\n]*\d')), findsNothing);
+      expect(find.bySemanticsLabel(RegExp(r'^(?!Mon 9 Nov\b)[^\n]*\d')), findsNothing);
       expect(find.bySemanticsLabel(RegExp('Amount hidden')), findsNWidgets(4));
       semantics.dispose();
     }, skip: _skip);
@@ -172,8 +173,9 @@ void main() {
     testWidgets('the eye masks the four amounts and nothing else; the labels stay', (tester) async {
       await _card(tester);
       await _tapEye(tester);
-      // UI5: the period line, and no "All details" line or facility name.
-      for (final label in ['Sales · Mon 9 Nov', 'Collected', 'Owed', 'Net profit', 'Today']) {
+      // UI5: the period line, and no "All details" line or facility name
+      // (HUB2: the switch, then the range under it).
+      for (final label in ['Sales', 'Mon 9 Nov', 'Collected', 'Owed', 'Net profit', 'Today']) {
         expect(find.text(label), findsOneWidget, reason: label);
       }
       await _tapEye(tester);
