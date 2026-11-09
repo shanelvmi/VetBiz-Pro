@@ -76,6 +76,10 @@ class TodayCard extends StatelessWidget {
         child: Material(
           type: MaterialType.transparency,
           child: Semantics(
+            // One button for the card; the chip, the eye and the figures keep
+            // their own nodes inside it.
+            container: true,
+            explicitChildNodes: true,
             button: true,
             label: l10n.home_allDetails,
             child: InkWell(
