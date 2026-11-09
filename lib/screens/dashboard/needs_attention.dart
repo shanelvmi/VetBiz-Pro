@@ -15,7 +15,8 @@ import '../products/stock_alerts_screen.dart';
 /// Where a Needs attention row leads.
 enum AttentionTarget { stockAlerts, debtors, team }
 
-/// What the phone home's Needs attention strip counts (phone_shell.md D2 and
+/// What the phone home's Needs attention counted before UI5 (overdue debtors
+/// is still counted here, for attentionItemsFor) (phone_shell.md D2 and
 /// section 2). Worked out only from what the app already holds in memory:
 /// ProductProvider.products (the stock alerts' own list, through
 /// StockAlertsScreen.currentAlerts) and DebtProvider.debts, with the
@@ -68,74 +69,13 @@ AttentionCounts attentionCountsFor({
   return AttentionCounts(stock: stock.length, expiry: expiry.length, overdueDebtors: overdue, overdueDays: overdueDays);
 }
 
-/// The strip: drawn only when something needs attention, up to three rows
-/// of 56 (icon, one line, a count chip, a chevron) on warningBannerFill.
-class NeedsAttentionStrip extends StatelessWidget {
-  final AttentionCounts counts;
-  final ValueChanged<AttentionTarget> onOpen;
-
-  const NeedsAttentionStrip({super.key, required this.counts, required this.onOpen});
-
-  @override
-  Widget build(BuildContext context) {
-    if (counts.isEmpty) return const SizedBox.shrink();
-    final l10n = context.l10n;
-    final colors = context.colors;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          l10n.home_needsAttention,
-          style: TextStyle(
-            fontSize: PhoneHomeMetrics.sectionTitle,
-            fontWeight: AppFontWeight.semibold,
-            color: colors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.s8),
-        Material(
-          color: colors.warningBannerFill,
-          borderRadius: BorderRadius.circular(PhoneHomeMetrics.cardRadius),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              if (counts.stock > 0)
-                _AttentionRow(
-                  icon: AppIcons.products.outlined,
-                  text: l10n.home_attentionStock,
-                  count: counts.stock,
-                  onTap: () => onOpen(AttentionTarget.stockAlerts),
-                ),
-              if (counts.expiry > 0)
-                _AttentionRow(
-                  icon: Icons.event_busy_outlined,
-                  text: l10n.home_attentionExpiry,
-                  count: counts.expiry,
-                  onTap: () => onOpen(AttentionTarget.stockAlerts),
-                ),
-              if (counts.overdueDebtors > 0)
-                _AttentionRow(
-                  icon: AppIcons.debtors.outlined,
-                  text: l10n.home_attentionDebts(counts.overdueDays),
-                  count: counts.overdueDebtors,
-                  onTap: () => onOpen(AttentionTarget.debtors),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
+/// UI5: one row of the Needs attention sheet: icon, its line, a chevron.
 class _AttentionRow extends StatelessWidget {
   final IconData icon;
   final String text;
-  /// The count chip; null (UI5's sheet, the count is in the text): none.
-  final int? count;
   final VoidCallback onTap;
 
-  const _AttentionRow({required this.icon, required this.text, this.count, required this.onTap});
+  const _AttentionRow({required this.icon, required this.text, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +89,7 @@ class _AttentionRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: PhoneHomeMetrics.cardPadding),
             child: Row(
               children: [
-                Icon(icon, size: PhoneHomeMetrics.rowIcon, color: colors.warningBannerText),
+                Icon(icon, size: PhoneHomeMetrics.rowIcon, color: colors.warningDeep),
                 const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Text(
@@ -159,27 +99,6 @@ class _AttentionRow extends StatelessWidget {
                     style: TextStyle(fontSize: PhoneHomeMetrics.rowLabel, color: colors.textPrimary),
                   ),
                 ),
-                if (count != null) ...[
-                  const SizedBox(width: AppSpacing.s8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: PhoneHomeMetrics.countChipPadding,
-                      vertical: AppSpacing.s2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: BorderRadius.circular(AppRadius.r12),
-                    ),
-                    child: Text(
-                      '$count',
-                      style: TextStyle(
-                        fontSize: PhoneHomeMetrics.rowLabel,
-                        fontWeight: AppFontWeight.bold,
-                        color: colors.warningBannerText,
-                      ),
-                    ),
-                  ),
-                ],
                 Icon(Icons.chevron_right, color: colors.textMuted),
               ],
             ),

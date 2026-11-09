@@ -603,16 +603,13 @@ class MoreMetrics {
 class PhoneHomeMetrics {
   PhoneHomeMetrics._();
 
-  /// The greeting top bar: avatar, a small greeting over the name.
+  /// The top bar's avatar.
   static const double avatar = 40;
-  static const double greeting = AppFontSize.f13;
-  static const double name = AppFontSize.f16;
 
-  /// The page: side padding, the gap between sections, section titles and
-  /// their "View all" / "All details" links (48 high).
+  /// The page: side padding, the gap between sections (All details), and a
+  /// 48 px target.
   static const double pagePadding = AppSpacing.s16;
   static const double sectionGap = AppSpacing.s16;
-  static const double sectionTitle = AppFontSize.f15;
   static const double linkHeight = 48;
 
   /// The Today card: Sales large, then two or three small figures.
@@ -627,9 +624,6 @@ class PhoneHomeMetrics {
   /// NAV1: the eye that masks the card's amounts (in a 48 target).
   static const double eyeIcon = AppIconSize.i20;
 
-  /// UI3: the facility name, a small line at the top of the card.
-  static const double facilityName = AppFontSize.f12;
-
   /// UI3: a hidden amount is the currency, then [maskDots] soft dots of
   /// [maskDot] times the text size, [maskDotGap] dots apart, in the text's
   /// colour at [maskAlpha], under a Gaussian blur. The small amounts' blur is
@@ -642,29 +636,11 @@ class PhoneHomeMetrics {
   static const double maskBlurLarge = 2.5;
   static const double maskBlurSmall = 1.4;
 
-  /// Quick access: four tiles in a row.
-  static const double tileHeight = 92;
-  static const double tileGap = AppSpacing.s8;
-  static const double tileCircle = 44;
-  static const double tileIcon = AppIconSize.i22;
-
   /// UI2: every tile keeps room for two label lines (each this many times
   /// the label size), so a one-line label does not lift its icon.
   static const double tileLabelLineHeight = 1.25;
 
-  /// Go to: a sideways list of round shortcuts, faded at the edge.
-  static const double goToHeight = 104;
-  static const double goToItemWidth = 72;
-
-  /// UI2: Transactions' cell (the last) is as wide as its label on one line,
-  /// measured, within these bounds; the others keep [goToItemWidth].
-  static const double goToFittedMin = 76;
-  static const double goToFittedMax = 96;
-  static const double goToCircle = 56;
-  static const double goToIcon = AppIconSize.i24;
-  static const double goToFade = 32;
-
-  /// Needs attention and All details: rows 56 high.
+  /// The Needs attention sheet and All details: rows 56 high.
   static const double rowHeight = 56;
   static const double rowIcon = AppIconSize.i22;
   static const double rowLabel = AppFontSize.f14;
@@ -918,9 +894,6 @@ class RevealMetrics {
 
   static const double skeletonLow = PhoneListMetrics.skeletonLow;
   static const double skeletonRadius = AppRadius.r8;
-
-  /// While Needs attention waits: its title and one row.
-  static const double attentionReserve = PhoneHomeMetrics.linkHeight + PhoneHomeMetrics.rowHeight;
 }
 
 /// UI1: the one brand loading look (vetbiz_loading_indicator.dart): the brand

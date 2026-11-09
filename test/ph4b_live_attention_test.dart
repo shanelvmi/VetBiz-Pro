@@ -7,7 +7,7 @@
 // The activation, the sign-out and the providers are the real ones; the
 // products go through the counting fake (helpers/counting_firestore.dart),
 // and the stand-in dashboard draws the real strip from ProductProvider, as
-// the phone home does (dashboard_screen.dart, attentionCountsFor).
+// the phone home does (dashboard_screen.dart, attentionItemsFor).
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -97,10 +97,11 @@ Future<(CountingFirestore, ProductProvider)> _app(WidgetTester tester, Size size
   pendingLoginMessage = null;
   dashboardScreenBuilder = () => Scaffold(
         body: Consumer<ProductProvider>(
-          builder: (_, p, __) => NeedsAttentionStrip(
-            counts: attentionCountsFor(products: p.products, debts: const [], overdueDays: 30),
-            onOpen: (_) {},
-          ),
+          // UI5: the one strip, from the same held products.
+          builder: (_, p, __) {
+            final items = attentionItemsFor(products: p.products, debts: const [], overdueDays: 30, isAdmin: true);
+            return items.isEmpty ? const SizedBox.shrink() : AttentionStrip(items: items, onTap: () {});
+          },
         ),
       );
 
@@ -148,11 +149,10 @@ Future<void> _sellAmoxicillinDown(WidgetTester tester, CountingFirestore db, [St
   await _wait(tester);
 }
 
-/// The strip's stock count, from the chip of its "Low or out of stock" row.
+/// The strip's low-stock count, from its line ("Low stock: 2 products"; UI5).
 int _stockCount(WidgetTester tester) {
-  final row = find.ancestor(of: find.text('Low or out of stock'), matching: find.byType(InkWell));
-  final chip = find.descendant(of: row, matching: find.textContaining(RegExp(r'^\d+$')));
-  return int.parse((tester.widget<Text>(chip).data)!);
+  final line = tester.widget<Text>(find.textContaining('Low stock: ')).data!;
+  return int.parse(RegExp(r'\d+').firstMatch(line)!.group(0)!);
 }
 
 void main() {
