@@ -10,7 +10,10 @@ import '../../theme/theme_context.dart';
 // motion.
 
 class PhoneListSkeleton extends StatefulWidget {
-  const PhoneListSkeleton({super.key});
+  const PhoneListSkeleton({super.key, this.pulse = true});
+
+  /// RV2: false inside a reveal's skeleton, which pulses as a whole.
+  final bool pulse;
 
   @override
   State<PhoneListSkeleton> createState() => _PhoneListSkeletonState();
@@ -27,7 +30,7 @@ class _PhoneListSkeletonState extends State<PhoneListSkeleton> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    final still = MediaQuery.disableAnimationsOf(context);
+    final still = MediaQuery.disableAnimationsOf(context) || !widget.pulse;
     if (still) {
       _pulse.stop();
     } else if (!_pulse.isAnimating) {

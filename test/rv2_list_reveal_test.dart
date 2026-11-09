@@ -9,7 +9,7 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'helpers/rv2_list_host.dart';
 
-const _skip = true;
+const _skip = false;
 
 void main() {
   testWidgets('the first page answers late: the skeleton at once, the reveal at 1200 ms, then the summary fills its slot',

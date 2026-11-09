@@ -10,6 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/money.dart';
 import 'package:vetbiz_pro/screens/services/add_edit_service_screen.dart';
 import 'package:vetbiz_pro/screens/services/services_screen.dart';
+import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'helpers/counting_firestore.dart';
 import 'helpers/phone_list_harness.dart';
@@ -184,7 +185,14 @@ void main() {
         final skeleton = _key('phoneList-skeleton');
         expect(skeleton, findsOneWidget);
         expect(find.descendant(of: skeleton, matching: _skeletonRows), findsNWidgets(6));
-        expect(find.descendant(of: skeleton, matching: find.byType(FadeTransition)), still ? findsNothing : findsWidgets);
+        // RV2: the first load's skeleton is the reveal's, which pulses as a
+        // whole (SkeletonPulse around it), still under reduced motion.
+        final pulse = tester.widget<FadeTransition>(find
+            .ancestor(of: skeleton, matching: find.descendant(of: find.byType(SkeletonPulse), matching: find.byType(FadeTransition)))
+            .first);
+        final at = pulse.opacity.value;
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(pulse.opacity.value == at, still, reason: still ? 'still' : 'pulsing');
         db.holdGets!.complete();
         await ph5Settle(tester);
         expect(skeleton, findsNothing);

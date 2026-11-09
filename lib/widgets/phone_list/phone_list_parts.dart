@@ -7,6 +7,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../firestore_error_view.dart';
+import '../reveal/skeleton_box.dart';
 import 'group_by_day.dart';
 
 // PH5a: the pieces PhoneListScaffold puts together (phone_list_scaffold.dart,
@@ -61,22 +62,56 @@ class PhoneListHeader extends StatelessWidget {
     required this.appliedFilters,
     required this.summaryLine,
     required this.onSummary,
+    this.summaryPending = false,
+    this.skeleton = false,
   });
+
+  /// RV2: the summary's figures are on their way: the line keeps its slot
+  /// (the real row, laid out with a stand-in text and drawn as a soft box),
+  /// so the rows below never move when they come.
+  final bool summaryPending;
+
+  /// RV2: drawn as the reveal's skeleton, every part a soft box of its size.
+  final bool skeleton;
+
+  Widget _summaryRow(BuildContext context, String text) => Padding(
+        padding: const EdgeInsets.only(left: PhoneListMetrics.pagePadding),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                text,
+                key: const ValueKey('phoneList-summaryLine'),
+                style: TextStyle(fontSize: PhoneListMetrics.summaryLine, color: context.colors.textSecondary),
+              ),
+            ),
+            TextButton(
+              key: const ValueKey('phoneList-summaryLink'),
+              onPressed: onSummary,
+              child: Text(context.l10n.common_summary),
+            ),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final colors = context.colors;
+    final line = summaryLine;
+    Widget soft(Widget child) => skeleton ? SkeletonOf(child: child) : child;
     final filterIcon = Icon(Icons.tune, color: colors.textPrimary);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (banner != null) banner!,
+        if (banner != null) soft(banner!),
         Row(
           children: [
-            Expanded(child: quickChips),
+            // The chips' area at the width Expanded gives it (a SkeletonOf
+            // alone would shrink it to the chips' own width).
+            Expanded(child: skeleton ? soft(SizedBox(width: double.infinity, child: quickChips)) : quickChips),
             if (onFilter != null)
-              Semantics(
+              soft(Semantics(
                 value: filtersActive ? l10n.phoneList_filtersOn : null,
                 child: IconButton(
                   tooltip: l10n.facilityPicker_filter,
@@ -90,40 +125,30 @@ class PhoneListHeader extends StatelessWidget {
                         )
                       : filterIcon,
                 ),
-              ),
+              )),
           ],
         ),
         if (appliedFilters.isNotEmpty)
           Padding(
             key: const ValueKey('phoneList-appliedChips'),
             padding: const EdgeInsets.symmetric(horizontal: PhoneListMetrics.pagePadding),
-            child: Wrap(
+            child: soft(Wrap(
               spacing: PhoneListMetrics.chipGap,
               children: [
                 for (final f in appliedFilters)
                   InputChip(label: Text(f.label), onDeleted: f.onRemove, deleteButtonTooltipMessage: l10n.common_remove),
               ],
-            ),
+            )),
           ),
-        if (summaryLine != null)
-          Padding(
-            padding: const EdgeInsets.only(left: PhoneListMetrics.pagePadding),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    summaryLine!,
-                    key: const ValueKey('phoneList-summaryLine'),
-                    style: TextStyle(fontSize: PhoneListMetrics.summaryLine, color: colors.textSecondary),
-                  ),
-                ),
-                TextButton(
-                  key: const ValueKey('phoneList-summaryLink'),
-                  onPressed: onSummary,
-                  child: Text(l10n.common_summary),
-                ),
-              ],
-            ),
+        if (line != null)
+          soft(_summaryRow(context, line))
+        else if (summaryPending)
+          KeyedSubtree(
+            key: const ValueKey('phoneList-summarySlot'),
+            // Inside the reveal's skeleton the whole skeleton pulses already.
+            child: skeleton
+                ? SkeletonOf(child: _summaryRow(context, l10n.common_loading))
+                : SkeletonPulse(child: SkeletonOf(child: _summaryRow(context, l10n.common_loading))),
           ),
       ],
     );

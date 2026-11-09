@@ -7,6 +7,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../app_safe_area.dart';
+import '../reveal/reveal.dart';
 import 'collapsing_fab.dart';
 import 'group_by_day.dart';
 import 'phone_list_parts.dart';
@@ -151,6 +152,48 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
   late bool _searching = widget.startSearching ?? widget.searchController.text.isNotEmpty;
   bool _fabExtended = true;
 
+  // RV2 (docs/design/screen_reveal.md 8.1): the header and the rows arrive
+  // as one piece, once per screen: the gate waits for the first page and the
+  // summary's figures. Later loads (Load more, refresh, a filter, a search)
+  // only change the in-list states, as before.
+  bool _sawLoading = false;
+  late final ValueNotifier<bool> _rowsAnswered = ValueNotifier(_rowsAnsweredNow());
+  late final ValueNotifier<bool> _summaryAnswered = ValueNotifier(!widget.summaryPending);
+  late final RevealGate _gate = RevealGate(primary: [
+    ListenableRevealSource<bool>(_rowsAnswered, (v) => v),
+    ListenableRevealSource<bool>(_summaryAnswered, (v) => v),
+  ]);
+
+  // An empty list before any load was asked for is not an answer: a screen
+  // whose controller starts its first read after the first frame would
+  // otherwise flash its empty state.
+  bool _rowsAnsweredNow() =>
+      widget.firstPageAnswered ??
+      (widget.error != null || (!widget.loading && (widget.items.isNotEmpty || _sawLoading)));
+
+  @override
+  void initState() {
+    super.initState();
+    _sawLoading = widget.loading;
+    _gate; // made now, so data already held opens it before the first frame
+  }
+
+  @override
+  void didUpdateWidget(PhoneListScaffold<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.loading) _sawLoading = true;
+    if (!_rowsAnswered.value && _rowsAnsweredNow()) _rowsAnswered.value = true;
+    if (!_summaryAnswered.value && !widget.summaryPending) _summaryAnswered.value = true;
+  }
+
+  @override
+  void dispose() {
+    _gate.dispose();
+    _rowsAnswered.dispose();
+    _summaryAnswered.dispose();
+    super.dispose();
+  }
+
   bool _onScroll(ScrollNotification n) {
     // The list's own scrolling only, not the chips' sideways row.
     if (n.depth != 0 || n.metrics.axis != Axis.vertical) return false;
@@ -273,7 +316,6 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
   Widget build(BuildContext context) {
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final fab = widget.fab;
-    final showMore = widget.items.isNotEmpty && (widget.hasMore || widget.loadingMore);
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _appBar(context),
@@ -288,7 +330,46 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
             ),
       // PH8a: as a tab of the phone shell, the subscription banner sits under
       // the app bar; a pushed screen has none.
-      body: PhoneShell.bodyWithBanner(context, RefreshIndicator(
+      body: PhoneShell.bodyWithBanner(context, KeyedSubtree(
+        key: const ValueKey('phoneList-revealGroup'),
+        child: ScreenReveal(gate: _gate, skeleton: _skeleton(context), child: _list(context)),
+      )),
+    );
+  }
+
+  PhoneListHeader _header({bool skeleton = false}) => PhoneListHeader(
+        banner: widget.banner,
+        quickChips: widget.quickChips,
+        filtersActive: widget.filtersActive,
+        onFilter: widget.onFilter,
+        appliedFilters: widget.appliedFilters,
+        summaryLine: widget.summaryLine,
+        summaryPending: widget.summaryPending,
+        onSummary: widget.onSummary,
+        skeleton: skeleton,
+      );
+
+  /// RV2: the header's parts and the six PH5a rows at their real sizes, from
+  /// the list's top; it fills the page as the list does, never scrolls and
+  /// is cut at the page's bottom.
+  Widget _skeleton(BuildContext context) => SizedBox.expand(
+        child: SingleChildScrollView(
+          key: const ValueKey('phoneList-revealSkeleton'),
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _header(skeleton: true),
+              const PhoneListSkeleton(key: ValueKey('phoneList-skeleton'), pulse: false),
+            ],
+          ),
+        ),
+      );
+
+  Widget _list(BuildContext context) {
+    final fab = widget.fab;
+    final showMore = widget.items.isNotEmpty && (widget.hasMore || widget.loadingMore);
+    return RefreshIndicator(
         onRefresh: widget.onRefresh,
         child: NotificationListener<ScrollNotification>(
           onNotification: _onScroll,
@@ -296,17 +377,7 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
             key: const ValueKey('phoneList-scroll'),
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-              SliverToBoxAdapter(
-                child: PhoneListHeader(
-                  banner: widget.banner,
-                  quickChips: widget.quickChips,
-                  filtersActive: widget.filtersActive,
-                  onFilter: widget.onFilter,
-                  appliedFilters: widget.appliedFilters,
-                  summaryLine: widget.summaryLine,
-                  onSummary: widget.onSummary,
-                ),
-              ),
+              SliverToBoxAdapter(child: _header()),
               ..._rows(context),
               if (showMore)
                 SliverToBoxAdapter(
@@ -329,7 +400,6 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
             ],
           ),
         ),
-      )),
-    );
+      );
   }
 }

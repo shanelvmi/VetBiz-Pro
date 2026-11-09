@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'helpers/rv2_list_host.dart';
 
-const _skip = true;
+const _skip = false;
 
 void main() {
   for (final size in const [Size(360, 740), Size(390, 844), Size(740, 360)]) {
