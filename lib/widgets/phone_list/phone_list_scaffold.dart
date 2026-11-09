@@ -57,6 +57,15 @@ class PhoneListScaffold<T> extends StatefulWidget {
   final String? summaryLine;
   final VoidCallback onSummary;
 
+  /// RV2: the summary's figures are still loading. The reveal waits for
+  /// them (within its 1200 ms), and the line keeps its slot until they come.
+  final bool summaryPending;
+
+  /// RV2: whether the first page has answered, for a screen whose provider
+  /// knows (Products: `provider.loaded`). Null: answered once [loading] has
+  /// been true and is false again, or on an error, or with rows.
+  final bool? firstPageAnswered;
+
   /// Shown above the rows (the "new records - Refresh" banner).
   final Widget? banner;
 
@@ -130,6 +139,8 @@ class PhoneListScaffold<T> extends StatefulWidget {
     this.menuBadge = false,
     this.byMonth = false,
     this.dayTotals = true,
+    this.summaryPending = false,
+    this.firstPageAnswered,
   });
 
   @override
