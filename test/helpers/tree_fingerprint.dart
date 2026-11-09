@@ -78,6 +78,27 @@ String treeFingerprint(WidgetTester tester, Finder root, {bool stripReveal = fal
         return visit(content!, depth, box?.localToGlobal(Offset.zero) ?? origin);
       }
     }
+    // RV2b: a network image counts as its slot (one line with its size),
+    // whatever draws it: Image.network with its loading and error builders
+    // before RV2b, RevealImage after. In a test the image never loads.
+    if (w is RevealImage || (w is Image && w.image is NetworkImage)) {
+      RenderBox? box;
+      void firstBox(Element c) {
+        if (box != null) return;
+        final r = c.renderObject;
+        if (r is RenderBox && r.hasSize && r.attached) {
+          box = r;
+        } else {
+          c.visitChildren(firstBox);
+        }
+      }
+
+      firstBox(e);
+      final o = (box?.localToGlobal(Offset.zero) ?? origin) - origin;
+      out.writeln('$depth IMAGE ${box?.size.width.toStringAsFixed(1)}x${box?.size.height.toStringAsFixed(1)}'
+          '@${o.dx.toStringAsFixed(1)},${o.dy.toStringAsFixed(1)}');
+      return;
+    }
     out.write('$depth ${w.runtimeType}');
     if (w is Text) out.write(' "${_mask(w.data ?? w.textSpan?.toPlainText() ?? '')}"');
     if (w is RichText) out.write(' "${_mask(w.text.toPlainText())}"');
