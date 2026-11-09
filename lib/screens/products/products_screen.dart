@@ -39,11 +39,7 @@ class ProductsScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
   final FirebaseFirestore? firestore;
 
-  /// A tab of the phone shell (PH3): its own AppBar with NO back arrow, which
-  /// would pop the whole shell.
-  final bool asTab;
-
-  const ProductsScreen({super.key, this.initialSearchQuery, this.firestore, this.asTab = false});
+  const ProductsScreen({super.key, this.initialSearchQuery, this.firestore});
 
   @override
   State<ProductsScreen> createState() => _ProductsScreenState();
@@ -764,8 +760,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     return AppBar(
-      // A tab of the phone shell: no back arrow, it would pop the whole shell.
-      automaticallyImplyLeading: !widget.asTab,
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e1,
@@ -1425,7 +1419,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
           // RV2b: its rows show photos (RevealImage).
           imageGrace: true,
       title: l10n.products_sellableTitle,
-      asTab: widget.asTab,
       menu: [
         if (isAdmin)
           PhoneListMenuItem(label: l10n.products_recalculateTooltip, icon: Icons.auto_awesome, onSelected: _recalculateSmartDefaults),

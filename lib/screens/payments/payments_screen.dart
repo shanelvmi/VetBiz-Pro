@@ -1176,7 +1176,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         final chip = _rangeChip;
         return PhoneListScaffold<LedgerEntry>(
           title: forClient ? l10n.payments_titleForClient(widget.initialClientName!) : l10n.payments_title,
-          asTab: false,
           menu: [PhoneListMenuItem(label: l10n.export_dateRange, icon: Icons.date_range_outlined, onSelected: _pickDates)],
           searchController: _searchController,
           searchHint: l10n.payments_searchHint,

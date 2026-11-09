@@ -1,7 +1,7 @@
 // PH8a-fix (2), the owner's correction: on a phone the subscription banner
-// floats OVER the tab content instead of pushing it down. The tab content
-// keeps its full height and never moves when the banner comes, goes or is
-// snoozed; the banner's top is the current tab's app bar bottom, with an
+// floats OVER Home's content instead of pushing it down (HUB1: Home only; no
+// tabs any more). Home keeps its full height and never moves when the banner
+// comes, goes or is snoozed; the banner's top is Home's app bar bottom, with an
 // 8 px side margin, a 12 px radius, a soft shadow and the status role at
 // PhoneBannerMetrics.overlayAlpha (slightly see-through, no blend into the
 // surface); it slides and fades in (not under reduced motion); its text and
@@ -12,15 +12,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
-import 'package:vetbiz_pro/screens/dashboard/phone_shell.dart';
+import 'package:vetbiz_pro/screens/dashboard/home_action_panel.dart';
+import 'package:vetbiz_pro/screens/dashboard/phone_hub.dart';
 import 'package:vetbiz_pro/screens/dashboard/subscription_banner.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/theme/color_math.dart';
 import 'package:vetbiz_pro/theme/theme_context.dart';
-import 'package:vetbiz_pro/widgets/phone_list/phone_list_scaffold.dart';
-import 'package:vetbiz_pro/widgets/phone_list/phone_quick_chips.dart';
 
 const _skip = false;
 
@@ -54,44 +53,12 @@ void _size(WidgetTester tester, [Size size = const Size(390, 844)]) {
   addTearDown(tester.view.reset);
 }
 
-Widget _list(String title, {bool fab = false}) => PhoneListScaffold<String>(
-      title: title,
-      asTab: true,
-      menu: const [],
-      searchController: TextEditingController(),
-      searchHint: 'Search',
-      onSearchChanged: (_) {},
-      onSearchClosed: () {},
-      quickChips: PhoneQuickChips(values: const ['All'], selected: 'All', label: (v) => v, onSelected: (_) {}),
-      filtersActive: false,
-      onFilter: null,
-      appliedFilters: const [],
-      summaryLine: null,
-      onSummary: () {},
-      items: [for (var i = 0; i < 30; i++) '$title row $i'],
-      idOf: (s) => s,
-      dateOf: (_) => DateTime(2026),
-      amountOf: (_) => 0,
-      grouped: false,
-      tileBuilder: (context, s, {required grouped}) => SizedBox(height: 64, child: Text(s)),
-      loading: false,
-      error: null,
-      onRetry: () {},
-      emptyIcon: Icons.inbox,
-      emptyText: 'None',
-      fab: fab ? PhoneListAction(label: 'Record', icon: Icons.add, onPressed: () {}) : null,
-      hasMore: false,
-      loadingMore: false,
-      onLoadMore: () {},
-      onRefresh: () async {},
-    );
-
-/// The shell with the banner the dashboard would give it: [shown] holds it,
+/// The hub with the banner the dashboard would give it: [shown] holds it,
 /// and its close button snoozes it (null, as the dashboard does).
 Widget _shell(ValueNotifier<SubscriptionBannerState?> shown) => ValueListenableBuilder<SubscriptionBannerState?>(
       valueListenable: shown,
-      builder: (context, state, _) => PhoneShell(
-        homeAppBar: AppBar(title: const Text('HOME BAR')),
+      builder: (context, state, _) => PhoneHub(
+        appBar: AppBar(title: const Text('HOME BAR')),
         banner: state == null
             ? null
             : PhoneSubscriptionBanner(
@@ -102,18 +69,9 @@ Widget _shell(ValueNotifier<SubscriptionBannerState?> shown) => ValueListenableB
                 onSnooze: () => shown.value = null,
               ),
         home: (_) => ListView(children: [for (var i = 0; i < 40; i++) SizedBox(height: 48, child: Text('Home row $i'))]),
-        sales: (_) => _list('Sales'),
-        products: (_) => _list('Products', fab: true),
-        more: (_) => _list('More'),
-        onRecord: () {},
+        panel: HomeActionPanel(isAdmin: true, onTile: (_) async {}),
       ),
     );
-
-Future<void> _tab(WidgetTester tester, String? label) async {
-  if (label == null) return;
-  await tester.tap(find.descendant(of: find.byType(PhoneBottomBar), matching: find.text(label)));
-  await tester.pumpAndSettle();
-}
 
 bool _overlaps(Rect a, Rect b) => a.intersect(b).width > 0 && a.intersect(b).height > 0;
 
@@ -122,12 +80,11 @@ void main() {
     expect(PhoneBannerMetrics.overlayAlpha, 0.92);
   }, skip: _skip);
 
-  for (final (tab, label) in [('Home', null), ('Sales', 'Sales')]) {
+  for (final tab in ['Home']) {
     testWidgets('on $tab the first row does not move: banner present, absent, snoozed', (tester) async {
       _size(tester);
       final shown = ValueNotifier<SubscriptionBannerState?>(null);
       await tester.pumpWidget(_app(_shell(shown)));
-      await _tab(tester, label);
       final row = find.text('$tab row 0');
       final absent = tester.getRect(row);
       shown.value = _states[4];
@@ -141,21 +98,17 @@ void main() {
     }, skip: _skip);
   }
 
-  for (final (tab, label) in [('Home', null), ('Sales', 'Sales'), ('Products', 'Products'), ('More', 'More')]) {
-    testWidgets('on $tab: top at the app bar\'s bottom, 8 px margins, clear of the app bar, the FAB and the bar', (tester) async {
+  for (final tab in ['Home']) {
+    testWidgets('on $tab: top at the app bar\'s bottom, 8 px margins, clear of the app bar and the action panel', (tester) async {
       _size(tester);
       await tester.pumpWidget(_app(_shell(ValueNotifier(_states[0]))));
-      await _tab(tester, label);
       final banner = tester.getRect(find.byKey(_banner));
       final appBar = tester.getRect(find.byType(AppBar).hitTestable().first);
       expect(banner.top, moreOrLessEquals(appBar.bottom));
       expect(_overlaps(banner, appBar), isFalse);
       expect(banner.left, PhoneBannerMetrics.overlayMargin);
       expect(banner.right, 390 - PhoneBannerMetrics.overlayMargin);
-      expect(_overlaps(banner, tester.getRect(find.byType(PhoneBottomBar))), isFalse);
-      final fab = find.byType(FloatingActionButton);
-      if (label == 'Products') expect(fab, findsOneWidget);
-      if (fab.evaluate().isNotEmpty) expect(_overlaps(banner, tester.getRect(fab)), isFalse);
+      expect(_overlaps(banner, tester.getRect(find.byKey(const ValueKey('hub-handle')))), isFalse);
     }, skip: _skip);
   }
 
@@ -225,7 +178,7 @@ void main() {
       shown.value = _states[1];
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 16));
-      // The shell's own entrance, not the route's transitions further up.
+      // The hub's own entrance, not the route's transitions further up.
       final entrance = find.byKey(const ValueKey('phone-subscription-banner-entrance'));
       expect(find.descendant(of: entrance, matching: find.byKey(_banner)), findsOneWidget);
       // The incoming banner's own transitions (the outgoing empty child has its own).

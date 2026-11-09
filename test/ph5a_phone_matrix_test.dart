@@ -31,7 +31,7 @@ Future<void> _seed(dynamic fs) async {
 
 void main() {
   final screens = {
-    'Sales': ((dynamic fs) => SalesScreen(firestore: fs, asTab: true), false, 's1'),
+    'Sales': ((dynamic fs) => SalesScreen(firestore: fs), false, 's1'),
     'Services': ((dynamic fs) => ServicesScreen(firestore: fs), true, 'v1'),
   };
 

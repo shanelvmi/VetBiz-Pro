@@ -56,7 +56,6 @@ class ListHostState extends State<ListHost> {
     final d = widget.data;
     return PhoneListScaffold<String>(
       title: 'Sales',
-      asTab: false,
       menu: const [],
       searchController: _search,
       searchHint: 'Search',

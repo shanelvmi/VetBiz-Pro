@@ -722,7 +722,6 @@ class _AlertsBodyState extends State<_AlertsBody> {
           // RV2b: its rows show photos (RevealImage).
           imageGrace: true,
       title: l10n.alerts_title,
-      asTab: false,
       menu: const [],
       searchController: _searchController,
       searchHint: l10n.alerts_searchHint,

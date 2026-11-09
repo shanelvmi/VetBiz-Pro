@@ -57,7 +57,6 @@ ThemeData _real(ThemeData t) => t.copyWith(textTheme: t.textTheme.apply(fontFami
 
 Widget _list(String title, {bool fab = false}) => PhoneListScaffold<String>(
       title: title,
-      asTab: false,
       menu: const [],
       searchController: TextEditingController(),
       searchHint: 'Search',

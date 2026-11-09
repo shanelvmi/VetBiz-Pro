@@ -78,7 +78,7 @@ void main() {
       });
 
       ph5TestWidgets('Products on a phone, $who: the details page ${admin ? 'has' : 'has no'} Edit', (tester) async {
-        await pumpPh5(tester, (fs) => ProductsScreen(firestore: fs, asTab: true), admin: admin, seed: ph7SeedProducts);
+        await pumpPh5(tester, (fs) => ProductsScreen(firestore: fs), admin: admin, seed: ph7SeedProducts);
         await tester.tap(ph5Key('phoneList-row-p1'));
         await ph5Settle(tester);
         expect(_editIn(ph5Page), admin ? findsOneWidget : findsNothing);

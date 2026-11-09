@@ -39,7 +39,6 @@ extension _ActivityLogPhone on _ActivityLogScreenState {
           final days = _retentionDays ?? _ActivityLogScreenState._defaultRetentionDays;
           return PhoneListScaffold<LogDoc>(
             title: l.export_activityLog,
-            asTab: false,
             menu: [
               if (isAdmin)
                 PhoneListMenuItem(

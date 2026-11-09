@@ -43,7 +43,7 @@ void main() {
   // name: (screen, the row whose details page is checked too, or a button
   // that opens it).
   final screens = <String, (Widget Function(dynamic fs), String?, String?)>{
-    'Products': ((fs) => ProductsScreen(firestore: fs, asTab: true), 'p7', null),
+    'Products': ((fs) => ProductsScreen(firestore: fs), 'p7', null),
     'Stock Store': ((fs) => const StockStoreScreen(), 'p7', null),
     'View Batches': ((fs) => const Ph7Listening(child: _BatchesHost()), null, 'BATCHES'),
     'Add Batch': ((fs) => AddBatchScreen(product: ph7LongProduct), null, null),
@@ -85,7 +85,7 @@ void main() {
 
   group('each row reads naturally (R11)', () {
     final labels = <String, (Widget Function(dynamic fs), String)>{
-      'Products': ((fs) => ProductsScreen(firestore: fs, asTab: true), 'Albendazole 10%, 40 pcs, ${Money.unitPrice(15000)}, In Stock'),
+      'Products': ((fs) => ProductsScreen(firestore: fs), 'Albendazole 10%, 40 pcs, ${Money.unitPrice(15000)}, In Stock'),
       'Stock Store': ((fs) => const StockStoreScreen(), 'Dairy meal 70kg, 15 pcs, ${Money.format(15 * 52000)}, In Stock'),
     };
     for (final e in labels.entries) {

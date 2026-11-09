@@ -476,7 +476,6 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
     final figures = _summaryFigures();
     return PhoneListScaffold<DailyReport>(
       title: l10n.reports_pastTitle,
-      asTab: false,
       menu: const [],
       searchController: _searchController,
       searchHint: l10n.reports_searchHint,

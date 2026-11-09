@@ -1149,7 +1149,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
       listenable: controller,
       builder: (context, _) => PhoneListScaffold<Client>(
         title: l10n.clients_title,
-        asTab: false,
         // Nothing secondary on this screen: no overflow menu.
         menu: const [],
         searchController: _searchController,

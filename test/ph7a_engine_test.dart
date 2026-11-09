@@ -32,7 +32,6 @@ Future<void> _pump(WidgetTester tester, Widget home) async {
 
 Widget _list({required bool menuBadge}) => PhoneListScaffold<String>(
       title: 'Products',
-      asTab: true,
       menu: [PhoneListMenuItem(label: 'Stock Alerts', icon: Icons.notifications_none, onSelected: () {})],
       menuBadge: menuBadge,
       searchController: TextEditingController(),

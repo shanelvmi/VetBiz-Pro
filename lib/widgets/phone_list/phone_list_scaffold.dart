@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 
 import '../../config/app_timeouts.dart';
-import '../../screens/dashboard/phone_shell.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
@@ -27,8 +26,6 @@ export 'phone_list_parts.dart' show PhoneAppliedFilter, PhoneListAction, PhoneLi
 class PhoneListScaffold<T> extends StatefulWidget {
   final String title;
 
-  /// A tab of the phone shell: no back arrow (it would pop the shell).
-  final bool asTab;
   final List<PhoneListMenuItem> menu;
 
   /// PH7a: a dot on the menu's button (Products' and Stock Store's stock
@@ -111,7 +108,6 @@ class PhoneListScaffold<T> extends StatefulWidget {
   const PhoneListScaffold({
     super.key,
     required this.title,
-    required this.asTab,
     required this.menu,
     required this.searchController,
     required this.searchHint,
@@ -222,7 +218,6 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
     final l10n = context.l10n;
     final colors = context.colors;
     return AppBar(
-      automaticallyImplyLeading: !widget.asTab,
       backgroundColor: colors.surface,
       foregroundColor: colors.textPrimary,
       elevation: AppElevation.e1,
@@ -334,12 +329,12 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
               extended: _fabExtended,
               onPressed: fab.onPressed,
             ),
-      // PH8a: as a tab of the phone shell, the subscription banner sits under
-      // the app bar; a pushed screen has none.
-      body: PhoneShell.bodyWithBanner(context, KeyedSubtree(
+      // PH8a: a pushed screen has no subscription banner (HUB1: every list is
+      // pushed; the banner is Home's).
+      body: KeyedSubtree(
         key: const ValueKey('phoneList-revealGroup'),
         child: ScreenReveal(gate: _gate, skeleton: _skeleton(context), child: _list(context)),
-      )),
+      ),
     );
   }
 
@@ -393,14 +388,11 @@ class _PhoneListScaffoldState<T> extends State<PhoneListScaffold<T>> {
                     onLoadMore: widget.onLoadMore,
                   ),
                 ),
-              // Room under the last row: the floating button never covers it
-              // (UI4: as a tab, nor does the shell's "+", which rises above
-              // the bar over the middle of the page).
+              // Room under the last row: the floating button never covers it.
               SliverPadding(
                 padding: EdgeInsets.only(
                   bottom: (fab == null ? PhoneListMetrics.pagePadding : PhoneListMetrics.fabClearance) +
-                      AppSafeArea.bottomOf(context) +
-                      PhoneShellInsets.overhangOf(context),
+                      AppSafeArea.bottomOf(context),
                 ),
               ),
             ],

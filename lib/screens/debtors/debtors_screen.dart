@@ -990,7 +990,6 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       listenable: controller,
       builder: (context, _) => PhoneListScaffold<_DebtorRow>(
         title: l10n.debtors_title,
-        asTab: false,
         menu: [
           PhoneListMenuItem(label: l10n.common_export, icon: Icons.download_outlined, onSelected: _exportDebtors),
         ],

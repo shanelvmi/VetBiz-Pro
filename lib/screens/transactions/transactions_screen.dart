@@ -918,7 +918,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
     final record = PhoneListAction(label: l10n.transactions_record, icon: Icons.add, onPressed: _recordTransaction);
     return PhoneListScaffold<TransactionModel>(
       title: l10n.transactions_title,
-      asTab: false,
       menu: [PhoneListMenuItem(label: l10n.export_dateRange, icon: Icons.date_range_outlined, onSelected: _showDateRangeDialog)],
       searchController: _searchController,
       searchHint: l10n.transactions_searchHint,

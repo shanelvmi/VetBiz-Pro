@@ -891,7 +891,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
       listenable: controller,
       builder: (context, _) => PhoneListScaffold<Service>(
         title: l10n.common_serviceRecords,
-        asTab: false,
         menu: [
           PhoneListMenuItem(
             label: l10n.services_archive,

@@ -36,14 +36,10 @@ import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
 
 class SalesScreen extends StatefulWidget {
-  /// A tab of the phone shell (PH3): its own AppBar with NO back arrow, which
-  /// would pop the whole shell.
-  final bool asTab;
-
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH3).
   final FirebaseFirestore? firestore;
 
-  const SalesScreen({super.key, this.asTab = false, this.firestore});
+  const SalesScreen({super.key, this.firestore});
 
   @override
   State<SalesScreen> createState() => _SalesScreenState();
@@ -565,8 +561,6 @@ class _SalesScreenState extends State<SalesScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      // A tab of the phone shell: no back arrow, it would pop the whole shell.
-      automaticallyImplyLeading: !widget.asTab,
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e1,
@@ -949,7 +943,6 @@ class _SalesScreenState extends State<SalesScreen> {
       listenable: controller,
       builder: (context, _) => PhoneListScaffold<Sale>(
         title: l10n.sales_title,
-        asTab: widget.asTab,
         menu: [
           PhoneListMenuItem(
             label: l10n.services_archive,

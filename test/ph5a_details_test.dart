@@ -94,7 +94,7 @@ void main() {
   }
 
   ph5TestWidgets('Back returns to the same place in the list', (tester) async {
-    await pumpPh5(tester, (fs) => SalesScreen(firestore: fs, asTab: true), seed: _seed);
+    await pumpPh5(tester, (fs) => SalesScreen(firestore: fs), seed: _seed);
     await tester.drag(_list, const Offset(0, -600));
     await ph5Settle(tester);
     final before = tester.state<ScrollableState>(_list).position.pixels;
@@ -110,7 +110,7 @@ void main() {
 
   ph5TestWidgets('a row reads "client, amount, status, date and time"', (tester) async {
     final semantics = tester.ensureSemantics();
-    await pumpPh5(tester, (fs) => SalesScreen(firestore: fs, asTab: true), seed: _seed);
+    await pumpPh5(tester, (fs) => SalesScreen(firestore: fs), seed: _seed);
     final when = DateFormat('d MMM HH:mm').format(_sale.when);
     expect(find.bySemanticsLabel('Amina Juma, ${Money.format(45000)}, Partial, $when'), findsOneWidget);
     semantics.dispose();

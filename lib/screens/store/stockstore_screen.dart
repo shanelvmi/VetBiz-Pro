@@ -1276,7 +1276,6 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           // RV2b: its rows show photos (RevealImage).
           imageGrace: true,
       title: l10n.store_title,
-      asTab: false,
       menu: [
         PhoneListMenuItem(label: l10n.products_stockAlerts, icon: Icons.notifications_none, onSelected: () => showStockAlertsSheet(context)),
       ],

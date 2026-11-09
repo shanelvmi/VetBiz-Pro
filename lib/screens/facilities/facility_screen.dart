@@ -1561,7 +1561,6 @@ class _FacilityScreenState extends State<FacilityScreen> {
           // RV2b: its rows show photos (RevealImage).
           imageGrace: true,
       title: l10n.facilities_title,
-      asTab: false,
       menu: const [],
       searchController: _searchController,
       searchHint: l10n.facilities_searchHint,

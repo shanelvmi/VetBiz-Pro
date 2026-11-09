@@ -34,8 +34,9 @@ final _six = [
   Ph5Sale('s6', ph5When(20), client: 'Neema Ally', amount: 7000, paid: 0, receipt: 6),
 ];
 
-Future<Ph5App> _sales(WidgetTester tester, {Size size = _phone, List<Ph5Sale>? sales, bool asTab = true}) =>
-    pumpPh5(tester, (fs) => SalesScreen(firestore: fs, asTab: asTab), size: size, pushed: !asTab,
+// HUB1: Sales is always a pushed screen on a phone (no tabs any more).
+Future<Ph5App> _sales(WidgetTester tester, {Size size = _phone, List<Ph5Sale>? sales}) =>
+    pumpPh5(tester, (fs) => SalesScreen(firestore: fs), size: size, pushed: true,
         seed: (fs) => ph5SeedSales(fs, sales ?? _six));
 
 Future<void> _openSheet(WidgetTester tester) async {
@@ -57,11 +58,11 @@ List<String> _valuesBeside(WidgetTester tester, Finder label, Type box, {Set<Str
 
 void main() {
   group('the app bar (R1) and the record button (R2)', () {
-    ph5TestWidgets('as a tab: the title only, a search icon and one overflow menu with Archive; nothing else', (tester) async {
+    ph5TestWidgets('the back arrow, the title only, a search icon and one overflow menu with Archive', (tester) async {
       await _sales(tester);
       expect(find.text('Sales Records'), findsOneWidget);
       expect(find.text('Track and manage all sales transactions'), findsNothing);
-      expect(find.byType(BackButton), findsNothing);
+      expect(find.byType(BackButton), findsOneWidget);
       expect(find.byTooltip('Search'), findsOneWidget);
       expect(find.byTooltip('Refresh'), findsNothing);
       // HUB1: the bar's "+" is gone; Sales has its own button (hub1_sales_fab_test).
@@ -69,11 +70,6 @@ void main() {
       await tester.tap(find.byTooltip('Show menu'));
       await ph5Settle(tester);
       expect(find.text('Archive'), findsOneWidget);
-    }, skip: _skip);
-
-    ph5TestWidgets('pushed: the back arrow', (tester) async {
-      await _sales(tester, asTab: false);
-      expect(find.byType(BackButton), findsOneWidget);
     }, skip: _skip);
 
     ph5TestWidgets('the cards, the toolbar, the table header and the page bar are gone', (tester) async {

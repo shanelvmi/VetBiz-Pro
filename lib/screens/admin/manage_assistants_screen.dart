@@ -1260,7 +1260,6 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
           // RV2b: its rows show photos (RevealImage).
           imageGrace: true,
       title: l10n.team_title,
-      asTab: false,
       menu: const [],
       searchController: _searchController,
       searchHint: l10n.team_searchHint,

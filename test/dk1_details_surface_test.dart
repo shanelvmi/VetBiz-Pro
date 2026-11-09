@@ -78,7 +78,7 @@ void main() {
     }
 
     ph5TestWidgets('${look.name} Products phone: the details page and the delete confirmation', (tester) async {
-      await pumpPh5(tester, (fs) => ProductsScreen(firestore: fs, asTab: true), look: look, seed: ph7SeedProducts);
+      await pumpPh5(tester, (fs) => ProductsScreen(firestore: fs), look: look, seed: ph7SeedProducts);
       await tester.tap(ph5Key('phoneList-row-p1'));
       await ph5Settle(tester);
       expectNoBadSurfaces(tester, dark: dark, where: 'Product details page');

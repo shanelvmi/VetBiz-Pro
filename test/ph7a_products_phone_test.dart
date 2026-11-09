@@ -32,7 +32,7 @@ Future<Ph5App> _products(WidgetTester tester,
         bool locked = false,
         CountingFirestore? firestore,
         bool settle = true}) =>
-    pumpPh5(tester, (fs) => ProductsScreen(firestore: fs, asTab: size.width < 600),
+    pumpPh5(tester, (fs) => ProductsScreen(firestore: fs),
         size: size,
         pushed: size.width >= 600,
         admin: admin,

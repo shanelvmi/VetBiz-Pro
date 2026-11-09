@@ -40,7 +40,6 @@ String _errors(WidgetTester tester) {
 void main() {
   final screens = <String, (Widget Function(dynamic fs), Type, bool, String)>{
     'sales': ((fs) => SalesScreen(firestore: fs), SalesScreen, true, 'SL-000002'),
-    'sales-tab': ((fs) => SalesScreen(firestore: fs, asTab: true), SalesScreen, false, 'SL-000002'),
     'services': ((fs) => ServicesScreen(firestore: fs), ServicesScreen, true, 'Vaccination visit'),
   };
   for (final e in screens.entries) {

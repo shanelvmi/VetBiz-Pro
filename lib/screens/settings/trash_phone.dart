@@ -142,7 +142,6 @@ class _TrashPhoneListState extends State<TrashPhoneList> {
 
     return PhoneListScaffold<TrashItem>(
       title: l.activityType_trash,
-      asTab: false,
       menu: const [],
       searchController: _search,
       searchHint: l.common_search,
