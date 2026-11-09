@@ -4105,5 +4105,9 @@
   "home_attentionMoreBadge": "+{count}",
   "@home_attentionMoreBadge": {"description":"Phone home (UI5), Needs attention: a small badge saying how many other items need attention besides the one shown, for example +2.","placeholders":{"count":{"type":"int"}}},
   "home_attentionMoreLabel": "{count, plural, =1{1 more needs attention} other{{count} more need attention}}",
-  "@home_attentionMoreLabel": {"description":"Phone home (UI5): what a screen reader says for the +2 badge.","placeholders":{"count":{"type":"int"}}}
+  "@home_attentionMoreLabel": {"description":"Phone home (UI5): what a screen reader says for the +2 badge.","placeholders":{"count":{"type":"int"}}},
+  "hub_showAllActions": "Show all actions",
+  "@hub_showAllActions": {"description":"Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel shows its two rows; opens every action."},
+  "hub_showFewerActions": "Show fewer actions",
+  "@hub_showFewerActions": {"description":"Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel is open; folds it back to two rows."}
 }

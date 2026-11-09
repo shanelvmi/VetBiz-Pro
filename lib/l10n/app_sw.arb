@@ -4105,5 +4105,9 @@
   "home_attentionMoreBadge": "+{count}",
   "@home_attentionMoreBadge": {"x-review":"draft"},
   "home_attentionMoreLabel": "{count, plural, =1{Kingine 1 kinahitaji umakini} other{Vingine {count} vinahitaji umakini}}",
-  "@home_attentionMoreLabel": {"x-review":"draft"}
+  "@home_attentionMoreLabel": {"x-review":"draft"},
+  "hub_showAllActions": "Onyesha vitendo vyote",
+  "@hub_showAllActions": {"x-review":"draft"},
+  "hub_showFewerActions": "Onyesha vitendo vichache",
+  "@hub_showFewerActions": {"x-review":"draft"}
 }
