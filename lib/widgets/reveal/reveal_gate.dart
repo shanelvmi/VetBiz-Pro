@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../../config/app_timeouts.dart';
 
@@ -129,6 +130,11 @@ class SelectorRevealSource<P extends Listenable> extends RevealSource {
 
 /// Owns a screen's primary sources and decides when its content shows.
 /// Secondary sources are never given to it: they fill late slots.
+///
+/// RV2b: with [imageGrace], the first screenful of images (RevealImage, at
+/// most [AppTimeouts.revealImageGraceSlots]) are secondary sources that may
+/// hold the open for [imageGrace] after the primary sources answered, and
+/// never past [timeout]. A gate open before the first frame waits for none.
 class RevealGate extends ChangeNotifier {
   RevealGate({
     required List<RevealSource> primary,
@@ -149,15 +155,14 @@ class RevealGate extends ChangeNotifier {
   final List<RevealSource> _primary;
   final RevealClock _clock;
   final Duration timeout;
-
-  /// RV2b: how long the first screenful of images (RevealImage) may hold the
-  /// open after the primary sources answered (not wired yet).
   final Duration? imageGrace;
 
   RevealState _state = RevealState.pending;
   bool _openedBeforeFirstFrame = false;
   Timer? _timer;
+  Timer? _graceTimer;
   bool _disposed = false;
+  final _images = <RevealSource>[];
 
   RevealState get state => _state;
   bool get isOpen => _state != RevealState.pending;
@@ -175,20 +180,42 @@ class RevealGate extends ChangeNotifier {
     _timer = _clock.start(timeout, () => _open(RevealState.timedOut));
   }
 
-  /// RV2b: an image of the first screenful asks to hold the open (not wired
-  /// yet: refused).
-  bool holdForImage(RevealSource image) => false;
+  /// RV2b: an image of the first screenful asks to hold the open. Refused
+  /// (false) without [imageGrace], once open, or when the slots are taken.
+  bool holdForImage(RevealSource image) {
+    if (imageGrace == null || _disposed || isOpen) return false;
+    if (_images.length >= AppTimeouts.revealImageGraceSlots) return false;
+    _images.add(image);
+    image.attach(_onAnswered);
+    return true;
+  }
 
-  /// RV2b: an image that will not count after all.
-  void releaseImage(RevealSource image) {}
+  /// RV2b: an image that will not count after all (offscreen once laid out,
+  /// or gone).
+  void releaseImage(RevealSource image) {
+    if (_images.remove(image)) _onAnswered();
+  }
 
   void _onAnswered() {
-    if (_allAnswered) _open(RevealState.revealed);
+    if (!_allAnswered) return;
+    final grace = imageGrace;
+    if (grace == null) return _open(RevealState.revealed);
+    // The rows' images are built in the frame the rows answered: they get
+    // that frame to ask, then the grace, never past the timeout.
+    if (_graceTimer == null) {
+      _graceTimer = _clock.start(grace, () => _open(RevealState.revealed));
+      SchedulerBinding.instance
+        ..addPostFrameCallback((_) => _onAnswered())
+        ..ensureVisualUpdate();
+      return;
+    }
+    if (_images.every((s) => s.answered)) _open(RevealState.revealed);
   }
 
   void _open(RevealState to) {
     if (_disposed || isOpen) return;
     _timer?.cancel();
+    _graceTimer?.cancel();
     _state = to;
     notifyListeners();
   }
@@ -197,7 +224,8 @@ class RevealGate extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _timer?.cancel();
-    for (final s in _primary) {
+    _graceTimer?.cancel();
+    for (final s in [..._primary, ..._images]) {
       s.dispose();
     }
     super.dispose();

@@ -15,7 +15,7 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
-const _skip = true;
+const _skip = false;
 
 class _FakeTimer implements Timer {
   bool cancelled = false;

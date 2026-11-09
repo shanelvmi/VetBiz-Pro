@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_motion.dart';
 import 'reveal_gate.dart';
+import 'reveal_image.dart';
 import 'skeleton_box.dart';
 
 /// RV1 (docs/design/screen_reveal.md): a screen's content arriving as one
@@ -105,7 +106,7 @@ class _ScreenRevealState extends State<ScreenReveal> with SingleTickerProviderSt
             opacity: _progress,
             child: AnimatedBuilder(
               animation: _progress,
-              child: RevealedContent(child: widget.child),
+              child: RevealedContent(child: RevealImageScope(gate: widget.gate, child: widget.child)),
               builder: (context, child) =>
                   Transform.translate(offset: Offset(0, AppMotion.revealRise * (1 - _progress.value)), child: child),
             ),

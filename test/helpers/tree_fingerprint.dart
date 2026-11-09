@@ -17,7 +17,8 @@ String _mask(String s) => s.replaceAll(RegExp(r'\d'), '#').replaceAll(_months, '
 /// Every element under [root]: its depth, widget type, text (masked), and
 /// for a box its size and position relative to [root]. With [stripReveal]
 /// (RV1), a ScreenReveal or LateSlot counts as its own content (the child of
-/// its RevealedContent, at the wrapper's depth) and a SkeletonOr as its child,
+/// its RevealedContent, at the wrapper's depth) and a SkeletonOr or a
+/// RevealImageScope (RV2b) as its child,
 /// so a revealed screen compares with the same screen before RV1.
 String treeFingerprint(WidgetTester tester, Finder root, {bool stripReveal = false}) {
   final rootElement = root.evaluate().single;
@@ -39,7 +40,8 @@ String treeFingerprint(WidgetTester tester, Finder root, {bool stripReveal = fal
       e.visitChildren(find);
       if (content != null) return visit(content!, depth, origin);
     }
-    if (stripReveal && w is SkeletonOr) {
+    // RV2b: the scope a reveal puts around its content for its images.
+    if (stripReveal && (w is SkeletonOr || w is RevealImageScope)) {
       return e.visitChildren((c) => visit(c, depth, origin));
     }
     // RV1: a route's page transition counts as its page (the wrappers the
