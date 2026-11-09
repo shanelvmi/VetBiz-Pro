@@ -50,6 +50,7 @@ import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
+import '../../widgets/reveal/reveal_image.dart';
 import '../../widgets/app_safe_area.dart';
 import '../../widgets/app_sheet.dart';
 import 'facility_phone_form.dart';
@@ -1557,6 +1558,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
     // Today's Add Facility, its limit check first.
     final add = PhoneListAction(label: l10n.facilities_addTitle, icon: Icons.add, onPressed: _showAddFacilityDialog);
     return PhoneListScaffold<Map<String, dynamic>>(
+          // RV2b: its rows show photos (RevealImage).
+          imageGrace: true,
       title: l10n.facilities_title,
       asTab: false,
       menu: const [],
@@ -1652,7 +1655,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         border: Border.all(color: context.colors.border),
       ),
       child: logoUrl != null
-          ? Image.network(logoUrl, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => initials)
+          ? RevealImage.fill(url: logoUrl, placeholder: initials)
           : initials,
     );
   }
@@ -1849,7 +1852,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
                 ),
                 padding: const EdgeInsets.all(AppSpacing.s6),
                 child: logoUrl != null
-                    ? Image.network(logoUrl, fit: BoxFit.contain, errorBuilder: (context, error, stackTrace) => logo)
+                    ? RevealImage.fill(url: logoUrl, placeholder: logo)
                     : logo,
               ),
               const SizedBox(width: AppSpacing.s12),
@@ -2310,11 +2313,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
               ),
               padding: const EdgeInsets.all(AppSpacing.s4),
               child: logoUrl != null
-                  ? Image.network(
-                      logoUrl,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i18),
-                    )
+                  ? RevealImage.fill(url: logoUrl, placeholder: Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i18))
                   : Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i18),
             ),
             const SizedBox(width: AppSpacing.s10),
@@ -2457,11 +2456,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
             ),
             padding: const EdgeInsets.all(AppSpacing.s10),
             child: logoUrl != null
-                ? Image.network(
-                    logoUrl,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i40),
-                  )
+                ? RevealImage.fill(url: logoUrl, placeholder: Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i40))
                 : Icon(Icons.business, color: context.colors.primary, size: AppIconSize.i40),
           ),
           const SizedBox(width: AppSpacing.s20),

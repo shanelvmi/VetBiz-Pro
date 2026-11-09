@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_motion.dart';
+import 'reveal/reveal_image.dart';
 
 /// A product thumbnail - shows the uploaded photo when one exists,
 /// falling back to a generic inventory icon (not initials - products
@@ -68,43 +68,10 @@ class ProductThumbnail extends StatelessWidget {
     final hasPhoto = imageUrl != null && imageUrl!.isNotEmpty;
     return ClipRRect(
       borderRadius: borderRadius,
+      // RV2b: the fallback at once, the photo fading in over it when
+      // decoded (RevealImage: no spinner, decoded at the slot's size).
       child: hasPhoto
-          ? Image.network(
-              imageUrl!,
-              width: width,
-              height: height,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => _fallback(),
-              // Shows a subtle placeholder while the photo downloads,
-              // instead of blank space - the card no longer looks like
-              // it's missing an image, it looks like it's loading one.
-              loadingBuilder: (context, child, loadingProgress) {
-                if (loadingProgress == null) return child;
-                return Container(
-                  width: width,
-                  height: height,
-                  color: backgroundColor,
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                    width: (width < height ? width : height) * 0.3,
-                    height: (width < height ? width : height) * 0.3,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: iconColor),
-                  ),
-                );
-              },
-              // Fades the photo in over the placeholder once it's ready,
-              // instead of popping in abruptly the moment the first frame
-              // is available - that abrupt swap is what read as a "bounce".
-              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                if (wasSynchronouslyLoaded) return child;
-                return AnimatedOpacity(
-                  opacity: frame == null ? 0 : 1,
-                  duration: AppMotion.normal,
-                  curve: Curves.easeOut,
-                  child: child,
-                );
-              },
-            )
+          ? RevealImage(url: imageUrl, width: width, height: height, placeholder: _fallback())
           : _fallback(),
     );
   }

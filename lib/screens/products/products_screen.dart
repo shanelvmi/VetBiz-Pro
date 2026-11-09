@@ -1422,6 +1422,8 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ? PhoneListAction(label: l10n.products_addProduct, icon: Icons.add, onPressed: () => showAddEditProductScreen(context))
         : null;
     return PhoneListScaffold<Product>(
+          // RV2b: its rows show photos (RevealImage).
+          imageGrace: true,
       title: l10n.products_sellableTitle,
       asTab: widget.asTab,
       menu: [

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'reveal/reveal_image.dart';
+
 /// A circular avatar showing the uploaded photo when one exists,
 /// falling back to the person's initials (e.g. "SH" for "Shanel
 /// Hassan") rather than a generic person icon when it doesn't -
@@ -51,15 +53,8 @@ class InitialsAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasPhoto = avatarUrl != null && avatarUrl!.isNotEmpty;
     return ClipOval(
-      child: hasPhoto
-          ? Image.network(
-              avatarUrl!,
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => _fallback(),
-            )
-          : _fallback(),
+      // RV2b: the initials at once, the photo fading in over them.
+      child: hasPhoto ? RevealImage(url: avatarUrl, width: size, height: size, placeholder: _fallback()) : _fallback(),
     );
   }
 }

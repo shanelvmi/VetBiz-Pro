@@ -8,6 +8,7 @@ import '../../utils/force_logout.dart';
 import '../../constants/facility_types.dart';
 import '../../widgets/facility_type_tag.dart';
 import '../../widgets/initials_avatar.dart';
+import '../../widgets/reveal/reveal_image.dart';
 import '../../widgets/vetbiz_loading_indicator.dart';
 import '../../data/collections.dart';
 import '../../data/facility_status.dart';
@@ -401,8 +402,10 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
                         width: 56,
                         height: 56,
                         child: logoUrl != null && logoUrl.isNotEmpty
-                            ? Image.network(logoUrl, fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Container(
+                            ? RevealImage.fill(
+                                url: logoUrl,
+                                fit: BoxFit.cover,
+                                placeholder: Container(
                                     color: context.colors.primary.withValues(alpha: AppAlpha.a10),
                                     child: Icon(Icons.storefront_outlined, color: context.colors.primary)))
                             : Container(

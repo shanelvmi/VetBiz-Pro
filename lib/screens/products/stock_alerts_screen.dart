@@ -713,6 +713,8 @@ class _AlertsBodyState extends State<_AlertsBody> {
     final shown = filtered.take(_phonePages * _pageSize).toList();
     final filtersOn = _searchQuery.isNotEmpty || _kindFilter != null || category != 'All';
     return PhoneListScaffold<StockAlert>(
+          // RV2b: its rows show photos (RevealImage).
+          imageGrace: true,
       title: l10n.alerts_title,
       asTab: false,
       menu: const [],

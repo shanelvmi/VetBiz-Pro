@@ -1273,6 +1273,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         ? PhoneListAction(label: l10n.products_addProduct, icon: Icons.add, onPressed: () => showAddEditProductScreen(context))
         : null;
     return PhoneListScaffold<Product>(
+          // RV2b: its rows show photos (RevealImage).
+          imageGrace: true,
       title: l10n.store_title,
       asTab: false,
       menu: [

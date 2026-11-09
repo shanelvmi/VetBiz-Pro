@@ -1252,6 +1252,8 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
         : PhoneListAction(label: l10n.team_inviteAssistant, icon: Icons.person_add_alt, onPressed: _startInviteFlow);
     final noMatches = all.isNotEmpty && items.isEmpty;
     return PhoneListScaffold<QueryDocumentSnapshot>(
+          // RV2b: its rows show photos (RevealImage).
+          imageGrace: true,
       title: l10n.team_title,
       asTab: false,
       menu: const [],

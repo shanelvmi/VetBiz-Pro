@@ -9,6 +9,7 @@ import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
+import 'reveal/reveal_image.dart';
 
 /// The light filter panel shared by Products and Stock Store.
 /// Deliberately NOT a copy of the Dashboard's own sidebar: that one is
@@ -109,11 +110,9 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
                   child: (logoUrl != null && logoUrl.isNotEmpty)
                       ? ClipRRect(
                           borderRadius: BorderRadius.circular(AppRadius.r6),
-                          child: Image.network(
-                            logoUrl,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Icon(Icons.storefront, color: widget.primaryColor, size: AppIconSize.i18),
+                          child: RevealImage.fill(
+                            url: logoUrl,
+                            placeholder: Icon(Icons.storefront, color: widget.primaryColor, size: AppIconSize.i18),
                           ),
                         )
                       : Icon(Icons.storefront, color: widget.primaryColor, size: AppIconSize.i18),

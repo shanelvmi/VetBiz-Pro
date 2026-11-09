@@ -16,6 +16,7 @@ import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/product_thumbnail.dart';
+import '../../widgets/reveal/reveal_image.dart';
 import 'stock_alerts_screen.dart';
 
 // PH7a (docs/design/phone_list_pattern.md): what Products and Stock Store
@@ -38,8 +39,8 @@ String productStatusChipLabel(AppLocalizations l10n, String status) => switch (s
       _ => status,
     };
 
-/// A product's 40 px leading on a phone row (R6): its photo, a soft block
-/// while the photo loads, or the name's initials on a tint when it has no
+/// A product's 40 px leading on a phone row (R6): its photo fading in over the
+/// initials (RevealImage), or the name's initials on a tint when it has no
 /// photo or the photo fails.
 class ProductLeading extends StatelessWidget {
   final Product product;
@@ -77,15 +78,8 @@ class ProductLeading extends StatelessWidget {
           ? initials()
           : ClipRRect(
               borderRadius: radius,
-              child: Image.network(
-                url,
-                width: size,
-                height: size,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => initials(),
-                loadingBuilder: (context, child, progress) =>
-                    progress == null ? child : ColoredBox(color: colors.surfaceMuted, child: const SizedBox.expand()),
-              ),
+              // RV2b: the initials at once, the photo fading in over them.
+              child: RevealImage(url: url, width: size, height: size, placeholder: initials()),
             ),
     );
   }
