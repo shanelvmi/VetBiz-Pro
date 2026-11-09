@@ -1,16 +1,16 @@
 // PH8a (2): the subscription banner on phones. One state from today's rules
 // (the pill's): locked, grace, the calm trial, the last 7 days of a trial or
 // a paid subscription; today's sentences unchanged. On a phone a slim banner
-// at the top of EVERY tab under its app bar, from one place (the PhoneShell),
-// never over the app bar, the floating button or the bar; not on pushed deep
-// screens; the snooze exactly as today (2 hours, every state, in memory).
+// under Home's app bar, from one place (HUB1: the hub; there are no tabs any
+// more), never over the app bar or the action panel; not on pushed screens;
+// the snooze exactly as today (2 hours, every state, in memory).
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/providers/subscription_provider.dart';
-import 'package:vetbiz_pro/screens/dashboard/more_screen.dart';
-import 'package:vetbiz_pro/screens/dashboard/phone_shell.dart';
+import 'package:vetbiz_pro/screens/dashboard/home_action_panel.dart';
+import 'package:vetbiz_pro/screens/dashboard/phone_hub.dart';
 import 'package:vetbiz_pro/screens/dashboard/subscription_banner.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
@@ -57,7 +57,7 @@ ThemeData _real(ThemeData t) => t.copyWith(textTheme: t.textTheme.apply(fontFami
 
 Widget _list(String title, {bool fab = false}) => PhoneListScaffold<String>(
       title: title,
-      asTab: true,
+      asTab: false,
       menu: const [],
       searchController: TextEditingController(),
       searchHint: 'Search',
@@ -87,16 +87,18 @@ Widget _list(String title, {bool fab = false}) => PhoneListScaffold<String>(
       onRefresh: () async {},
     );
 
-Widget _shell({Widget? banner}) => PhoneShell(
-      homeAppBar: AppBar(title: const Text('HOME BAR')),
+/// HUB1: the hub: Home under its app bar with the panel; any tile pushes a
+/// list screen (Deep) over it.
+Widget _shell({Widget? banner}) => PhoneHub(
+      appBar: AppBar(title: const Text('HOME BAR')),
       banner: banner,
       home: (_) => ListView(children: [for (var i = 0; i < 40; i++) SizedBox(height: 48, child: Text('home row $i'))]),
-      sales: (_) => _list('Sales'),
-      products: (context) => _list('Products', fab: true),
-      more: (_) => MoreScreen(isAdmin: true, onOpen: (context, item) async {
-        await Navigator.push(context, MaterialPageRoute<void>(builder: (_) => _list('Deep', fab: true)));
-      }),
-      onRecord: () {},
+      panel: Builder(
+        builder: (context) => HomeActionPanel(
+          isAdmin: true,
+          onTile: (_) => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => _list('Deep', fab: true))),
+        ),
+      ),
     );
 
 Widget _phoneBanner(SubscriptionBannerState state, {bool admin = true, VoidCallback? onOpen, VoidCallback? onSnooze}) =>
@@ -212,30 +214,19 @@ void main() {
     }, skip: _skip);
   });
 
-  group('in the phone shell', () {
-    for (final (tab, label) in [('home', null), ('sales', 'Sales'), ('products', 'Products'), ('more', 'More')]) {
-      testWidgets('on $tab: under the app bar, never over the floating button or the bar', (tester) async {
-        await _pump(tester, _shell(banner: _phoneBanner(_states[4])));
-        if (label != null) {
-          await tester.tap(find.descendant(of: find.byType(PhoneBottomBar), matching: find.text(label)));
-          await tester.pumpAndSettle();
-        }
-        expect(find.byKey(_banner), findsOneWidget);
-        final banner = tester.getRect(find.byKey(_banner));
-        final appBar = tester.getRect(find.byType(AppBar).hitTestable().first);
-        expect(banner.top, greaterThanOrEqualTo(appBar.bottom));
-        final bar = tester.getRect(find.byType(PhoneBottomBar));
-        expect(_overlaps(banner, bar), isFalse);
-        final fab = find.byType(FloatingActionButton);
-        if (fab.evaluate().isNotEmpty) expect(_overlaps(banner, tester.getRect(fab)), isFalse);
-      }, skip: _skip);
-    }
+  group('on the hub', () {
+    testWidgets('on Home: under the app bar, never over the action panel', (tester) async {
+      await _pump(tester, _shell(banner: _phoneBanner(_states[4])));
+      expect(find.byKey(_banner), findsOneWidget);
+      final banner = tester.getRect(find.byKey(_banner));
+      final appBar = tester.getRect(find.byType(AppBar).hitTestable().first);
+      expect(banner.top, greaterThanOrEqualTo(appBar.bottom));
+      expect(_overlaps(banner, tester.getRect(find.byKey(const ValueKey('hub-handle')))), isFalse);
+    }, skip: _skip);
 
-    testWidgets('not on a pushed deep screen, nor with no banner', (tester) async {
+    testWidgets('not on a pushed screen, nor with no banner', (tester) async {
       await _pump(tester, _shell(banner: _phoneBanner(_states[0])));
-      await tester.tap(find.descendant(of: find.byType(PhoneBottomBar), matching: find.text('More')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byType(InkWell).at(2));
+      await tester.tap(find.byKey(const ValueKey('hub-tile-sales')));
       await tester.pumpAndSettle();
       expect(find.text('Deep'), findsOneWidget);
       expect(find.byKey(_banner), findsNothing);
