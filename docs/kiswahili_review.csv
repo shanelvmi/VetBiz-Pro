@@ -2060,3 +2060,10 @@ home_attentionMoreBadge,+{count},+{count},"Phone home (UI5), Needs attention: a 
 home_attentionMoreLabel,"{count, plural, =1{1 more needs attention} other{{count} more need attention}}","{count, plural, =1{Kingine 1 kinahitaji umakini} other{Vingine {count} vinahitaji umakini}}",Phone home (UI5): what a screen reader says for the +2 badge.,draft
 hub_showAllActions,Show all actions,Onyesha vitendo vyote,"Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel shows its two rows; opens every action.",draft
 hub_showFewerActions,Show fewer actions,Onyesha vitendo vichache,"Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel is open; folds it back to two rows.",draft
+home_vetServices,Vet services,Huduma za mifugo,"Phone Home (HUB2), the card: the second option of the switch at its top (the first is Sales); also the title of the chart page of service revenue.",draft
+home_visits,Visits,Ziara,"Phone Home (HUB2), the card with Vet services chosen: the label over the number of services performed in the period.",draft
+home_noVisitsYet,No visits yet,Bado hakuna ziara,"Phone Home (HUB2), the card with Vet services chosen: shown under the amount when no service was recorded in the period.",draft
+home_chartThisWeek,This week,Wiki hii,"Phone Home (HUB2), the Sales chart legend: the solid line, the last 7 days.",draft
+home_chartLastWeek,Last week,Wiki iliyopita,"Phone Home (HUB2), the Sales chart legend: the dashed line, the 7 days before.",draft
+home_chartNoData,No data yet for this week,Bado hakuna data ya wiki hii,"Phone Home (HUB2), a chart page with nothing to draw for the last 7 days.",draft
+home_chartProducts,Product movement,Mwenendo wa bidhaa,"Phone Home (HUB2), the title of the chart page of the 5 products sold in the largest quantity in the last 7 days.",draft
