@@ -13,8 +13,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-// HUB1: true until the panel and the profile menu are done.
-const _skip = true;
+const _skip = false;
 
 /// Generic openers that are not a destination.
 const _generic = {'showDialog', 'showModalBottomSheet', 'showAppSheet', 'showGeneralDialog', 'showLockedDialog'};

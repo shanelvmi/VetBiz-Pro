@@ -17,7 +17,6 @@ import '../subscription/subscription_screen.dart';
 import '../dashboard/notifications_screen.dart';
 import '../../config/app_defaults.dart';
 import '../../l10n/l10n.dart';
-import '../../widgets/support_contact_dialog.dart';
 import '../../config/app_info.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
@@ -199,12 +198,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       },
                     ),
                     _buildSettingsItem(
-                      icon: AppIcons.help.outlined,
-                      label: context.l10n.settings_helpSupport,
-                      isLast: false,
-                      onTap: () => _showHelpSupportDialog(context),
-                    ),
-                    _buildSettingsItem(
                       icon: Icons.info_outline,
                       label: context.l10n.settings_appInfo,
                       isLast: true,
@@ -268,10 +261,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // and items as the mobile list, but tapping a navigable one swaps
   // the content pane in-place instead of pushing a whole new screen -
   // no navigation stack to climb back out of just to check a
-  // different setting next. Dialog/bottom-sheet items (Help &
-  // Support, App Info, Language) keep working exactly as they do on
-  // mobile - they're small, modal-appropriate content, not worth
-  // dedicating a whole pane to.
+  // different setting next. Dialog/bottom-sheet items (App Info,
+  // Language) keep working exactly as they do on mobile - they're
+  // small, modal-appropriate content, not worth dedicating a whole pane
+  // to. (HUB1: Help & Support left Settings for the profile menu.)
   Widget _buildDesktopLayout(BuildContext context) {
     final uiSettings = Provider.of<UiSettingsProvider>(context);
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
@@ -356,11 +349,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: AppIcons.printer.outlined,
                           label: context.l10n.printer_title,
                           navigateKey: 'printer',
-                        ),
-                        _buildSidebarItem(
-                          icon: AppIcons.help.outlined,
-                          label: context.l10n.settings_helpSupport,
-                          onTapDialog: () => _showHelpSupportDialog(context),
                         ),
                         _buildSidebarItem(
                           icon: Icons.info_outline,
@@ -669,10 +657,4 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
-
-
-  // The same platform-set contact as the dashboard Help and the sign-in
-  // footer (app_config/support_contact), with this screen's own title.
-  void _showHelpSupportDialog(BuildContext context) =>
-      showSupportContactDialog(context, title: context.l10n.settings_helpSupport);
 }

@@ -14,9 +14,10 @@ import 'package:vetbiz_pro/widgets/support_contact_dialog.dart';
 
 import 'helpers/help_dialog_rows.dart';
 
-// G3b: Settings' Help and Support shows the platform-set contact through the
+// G3b: Settings' Help and Support showed the platform-set contact through the
 // shared Help dialog (its own title kept), never a hard-coded number or
-// address. Written before the change (e2be518).
+// address. Written before the change (e2be518). HUB1: Help left Settings for
+// the profile menu; the dialog with that title is still checked here.
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -52,8 +53,14 @@ void main() {
   group('Settings', () {
     final settings = File('lib/screens/settings/settings_screen.dart').readAsStringSync();
 
-    test('Help and Support opens the shared dialog with its own title', () {
-      expect(settings.contains('showSupportContactDialog(context, title: context.l10n.settings_helpSupport)'), isTrue);
+    // HUB1 (the owner's answer, 2026-11-09): Help & Support left the Settings
+    // screen at every width; the profile menu's Help opens the same shared
+    // dialog (one place per destination, hub1_partition_test).
+    test('Help is the profile menu\'s, through the shared dialog; not in Settings', () {
+      expect(settings.contains('showSupportContactDialog'), isFalse);
+      final dashboard = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync();
+      final menu = dashboard.substring(dashboard.indexOf('Widget _buildEndDrawerContent()'));
+      expect(menu.contains('onTap: () => showSupportContactDialog(context),'), isTrue);
     });
 
     test('no hard-coded support contact', () {

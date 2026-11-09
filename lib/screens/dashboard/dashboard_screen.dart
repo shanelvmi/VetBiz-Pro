@@ -2824,6 +2824,21 @@ Widget _buildDrawerContent() {
                 // View Facilities).
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityLogScreen())),
               ),
+            // HUB1 (the owner's split): the profile menu is the person and
+            // Settings, at every width; the action panel is daily work and the
+            // Settings screen configuration. Help left Settings for here.
+            ProfileDrawerAction(
+              icon: AppIcons.settings.outlined,
+              label: context.l10n.settings_title,
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsScreen())),
+            ),
+            ProfileDrawerAction(
+              icon: AppIcons.help.outlined,
+              label: context.l10n.dashboard_help,
+              // The platform-set contact (app_config/support_contact), as the
+              // wide top bar's Help.
+              onTap: () => showSupportContactDialog(context),
+            ),
             ProfileDrawerAction(
               icon: Icons.power_settings_new,
               label: context.l10n.common_logout,

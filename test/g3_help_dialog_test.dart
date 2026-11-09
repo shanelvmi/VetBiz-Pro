@@ -48,8 +48,9 @@ void main() {
 
   test('the dashboard opens the shared dialog and no longer reads the document itself', () {
     final source = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync();
-    // UI5: the phone Home's Help left its top bar (More's top bar has it).
-    expect(RegExp(r'showSupportContactDialog\(context\)').allMatches(source).length, 2); // both wide top bars
+    // UI5: the phone Home's Help left its top bar. HUB1: the profile menu has
+    // it (every width), beside both wide top bars' Help.
+    expect(RegExp(r'showSupportContactDialog\(context\)').allMatches(source).length, 3);
     expect(source.contains('_showHelpDialog'), isFalse);
     expect(source.contains("doc('support_contact')"), isFalse);
   });
