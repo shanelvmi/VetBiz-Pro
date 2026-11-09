@@ -7525,4 +7525,10 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get hub_showAllActions => 'Show all actions';
+
+  @override
+  String get hub_showFewerActions => 'Show fewer actions';
 }

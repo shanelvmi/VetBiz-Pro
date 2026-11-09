@@ -12456,6 +12456,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 more needs attention} other{{count} more need attention}}'**
   String home_attentionMoreLabel(int count);
+
+  /// Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel shows its two rows; opens every action.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all actions'**
+  String get hub_showAllActions;
+
+  /// Phone Home (HUB1), the action panel: the drag handle's spoken label and action while the panel is open; folds it back to two rows.
+  ///
+  /// In en, this message translates to:
+  /// **'Show fewer actions'**
+  String get hub_showFewerActions;
 }
 
 class _AppLocalizationsDelegate

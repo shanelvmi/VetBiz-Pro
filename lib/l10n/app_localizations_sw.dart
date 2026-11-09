@@ -7569,4 +7569,10 @@ class AppLocalizationsSw extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get hub_showAllActions => 'Onyesha vitendo vyote';
+
+  @override
+  String get hub_showFewerActions => 'Onyesha vitendo vichache';
 }
