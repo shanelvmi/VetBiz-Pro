@@ -66,7 +66,7 @@ void main() {
 
     for (final admin in [true, false]) {
       testWidgets('View all: the sheet with the other actions (${admin ? 'admin' : 'assistant'})', (tester) async {
-        await pumpPhoneHome(tester, phoneHomeHarness(isAdmin: admin, onViewAll: (context) => showRecordSheet(context, all: true, isAdmin: admin)));
+        await pumpPhoneHome(tester, phoneHomeHarness(isAdmin: admin, onViewAll: (context) => showRecordSheet(context, isAdmin: admin)));
         await tester.tap(find.text('View all'));
         await tester.pumpAndSettle();
         final expected = [...tiles, if (admin) 'Add Product', 'Add New Batch', 'Record Transaction'];
@@ -75,7 +75,8 @@ void main() {
           expect(find.descendant(of: sheet, matching: find.text(row)), findsOneWidget, reason: row);
         }
         if (!admin) expect(find.descendant(of: sheet, matching: find.text('Add Product')), findsNothing);
-        expect(recordActionsFor(isAdmin: admin, all: true), hasLength(expected.length));
+        expect(find.descendant(of: sheet, matching: find.text('More')), findsOneWidget, reason: 'UI5: the More group');
+        expect([...recordActionsFor(isAdmin: admin), ...recordMoreActionsFor(isAdmin: admin)], hasLength(expected.length));
       }, skip: _skip);
     }
 
@@ -85,7 +86,6 @@ void main() {
         tester,
         phoneHomeHarness(
           onViewAll: (context) => showRecordSheet(context,
-              all: true,
               isAdmin: true,
               actions: actions([]),
               guard: (context, destination, {onNavigate}) async => guarded.add(destination.runtimeType.toString())),

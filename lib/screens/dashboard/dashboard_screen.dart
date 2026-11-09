@@ -1617,7 +1617,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     attentionReady: productProvider.loaded && debtProvider.loaded,
                     onAllDetails: _openAllDetails,
                     onQuickAction: (action) => runRecordAction(homeContext, action, onDone: _returnToHome),
-                    onViewAll: () => showRecordSheet(homeContext, all: true, isAdmin: isAdmin, onDone: _returnToHome),
+                    onViewAll: () => showRecordSheet(homeContext, isAdmin: isAdmin, onDone: _returnToHome),
                     onGoTo: (item) => _goTo(homeContext, item),
                     onAttention: (target) => _openAttention(homeContext, target),
                   );
@@ -1633,7 +1633,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 onReturned: _returnToHome,
               ),
             ),
-            onRecord: () => showRecordSheet(context, onDone: _returnToHome),
+            onRecord: () => showRecordSheet(context, isAdmin: isAdmin, onDone: _returnToHome),
             onTabChanged: (tab) {
               if (tab == PhoneTab.home) _returnToHome();
             },
