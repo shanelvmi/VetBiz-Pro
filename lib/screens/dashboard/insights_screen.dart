@@ -6,6 +6,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/debt_provider.dart';
 import '../../services/dashboard_summary_service.dart';
+import '../../services/insights_data_loader.dart';
 import '../../widgets/summary_card.dart' show KpiTrend;
 import '../../data/collections.dart';
 import '../../config/money.dart';
@@ -88,32 +89,22 @@ class _InsightsScreenState extends State<InsightsScreen> {
     // Matches exactly what's displayed - the trend chart and the
     // top-products/services figures below both only ever use this
     // same 14-day window, so there's nothing gained from querying
-    // further back than what's actually shown.
-    final windowStart = _trendStart;
+    // further back than what's actually shown (the loader's windowStart is
+    // this same _trendStart).
 
     try {
-      final results = await Future.wait([
-        FirebaseFirestore.instance
-            .collection(Collections.facilities)
-            .doc(facilityId)
-            .collection(Collections.sales)
-            .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(windowStart))
-            .get(),
-        FirebaseFirestore.instance
-            .collection(Collections.facilities)
-            .doc(facilityId)
-            .collection(Collections.services)
-            .where('serviceDate', isGreaterThanOrEqualTo: Timestamp.fromDate(windowStart))
-            .get(),
-      ]);
-      final salesSnap = results[0];
-      final servicesSnap = results[1];
+      // HUB2: the same two reads, through the loader Home's Product movement
+      // page shares: kept for the session, so a second visit (or Home
+      // first) costs nothing.
+      final loader = InsightsDataLoader.shared;
+      final results = await Future.wait([loader.sales(facilityId, now: now), loader.services(facilityId, now: now)]);
+      final salesDocs = results[0];
+      final servicesDocs = results[1];
 
       final dailyTotals = List<double>.filled(14, 0.0);
       final productRevenue = <String, double>{};
 
-      for (final doc in salesSnap.docs) {
-        final data = doc.data();
+      for (final data in salesDocs) {
         final timestampField = data['timestamp'];
         final timestamp = timestampField is Timestamp ? timestampField.toDate() : null;
         final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
@@ -139,8 +130,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       }
 
       final serviceRevenue = <String, double>{};
-      for (final doc in servicesSnap.docs) {
-        final data = doc.data();
+      for (final data in servicesDocs) {
         final name = (data['name'] as String?);
         final key = (name == null || name.isEmpty) ? 'Other' : name;
         final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;

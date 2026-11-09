@@ -1,5 +1,3 @@
-// ignore_for_file: unused_import, unused_field
-// HUB2: the API only, so its tests compile (committed skipped); the engine follows.
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../config/app_ranges.dart';
@@ -20,19 +18,27 @@ class HomeChartDays {
 
   const HomeChartDays({required this.firstDay, required this.sales, required this.services});
 
-  factory HomeChartDays.empty(DateTime today) => throw UnimplementedError();
+  factory HomeChartDays.empty(DateTime today) => HomeChartDays(
+        firstDay: today.subtract(AppRanges.day * (length - 1)),
+        sales: List.filled(length, 0),
+        services: List.filled(length, 0),
+      );
 
   /// Today's values replaced by the live ones the card already holds (the
   /// period totals while the period is Today); null keeps the read's.
-  HomeChartDays withToday({double? sales, double? services}) => throw UnimplementedError();
+  HomeChartDays withToday({double? sales, double? services}) => HomeChartDays(
+        firstDay: firstDay,
+        sales: [...this.sales.take(length - 1), sales ?? this.sales.last],
+        services: [...this.services.take(length - 1), services ?? this.services.last],
+      );
 
   /// The last 7 days (today last) and the 7 before them.
-  List<double> get salesThisWeek => throw UnimplementedError();
-  List<double> get salesLastWeek => throw UnimplementedError();
-  List<double> get servicesThisWeek => throw UnimplementedError();
+  List<double> get salesThisWeek => sales.sublist(week);
+  List<double> get salesLastWeek => sales.sublist(0, week);
+  List<double> get servicesThisWeek => services.sublist(week);
 
   /// The days of [salesThisWeek], for the guide labels and tooltips.
-  List<DateTime> get thisWeekDays => throw UnimplementedError();
+  List<DateTime> get thisWeekDays => [for (var i = week; i < length; i++) firstDay.add(AppRanges.day * i)];
 }
 
 /// HUB2: reads the 14 days once per facility and day, ONE range get of each
@@ -50,7 +56,50 @@ class HomeChartLoader {
   /// The app's one loader.
   static final HomeChartLoader shared = HomeChartLoader();
 
-  Future<HomeChartDays> days(String facilityId, {DateTime? now}) => throw UnimplementedError();
+  FirebaseFirestore get _db => _injected ?? FirebaseFirestore.instance;
+
+  static String _key(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  Future<HomeChartDays> days(String facilityId, {DateTime? now}) {
+    final at = now ?? DateTime.now();
+    final today = DateTime(at.year, at.month, at.day);
+    final cacheKey = '$facilityId|${_key(today)}';
+    final cached = _cache[cacheKey];
+    if (cached != null) return cached;
+    final future = _read(facilityId, today);
+    _cache[cacheKey] = future;
+    future.catchError((Object _) {
+      _cache.remove(cacheKey);
+      return HomeChartDays.empty(today);
+    });
+    return future;
+  }
+
+  Future<HomeChartDays> _read(String facilityId, DateTime today) async {
+    final first = today.subtract(AppRanges.day * (HomeChartDays.length - 1));
+    Future<List<double>> perDay(String collection) async {
+      final snap = await _db
+          .collection(Collections.facilities)
+          .doc(facilityId)
+          .collection(collection)
+          .where(FieldPath.documentId, isGreaterThanOrEqualTo: _key(first))
+          .where(FieldPath.documentId, isLessThanOrEqualTo: _key(today))
+          .get();
+      final out = List<double>.filled(HomeChartDays.length, 0);
+      for (final doc in snap.docs) {
+        final day = DateTime.tryParse(doc.id);
+        if (day == null) continue;
+        final i = DateTime(day.year, day.month, day.day).difference(first).inDays;
+        if (i < 0 || i >= HomeChartDays.length) continue;
+        out[i] += (doc.data()['totalAmount'] as num?)?.toDouble() ?? 0;
+      }
+      return out;
+    }
+
+    final results = await Future.wait([perDay(Collections.dailySummaries), perDay(Collections.dailyServiceSummaries)]);
+    return HomeChartDays(firstDay: first, sales: results[0], services: results[1]);
+  }
 
   /// Signing out forgets what was read.
   void clear() => _cache.clear();

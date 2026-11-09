@@ -11,6 +11,8 @@ import '../providers/debt_provider.dart';
 import '../providers/payment_provider.dart';
 import '../providers/subscription_provider.dart';
 import '../providers/user_role_provider.dart';
+import '../services/home_chart_data.dart';
+import '../services/insights_data_loader.dart';
 
 /// Resets every provider that holds data tied to a specific signed-in
 /// user or facility - call this on logout AND on facility switch, before
@@ -33,4 +35,7 @@ void resetAllUserProviders(BuildContext context) {
   Provider.of<PaymentProvider>(context, listen: false).clear();
   Provider.of<SubscriptionProvider>(context, listen: false).clear();
   Provider.of<UserRoleProvider>(context, listen: false).clear();
+  // HUB2: the chart and Insights reads kept for the session.
+  HomeChartLoader.shared.clear();
+  InsightsDataLoader.shared.clear();
 }

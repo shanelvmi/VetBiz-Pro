@@ -11,7 +11,7 @@ import 'package:vetbiz_pro/services/insights_data_loader.dart';
 
 import 'helpers/counting_firestore.dart';
 
-const _skip = true;
+const _skip = false;
 
 final _now = DateTime(2026, 11, 10, 15, 30);
 final _today = DateTime(2026, 11, 10);
