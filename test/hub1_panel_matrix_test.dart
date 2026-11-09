@@ -13,8 +13,7 @@ import 'helpers/hub1_hub.dart';
 import 'helpers/real_font.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// HUB1: true until the panel lands (the next commits).
-const _skip = true;
+const _skip = false;
 
 const _sizes = [
   MatrixSize('360x740', Size(360, 740), phone: true),

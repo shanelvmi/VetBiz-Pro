@@ -15,8 +15,7 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'helpers/hub1_hub.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// HUB1: true until the panel lands (the next commits).
-const _skip = true;
+const _skip = false;
 
 Future<void> _pump(WidgetTester tester, Widget hub, {Size size = const Size(390, 844), MatrixLook look = MatrixLook.light}) =>
     pumpAtSize(tester, screen: hub, size: size, look: look);
