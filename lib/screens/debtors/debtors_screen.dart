@@ -1010,6 +1010,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             ? null
             : l10n.phoneList_debtorsSummaryLine(metrics?.totalDebtors ?? 0, Money.format(metrics?.totalOwed ?? 0)),
         onSummary: _showSummary,
+        summaryPending: metrics == null && _isMetricsLoading,
         banner: controller.newRecordsAvailable > 0 ? _buildNewRecordsBanner(controller) : null,
         items: [for (final c in controller.loadedItems) _DebtorRow(c, overdueDays)],
         idOf: (d) => d.clientId,

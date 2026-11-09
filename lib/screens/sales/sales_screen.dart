@@ -981,6 +981,7 @@ class _SalesScreenState extends State<SalesScreen> {
             ? null
             : l10n.phoneList_salesSummaryLine(f.count, l10n.services_last30, Money.format(f.total)),
         onSummary: _showSummary,
+        summaryPending: _rangeSummary == null && _isSummaryLoading,
         banner: controller.newRecordsAvailable > 0 ? _buildNewRecordsBanner(controller) : null,
         items: controller.loadedItems,
         idOf: (s) => s.id,

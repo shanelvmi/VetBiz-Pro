@@ -1310,6 +1310,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
       grouped: false,
       tileBuilder: (context, p, {required grouped}) => _storeTile(p),
       loading: !provider.loaded,
+      firstPageAnswered: provider.loaded || provider.listenError != null,
       error: provider.listenError,
       onRetry: provider.retryListening,
       emptyIcon: Icons.inventory_2,

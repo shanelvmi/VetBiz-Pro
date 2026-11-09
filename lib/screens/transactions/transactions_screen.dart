@@ -941,6 +941,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ? null
           : l10n.phoneList_transactionsSummaryLine(_rangeText, Money.format(_otherIncomeTotal), Money.format(_expensesTotal)),
       onSummary: () => _showSummary(transactions.length),
+      summaryPending: _isSummaryLoading,
       items: transactions,
       idOf: (tx) => tx.id,
       dateOf: (tx) => tx.date,

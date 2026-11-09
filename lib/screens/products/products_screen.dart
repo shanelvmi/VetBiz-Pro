@@ -1464,6 +1464,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       grouped: false,
       tileBuilder: (context, p, {required grouped}) => _productTile(p),
       loading: !provider.loaded,
+      firstPageAnswered: provider.loaded || provider.listenError != null,
       error: provider.listenError,
       onRetry: provider.retryListening,
       emptyIcon: Icons.shopping_bag,

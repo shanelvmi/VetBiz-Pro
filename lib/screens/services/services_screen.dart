@@ -925,6 +925,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             : l10n.phoneList_servicesSummaryLine((summary['count'] ?? 0).toInt(), l10n.services_last30,
                 Money.format((summary['paidAmount'] ?? 0) + (summary['outstanding'] ?? 0))),
         onSummary: _showSummary,
+        summaryPending: summary == null && _isSummaryLoading,
         banner: controller.newRecordsAvailable > 0 ? _buildNewRecordsBanner(controller) : null,
         items: controller.loadedItems,
         idOf: (s) => s.id,

@@ -768,6 +768,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
       grouped: false,
       tileBuilder: (context, a, {required grouped}) => _phoneTile(a, isAdmin),
       loading: !provider.loaded,
+      firstPageAnswered: provider.loaded || provider.listenError != null,
       error: provider.listenError,
       onRetry: provider.retryListening,
       emptyIcon: filtersOn ? Icons.search_off : Icons.notifications_none,
