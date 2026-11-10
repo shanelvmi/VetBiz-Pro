@@ -66,6 +66,9 @@ class ProductMovement {
 
   const ProductMovement(this.name, this.quantity);
 
+  /// The group of sale items saved without a name (Insights' key too).
+  static const String unknownName = 'Unknown';
+
   @override
   bool operator ==(Object other) => other is ProductMovement && other.name == name && other.quantity == quantity;
 
@@ -88,7 +91,7 @@ List<ProductMovement> topProductsByQuantity(List<Map<String, dynamic>> sales,
     if (when == null || when.isBefore(since)) continue;
     for (final item in sale['items'] as List<dynamic>? ?? const []) {
       if (item is! Map) continue;
-      final name = (item['name'] as String?) ?? 'Unknown';
+      final name = (item['name'] as String?) ?? ProductMovement.unknownName;
       quantities[name] = (quantities[name] ?? 0) + ((item['quantity'] as num?)?.toDouble() ?? 0);
     }
   }
