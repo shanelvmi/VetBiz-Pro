@@ -586,6 +586,62 @@ class HomeCardMetrics {
   static const double swipeVelocity = 300;
 }
 
+/// HUB2: Home's chart carousel (home_chart_carousel.dart). The region fills
+/// the free height between the strip (or the card) and the panel, [gap]
+/// below them, between [minHeight] and [maxHeight]; with less than
+/// [minHeight] free it is not drawn. Pages are surface cards ([radius],
+/// [padding]) inset [pageInset] on each side while swiping, the dots under them.
+class HomeChartMetrics {
+  HomeChartMetrics._();
+
+  static const double minHeight = 120;
+  static const double maxHeight = 280;
+  static const double gap = AppSpacing.s12;
+
+  static const double radius = AppRadius.r16;
+  static const double padding = AppSpacing.s12;
+  static const double pageInset = AppSpacing.s4;
+  static const double title = AppFontSize.f12;
+  static const double titleGap = AppSpacing.s8;
+
+  /// The dots: [dot] round, the shown page's [dotActive] long, [dotMargin] each side.
+  static const double dotsHeight = AppSpacing.s16;
+  static const double dot = 6;
+  static const double dotActive = AppSpacing.s16;
+  static const double dotMargin = AppSpacing.s2;
+
+  /// Axes: the guide labels at 12 in a reserved column, [guideCount] of them
+  /// (half and the top of a round scale, [niceSteps] times a power of ten).
+  static const double axisLabel = AppFontSize.f12;
+  static const double axisReserved = 36;
+  static const int guideCount = 2;
+  static const List<double> niceSteps = [1, 2, 2.5, 5, 10];
+
+  /// The current week's line, the previous week's dashed one, the area under.
+  static const double line = 2.5;
+  static const double previousLine = 1.5;
+  static const List<int> dash = [4, 4];
+  static const double areaAlpha = AppAlpha.a15;
+  static const double swatch = AppSpacing.s12;
+
+  /// Vet services bars: [barFill] of a day's width, at least [barMinWidth].
+  static const double barFill = 0.5;
+  static const double barMinWidth = AppSpacing.s4;
+  static const double barRadius = AppRadius.r4;
+
+  /// Product movement rows: name and bar side by side ([productNameFlex] to
+  /// [productBarFlex]), each row at least [productRow] high or one line of
+  /// text ([lineHeight] times its size), [productGap] apart; the shortest
+  /// bar still [productBarMin] of its room.
+  static const double productRow = AppSpacing.s16;
+  static const double lineHeight = 1.3;
+  static const double productGap = AppSpacing.s6;
+  static const double productBar = 6;
+  static const double productBarMin = 0.04;
+  static const int productNameFlex = 5;
+  static const int productBarFlex = 4;
+}
+
 /// HUB1: the action panel docked at the bottom of the phone Home (the hub
 /// that replaced the bottom bar, the "+" and the More page). Its tiles keep
 /// UI5's grid measures (PhoneHomeMetrics.grid*). Colours come from

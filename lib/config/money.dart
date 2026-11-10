@@ -70,6 +70,20 @@ class Money {
     return '${amount < 0 ? '-' : ''}${AppDefaults.currencySymbol} $digits';
   }
 
+  /// HUB2: a Home chart's guide label, short and without the currency (the
+  /// page's title says what it counts): "800", "50k", "2.5k", "1.2M"; a whole
+  /// value drops its decimal.
+  static String axis(num amount) {
+    final a = amount.abs();
+    String short(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
+    final digits = a >= 1000000
+        ? '${short(a / 1000000)}M'
+        : a >= 1000
+            ? '${short(a / 1000)}k'
+            : a.toStringAsFixed(0);
+    return '${amount < 0 ? '-' : ''}$digits';
+  }
+
   /// SAVED text: activity and transaction descriptions written to Firestore,
   /// for example "Recorded sale to Walk-in - Tsh 12,500". New entries read like
   /// the screens (R3, D4); old entries keep what they say ("Tsh 12500"), and
