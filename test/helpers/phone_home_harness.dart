@@ -5,10 +5,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/models/debt.dart';
 import 'package:vetbiz_pro/models/product.dart';
 import 'package:vetbiz_pro/screens/dashboard/needs_attention.dart';
+import 'package:vetbiz_pro/screens/dashboard/home_chart_carousel.dart';
 import 'package:vetbiz_pro/screens/dashboard/home_action_panel.dart';
 import 'package:vetbiz_pro/screens/dashboard/hub_destinations.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_hub.dart';
+import 'package:vetbiz_pro/services/home_chart_data.dart';
+import 'package:vetbiz_pro/services/insights_data_loader.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'screen_size_matrix.dart';
@@ -84,6 +87,7 @@ Widget phoneHomeHarness({
   VoidCallback? onAllDetails,
   bool amountsHidden = false,
   VoidCallback? onToggleAmounts,
+  Widget? charts,
 }) =>
     PhoneHub(
       appBar: AppBar(
@@ -114,6 +118,7 @@ Widget phoneHomeHarness({
               onAttention: () => onAttention?.call(context),
               amountsHidden: amountsHidden,
               onToggleAmounts: onToggleAmounts ?? () {},
+              charts: charts,
             );
         return gate == null ? home() : ScreenReveal(gate: gate, skeleton: home(skeleton: true), child: home());
       },
@@ -125,3 +130,27 @@ Future<void> pumpPhoneHome(WidgetTester tester, Widget screen, {Size size = cons
 /// Every text drawn.
 List<String> drawnTexts(WidgetTester tester) =>
     find.byType(RichText).evaluate().map((e) => (e.widget as RichText).text.toPlainText()).toList();
+
+/// HUB2: the chart carousel with fixed data (answered at once), as Home
+/// builds it, counting what it asks for.
+class HarnessCharts {
+  int days = 0, products = 0, opened = 0;
+
+  Widget build({bool hidden = false}) => HomeChartCarousel(
+        days: () {
+          days++;
+          final today = DateTime(ph4Now.year, ph4Now.month, ph4Now.day);
+          return Future.value(HomeChartDays(
+            firstDay: today.subtract(const Duration(days: 13)),
+            sales: [for (var i = 0; i < 14; i++) matrixBigAmount / (i + 1)],
+            services: [for (var i = 0; i < 14; i++) i.isEven ? matrixBigAmount / 10 : 0],
+          ));
+        },
+        products: () {
+          products++;
+          return Future.value(const [ProductMovement(matrixLongProductName, 12345678), ProductMovement('Dewormer', 8)]);
+        },
+        amountsHidden: hidden,
+        onOpen: () => opened++,
+      );
+}
