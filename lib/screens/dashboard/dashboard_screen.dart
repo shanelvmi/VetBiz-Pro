@@ -13,6 +13,8 @@ import '../../providers/debt_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/session_validity_service.dart';
 import '../../services/dashboard_summary_service.dart';
+import '../../services/home_chart_data.dart';
+import '../../services/insights_data_loader.dart';
 import '../../services/sales_summary_service.dart';
 import '../../services/notification_feed.dart';
 import '../../services/announcement_service.dart';
@@ -35,6 +37,8 @@ import 'subscription_banner.dart';
 import 'all_details_screen.dart';
 import 'needs_attention.dart';
 import 'phone_home.dart';
+import 'home_chart_carousel.dart';
+import 'insights_screen.dart' show showInsightsScreen;
 import '../../theme/app_icons.dart';
 import '../../theme/app_layout.dart';
 import '../products/stock_alerts_screen.dart';
@@ -632,6 +636,10 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   RevealGate get _phoneRevealGate => _phoneGate ??= RevealGate(primary: [
         ListenableRevealSource<bool>(_periodAnswered, (v) => v),
         SelectorRevealSource<DebtProvider>(Provider.of<DebtProvider>(context, listen: false), (p) => p.loaded),
+        // HUB2: the products too (held since activation, no new listener),
+        // so the strip is known before the reveal and the chart region
+        // under it does not move.
+        SelectorRevealSource<ProductProvider>(Provider.of<ProductProvider>(context, listen: false), (p) => p.loaded),
       ]);
 
   RevealGate get _wideRevealGate => _wideGate ??= RevealGate(primary: [
@@ -1644,6 +1652,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     onPeriodChanged: (val) => setState(() => selectedFilter = val),
                     attention: attention,
                     attentionReady: productProvider.loaded && debtProvider.loaded,
+                    charts: _homeCharts(homeContext, uiSettings.homeAmountsHidden),
                     onAllDetails: _openAllDetails,
                     onAttention: () => showAttentionSheet(
                       homeContext,
@@ -1870,6 +1879,27 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       },
     ));
     _returnToHome();
+  }
+
+  /// HUB2 (3): Home's chart carousel. It reads nothing of its own: the 14
+  /// days come from the shared loader (one range get of each daily summary,
+  /// kept for the session), the products from Insights' shared sales read,
+  /// asked only when that page is shown; today is the live period totals
+  /// while the period is Today.
+  Widget? _homeCharts(BuildContext homeContext, bool amountsHidden) {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    if (facilityId == null) return null;
+    final live = selectedFilter == dashboardPeriods.first && !_isPeriodLoading;
+    return HomeChartCarousel(
+      key: ValueKey('home-charts-$facilityId'),
+      days: () => HomeChartLoader.shared.days(facilityId),
+      products: () => InsightsDataLoader.shared.sales(facilityId).then((sales) => topProductsByQuantity(sales,
+          since: _today().subtract(AppRanges.day * (HomeChartDays.week - 1)))),
+      todaySales: live ? _periodTotals.totalSales : null,
+      todayServices: live ? _periodTotals.totalServiceRevenue : null,
+      amountsHidden: amountsHidden,
+      onOpen: () => showInsightsScreen(homeContext),
+    );
   }
 
   /// All details: the chart and Recent Activity load now, not on Home.
