@@ -10,6 +10,7 @@ import '../../widgets/profile/profile_avatar.dart';
 import '../../widgets/reveal/reveal.dart';
 import 'dashboard_figures.dart';
 import 'needs_attention.dart';
+import 'home_fill_layout.dart';
 import 'phone_hub.dart';
 import 'today_card.dart';
 
@@ -119,6 +120,10 @@ class PhoneHome extends StatelessWidget {
   /// until then its slot keeps the strip's place.
   final bool attentionReady;
 
+  /// HUB2: the chart carousel under the card and the strip (null: none).
+  /// In the skeleton its region is a soft box of the same height.
+  final Widget? charts;
+
   /// NAV1: the Today card's amounts are masked, and its eye (null: none).
   final bool amountsHidden;
   final VoidCallback? onToggleAmounts;
@@ -140,6 +145,7 @@ class PhoneHome extends StatelessWidget {
     this.overlay,
     this.skeleton = false,
     this.attentionReady = true,
+    this.charts,
     this.amountsHidden = false,
     this.onToggleAmounts,
     this.mode = HomeCardMode.sales,
@@ -193,19 +199,52 @@ class PhoneHome extends StatelessWidget {
       mode: mode,
       onModeChanged: onModeChanged,
     );
-    final list = ListView(
-      key: const ValueKey('phone-home-list'),
-      // HUB1: the end of the page clears the folded action panel.
-      padding: EdgeInsets.fromLTRB(
-        PhoneHomeMetrics.pagePadding,
-        PhoneHomeMetrics.pagePadding,
-        PhoneHomeMetrics.pagePadding,
-        PhoneHomeMetrics.pagePadding + HomePanelInsets.bottomOf(context),
-      ),
+    // HUB1: the end of the page clears the folded action panel.
+    final bottom = PhoneHomeMetrics.pagePadding + HomePanelInsets.bottomOf(context);
+    final top = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (skeleton) SkeletonOf(radius: PhoneHomeMetrics.cardRadius, child: card) else card,
         _attentionSlot(context),
       ],
+    );
+    final list = LayoutBuilder(
+      builder: (context, constraints) => ListView(
+        key: const ValueKey('phone-home-list'),
+        padding: EdgeInsets.fromLTRB(
+          PhoneHomeMetrics.pagePadding,
+          PhoneHomeMetrics.pagePadding,
+          PhoneHomeMetrics.pagePadding,
+          bottom,
+        ),
+        children: [
+          if (charts == null)
+            top
+          else
+            // HUB2: the chart region takes the room left down to the panel
+            // (none when it would be under its minimum), decided before
+            // any data, so the skeleton and the content match.
+            HomeFillLayout(
+              key: const ValueKey('phone-home-fill'),
+              viewportHeight: constraints.hasBoundedHeight
+                  ? constraints.maxHeight - PhoneHomeMetrics.pagePadding - bottom
+                  : 0,
+              minHeight: HomeChartMetrics.minHeight,
+              maxHeight: HomeChartMetrics.maxHeight,
+              gap: HomeChartMetrics.gap,
+              top: top,
+              fill: LayoutBuilder(
+                key: const ValueKey('phone-home-charts'),
+                builder: (context, box) => box.maxHeight < HomeChartMetrics.minHeight
+                    ? const SizedBox.shrink()
+                    : skeleton
+                        ? const SkeletonBox(radius: HomeChartMetrics.radius)
+                        : charts!,
+              ),
+            ),
+        ],
+      ),
     );
     return ColoredBox(
       color: context.colors.background,

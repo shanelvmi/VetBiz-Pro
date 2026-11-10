@@ -595,7 +595,8 @@ class HomeChartMetrics {
   HomeChartMetrics._();
 
   static const double minHeight = 120;
-  static const double maxHeight = 280;
+  /// 340, not the brief's "about 280": 412x915 has 326 free under the strip.
+  static const double maxHeight = 340;
   static const double gap = AppSpacing.s12;
 
   static const double radius = AppRadius.r16;
