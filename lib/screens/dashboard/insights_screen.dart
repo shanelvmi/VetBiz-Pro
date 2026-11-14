@@ -7,6 +7,7 @@ import '../../providers/facility_provider.dart';
 import '../../providers/debt_provider.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../services/insights_data_loader.dart';
+import '../../services/service_breakdown.dart';
 import '../../widgets/summary_card.dart' show KpiTrend;
 import '../../data/collections.dart';
 import '../../config/money.dart';
@@ -130,22 +131,12 @@ class _InsightsScreenState extends State<InsightsScreen> {
         }
       }
 
-      final serviceRevenue = <String, double>{};
-      for (final data in servicesDocs) {
-        final name = (data['name'] as String?);
-        final key = (name == null || name.isEmpty) ? 'Other' : name;
-        final totalAmount = (data['totalAmount'] as num?)?.toDouble() ?? 0.0;
-        serviceRevenue[key] = (serviceRevenue[key] ?? 0) + totalAmount;
-      }
-
-      final sortedServicesFull = serviceRevenue.entries.toList()
-        ..sort((a, b) => b.value.compareTo(a.value));
-      final topServices = sortedServicesFull.take(5).toList();
-      final remainingServicesTotal =
-          sortedServicesFull.skip(5).fold<double>(0.0, (total, e) => total + e.value);
+      // HUB4: the one breakdown Home's Visit activity donut shares (top 5
+      // by revenue, then the rest as "Other"); the donut here draws revenue
+      // and, as before, leaves out a rest that earned nothing.
       final serviceBreakdown = [
-        ...topServices,
-        if (remainingServicesTotal > 0) MapEntry('Other', remainingServicesTotal),
+        for (final s in serviceBreakdownOf(servicesDocs))
+          if (!s.tail || s.revenue > 0) MapEntry(s.key, s.revenue),
       ];
 
       final sortedProducts = productRevenue.entries.toList()

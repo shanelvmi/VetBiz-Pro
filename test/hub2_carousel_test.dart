@@ -168,7 +168,7 @@ void main() {
     expect(Money.axis(10000000), '10M');
     expect(homeChartNiceMax(70000), 100000);
     expect(homeChartNiceMax(140000), 200000);
-    expect(homeChartNiceMax(22000), 25000);
+    expect(homeChartNiceMax(22000), 50000, reason: "HUB4: 1, 2 or 5 times a power of ten");
     expect(homeChartNiceMax(0), 1);
   }, skip: _skip);
 

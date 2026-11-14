@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/app_defaults.dart';
 import '../data/home_card_mode.dart';
+import '../data/home_chart_range.dart';
 import '../data/ui_theme_mode.dart';
 import '../l10n/l10n.dart';
 import '../theme/app_palette.dart';
@@ -21,6 +22,7 @@ class UiSettingsProvider with ChangeNotifier {
   static const String _themeModeKey = 'ui_theme_mode';
   static const String _homeAmountsHiddenKey = 'ui_home_amounts_hidden';
   static const String _homeCardModeKey = 'ui_home_card_mode';
+  static const String _homeChartRangeKey = 'ui_home_chart_range';
 
   bool _layoutFixed = false;
   String _colorThemeId = AppColorTheme.defaultId;
@@ -28,6 +30,7 @@ class UiSettingsProvider with ChangeNotifier {
   UiThemeMode _themeMode = UiThemeMode.defaultMode;
   bool _homeAmountsHidden = false;
   HomeCardMode _homeCardMode = HomeCardMode.defaultMode;
+  HomeChartRange _homeChartRange = HomeChartRange.defaultRange;
   bool _loaded = false;
 
   UiSettingsProvider() {
@@ -63,6 +66,10 @@ class UiSettingsProvider with ChangeNotifier {
   /// default, remembered on this device only.
   HomeCardMode get homeCardMode => _homeCardMode;
 
+  /// HUB4: the span of Home's chart pages (7d or 30d); 7d by default,
+  /// remembered on this device only.
+  HomeChartRange get homeChartRange => _homeChartRange;
+
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -86,6 +93,7 @@ class UiSettingsProvider with ChangeNotifier {
       _themeMode = UiThemeMode.fromKey(prefs.getString(_themeModeKey));
       _homeAmountsHidden = prefs.getBool(_homeAmountsHiddenKey) ?? false;
       _homeCardMode = HomeCardMode.fromKey(prefs.getString(_homeCardModeKey));
+      _homeChartRange = HomeChartRange.fromKey(prefs.getString(_homeChartRangeKey));
     } catch (e) {
       // Settings are a convenience: if they can't be read, the defaults stand.
       debugPrint('[UI SETTINGS] could not read saved settings: $e');
@@ -127,6 +135,18 @@ class UiSettingsProvider with ChangeNotifier {
       await prefs.setString(_homeCardModeKey, value.key);
     } catch (e) {
       debugPrint('[UI SETTINGS] could not save the Home card choice: $e');
+    }
+  }
+
+  Future<void> setHomeChartRange(HomeChartRange value) async {
+    if (_homeChartRange == value) return;
+    _homeChartRange = value;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_homeChartRangeKey, value.key);
+    } catch (e) {
+      debugPrint('[UI SETTINGS] could not save the Home chart range: $e');
     }
   }
 

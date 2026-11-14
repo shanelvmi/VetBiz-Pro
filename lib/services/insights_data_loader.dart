@@ -21,19 +21,26 @@ class InsightsDataLoader {
 
   FirebaseFirestore get _db => _injected ?? FirebaseFirestore.instance;
 
-  /// The first day of the window for [now] (Insights' trend start).
-  static DateTime windowStart({DateTime? now}) {
+  /// The first day of the window for [now] (Insights' trend start). HUB4:
+  /// with [days], the window of that many days, today last (Home's 30d).
+  static DateTime windowStart({DateTime? now, int? days}) {
     final at = now ?? AppClock.now();
-    return DateTime(at.year, at.month, at.day).subtract(AppRanges.insightsTrendBack);
+    final back = days == null ? AppRanges.insightsTrendBack : AppRanges.day * (days - 1);
+    return DateTime(at.year, at.month, at.day).subtract(back);
   }
 
-  /// The window's sales (the documents' data), by `timestamp`.
-  Future<List<Map<String, dynamic>>> sales(String facilityId, {DateTime? now}) =>
-      _load(facilityId, Collections.sales, 'timestamp', windowStart(now: now));
+  /// The window's sales (the documents' data), by `timestamp`. HUB4: [days]
+  /// longer than Insights' window is its own read (Home's 30d), kept the
+  /// same way.
+  Future<List<Map<String, dynamic>>> sales(String facilityId, {DateTime? now, int? days}) =>
+      _load(facilityId, Collections.sales, 'timestamp', windowStart(now: now, days: _longer(days)));
 
   /// The window's services (the documents' data), by `serviceDate`.
-  Future<List<Map<String, dynamic>>> services(String facilityId, {DateTime? now}) =>
-      _load(facilityId, Collections.services, 'serviceDate', windowStart(now: now));
+  Future<List<Map<String, dynamic>>> services(String facilityId, {DateTime? now, int? days}) =>
+      _load(facilityId, Collections.services, 'serviceDate', windowStart(now: now, days: _longer(days)));
+
+  /// Insights' own window covers any shorter span (Home's 7d reads it).
+  static int? _longer(int? days) => days != null && days > AppRanges.insightsTrendBack.inDays + 1 ? days : null;
 
   Future<List<Map<String, dynamic>>> _load(String facilityId, String collection, String field, DateTime start) {
     final key = '$facilityId|$collection|${start.toIso8601String()}';

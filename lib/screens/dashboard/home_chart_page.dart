@@ -105,7 +105,7 @@ class HomeChartEmpty extends StatelessWidget {
   );
 }
 
-/// The top of a chart's scale: the next "nice" value (1, 2, 2.5 or 5 times a
+/// The top of a chart's scale: the next "nice" value (1, 2 or 5 times a
 /// power of ten) at or above [max], so the two guide labels are round.
 double homeChartNiceMax(double max) {
   if (max <= 0) return 1;

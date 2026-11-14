@@ -639,7 +639,7 @@ class HomeChartMetrics {
   static const double axisLabel = AppFontSize.f12;
   static const double axisReserved = 36;
   static const int guideCount = 2;
-  static const List<double> niceSteps = [1, 2, 2.5, 5, 10];
+  static const List<double> niceSteps = [1, 2, 5, 10];
 
   /// The current week's line, the previous week's dashed one, the area under.
   static const double line = 2.5;
