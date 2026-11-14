@@ -2045,6 +2045,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         await openProductPhoneDetails(homeContext, p);
         _returnToHome();
       },
+      // HUB4b: the header's link, the panel's Insights tile's way.
+      onInsights: () => runHubTile(homeContext, HubTile.insights, onDone: _returnToHome),
     );
   }
 

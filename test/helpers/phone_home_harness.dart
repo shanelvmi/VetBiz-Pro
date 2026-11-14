@@ -151,9 +151,9 @@ List<String> drawnTexts(WidgetTester tester) =>
 
 /// HUB2, HUB4: the chart carousel with fixed data (answered at once), as
 /// Home builds it, counting what it asks for. [opened] counts the products
-/// opened from Product movement.
+/// opened from Product movement; [insights] the header link's taps (HUB4b).
 class HarnessCharts {
-  int days = 0, products = 0, visits = 0, opened = 0;
+  int days = 0, products = 0, visits = 0, opened = 0, insights = 0;
 
   Widget build({bool hidden = false, HomeChartRange range = HomeChartRange.week}) => HomeChartCarousel(
         days: (r) {
@@ -189,5 +189,6 @@ class HarnessCharts {
         onRangeChanged: (_) {},
         amountsHidden: hidden,
         onOpenProduct: (_) => opened++,
+        onInsights: () => insights++,
       );
 }

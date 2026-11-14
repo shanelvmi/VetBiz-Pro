@@ -58,6 +58,10 @@ class HomeChartCarousel extends StatefulWidget {
   final VoidCallback? onAddProduct;
   final ValueChanged<Product> onOpenProduct;
 
+  /// HUB4b: the header's "Insights" link (a page tap no longer opens it);
+  /// null: no link.
+  final VoidCallback? onInsights;
+
   const HomeChartCarousel({
     super.key,
     required this.days,
@@ -74,6 +78,7 @@ class HomeChartCarousel extends StatefulWidget {
     this.onRecordSale,
     this.onRecordVisit,
     this.onAddProduct,
+    this.onInsights,
   });
 
   /// The pages, in order.
@@ -136,6 +141,13 @@ class _HomeChartCarouselState extends State<HomeChartCarousel> {
     final mode = HomeChartCarousel.modeOf(i);
     if (mode != widget.mode) widget.onModeChanged?.call(mode);
   }
+
+  // Where the dots end: the inset, then each dot (the active one wider)
+  // with its margins.
+  static const double _dotsEnd = HomeChartMetrics.pageInset +
+      (HomeChartCarousel.pageCount - 1) * HomeChartMetrics.dot +
+      HomeChartMetrics.dotActive +
+      HomeChartCarousel.pageCount * 2 * HomeChartMetrics.dotMargin;
 
   @override
   void dispose() {
@@ -234,8 +246,22 @@ class _HomeChartCarouselState extends State<HomeChartCarousel> {
         Positioned.fill(child: pages),
         Positioned(
           top: (HomeChartMetrics.header - HomeChartMetrics.rangeHeight) / 2,
+          // HUB4b: from the end of the dots, so the Insights link only takes the
+          // room left and shortens its text first (the empty part lets taps
+          // through to the pages).
+          left: _dotsEnd + HomeChartMetrics.insightsGap,
           right: HomeChartMetrics.pageInset,
-          child: _RangeSwitch(range: widget.range, onChanged: widget.onRangeChanged),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (widget.onInsights != null) ...[
+                Flexible(child: _InsightsLink(onTap: widget.onInsights!)),
+                const SizedBox(width: HomeChartMetrics.insightsGap),
+              ],
+              _RangeSwitch(range: widget.range, onChanged: widget.onRangeChanged),
+            ],
+          ),
         ),
       ],
     );
@@ -306,6 +332,59 @@ class _RangeSwitch extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// HUB4b: the header's small "Insights" link with a chevron, beside the
+/// switch: drawn [HomeChartMetrics.rangeHeight] high in a 48 px touch area,
+/// at least 48 wide; on a narrow header its text shortens, the chevron
+/// stays. It opens the Insights screen (the panel tile's way).
+class _InsightsLink extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _InsightsLink({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Semantics(
+      button: true,
+      label: context.l10n.insights_title,
+      excludeSemantics: true,
+      child: GestureDetector(
+        key: const ValueKey('home-chart-insights'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: HomeChartMetrics.target, minHeight: HomeChartMetrics.target),
+          child: Align(
+            alignment: Alignment.topCenter,
+            widthFactor: 1,
+            child: SizedBox(
+              height: HomeChartMetrics.rangeHeight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      context.l10n.insights_title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: HomeChartMetrics.axisLabel,
+                        fontWeight: AppFontWeight.semibold,
+                        color: colors.primary,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, size: HomeChartMetrics.insightsChevron, color: colors.primary),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

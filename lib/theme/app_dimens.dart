@@ -688,6 +688,11 @@ class HomeChartMetrics {
   static const double rangeSegment = 48;
   static const double target = 48;
   static const double bodyMin = AppSpacing.s32;
+  /// HUB4b: the Insights link left of the switch: its gap to the switch and
+  /// its chevron (the text is [axisLabel], drawn [rangeHeight] high in a
+  /// [target] touch area).
+  static const double insightsGap = AppSpacing.s4;
+  static const double insightsChevron = AppIconSize.i16;
   static const double donutTextMin = 64;
   static const double donutStart = -90;
   static const double donutShare = 0.45;
