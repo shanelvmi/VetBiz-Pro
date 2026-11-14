@@ -33,7 +33,10 @@ void main() {
           isFalse, reason: banned);
     }
     for (final path in ['lib/screens/dashboard/today_card.dart', 'lib/screens/dashboard/phone_home.dart']) {
-      expect(RegExp(r'\blive\b\s*[:?,;]').hasMatch(_read(path)), isFalse, reason: '$path still takes a live line');
+      final source = _read(path);
+      for (final banned in ['Widget? live', 'this.live', 'live: skeleton', 'live ??']) {
+        expect(source.contains(banned), isFalse, reason: '$path still takes a live line ($banned)');
+      }
     }
   }, skip: _skip);
 

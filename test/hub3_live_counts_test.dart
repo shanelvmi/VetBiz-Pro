@@ -1,19 +1,13 @@
-// HUB3 (2) DATA: the live line costs one small listener, and it is the one
-// the dashboard already had: Recent Activity's stream (the last 5 entries,
-// newest first, recentActivityStream), shared, so All details' feed costs
-// nothing more afterwards. An admin's is one listener; an assistant's is the
-// pair today's rules require (entries they did, entries about them: each
-// query must filter on one of those), merged, so the line only ever shows
-// what the role already sees. Cancelling the line (a facility switch, a
-// sign-out) closes it. No new Firestore rule: the queries are the ones the
-// feed has always made.
+// HUB3 (2) DATA, after UI6: the live line is gone, so phone Home no longer
+// listens to Recent Activity's stream (ui6_costs_test). The stream itself
+// stays as HUB3 left it for the feeds that use it (the wide dashboard's,
+// All details'): the last 5 entries, newest first, shared. An admin's is one
+// listener; an assistant's is the pair today's rules require (entries they
+// did, entries about them: each query must filter on one of those), merged,
+// so a feed only ever shows what the role already sees. Cancelling closes it.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/collections.dart';
-import 'package:vetbiz_pro/providers/debt_provider.dart';
 import 'package:vetbiz_pro/screens/dashboard/dashboard_panels.dart';
-import 'package:vetbiz_pro/screens/dashboard/home_live_event.dart';
-import 'package:vetbiz_pro/services/dashboard_summary_service.dart';
-import 'package:vetbiz_pro/services/home_chart_data.dart';
 
 import 'helpers/counting_firestore.dart';
 import 'helpers/test_clock.dart';
@@ -39,16 +33,16 @@ Future<CountingFirestore> _seed() async {
 }
 
 void main() {
-  test('admin: one listener of 5 entries, newest first; the line shows the newest', () async {
+  test('admin: one listener of 5 entries, newest first; shared by a second feed', () async {
     final db = await _seed();
     final stream = recentActivityStream(db, 'f1', isAdmin: true, uid: 'admin');
-    final seen = <HomeLiveEvent?>[];
-    final sub = homeLiveEvents(stream).listen(seen.add);
+    final seen = <List<String>>[];
+    final sub = stream.listen((docs) => seen.add([for (final d in docs) d.id]));
     await _settle();
     expect(db.listeners, 1);
     expect(db.reads, 5, reason: 'limit 5');
-    expect(seen.last!.client, 'Client 7');
-    // All details' feed listens to the same shared stream: nothing more.
+    expect(seen.last.first, 'e7', reason: 'newest first');
+    // A second feed (All details) listens to the same shared stream.
     final feed = stream.listen((_) {});
     await _settle();
     expect(db.listeners, 1);
@@ -62,60 +56,17 @@ void main() {
   test('assistant: only what they did or what is about them (the rules\' pair, merged)', () async {
     final db = await _seed();
     final stream = recentActivityStream(db, 'f1', isAdmin: false, uid: 'asst');
-    final seen = <HomeLiveEvent?>[];
-    final sub = homeLiveEvents(stream).listen(seen.add);
+    final seen = <List<String>>[];
+    final sub = stream.listen((docs) => seen.add([for (final d in docs) d.id]));
     await _settle();
     expect(db.listeners, 2);
-    expect(seen.last!.client, 'Client 7', reason: 'entry 7 is the assistant\'s');
+    expect(seen.last, ['e7', 'e5', 'e3', 'e1'], reason: 'the assistant\'s entries only');
     await sub.cancel();
     final other = recentActivityStream(db, 'f1', isAdmin: false, uid: 'nobody');
-    final none = <HomeLiveEvent?>[];
-    final sub2 = homeLiveEvents(other).listen(none.add);
+    final none = <List<String>>[];
+    final sub2 = other.listen((docs) => none.add([for (final d in docs) d.id]));
     await _settle();
-    expect(none, [null], reason: 'no entry of theirs: the empty line, never someone else\'s');
+    expect(none, [<String>[]], reason: 'no entry of theirs: nothing, never someone else\'s');
     await sub2.cancel();
-  }, skip: _skip);
-
-  test('the offline signal comes from the same listener (its snapshots\' metadata)', () async {
-    final db = await _seed();
-    final online = <bool>[];
-    final stream = recentActivityStream(db, 'f1', isAdmin: true, uid: 'admin', onFromCache: (c) => online.add(!c));
-    final sub = stream.listen((_) {});
-    await _settle();
-    expect(db.listeners, 1, reason: 'no second listener for the signal');
-    expect(online.last, isTrue);
-    await sub.cancel();
-  }, skip: _skip);
-
-  test('phone Home cold open and return, before and after HUB3', () async {
-    final db = await _seed();
-    final f = db.inner.collection(Collections.facilities).doc('f1');
-    await f.collection(Collections.debts).add({'clientId': 'c1', 'amountOwed': 500.0, 'timestamp': testNow});
-    db.resetCounts();
-    final debts = DebtProvider(firestore: db)..listenToDebts('f1');
-    final totals = DashboardSummaryService(firestore: db)
-        .watchDashboardTotals(facilityId: 'f1', start: testToday, end: testNow)
-        .listen((_) {});
-    await HomeChartLoader(firestore: db).days('f1', now: testNow);
-    await _settle();
-    final before = (listeners: db.listeners, gets: db.gets, reads: db.reads);
-    expect(before.listeners, 5, reason: 'HUB2: 4 period totals and the debts');
-
-    final stream = recentActivityStream(db, 'f1', isAdmin: true, uid: 'admin');
-    final line = homeLiveEvents(stream).listen((_) {});
-    await _settle();
-    expect(db.listeners, before.listeners + 1);
-    expect(db.gets, before.gets);
-    expect(db.reads - before.reads, 5);
-    final cold = (listeners: db.listeners, reads: db.reads);
-    // A return to Home: the same stream, held.
-    await _settle();
-    expect((db.listeners, db.reads), (cold.listeners, cold.reads));
-    // ignore: avoid_print
-    print('HUB3 phone Home: listeners ${before.listeners} -> ${cold.listeners} (admin; assistant +2, the rules\' pair); '
-        'cold open reads +${cold.reads - before.reads}, gets +0; return to Home +0; All details\' feed +0 (shared)');
-    await line.cancel();
-    await totals.cancel();
-    debts.clear();
   }, skip: _skip);
 }

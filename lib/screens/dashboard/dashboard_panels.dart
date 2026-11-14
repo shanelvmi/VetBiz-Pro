@@ -31,29 +31,23 @@ import 'insights_screen.dart';
 /// query between listeners (a broadcast that replays nothing), the fake
 /// Firestore does not. The app uses Query.snapshots.
 ///
-/// HUB3 (2): the phone Home's live line shares this stream (its newest
-/// entry); [onFromCache] hears, from the same listener's metadata, whether
-/// the answer came from the device's cache (no connection: "Offline").
+/// UI6: phone Home no longer listens to it (HUB3's live line is gone); the
+/// wide dashboard's feed and All details' feed do.
 Stream<List<LogDoc>> recentActivityStream(FirebaseFirestore firestore, String facilityId,
     {required bool isAdmin,
     required String uid,
-    void Function(bool fromCache)? onFromCache,
     @visibleForTesting Stream<QuerySnapshot<Map<String, dynamic>>> Function(Query<Map<String, dynamic>>)? snapshotsOf}) {
   final logs = firestore.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
   if (isAdmin) {
     final query = logs.orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount);
     // Shared, so a feed rebuilt elsewhere after a resize gets the entries at
     // once (DASH-1).
-    return shareLatest(
-        () => (snapshotsOf ?? (q) => q.snapshots(includeMetadataChanges: onFromCache != null))(query).map((s) {
-              onFromCache?.call(s.metadata.isFromCache);
-              return s.docs;
-            }));
+    return shareLatest(() => (snapshotsOf ?? (q) => q.snapshots())(query).map((s) => s.docs));
   }
   return mergedLogStream([
     logs.where(Fields.userId, isEqualTo: uid).orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount),
     logs.where('targetUserId', isEqualTo: uid).orderBy('timestamp', descending: true).limit(AppLimits.recentActivityCount),
-  ], limit: AppLimits.recentActivityCount, onFromCache: onFromCache);
+  ], limit: AppLimits.recentActivityCount);
 }
 
 /// What sits under the summary cards: the Today at a Glance strip, the sales
