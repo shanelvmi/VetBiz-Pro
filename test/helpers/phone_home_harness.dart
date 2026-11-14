@@ -14,6 +14,7 @@ import 'package:vetbiz_pro/services/home_chart_data.dart';
 import 'package:vetbiz_pro/data/home_chart_range.dart';
 import 'package:vetbiz_pro/services/home_movement.dart';
 import 'package:vetbiz_pro/services/service_breakdown.dart';
+import 'package:vetbiz_pro/screens/dashboard/home_setup.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'screen_size_matrix.dart';
@@ -94,6 +95,10 @@ Widget phoneHomeHarness({
   bool amountsHidden = false,
   VoidCallback? onToggleAmounts,
   Widget? charts,
+  List<HomeSetupItem> setup = const [],
+  bool setupReady = true,
+  ValueChanged<HomeSetupStep>? onSetupStep,
+  VoidCallback? onSetupHide,
 }) =>
     PhoneHub(
       reveal: gate,
@@ -128,6 +133,10 @@ Widget phoneHomeHarness({
               charts: charts,
               live: live,
               delta: delta,
+              setup: setup,
+              setupReady: setupReady,
+              onSetupStep: onSetupStep,
+              onSetupHide: onSetupHide,
             );
         return gate == null ? home() : ScreenReveal(gate: gate, skeleton: home(skeleton: true), child: home());
       },

@@ -41,6 +41,8 @@ import 'all_details_screen.dart';
 import 'needs_attention.dart';
 import 'phone_home.dart';
 import 'profile_actions.dart';
+import 'home_setup.dart';
+import '../../data/home_setup_state.dart';
 import '../../models/facility_entry.dart';
 import '../../utils/facility_activation.dart';
 import '../../widgets/profile/profile_page.dart';
@@ -664,6 +666,39 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     HomeChartLoader.shared.days(facilityId).then((days) {
       if (mounted && _homeDaysKey == key) setState(() => _homeDays = days);
     }, onError: (Object _) {});
+  }
+
+  /// HUB4b: Home's first-time checklist from what Home already holds: the
+  /// products and clients (live since activation), and the sales in the
+  /// period totals and the 14 days above (a stand-in for "no sale ever": no
+  /// all-time count is held, and none is read). Ready once all of them and
+  /// the device's saved state have answered; only then is a new state saved.
+  ({List<HomeSetupItem> items, bool ready}) _homeSetup(
+    String? facilityId,
+    UiSettingsProvider ui, {
+    required List<AttentionItem> attention,
+    required bool isAdmin,
+    required ProductProvider products,
+    required ClientProvider clients,
+  }) {
+    final days = _homeDays;
+    final anySale = (!_isPeriodLoading && _periodTotals.totalSales > 0) || (days?.sales.any((v) => v > 0) ?? false);
+    final bool? hasSales = anySale ? true : (_isPeriodLoading || days == null ? null : false);
+    final bool? hasProducts = products.loaded ? products.products.isNotEmpty : null;
+    final bool? hasClients = clients.hasLoaded ? clients.clients.isNotEmpty : null;
+    final ready = facilityId != null && ui.loaded && hasSales != null && hasProducts != null && hasClients != null;
+    if (!ready) return (items: const <HomeSetupItem>[], ready: false);
+    final decision = homeSetupFor(
+      saved: ui.homeSetupState(facilityId),
+      isAdmin: isAdmin,
+      hasProducts: hasProducts,
+      hasClients: hasClients,
+      hasSales: hasSales,
+      attentionShown: attention.isNotEmpty,
+    );
+    final save = decision.save;
+    if (save != null) ui.setHomeSetupState(facilityId, save);
+    return (items: decision.items, ready: true);
   }
 
   HomeDelta? _homeDelta(HomeCardMode mode) {
@@ -1690,6 +1725,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               );
               final facilityId = facilityProvider.selectedFacilityId;
               if (facilityId != null) _watchHomeDays(facilityId);
+              // HUB4b: the first-time checklist, from held data only (no read).
+              final setup = _homeSetup(facilityId, uiSettings, attention: attention, isAdmin: isAdmin,
+                  products: productProvider, clients: clientProvider);
               // HUB3 (2): the latest activity, from Recent Activity's stream
               // (scoped by role as the feed is; both roles see sales and
               // collections on Home, so the amounts show for both).
@@ -1733,6 +1771,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                       items: attention,
                       onOpen: (item) => _openAttention(homeContext, item),
                     ),
+                    setup: setup.items,
+                    setupReady: setup.ready,
+                    // Through the panel tile's guard and form.
+                    onSetupStep: (step) => runHubTile(homeContext, step.tile, onDone: _returnToHome),
+                    onSetupHide: facilityId == null
+                        ? null
+                        : () => uiSettings.setHomeSetupState(facilityId, HomeSetupState.hidden, notify: true),
                   );
               return ScreenReveal(gate: _phoneRevealGate, skeleton: home(skeleton: true), child: home(skeleton: false));
             },

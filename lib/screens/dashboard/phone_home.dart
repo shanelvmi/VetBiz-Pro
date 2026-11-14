@@ -10,6 +10,8 @@ import '../../widgets/profile/profile_avatar.dart';
 import '../../widgets/reveal/reveal.dart';
 import 'dashboard_figures.dart';
 import 'needs_attention.dart';
+import 'home_setup.dart';
+import 'home_setup_card.dart';
 import 'home_fill_layout.dart';
 import 'phone_hub.dart';
 import 'today_card.dart';
@@ -137,6 +139,16 @@ class PhoneHome extends StatelessWidget {
   final Widget? live;
   final HomeDelta? delta;
 
+  /// HUB4b: the first-time checklist's rows (homeSetupFor), shown in the
+  /// strip's place only when no strip shows; empty: no card.
+  final List<HomeSetupItem> setup;
+
+  /// HUB4b: whether the checklist's held data has answered; until then the
+  /// slot keeps the strip's place (unless the strip already shows).
+  final bool setupReady;
+  final ValueChanged<HomeSetupStep>? onSetupStep;
+  final VoidCallback? onSetupHide;
+
   const PhoneHome({
     super.key,
     required this.figures,
@@ -157,30 +169,51 @@ class PhoneHome extends StatelessWidget {
     this.onModeChanged,
     this.live,
     this.delta,
+    this.setup = const [],
+    this.setupReady = true,
+    this.onSetupStep,
+    this.onSetupHide,
   });
 
   /// The strip's slot: while its data has not answered, a reserved place of
   /// the strip's height (a soft box in the skeleton, a LateSlot in the
   /// content); then the strip, or nothing. A strip that comes or goes later
   /// (the data changed) animates its height once; at once under reduced
-  /// motion.
+  /// motion. HUB4b: the setup card takes the same slot when no strip shows
+  /// (the strip wins); the slot waits for its data too, unless a strip shows.
   Widget _attentionSlot(BuildContext context) {
     const gap = SizedBox(height: PhoneHomeMetrics.stripGap);
+    final strip = attention.isNotEmpty;
+    final card = !strip && setup.isNotEmpty;
+    final ready = attentionReady && (strip || setupReady);
+    final compact = MediaQuery.sizeOf(context).height < PhoneHomeMetrics.setupFullMinScreenHeight;
+    Widget setupCard({required bool live}) => HomeSetupCard(
+          items: setup,
+          onStep: live ? (onSetupStep ?? (_) {}) : (_) {},
+          onHide: live ? (onSetupHide ?? () {}) : () {},
+          compact: compact,
+        );
     Widget? slot;
     if (skeleton) {
-      if (!attentionReady) {
+      if (!ready) {
         slot = const SkeletonBox(height: PhoneHomeMetrics.attentionStripHeight);
-      } else if (attention.isNotEmpty) {
+      } else if (strip) {
         slot = SkeletonOf(
           radius: PhoneHomeMetrics.cardRadius,
           child: AttentionStrip(items: attention, onTap: () {}),
         );
+      } else if (card) {
+        slot = SkeletonOf(radius: PhoneHomeMetrics.cardRadius, child: setupCard(live: false));
       }
-    } else if (!attentionReady || attention.isNotEmpty) {
+    } else if (!ready || strip || card) {
       slot = LateSlot(
-        height: attentionReady ? null : PhoneHomeMetrics.attentionStripHeight,
-        ready: attentionReady,
-        child: attention.isEmpty ? const SizedBox.shrink() : AttentionStrip(items: attention, onTap: onAttention),
+        height: ready ? null : PhoneHomeMetrics.attentionStripHeight,
+        ready: ready,
+        child: strip
+            ? AttentionStrip(items: attention, onTap: onAttention)
+            : card
+                ? setupCard(live: true)
+                : const SizedBox.shrink(),
       );
     }
     return AnimatedSize(
