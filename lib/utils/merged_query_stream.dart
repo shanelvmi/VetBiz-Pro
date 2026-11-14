@@ -19,13 +19,17 @@ typedef LogDoc = QueryDocumentSnapshot<Map<String, dynamic>>;
 /// Safe to listen to more than once (DASH-1): a cached stream is listened to
 /// again whenever its widget is rebuilt somewhere else (a resize moves the
 /// dashboard's feed to another layout branch), so the result is
-/// [shareLatest].
-Stream<List<LogDoc>> mergedLogStream(List<Query<Map<String, dynamic>>> queries, {int? limit}) =>
-    shareLatest(() => _mergeOnce(queries, limit));
+/// [shareLatest]. HUB3: [onFromCache] hears whether the answers came from the
+/// device's cache (offline), from the same listeners.
+Stream<List<LogDoc>> mergedLogStream(List<Query<Map<String, dynamic>>> queries,
+        {int? limit, void Function(bool fromCache)? onFromCache}) =>
+    shareLatest(() => _mergeOnce(queries, limit, onFromCache));
 
-Stream<List<LogDoc>> _mergeOnce(List<Query<Map<String, dynamic>>> queries, int? limit) {
+Stream<List<LogDoc>> _mergeOnce(
+    List<Query<Map<String, dynamic>>> queries, int? limit, void Function(bool fromCache)? onFromCache) {
   late final StreamController<List<LogDoc>> controller;
   final latest = <int, List<LogDoc>>{};
+  final fromCache = <int, bool>{};
   final subscriptions = <StreamSubscription<QuerySnapshot<Map<String, dynamic>>>>[];
 
   void emit() {
@@ -45,9 +49,11 @@ Stream<List<LogDoc>> _mergeOnce(List<Query<Map<String, dynamic>>> queries, int? 
     onListen: () {
       for (var i = 0; i < queries.length; i++) {
         subscriptions.add(
-          queries[i].snapshots().listen(
+          queries[i].snapshots(includeMetadataChanges: onFromCache != null).listen(
             (snapshot) {
               latest[i] = snapshot.docs;
+              fromCache[i] = snapshot.metadata.isFromCache;
+              onFromCache?.call(fromCache.values.any((c) => c));
               if (latest.length == queries.length) emit();
             },
             onError: controller.addError,
