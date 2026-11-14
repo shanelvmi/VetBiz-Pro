@@ -7620,4 +7620,151 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get home_deltaSame => 'same as yesterday';
+
+  @override
+  String get home_chartRange7d => '7d';
+
+  @override
+  String get home_chartRange30d => '30d';
+
+  @override
+  String get home_chartRangeLabel => 'Chart range';
+
+  @override
+  String home_chartPreviousDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Previous $count days',
+      one: 'Previous day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_chartNoSales(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'No sales in the last $count days',
+      one: 'No sales in the last day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get home_chartRecordSale => 'Record a sale';
+
+  @override
+  String get home_chartTopSellers => 'Top sellers';
+
+  @override
+  String get home_chartSlowMovers => 'Slow movers';
+
+  @override
+  String home_chartInStock(int count) {
+    return '$count in stock';
+  }
+
+  @override
+  String home_chartNothingSold(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Nothing sold in the last $count days',
+      one: 'Nothing sold in the last day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get home_chartAddProduct => 'Add a product';
+
+  @override
+  String get home_chartVisitActivity => 'Visit activity';
+
+  @override
+  String home_chartNoVisits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'No visits in the last $count days',
+      one: 'No visits in the last day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get home_chartRecordVisit => 'Record a visit';
+
+  @override
+  String home_chartSliceShare(int count, int percent) {
+    return '$count ($percent%)';
+  }
+
+  @override
+  String home_chartSliceDetail(String name, int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count visits',
+      one: '1 visit',
+    );
+    return '$name: $_temp0, $amount';
+  }
+
+  @override
+  String home_chartSliceDetailHidden(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count visits',
+      one: '1 visit',
+    );
+    return '$name: $_temp0';
+  }
+
+  @override
+  String home_chartSalesSummary(int count, String total, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sales over the last $count days, total $total, highest day $day',
+      one: 'Sales over the last day, total $total, highest day $day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_chartSalesSummaryHidden(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sales over the last $count days',
+      one: 'Sales over the last day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_chartProductsSummary(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Product movement over the last $count days, top seller $name',
+      one: 'Product movement over the last day, top seller $name',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_chartVisitsSummary(int visits, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      visits,
+      locale: localeName,
+      other: 'Visit activity, $visits visits, most $name',
+      one: 'Visit activity, 1 visit, most $name',
+    );
+    return '$_temp0';
+  }
 }

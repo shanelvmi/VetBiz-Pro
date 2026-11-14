@@ -7664,4 +7664,151 @@ class AppLocalizationsSw extends AppLocalizations {
 
   @override
   String get home_deltaSame => 'sawa na jana';
+
+  @override
+  String get home_chartRange7d => 'Siku 7';
+
+  @override
+  String get home_chartRange30d => 'Siku 30';
+
+  @override
+  String get home_chartRangeLabel => 'Muda wa chati';
+
+  @override
+  String home_chartPreviousDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Siku $count zilizotangulia',
+      one: 'Siku iliyotangulia',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_chartNoSales(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hakuna mauzo katika siku $count zilizopita',
+      one: 'Hakuna mauzo siku iliyopita',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get home_chartRecordSale => 'Rekodi mauzo';
+
+  @override
+  String get home_chartTopSellers => 'Zinazouzwa zaidi';
+
+  @override
+  String get home_chartSlowMovers => 'Zinazouzwa polepole';
+
+  @override
+  String home_chartInStock(int count) {
+    return '$count zipo stoo';
+  }
+
+  @override
+  String home_chartNothingSold(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hakuna kilichouzwa katika siku $count zilizopita',
+      one: 'Hakuna kilichouzwa siku iliyopita',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get home_chartAddProduct => 'Ongeza bidhaa';
+
+  @override
+  String get home_chartVisitActivity => 'Shughuli za ziara';
+
+  @override
+  String home_chartNoVisits(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hakuna ziara katika siku $count zilizopita',
+      one: 'Hakuna ziara siku iliyopita',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get home_chartRecordVisit => 'Rekodi ziara';
+
+  @override
+  String home_chartSliceShare(int count, int percent) {
+    return '$count ($percent%)';
+  }
+
+  @override
+  String home_chartSliceDetail(String name, int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ziara $count',
+      one: 'ziara 1',
+    );
+    return '$name: $_temp0, $amount';
+  }
+
+  @override
+  String home_chartSliceDetailHidden(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ziara $count',
+      one: 'ziara 1',
+    );
+    return '$name: $_temp0';
+  }
+
+  @override
+  String home_chartSalesSummary(int count, String total, String day) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mauzo ya siku $count zilizopita, jumla $total, siku ya juu $day',
+      one: 'Mauzo ya siku iliyopita, jumla $total, siku ya juu $day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_chartSalesSummaryHidden(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mauzo ya siku $count zilizopita',
+      one: 'Mauzo ya siku iliyopita',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_chartProductsSummary(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mwenendo wa bidhaa wa siku $count zilizopita, inayoongoza $name',
+      one: 'Mwenendo wa bidhaa wa siku iliyopita, inayoongoza $name',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_chartVisitsSummary(int visits, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      visits,
+      locale: localeName,
+      other: 'Shughuli za ziara, ziara $visits, nyingi zaidi $name',
+      one: 'Shughuli za ziara, ziara 1, nyingi zaidi $name',
+    );
+    return '$_temp0';
+  }
 }

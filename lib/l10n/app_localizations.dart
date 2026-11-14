@@ -12605,6 +12605,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'same as yesterday'**
   String get home_deltaSame;
+
+  /// Phone Home (HUB4), the chart carousel's small range switch: the last 7 days. Saved on the device as 7d; only shown.
+  ///
+  /// In en, this message translates to:
+  /// **'7d'**
+  String get home_chartRange7d;
+
+  /// Phone Home (HUB4), the chart carousel's small range switch: the last 30 days. Saved on the device as 30d; only shown.
+  ///
+  /// In en, this message translates to:
+  /// **'30d'**
+  String get home_chartRange30d;
+
+  /// Phone Home (HUB4), the screen reader's name for the chart carousel's 7d or 30d switch.
+  ///
+  /// In en, this message translates to:
+  /// **'Chart range'**
+  String get home_chartRangeLabel;
+
+  /// Phone Home (HUB4), the Sales chart's legend: the dashed line is the same number of days just before the period shown.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Previous day} other{Previous {count} days}}'**
+  String home_chartPreviousDays(int count);
+
+  /// Phone Home (HUB4), the Sales chart page when every day of the period is zero.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{No sales in the last day} other{No sales in the last {count} days}}'**
+  String home_chartNoSales(int count);
+
+  /// Phone Home (HUB4), a small text button on the empty Sales chart page (only for people who may record a sale).
+  ///
+  /// In en, this message translates to:
+  /// **'Record a sale'**
+  String get home_chartRecordSale;
+
+  /// Phone Home (HUB4), Product movement page: the section of the products sold in the largest quantity in the period.
+  ///
+  /// In en, this message translates to:
+  /// **'Top sellers'**
+  String get home_chartTopSellers;
+
+  /// Phone Home (HUB4), Product movement page: the section of products that have stock but sold nothing in the period.
+  ///
+  /// In en, this message translates to:
+  /// **'Slow movers'**
+  String get home_chartSlowMovers;
+
+  /// Phone Home (HUB4), Product movement page: a slow mover's quantity in stock (shelf and store).
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in stock'**
+  String home_chartInStock(int count);
+
+  /// Phone Home (HUB4), Product movement page: shown in place of the top sellers when nothing was sold in the period.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Nothing sold in the last day} other{Nothing sold in the last {count} days}}'**
+  String home_chartNothingSold(int count);
+
+  /// Phone Home (HUB4), a small text button on the Product movement page when the facility has no products (admins only).
+  ///
+  /// In en, this message translates to:
+  /// **'Add a product'**
+  String get home_chartAddProduct;
+
+  /// Phone Home (HUB4), the title of the chart page of the services provided in the period by type (it was Vet services).
+  ///
+  /// In en, this message translates to:
+  /// **'Visit activity'**
+  String get home_chartVisitActivity;
+
+  /// Phone Home (HUB4), the Visit activity page when no service was provided in the period.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{No visits in the last day} other{No visits in the last {count} days}}'**
+  String home_chartNoVisits(int count);
+
+  /// Phone Home (HUB4), a small text button on the empty Visit activity page (only for people who may record a visit).
+  ///
+  /// In en, this message translates to:
+  /// **'Record a visit'**
+  String get home_chartRecordVisit;
+
+  /// Phone Home (HUB4), Visit activity legend: a service type's number of visits and its share of all visits in the period.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} ({percent}%)'**
+  String home_chartSliceShare(int count, int percent);
+
+  /// Phone Home (HUB4), Visit activity: shown after a tap on a slice or legend row: the type, its visits and its revenue (amount already formatted).
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {count, plural, =1{1 visit} other{{count} visits}}, {amount}'**
+  String home_chartSliceDetail(String name, int count, String amount);
+
+  /// Phone Home (HUB4), Visit activity: the same as home_chartSliceDetail while amounts are hidden (no revenue).
+  ///
+  /// In en, this message translates to:
+  /// **'{name}: {count, plural, =1{1 visit} other{{count} visits}}'**
+  String home_chartSliceDetailHidden(String name, int count);
+
+  /// Phone Home (HUB4), what a screen reader says for the Sales chart page (amounts and the day already formatted).
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Sales over the last day, total {total}, highest day {day}} other{Sales over the last {count} days, total {total}, highest day {day}}}'**
+  String home_chartSalesSummary(int count, String total, String day);
+
+  /// Phone Home (HUB4), the screen reader's Sales chart summary while amounts are hidden.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Sales over the last day} other{Sales over the last {count} days}}'**
+  String home_chartSalesSummaryHidden(int count);
+
+  /// Phone Home (HUB4), what a screen reader says for the Product movement page.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Product movement over the last day, top seller {name}} other{Product movement over the last {count} days, top seller {name}}}'**
+  String home_chartProductsSummary(int count, String name);
+
+  /// Phone Home (HUB4), what a screen reader says for the Visit activity page: the visits in the period and the most frequent type.
+  ///
+  /// In en, this message translates to:
+  /// **'{visits, plural, =1{Visit activity, 1 visit, most {name}} other{Visit activity, {visits} visits, most {name}}}'**
+  String home_chartVisitsSummary(int visits, String name);
 }
 
 class _AppLocalizationsDelegate
