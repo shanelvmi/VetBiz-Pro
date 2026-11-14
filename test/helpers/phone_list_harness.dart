@@ -27,6 +27,7 @@ import 'package:vetbiz_pro/ui/feedback/app_feedback.dart';
 import 'fake_firestore.dart';
 import 'screen_size_matrix.dart';
 import 'wait_until.dart';
+import 'test_clock.dart';
 
 class _NoAuth implements AuthService {
   @override
@@ -54,7 +55,7 @@ const ph5WideSizes = [Size(768, 1024), Size(1024, 768), Size(1200, 800)];
 /// A record [daysAgo] days back, [minutes] minutes after 08:00 that day
 /// (today: [minutes] minutes before now, so it is never in the future).
 DateTime ph5When(int daysAgo, {int minutes = 0}) {
-  final now = DateTime.now();
+  final now = testNow;
   if (daysAgo == 0) return now.subtract(Duration(minutes: minutes + 1));
   final day = DateTime(now.year, now.month, now.day).subtract(Duration(days: daysAgo));
   return day.add(Duration(hours: 8, minutes: minutes));

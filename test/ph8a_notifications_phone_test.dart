@@ -10,12 +10,13 @@ import 'package:vetbiz_pro/services/notification_feed.dart';
 import 'helpers/notification_harness.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
+import 'helpers/test_clock.dart';
 
 const _skip = false;
 
 Future<NotificationFeedController> _feed(WidgetTester tester, {int window = 200}) async {
   final fs = FakeFirebaseFirestore();
-  final clock = Clock()..now = DateTime.now();
+  final clock = Clock()..now = testNow;
   final at = clock.now.subtract(const Duration(hours: 2));
   final c = (await tester.runAsync(() async {
     await seed(fs, 'n1', 'lowStock', createdAt: at, title: 'Low stock: $matrixLongProductName');

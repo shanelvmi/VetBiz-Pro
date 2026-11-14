@@ -12,6 +12,7 @@ import 'package:vetbiz_pro/models/transaction.dart';
 import 'package:vetbiz_pro/providers/transaction_provider.dart';
 
 import '../helpers/fake_firestore.dart';
+import '../helpers/test_clock.dart';
 
 const String? _skip = null;
 
@@ -41,7 +42,7 @@ Object? _withoutEditTimes(Object? node) {
 Service _asEditScreenBuilds(Service s, {double? total}) => Service(
       id: s.id, category: s.category, name: s.name, description: s.description,
       totalAmount: total ?? s.totalAmount, totalPaid: s.totalPaid, clientId: s.clientId, clientName: s.clientName,
-      serviceDate: s.serviceDate, providedByName: s.providedByName, updatedAt: DateTime.now(),
+      serviceDate: s.serviceDate, providedByName: s.providedByName, updatedAt: testNow,
       itemsUsed: [
         for (final i in s.itemsUsed) {'itemName': i['itemName'], 'price': i['price'], 'productId': i['productId']},
       ],

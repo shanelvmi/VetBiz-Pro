@@ -11,6 +11,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'helpers/tree_fingerprint.dart';
 import 'ph8a_seams_test.dart' show Ph8Auth;
+import 'helpers/test_clock.dart';
 
 String _errors(WidgetTester tester) {
   final out = StringBuffer();
@@ -24,7 +25,7 @@ String _errors(WidgetTester tester) {
 /// them), with a long Kiswahili name in one description.
 Future<void> seedActivity(FirebaseFirestore fs) async {
   final logs = facilityCollection(fs, Collections.activityLogs);
-  final now = DateTime.now();
+  final now = testNow;
   Future<void> log(String id, Duration ago, String type, String description,
           {String user = 'admin2', String name = 'Juma Hassan', String? target}) =>
       logs.doc(id).set({
@@ -44,10 +45,17 @@ Future<void> seedActivity(FirebaseFirestore fs) async {
   await log('a6', const Duration(days: 2, hours: 4), 'Sales', 'Recorded sale to Walk-in - Tsh 9,000');
 }
 
+/// HUB3 (7): it waits for the newest entry (a1, seen by both roles) rather than
+/// a fixed budget of real time (ph5Settle), which a loaded machine overran:
+/// ph8a_activity_phone failed only in a full run, before the fake
+/// Firestore's first answer had reached the list.
 Future<Ph5App> pumpActivity(WidgetTester tester,
-        {required dynamic size, bool admin = true, bool modal = false, MatrixLook look = MatrixLook.light, FirebaseFirestore? fs}) =>
-    pumpPh5(tester, (fs) => ActivityLogScreen(isModal: modal, firestore: fs, auth: Ph8Auth()),
-        size: size, look: look, admin: admin, pushed: true, firestore: fs, seed: seedActivity);
+    {required dynamic size, bool admin = true, bool modal = false, MatrixLook look = MatrixLook.light, FirebaseFirestore? fs}) async {
+  final app = await pumpPh5(tester, (fs) => ActivityLogScreen(isModal: modal, firestore: fs, auth: Ph8Auth()),
+      size: size, look: look, admin: admin, pushed: true, firestore: fs, seed: seedActivity, settle: false);
+  await ph5SettleUntil(tester, () => find.textContaining('Recorded sale to').evaluate().isNotEmpty);
+  return app;
+}
 
 void main() {
   for (final size in ph5WideSizes) {

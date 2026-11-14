@@ -16,6 +16,7 @@ import 'package:vetbiz_pro/screens/reports/view_reports_screen.dart';
 
 import 'helpers/ph7b_report.dart';
 import 'helpers/phone_list_harness.dart';
+import 'helpers/test_clock.dart';
 import 'helpers/tree_fingerprint.dart';
 
 const _skip = false;
@@ -61,6 +62,14 @@ void _expect(WidgetTester tester, String name, Finder root) =>
 /// A fixed day in the past, so the dates every other screen shows never move.
 final _day = DateTime(2025, 3, 12);
 
+/// HUB3 (7): View Reports shows TODAY's report and date. Its fingerprints were
+/// recorded on Monday 9 November 2026: under the square test font a longer
+/// weekday (Tuesday on) overflows the header row by more, so the submitted
+/// case failed by the calendar from 2026-11-10. The app's clock is fixed to
+/// that Monday here (a real overflow at 768 wide with a long weekday is in
+/// the ledger for the owner; this test pins the layout before PH7b).
+final _viewDay = DateTime(2026, 11, 9);
+
 String _slug(String tab) => tab.toLowerCase().replaceAll(' ', '-');
 
 void main() {
@@ -82,11 +91,12 @@ void main() {
     }, skip: _skip);
 
     for (final (name, report) in [
-      ('submitted', ph7bReport()),
-      ('draft', ph7bReport(status: 'draft')),
+      ('submitted', ph7bReport(day: _viewDay)),
+      ('draft', ph7bReport(status: 'draft', day: _viewDay)),
       ('none', null),
     ]) {
       ph5TestWidgets('ph7b-view-reports-$name-$at: View Reports as before PH7b', (tester) async {
+        fixTestClock(_viewDay.add(const Duration(hours: 10, minutes: 30)));
         await pumpPh5(tester, (fs) => ViewReportsScreen(firestore: fs, authService: Ph7bNoAuth()),
             size: size, pushed: true, seed: report == null ? null : (fs) => ph7bSeedReport(fs, report));
         _expect(tester, 'ph7b-view-reports-$name-$at', find.byType(ViewReportsScreen));

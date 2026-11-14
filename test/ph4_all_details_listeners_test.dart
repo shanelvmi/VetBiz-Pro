@@ -18,6 +18,7 @@ import 'package:vetbiz_pro/services/sales_summary_service.dart';
 
 import 'helpers/counting_firestore.dart';
 import 'helpers/screen_size_matrix.dart';
+import 'helpers/test_clock.dart';
 
 const _skip = false;
 
@@ -174,7 +175,7 @@ void main() {
     Future<CountingFirestore> seeded() async {
       final db = CountingFirestore();
       final f = db.inner.collection(Collections.facilities).doc(fid);
-      final now = DateTime.now();
+      final now = testNow;
       for (var i = 0; i < 14; i++) {
         final day = key(now.subtract(Duration(days: i)));
         await f.collection(Collections.dailySummaries).doc(day).set({'totalAmount': 1000.0 * i, 'saleCount': i});
@@ -199,7 +200,7 @@ void main() {
         {required bool isAdmin}) async {
       final summary = DashboardSummaryService(firestore: db);
       final sales = SalesSummaryService(firestore: db);
-      final now = DateTime.now();
+      final now = testNow;
       final today = DateTime(now.year, now.month, now.day);
       final yesterday = today.subtract(const Duration(days: 1));
       for (final load in loads) {

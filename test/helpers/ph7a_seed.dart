@@ -10,6 +10,7 @@ import 'package:vetbiz_pro/providers/product_provider.dart';
 
 import 'fake_firestore.dart';
 import 'screen_size_matrix.dart';
+import 'test_clock.dart';
 
 /// One seeded product. [shelf] is the sellable quantity, [store] the Stock
 /// Store's; [expiryDays] days from today (negative: expired), none if null.
@@ -47,7 +48,7 @@ class Ph7Product {
 
 /// A fixed day well inside a year from now, so expiry texts keep their shape.
 DateTime ph7Expiry(int days) {
-  final now = DateTime.now();
+  final now = testNow;
   return DateTime(now.year, now.month, now.day).add(Duration(days: days));
 }
 

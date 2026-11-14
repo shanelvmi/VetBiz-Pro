@@ -15,6 +15,7 @@ import 'package:vetbiz_pro/screens/settings/settings_screen.dart';
 import 'helpers/fake_firestore.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'ph8a_seams_test.dart' show Ph8Auth;
+import 'helpers/test_clock.dart';
 
 // PH2a: the size matrix applied to three screens as proof
 // (phone_foundations.md section 10). A case that fails for a real layout
@@ -42,8 +43,8 @@ Future<UserRoleProvider> _admin(WidgetTester tester, FirebaseFirestore fs) async
 /// Products for every alert kind, with long Kiswahili names and an 8-digit price.
 Future<void> _seedAlertProducts(FirebaseFirestore fs) async {
   final products = facilityCollection(fs, Collections.products);
-  final soon = Timestamp.fromDate(DateTime.now().add(const Duration(days: 10)));
-  final past = Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 10)));
+  final soon = Timestamp.fromDate(testNow.add(const Duration(days: 10)));
+  final past = Timestamp.fromDate(testNow.subtract(const Duration(days: 10)));
   final base = {
     'unit': 'pcs',
     'category': 'Dawa za Mifugo na Chanjo za Kuku',

@@ -16,6 +16,7 @@ import 'helpers/counting_firestore.dart';
 import 'helpers/ph5b_finders.dart';
 import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
+import 'helpers/test_clock.dart';
 
 const _skip = false;
 
@@ -156,7 +157,7 @@ void main() {
     for (final t in ['AJ', 'Amina Juma', Money.format(45000), DateFormat('dd MMM yyyy').format(_clients.first.oldestDebt!),
       // The screen's rule (whole days since the oldest debt): 44 before
       // 08:00, 45 after, as the seeded debt is at 08:00.
-      '${DateTime.now().difference(_clients.first.oldestDebt!).inDays} days',
+      '${testNow.difference(_clients.first.oldestDebt!).inDays} days',
       'Overdue',
     ]) {
       expect(find.descendant(of: row, matching: find.text(t)), findsOneWidget, reason: t);

@@ -8,6 +8,7 @@ import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/providers/product_provider.dart';
 
 import '../helpers/fake_firestore.dart';
+import '../helpers/test_clock.dart';
 
 void main() {
   test('addService twice with the same service id leaves one service, one debt, one expense, one stock deduction',
@@ -152,7 +153,7 @@ void main() {
 
   test('the activity entry is activity_logs/service_{id} and passes the existing rule', () async {
     final fs = newFakeFirestore();
-    final startedAt = DateTime.now().subtract(const Duration(seconds: 1));
+    final startedAt = wallClock().subtract(const Duration(seconds: 1));
 
     await newServiceProvider(fs).addService(testService(id: 'log1'));
     await settle();

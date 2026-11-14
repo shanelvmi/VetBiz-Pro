@@ -24,6 +24,7 @@ import 'fake_firestore.dart';
 import 'ph5b_seed.dart';
 import 'phone_list_harness.dart';
 import 'screen_size_matrix.dart';
+import 'test_clock.dart';
 
 /// The test user, signed in (Record Payment saves their id; Add Transaction
 /// asks the users collection for their name).
@@ -69,7 +70,7 @@ ProductBatch ph6Batch() => ProductBatch(
       id: 'b1',
       productId: 'p1',
       batchNo: 'BN-2026-001',
-      expiry: DateTime.now().subtract(const Duration(days: 5)),
+      expiry: testNow.subtract(const Duration(days: 5)),
       buyPrice: 1000,
       stockQty: 0,
       sellableQty: 12,

@@ -15,6 +15,7 @@ import 'package:vetbiz_pro/services/auth_service.dart';
 import 'fake_firestore.dart';
 import 'phone_list_harness.dart';
 import 'screen_size_matrix.dart';
+import 'test_clock.dart';
 
 /// No one signed in (View Reports' generate reads the name through it).
 class Ph7bNoAuth implements AuthService {
@@ -25,16 +26,10 @@ class Ph7bNoAuth implements AuthService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-/// Today at [hour]:[minute].
-DateTime ph7bAt(int hour, [int minute = 0]) {
-  final now = DateTime.now();
-  return DateTime(now.year, now.month, now.day, hour, minute);
-}
+/// Today (the fixed test day, test_clock.dart) at [hour]:[minute].
+DateTime ph7bAt(int hour, [int minute = 0]) => testAt(hour, minute);
 
-DateTime get ph7bToday {
-  final now = DateTime.now();
-  return DateTime(now.year, now.month, now.day);
-}
+DateTime get ph7bToday => testToday;
 
 /// The report's id for [day], as DailyReportService keys it.
 String ph7bReportId(DateTime day) =>

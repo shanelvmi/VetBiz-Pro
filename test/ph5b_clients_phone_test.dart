@@ -17,6 +17,7 @@ import 'helpers/counting_firestore.dart';
 import 'helpers/ph5b_finders.dart';
 import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
+import 'helpers/test_clock.dart';
 
 const _skip = false;
 
@@ -183,7 +184,7 @@ void main() {
 
   ph5TestWidgets('pull to refresh starts the list over (a client added since shows)', (tester) async {
     final app = await _clients(tester);
-    await tester.runAsync(() => ph5SeedClients(app.fs, [Ph5Client('c4', 'Zawadi Said', DateTime.now())]));
+    await tester.runAsync(() => ph5SeedClients(app.fs, [Ph5Client('c4', 'Zawadi Said', testNow)]));
     expect(ph5RowIds(tester), isNot(contains('c4')));
     await ph5Pull(tester);
     expect(ph5RowIds(tester), contains('c4'));

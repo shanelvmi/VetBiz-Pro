@@ -24,6 +24,7 @@ import 'helpers/ph8a_saved.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/tree_fingerprint.dart';
 import 'ph8a_seams_test.dart' show Ph8Auth;
+import 'helpers/test_clock.dart';
 
 // The phone cases were skipped until the phone pages existed.
 const _skipPhone = false;
@@ -44,7 +45,7 @@ Future<Map<String, String>> ph8UserInfo() async => {'userId': testUserId, 'userN
 /// Something in each Trash tab, deleted two days ago (28 days before the
 /// purge, whatever the day the test runs).
 Future<void> seedTrash(FirebaseFirestore fs) async {
-  final deleted = Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 2)));
+  final deleted = Timestamp.fromDate(testNow.subtract(const Duration(days: 2)));
   await facilityCollection(fs, Collections.trashProducts).doc('p1').set(
       {'name': 'Albendazole 10% Chupa ya Lita Moja', 'deletedAt': deleted, 'deletedBy': 'Asha', 'sellPrice': 15000});
   await facilityCollection(fs, Collections.trashClients)

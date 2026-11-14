@@ -15,6 +15,7 @@ import 'package:vetbiz_pro/services/insights_data_loader.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'screen_size_matrix.dart';
+import 'test_clock.dart';
 
 const ph4PhoneSizes = [
   MatrixSize('360x740', Size(360, 740), phone: true),
@@ -22,7 +23,7 @@ const ph4PhoneSizes = [
   MatrixSize('740x360', Size(740, 360), phone: true),
 ];
 
-final ph4Now = DateTime.now();
+final ph4Now = testNow;
 
 Product ph4Product(String id, {int qty = 50, int low = 5, DateTime? expiry, bool everStocked = true}) => Product(
       id: id,

@@ -30,6 +30,7 @@ import 'package:vetbiz_pro/providers/product_provider.dart';
 import 'package:vetbiz_pro/providers/transaction_provider.dart';
 
 import '../helpers/fake_firestore.dart';
+import '../helpers/test_clock.dart';
 
 // moveToSellable takes a BuildContext it does not use.
 class _NoContext extends Fake implements BuildContext {}
@@ -143,7 +144,7 @@ Future<void> _repay(FakeFirebaseFirestore fs, {required String debtId, required 
   } else {
     final ref = facilityCollection(fs, Collections.services).doc(debt['serviceId'] as String);
     final service = Service.fromFirestore((await ref.get()).data()!, ref.id);
-    batch.update(ref, service.copyWith(totalPaid: service.totalPaid + amount, updatedAt: DateTime.now()).toMap());
+    batch.update(ref, service.copyWith(totalPaid: service.totalPaid + amount, updatedAt: testNow).toMap());
   }
   await batch.commit();
 }
@@ -203,7 +204,7 @@ void main() {
 
     final transactions = TransactionProvider(firestore: fs, currentUserInfo: testUserInfo, isAdmin: () => true);
     TransactionModel expense(String description, double amount) => TransactionModel(
-        id: '', date: DateTime.now(), description: description, amount: amount, type: 'expense',
+        id: '', date: testNow, description: description, amount: amount, type: 'expense',
         category: 'Transport', recordedBy: testUserName);
     await _record(fs, 'addTransaction, the first expense (its counter is created)', _everyone,
         () => _ignoringActivityLog(() => transactions.addTransaction(expense('Fuel', 3000), testFacilityId)));

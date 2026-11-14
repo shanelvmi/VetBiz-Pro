@@ -17,8 +17,9 @@ import 'package:vetbiz_pro/providers/sale_provider.dart';
 import 'package:vetbiz_pro/providers/service_provider.dart';
 
 import '../helpers/fake_firestore.dart';
+import '../helpers/test_clock.dart';
 
-final _yesterday = DateTime.now().subtract(const Duration(days: 1));
+final _yesterday = testNow.subtract(const Duration(days: 1));
 
 /// The n-th record's time: s1 is the oldest, s4 the newest.
 DateTime _at(int n) => _yesterday.add(Duration(hours: n));
@@ -139,7 +140,7 @@ void main() {
       await clients.debtorsListController.openSession(clients.updateDebtorsListFilters(
           facilityId: testFacilityId, searchTerm: '', statusFilter: 'All', overdueRangeFilter: 'All', overdueDays: 30));
       final payments = PaymentProvider(firestore: fs);
-      final now = DateTime.now();
+      final now = testNow;
       await payments.ledgerController.openSession(
         querySignature: payments.updateLedgerFilters(
             facilityId: testFacilityId, searchTerm: '', typeFilter: null, methodFilter: null, initialClientId: null),

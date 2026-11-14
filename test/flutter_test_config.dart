@@ -6,7 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vetbiz_pro/services/support_contact_store.dart';
 import 'package:vetbiz_pro/services/updates_store.dart';
+import 'package:vetbiz_pro/utils/app_clock.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal_image.dart';
+
+import 'helpers/test_clock.dart';
 
 // Runs around every test file. G6, AN6: the support contact and the Updates
 // store live for the whole app (a session), so each test starts
@@ -19,12 +22,16 @@ import 'package:vetbiz_pro/widgets/reveal/reveal_image.dart';
 // with no network does, instead of never answering in the fake clock (which
 // would hold a list's reveal for its grace); a test that needs a real image
 // sets RevealImage.providerFor itself.
+// HUB3 (7): the app's clock reads the fixed test moment (test_clock.dart's
+// testNow), so no test depends on the real date; a test may fix another
+// moment with fixTestClock.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     SupportContactStore.debugReset();
     UpdatesStore.debugReset();
     RevealImage.providerFor = _NoNetworkImage.new;
+    AppClock.fix(() => testNow);
   });
   await testMain();
 }

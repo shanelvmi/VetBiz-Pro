@@ -13,6 +13,7 @@ import 'package:vetbiz_pro/providers/sale_provider.dart';
 import 'package:vetbiz_pro/providers/service_provider.dart';
 import 'package:vetbiz_pro/models/restore_outcome.dart';
 import 'package:vetbiz_pro/services/trash_service.dart';
+import 'test_clock.dart';
 
 const testFacilityId = 'facility1';
 const testUserId = 'user1';
@@ -26,7 +27,10 @@ String testDeletedBy() => testUserEmail;
 Future<Map<String, String>> testUserInfo() async =>
     {'userId': testUserId, 'userName': testUserName};
 
-FakeFirebaseFirestore newFakeFirestore() => FakeFirebaseFirestore();
+/// HUB3 (7): its server time (FieldValue.serverTimestamp) is the app's clock,
+/// so records the app stamps are dated on the same fixed test day as
+/// everything the app compares them with.
+FakeFirebaseFirestore newFakeFirestore() => FakeFirebaseFirestore(clock: testFirestoreClock);
 
 ClientProvider newClientProvider(FirebaseFirestore firestore) =>
     ClientProvider(firestore: firestore, currentUserInfo: testUserInfo, deletedBy: testDeletedBy);
@@ -94,8 +98,8 @@ Sale testSale({
     id: id,
     clientId: clientId,
     clientName: clientName,
-    timestamp: DateTime.now(),
-    updatedAt: DateTime.now(),
+    timestamp: testNow,
+    updatedAt: testNow,
     items: items,
     totalAmount: total,
     totalPaid: totalPaid,
@@ -140,9 +144,9 @@ Service testService({
     totalPaid: totalPaid,
     clientId: clientId,
     clientName: clientName,
-    serviceDate: DateTime.now(),
+    serviceDate: testNow,
     providedByName: testUserName,
-    updatedAt: DateTime.now(),
+    updatedAt: testNow,
     itemsUsed: items,
     paymentMethod: totalPaid > 0 ? 'Cash' : null,
   );

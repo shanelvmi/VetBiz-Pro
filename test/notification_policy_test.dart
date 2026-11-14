@@ -11,6 +11,7 @@ import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/models/notification_model.dart';
 import 'package:vetbiz_pro/models/notification_policy.dart';
 import 'package:vetbiz_pro/providers/subscription_provider.dart';
+import 'helpers/test_clock.dart';
 
 const persistent = NotificationClass.persistent;
 const dismissible = NotificationClass.dismissible;
@@ -204,7 +205,7 @@ void main() {
       }
 
       Timestamp inDays(double d) =>
-          Timestamp.fromDate(DateTime.now().add(Duration(minutes: (d * 24 * 60).round())));
+          Timestamp.fromDate(testNow.add(Duration(minutes: (d * 24 * 60).round())));
 
       test('comfortably active: none; 7 days and 6 days left: both expiring (read at 7 stays read at 6)', () async {
         expect(await stageFor({'subscriptionExpiresAt': inDays(30)}), SubscriptionNoticeStage.none);

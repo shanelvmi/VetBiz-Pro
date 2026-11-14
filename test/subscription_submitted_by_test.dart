@@ -17,8 +17,9 @@ import 'package:vetbiz_pro/screens/subscription/subscription_history_screen.dart
 import 'package:vetbiz_pro/screens/subscription/subscription_screen.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
+import 'helpers/test_clock.dart';
 
-final _recent = DateTime.now().subtract(const Duration(days: 2));
+final _recent = testNow.subtract(const Duration(days: 2));
 
 Map<String, dynamic> _claim(String status, Map<String, dynamic> who) => {
       'facilityId': 'F1',

@@ -7,6 +7,7 @@ import 'package:vetbiz_pro/config/payment_methods.dart';
 import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/providers/payment_provider.dart';
 import 'package:vetbiz_pro/services/daily_report_service.dart';
+import 'helpers/test_clock.dart';
 
 // R3, D5: one name, "Mixx by Yas". A record stored as 'Tigo Pesa' is shown,
 // filtered and grouped as Mixx by Yas; the stored key never changes.
@@ -58,7 +59,7 @@ void main() {
 
     setUp(() async {
       fs = FakeFirebaseFirestore();
-      final earlier = Timestamp.fromDate(DateTime.now().subtract(const Duration(seconds: 5)));
+      final earlier = Timestamp.fromDate(testNow.subtract(const Duration(seconds: 5)));
       await payments().doc('p1').set({'source': 'sale', 'amount': 1000, 'paymentMethod': tigo, 'timestamp': earlier});
       await payments().doc('p2').set({'source': 'sale', 'amount': 2500, 'paymentMethod': mixx, 'timestamp': earlier});
       await payments().doc('p3').set({'source': 'sale', 'amount': 700, 'paymentMethod': 'Cash', 'timestamp': earlier});

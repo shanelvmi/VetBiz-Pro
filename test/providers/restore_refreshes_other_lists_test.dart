@@ -17,8 +17,9 @@ import 'package:vetbiz_pro/providers/product_provider.dart';
 import 'package:vetbiz_pro/providers/transaction_provider.dart';
 
 import '../helpers/fake_firestore.dart';
+import '../helpers/test_clock.dart';
 
-final _yesterday = DateTime.now().subtract(const Duration(days: 1));
+final _yesterday = testNow.subtract(const Duration(days: 1));
 
 /// The facility the screens pass to ProductProvider.deleteProduct.
 class _TestFacility extends FacilityProvider {
@@ -93,7 +94,7 @@ void main() {
         querySignature: payments.updateLedgerFilters(
             facilityId: testFacilityId, searchTerm: '', typeFilter: null, methodFilter: null, initialClientId: null),
         rangeStart: DateTime(_yesterday.year, _yesterday.month, _yesterday.day),
-        rangeEnd: DateTime.now(),
+        rangeEnd: testNow,
       );
       return (transactions, payments);
     }

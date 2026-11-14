@@ -12,13 +12,14 @@ import 'package:vetbiz_pro/services/home_chart_data.dart';
 import 'package:vetbiz_pro/services/insights_data_loader.dart';
 
 import 'helpers/counting_firestore.dart';
+import 'helpers/test_clock.dart';
 
 const _skip = false;
 
 void main() {
   test('cold open, return to Home, Product movement, then Insights', () async {
     final db = CountingFirestore();
-    final now = DateTime.now();
+    final now = testNow;
     final today = DateTime(now.year, now.month, now.day);
     String day(int back) {
       final d = today.subtract(Duration(days: back));

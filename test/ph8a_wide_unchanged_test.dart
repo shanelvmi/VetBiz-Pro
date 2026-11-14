@@ -16,6 +16,7 @@ import 'helpers/notification_harness.dart';
 import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/tree_fingerprint.dart';
+import 'helpers/test_clock.dart';
 
 const _skip = false;
 
@@ -36,7 +37,7 @@ void _expect(WidgetTester tester, String name, Finder root) =>
 Future<NotificationFeedController> _feed(WidgetTester tester) async {
   final fs = FakeFirebaseFirestore();
   // Two hours before now, so "2 hours ago" never changes from day to day.
-  final clock = Clock()..now = DateTime.now();
+  final clock = Clock()..now = testNow;
   final at = clock.now.subtract(const Duration(hours: 2));
   return (await tester.runAsync(() async {
     await seed(fs, 'n1', 'lowStock', createdAt: at, title: 'Low stock: Albendazole 10% Chupa ya Lita Moja');

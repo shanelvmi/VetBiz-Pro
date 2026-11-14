@@ -11,6 +11,7 @@ import 'package:vetbiz_pro/services/dashboard_summary_service.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'helpers/counting_firestore.dart';
+import 'helpers/test_clock.dart';
 
 const _skip = false;
 
@@ -32,13 +33,13 @@ void main() {
       () async {
     final db = CountingFirestore();
     final f = db.inner.collection(Collections.facilities).doc('f1');
-    await f.collection(Collections.debts).add({'clientId': 'c1', 'amountOwed': 500.0, 'timestamp': DateTime.now()});
+    await f.collection(Collections.debts).add({'clientId': 'c1', 'amountOwed': 500.0, 'timestamp': testNow});
     db.resetCounts();
 
     // As before RV1: the dashboard's period totals subscription and the
     // app-level debts listener.
     final debts = DebtProvider(firestore: db)..listenToDebts('f1');
-    final now = DateTime.now();
+    final now = testNow;
     final answered = ValueNotifier(false);
     final sub = DashboardSummaryService(firestore: db)
         .watchDashboardTotals(facilityId: 'f1', start: DateTime(now.year, now.month, now.day), end: now)
@@ -67,7 +68,7 @@ void main() {
 
   test('the stream adapter passes the one subscription through: no second listener', () async {
     final db = CountingFirestore();
-    final now = DateTime.now();
+    final now = testNow;
     final source = StreamRevealSource(DashboardSummaryService(firestore: db)
         .watchDashboardTotals(facilityId: 'f1', start: DateTime(now.year, now.month, now.day), end: now));
     final sub = source.stream.listen((_) {});
