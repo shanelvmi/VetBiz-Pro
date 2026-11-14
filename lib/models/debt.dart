@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/fields.dart';
+import '../utils/app_clock.dart';
 
 class Debt {
   final String id;
@@ -55,8 +56,8 @@ class Debt {
 
     DateTime parseDate(dynamic value) {
       if (value is Timestamp) return value.toDate();
-      if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
-      return DateTime.now();
+      if (value is String) return DateTime.tryParse(value) ?? AppClock.now();
+      return AppClock.now();
     }
 
     return Debt(

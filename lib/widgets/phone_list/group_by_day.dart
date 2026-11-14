@@ -1,5 +1,6 @@
 import '../../config/app_date_format.dart';
 import '../../l10n/l10n.dart';
+import '../../utils/app_clock.dart';
 
 // PH5a R5 (docs/design/phone_list_pattern.md): a phone list's rows under one
 // header per day, each with that day's total once the day is fully loaded.
@@ -52,7 +53,7 @@ List<DayGroup<T>> groupByDay<T>(
 
 /// "Today", "Yesterday", then the weekday and date ("Monday, 27 Oct").
 String dayHeaderLabel(AppLocalizations l, DateTime day, {DateTime? now}) {
-  final today = _midnight(now ?? DateTime.now());
+  final today = _midnight(now ?? AppClock.now());
   final d = _midnight(day);
   if (d == today) return l.common_today;
   if (d == DateTime(today.year, today.month, today.day - 1)) return l.common_yesterday;

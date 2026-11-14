@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/fields.dart';
 import '../data/payment_status.dart';
+import '../utils/app_clock.dart';
 
 class SaleItem {
   final String productId;
@@ -205,7 +206,7 @@ class Sale {
       items: updatedItems,
       realizedProfit: totalRealized,
       unrealizedProfit: totalUnrealized,
-      updatedAt: DateTime.now(),
+      updatedAt: AppClock.now(),
     );
   }
 
@@ -265,13 +266,13 @@ class Sale {
     double unrealized =
         itemsList.fold(0.0, (total, item) => total + item.unrealizedProfit);
 
-    DateTime timestamp = DateTime.now();
+    DateTime timestamp = AppClock.now();
     final rawTs = map['timestamp'];
     if (rawTs != null) {
       if (rawTs is Timestamp) {
         timestamp = rawTs.toDate();
       } else if (rawTs is String) {
-        timestamp = DateTime.tryParse(rawTs) ?? DateTime.now();
+        timestamp = DateTime.tryParse(rawTs) ?? AppClock.now();
       }
     }
 

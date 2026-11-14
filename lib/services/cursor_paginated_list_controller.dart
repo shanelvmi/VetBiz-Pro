@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../config/app_limits.dart';
+import '../utils/app_clock.dart';
 
 /// One page's worth of results from a single Firestore fetch, plus the
 /// cursor needed to fetch whatever comes after it. Kept separate from
@@ -144,7 +145,7 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
     if (!forceRefresh && !signatureChanged && hasOpenSession) return;
 
     _querySignature = querySignature;
-    _snapshotAt = DateTime.now();
+    _snapshotAt = AppClock.now();
     _pages.clear();
     _currentPageIndex = -1;
     _newRecordsAvailable = 0;

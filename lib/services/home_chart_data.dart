@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../config/app_ranges.dart';
 import '../data/collections.dart';
+import '../utils/app_clock.dart';
 
 /// HUB2: the 14 days Home's Sales and Vet services charts draw, oldest
 /// first: the last entry is today. Sales by sale date (dailySummaries),
@@ -62,7 +63,7 @@ class HomeChartLoader {
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   Future<HomeChartDays> days(String facilityId, {DateTime? now}) {
-    final at = now ?? DateTime.now();
+    final at = now ?? AppClock.now();
     final today = DateTime(at.year, at.month, at.day);
     final cacheKey = '$facilityId|${_key(today)}';
     final cached = _cache[cacheKey];

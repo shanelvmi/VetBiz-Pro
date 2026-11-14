@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/subscription_status_utils.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
+import '../utils/app_clock.dart';
 
 /// One subscription discount/offer. The schema itself already
 /// supports several promotions coexisting (V2: a real list, priority
@@ -61,7 +62,7 @@ class Promotion {
     return true;
   }
 
-  bool get hasEnded => endsAt != null && DateTime.now().isAfter(endsAt!);
+  bool get hasEnded => endsAt != null && AppClock.now().isAfter(endsAt!);
 
   double discountedPrice(double originalPrice) {
     final discounted = originalPrice * (1 - (discountPercent / 100));
@@ -167,7 +168,7 @@ bool _isExpiringSoon(DateTime? expiresAt, DateTime? trialExpiresAt) {
   if (status != SubscriptionStatusKind.trial && status != SubscriptionStatusKind.active) return false;
   final governingExpiry = expiresAt ?? trialExpiresAt;
   if (governingExpiry == null) return false;
-  return governingExpiry.difference(DateTime.now()).inDays <= 7;
+  return governingExpiry.difference(AppClock.now()).inDays <= 7;
 }
 
 Future<void> _notifyFacilitiesOfPromotion(Promotion promo) async {

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../constants/subscription_plans.dart';
 import '../data/collections.dart';
+import 'app_clock.dart';
 
 /// Looks up the Platform Admin's configured trial length
 /// (platform_config/settings.trialDays) and returns the expiry date a
@@ -27,6 +28,6 @@ Future<DateTime> computeNewFacilityTrialExpiry() async {
     // Config lookup failed - proceed with the default rather than
     // blocking facility creation over it.
   }
-  final expiryDate = DateTime.now().add(Duration(days: days));
+  final expiryDate = AppClock.now().add(Duration(days: days));
   return DateTime(expiryDate.year, expiryDate.month, expiryDate.day, 23, 59, 59);
 }

@@ -4,6 +4,7 @@ import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
+import '../utils/app_clock.dart';
 
 /// Shared date-range picker dialog, used anywhere a screen needs "pick a
 /// custom period" (Payments, Transactions, and anywhere else this comes
@@ -88,7 +89,7 @@ class _DateRangeDialogState extends State<DateRangeDialog> {
                 context: context,
                 initialDate: _end,
                 firstDate: _start,
-                lastDate: DateTime.now(),
+                lastDate: AppClock.now(),
               );
               if (picked != null) setState(() => _end = picked);
             },

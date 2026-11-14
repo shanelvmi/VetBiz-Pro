@@ -9,6 +9,7 @@ import '../config/app_timeouts.dart';
 import '../data/collections.dart';
 import '../data/support_contact_fields.dart';
 import '../models/support_contact.dart';
+import '../utils/app_clock.dart';
 
 /// Reads app_config/support_contact's data; throws when the read fails (the
 /// store then keeps what it had).
@@ -43,7 +44,7 @@ class SupportContactStore extends ChangeNotifier {
   @visibleForTesting
   factory SupportContactStore.seeded(SupportContact contact) => SupportContactStore(fetch: (_) async => contact.toMap())
     .._current = contact
-    .._readAt = DateTime.now();
+    .._readAt = AppClock.now();
 
   static SupportContactStore? _instance;
 

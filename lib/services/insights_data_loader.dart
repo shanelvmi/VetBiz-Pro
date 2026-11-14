@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../config/app_ranges.dart';
 import '../data/collections.dart';
+import '../utils/app_clock.dart';
 
 /// HUB2: the sales and services of Insights' window (today and the 13 days
 /// before it), each read once per facility and day and kept in memory for
@@ -22,7 +23,7 @@ class InsightsDataLoader {
 
   /// The first day of the window for [now] (Insights' trend start).
   static DateTime windowStart({DateTime? now}) {
-    final at = now ?? DateTime.now();
+    final at = now ?? AppClock.now();
     return DateTime(at.year, at.month, at.day).subtract(AppRanges.insightsTrendBack);
   }
 

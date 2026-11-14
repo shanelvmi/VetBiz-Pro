@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/fields.dart';
+import '../utils/app_clock.dart';
 
 /// The specific kind of event this notification represents. Deliberately
 /// granular - one value per distinct event kind - with [category] below
@@ -261,7 +262,7 @@ class FacilityNotification {
 
   bool get isRead => readAt != null;
   bool get isPersistent => expiresAt != null;
-  bool get isExpired => expiresAt != null && expiresAt!.isBefore(DateTime.now());
+  bool get isExpired => expiresAt != null && expiresAt!.isBefore(AppClock.now());
 
   // What actually determines whether this still belongs on screen -
   // an ephemeral one only while unread, a persistent one for as long

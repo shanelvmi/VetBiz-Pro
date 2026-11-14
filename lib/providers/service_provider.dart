@@ -20,6 +20,7 @@ import '../config/money.dart';
 import '../config/app_limits.dart';
 import '../config/app_ranges.dart';
 import '../config/payment_methods.dart';
+import '../utils/app_clock.dart';
 
 class ServiceProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore;
@@ -527,8 +528,8 @@ class ServiceProvider extends ChangeNotifier {
         saleId: null,
         source: 'Service',
         amountOwed: owed,
-        timestamp: DateTime.now(),
-        updatedAt: DateTime.now(),
+        timestamp: AppClock.now(),
+        updatedAt: AppClock.now(),
         items: [
           {
             'serviceName': service.name,
@@ -705,8 +706,8 @@ class ServiceProvider extends ChangeNotifier {
         saleId: null,
         source: 'Service',
         amountOwed: owed,
-        timestamp: service.serviceDate ?? DateTime.now(),
-        updatedAt: DateTime.now(),
+        timestamp: service.serviceDate ?? AppClock.now(),
+        updatedAt: AppClock.now(),
         items: [
           {
             'serviceName': service.name,
@@ -738,7 +739,7 @@ class ServiceProvider extends ChangeNotifier {
     return {
       'amount': expenseAmount,
       'category': 'Vet Service Expenses',
-      'date': Timestamp.fromDate(DateTime.now()),
+      'date': Timestamp.fromDate(AppClock.now()),
       'description': 'Items used for ${service.name}: $itemsSummary',
       'recordedBy': recordedBy,
       'type': 'expense',
@@ -810,8 +811,8 @@ class ServiceProvider extends ChangeNotifier {
         saleId: null,
         source: 'Service',
         amountOwed: owed,
-        timestamp: originalTimestamp ?? DateTime.now(),
-        updatedAt: DateTime.now(),
+        timestamp: originalTimestamp ?? AppClock.now(),
+        updatedAt: AppClock.now(),
         items: [
           {
             'serviceName': service.name,
@@ -934,7 +935,7 @@ class ServiceProvider extends ChangeNotifier {
     await ref.add({
       'amount': expenseAmount,
       'category': 'Vet Service Expenses',
-      'date': Timestamp.fromDate(DateTime.now()),
+      'date': Timestamp.fromDate(AppClock.now()),
       'description': 'Items used for ${service.name}: $itemsSummary',
       'recordedBy': name,
       'type': 'expense',

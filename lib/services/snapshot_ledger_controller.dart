@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../utils/app_clock.dart';
 
 /// Reusable state for a screen that shows a merged view built from more
 /// than one Firestore collection - Payments being the first case (the
@@ -93,7 +94,7 @@ class SnapshotLedgerController<T> extends ChangeNotifier {
     _querySignature = querySignature;
     _rangeStart = rangeStart;
     _rangeEnd = rangeEnd;
-    _snapshotAt = DateTime.now();
+    _snapshotAt = AppClock.now();
     _newEntriesAvailable = 0;
     _error = null;
     await _load();

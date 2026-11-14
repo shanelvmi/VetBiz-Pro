@@ -1,4 +1,5 @@
 import '../config/app_rules.dart';
+import 'app_clock.dart';
 
 /// Shared subscription status logic - used by SubscriptionProvider (one
 /// facility's own live status) and the Platform Admin Shops Directory
@@ -13,7 +14,7 @@ const int kGracePeriodDaysUtil = AppRules.gracePeriodDays;
 SubscriptionStatusKind computeSubscriptionStatus(DateTime? subscriptionExpiresAt, [DateTime? trialExpiresAt]) {
   // A real, paid subscription cycle takes priority whenever it exists.
   if (subscriptionExpiresAt != null) {
-    final now = DateTime.now();
+    final now = AppClock.now();
     if (now.isBefore(subscriptionExpiresAt)) return SubscriptionStatusKind.active;
     final graceEnd = subscriptionExpiresAt.add(AppRules.gracePeriod);
     if (now.isBefore(graceEnd)) return SubscriptionStatusKind.grace;
@@ -24,7 +25,7 @@ SubscriptionStatusKind computeSubscriptionStatus(DateTime? subscriptionExpiresAt
   // facilities created after this feature shipped) counts down the
   // same way, reusing the same grace/locked flow once it runs out.
   if (trialExpiresAt != null) {
-    final now = DateTime.now();
+    final now = AppClock.now();
     if (now.isBefore(trialExpiresAt)) return SubscriptionStatusKind.trial;
     final graceEnd = trialExpiresAt.add(AppRules.gracePeriod);
     if (now.isBefore(graceEnd)) return SubscriptionStatusKind.grace;

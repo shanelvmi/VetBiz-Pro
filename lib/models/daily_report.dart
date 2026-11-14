@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/fields.dart';
 import '../config/payment_methods.dart';
+import '../utils/app_clock.dart';
 
 /// One line in the itemized Sales tab.
 class SaleLineItem {
@@ -34,7 +35,7 @@ class SaleLineItem {
 
   factory SaleLineItem.fromMap(Map<String, dynamic> map) => SaleLineItem(
         saleId: map['saleId'] as String? ?? '',
-        time: (map['time'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        time: (map['time'] as Timestamp?)?.toDate() ?? AppClock.now(),
         receiptNo: map['receiptNo'] as String? ?? '',
         customerName: map['customerName'] as String? ?? 'Walk-in',
         itemCount: (map['itemCount'] as num?)?.toInt() ?? 0,
@@ -201,7 +202,7 @@ class ExpenseLineItem {
       };
 
   factory ExpenseLineItem.fromMap(Map<String, dynamic> map) => ExpenseLineItem(
-        time: (map['time'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        time: (map['time'] as Timestamp?)?.toDate() ?? AppClock.now(),
         description: map['description'] as String? ?? '',
         category: map['category'] as String? ?? 'Uncategorized',
         amount: (map['amount'] as num?)?.toDouble() ?? 0,
@@ -235,7 +236,7 @@ class ActivityLogEntry {
       };
 
   factory ActivityLogEntry.fromMap(Map<String, dynamic> map) => ActivityLogEntry(
-        time: (map['time'] as Timestamp?)?.toDate() ?? DateTime.now(),
+        time: (map['time'] as Timestamp?)?.toDate() ?? AppClock.now(),
         actionType: map['actionType'] as String? ?? 'Unknown',
         description: map['description'] as String? ?? '',
         userName: map['userName'] as String? ?? 'Unknown',
@@ -485,8 +486,8 @@ class DailyReport {
     return DailyReport(
       id: id,
       facilityId: map[Fields.facilityId] as String? ?? '',
-      reportDate: (map['reportDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      generatedAt: (map['generatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      reportDate: (map['reportDate'] as Timestamp?)?.toDate() ?? AppClock.now(),
+      generatedAt: (map['generatedAt'] as Timestamp?)?.toDate() ?? AppClock.now(),
       generatedByName: map['generatedByName'] as String? ?? 'Unknown',
       status: map[Fields.status] as String? ?? 'draft',
       submittedAt: (map['submittedAt'] as Timestamp?)?.toDate(),

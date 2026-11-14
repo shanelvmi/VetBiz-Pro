@@ -17,6 +17,7 @@ import '../data/activity_type.dart';
 import '../config/money.dart';
 import '../config/app_limits.dart';
 import '../config/app_ranges.dart';
+import '../utils/app_clock.dart';
 
 class SaleProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore;
@@ -480,7 +481,7 @@ class SaleProvider extends ChangeNotifier {
         // One moment for both: the debt's date IS the oldest unpaid date it
         // sets, which AddPaymentScreen compares exactly and a restore from
         // Trash gives back (owner condition 6 of delete_restore.md).
-        final now = DateTime.now();
+        final now = AppClock.now();
         final currentBalance = (clientData?['balance'] as num?)?.toDouble() ?? 0.0;
         final balanceUpdate = <String, dynamic>{
           'balance': FieldValue.increment(outstanding),
@@ -629,7 +630,7 @@ class SaleProvider extends ChangeNotifier {
         amountOwed: owed,
         items: sale.items.map((i) => i.toMap()).toList(),
         timestamp: sale.timestamp,
-        updatedAt: DateTime.now(),
+        updatedAt: AppClock.now(),
         source: 'Sale',
       ).toMap();
     },
@@ -686,7 +687,7 @@ class SaleProvider extends ChangeNotifier {
         if (currentBalance <= 0) {
           batch.set(
             clientRef,
-            {'oldestUnpaidDebtDate': Timestamp.fromDate(DateTime.now())},
+            {'oldestUnpaidDebtDate': Timestamp.fromDate(AppClock.now())},
             SetOptions(merge: true),
           );
         }

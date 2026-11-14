@@ -8,6 +8,7 @@ import '../config/app_limits.dart';
 import '../data/collections.dart';
 import '../data/upload_content_types.dart';
 import '../utils/upload_size_check.dart';
+import '../utils/app_clock.dart';
 
 /// Where profile photos are kept: Firebase Storage in the app, a fake in
 /// tests. [delete] throws a FirebaseException with code 'object-not-found'
@@ -89,7 +90,7 @@ class ProfilePhotoService {
     // A new photo at the same path can come back with the same URL, which
     // the image cache would keep showing; the extra parameter is ignored
     // by Storage and makes the URL new.
-    final shown = '$url${url.contains('?') ? '&' : '?'}v=${DateTime.now().millisecondsSinceEpoch}';
+    final shown = '$url${url.contains('?') ? '&' : '?'}v=${AppClock.now().millisecondsSinceEpoch}';
     await _user(uid).update({'avatarUrl': shown});
     return shown;
   }

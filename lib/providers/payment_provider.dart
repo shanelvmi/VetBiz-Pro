@@ -11,6 +11,7 @@ import '../config/payment_methods.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../l10n/l10n.dart';
+import '../utils/app_clock.dart';
 
 class PaymentProvider with ChangeNotifier {
   final FirebaseFirestore _firestore;
@@ -94,7 +95,7 @@ class PaymentProvider with ChangeNotifier {
     return LedgerEntry(
       type: source,
       amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? AppClock.now(),
       clientId: data['clientId'] as String?,
       clientName: data['clientName'] as String?,
       clientPhone: data['clientPhone'] as String?,
@@ -211,7 +212,7 @@ class PaymentProvider with ChangeNotifier {
         entries.add(LedgerEntry(
           type: 'other_income',
           amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-          timestamp: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          timestamp: (data['date'] as Timestamp?)?.toDate() ?? AppClock.now(),
           description: (data['description'] as String?)?.isNotEmpty == true
               ? data['description'] as String
               : 'Other income',
@@ -365,7 +366,7 @@ class PaymentProvider with ChangeNotifier {
             totalProfit: totalProfit,
             realizedProfit: realizedProfit,
             unrealizedProfit: unrealizedProfit,
-            updatedAt: DateTime.now(),
+            updatedAt: AppClock.now(),
           );
 
           await _firestore
@@ -395,7 +396,7 @@ class PaymentProvider with ChangeNotifier {
 
           final updatedService = service.copyWith(
             totalPaid: updatedTotalPaid,
-            updatedAt: DateTime.now(),
+            updatedAt: AppClock.now(),
           );
 
           await serviceProvider.updateService(updatedService);
@@ -477,7 +478,7 @@ class PaymentProvider with ChangeNotifier {
             totalProfit: totalProfit,
             realizedProfit: realizedProfit,
             unrealizedProfit: unrealizedProfit,
-            updatedAt: DateTime.now(),
+            updatedAt: AppClock.now(),
           );
 
           await _firestore
@@ -507,7 +508,7 @@ class PaymentProvider with ChangeNotifier {
 
           final updatedService = service.copyWith(
             totalPaid: updatedTotalPaid,
-            updatedAt: DateTime.now(),
+            updatedAt: AppClock.now(),
           );
 
           await serviceProvider.updateService(updatedService);

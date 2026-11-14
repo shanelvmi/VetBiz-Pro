@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'app_clock.dart';
 
 /// Tracks when the current device last opened the Notifications screen -
 /// stored locally (per-device), not synced to Firestore. Used to tell
@@ -20,6 +21,6 @@ class NotificationSeenTracker {
 
   static Future<void> markViewedNow() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_key, DateTime.now().millisecondsSinceEpoch);
+    await prefs.setInt(_key, AppClock.now().millisecondsSinceEpoch);
   }
 }

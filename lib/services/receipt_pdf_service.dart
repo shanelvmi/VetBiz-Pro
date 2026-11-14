@@ -14,6 +14,7 @@ import '../config/app_info.dart';
 import '../theme/app_text.dart';
 import '../theme/app_dimens.dart';
 import '../utils/facility_display.dart';
+import '../utils/app_clock.dart';
 
 /// Builds a genuine A4 PDF receipt for a Sale or a Service - a real,
 /// correctly-sized printable document, not a screenshot of the on-screen
@@ -249,7 +250,7 @@ class ReceiptPdfService {
       return sum + (p is num ? p.toDouble() : 0.0);
     });
     final serviceFeePortion = service.totalAmount - itemsUsedTotal;
-    final serviceDate = service.serviceDate ?? DateTime.now();
+    final serviceDate = service.serviceDate ?? AppClock.now();
 
     doc.addPage(
       pw.MultiPage(

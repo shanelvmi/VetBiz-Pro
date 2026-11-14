@@ -8,6 +8,7 @@ import '../data/fields.dart';
 import '../config/app_ranges.dart';
 import '../config/app_rules.dart';
 import '../config/payment_methods.dart';
+import '../utils/app_clock.dart';
 
 class DailyReportService {
   DailyReportService({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance;
@@ -154,7 +155,7 @@ class DailyReportService {
   /// decide the Generate button's state: nothing yet (offer to
   /// generate), draft (resume filling it in), submitted (view it).
   Future<DailyReport?> getTodaysReport(String facilityId) async {
-    final doc = await _reportsCollection(facilityId).doc(_dateKey(DateTime.now())).get();
+    final doc = await _reportsCollection(facilityId).doc(_dateKey(AppClock.now())).get();
     if (!doc.exists) return null;
     return DailyReport.fromMap(doc.id, doc.data()!);
   }
@@ -177,7 +178,7 @@ class DailyReportService {
     // False for an assistant - see DailyReport.activityLogIncluded.
     bool includeActivityLog = true,
   }) async {
-    final now = DateTime.now();
+    final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
     final dateKey = _dateKey(today);
     final docRef = _reportsCollection(facilityId).doc(dateKey);
@@ -693,7 +694,7 @@ class DailyReportService {
 
     final updated = current.copyWith(
       status: 'submitted',
-      submittedAt: DateTime.now(),
+      submittedAt: AppClock.now(),
       productMovement: productMovement,
       paymentReconciliation: paymentReconciliation,
       declarationConfirmed: declarationConfirmed,

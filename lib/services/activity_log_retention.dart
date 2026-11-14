@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../data/collections.dart';
 import '../config/app_limits.dart';
 import '../l10n/l10n.dart';
+import '../utils/app_clock.dart';
 
 /// Removes activity logs that have aged out of a facility's "keep logs for
 /// N days" setting.
@@ -17,7 +18,7 @@ class ActivityLogRetention {
 
   /// A log older than this is outside the window.
   static DateTime cutoffFor(int retentionDays) =>
-      DateTime.now().subtract(Duration(days: retentionDays));
+      AppClock.now().subtract(Duration(days: retentionDays));
 
   /// Deletes every log older than the retention window and returns how many
   /// were removed. Works through the backlog 500 at a time (Firestore's batch

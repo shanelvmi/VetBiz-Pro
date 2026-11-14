@@ -3,6 +3,7 @@ import '../config/app_rules.dart';
 import '../constants/facility_types.dart';
 import '../ui/feedback/friendly_error.dart';
 import '../l10n/l10n.dart';
+import '../utils/app_clock.dart';
 
 /// The region the membership functions run in - the same one as the database
 /// (africa-south1, Johannesburg). They make several database round trips each,
@@ -143,7 +144,7 @@ class MembershipService {
     return CreatedInvite(
       code: (data['code'] ?? '').toString(),
       expiresAt: DateTime.tryParse((data['expiresAt'] ?? '').toString())?.toLocal() ??
-          DateTime.now().add(AppRules.inviteValidity),
+          AppClock.now().add(AppRules.inviteValidity),
     );
   }
 

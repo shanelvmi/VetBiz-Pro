@@ -8,6 +8,7 @@ import '../models/restore_outcome.dart';
 import '../providers/product_provider.dart';
 import '../utils/activity_logger.dart';
 import 'record_changes.dart';
+import '../utils/app_clock.dart';
 
 /// What differs between a sale and a service for [RecordTrash].
 class TrashedRecordType {
@@ -118,7 +119,7 @@ class RecordTrash {
     }
     final logRef = facilityRef
         .collection(Collections.activityLogs)
-        .doc('delete_${type.idPrefix}_${id}_${DateTime.now().millisecondsSinceEpoch}');
+        .doc('delete_${type.idPrefix}_${id}_${AppClock.now().millisecondsSinceEpoch}');
 
     await firestore.runTransaction((transaction) async {
       // --- Reads ---

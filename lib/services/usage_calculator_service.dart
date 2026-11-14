@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/product.dart';
 import '../config/restock_rules.dart';
 import '../data/collections.dart';
+import '../utils/app_clock.dart';
 
 /// Computes usage-based suggested stock thresholds from real sales and
 /// service-consumption history, per the agreed design:
@@ -41,7 +42,7 @@ class UsageCalculatorService {
   static Future<Map<String, double>> calculateAverageDailyUsage(
     String facilityId,
   ) async {
-    final cutoff = DateTime.now().subtract(RestockRules.usageLookback);
+    final cutoff = AppClock.now().subtract(RestockRules.usageLookback);
     final cutoffTimestamp = Timestamp.fromDate(cutoff);
     final totalUnitsByProduct = <String, int>{};
 

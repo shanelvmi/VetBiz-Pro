@@ -16,6 +16,7 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../config/app_limits.dart';
 import '../config/app_ranges.dart';
+import '../utils/app_clock.dart';
 
 /// An existing client that looks like the one being saved - see
 /// [ClientProvider.findSimilarClient].
@@ -560,7 +561,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     final sumAgg = await debtorsQuery.aggregate(sum('balance')).get();
     final overdueAgg = await clientsRef
         .where('oldestUnpaidDebtDate',
-            isLessThanOrEqualTo: Timestamp.fromDate(DateTime.now().subtract(Duration(days: overdueDays))))
+            isLessThanOrEqualTo: Timestamp.fromDate(AppClock.now().subtract(Duration(days: overdueDays))))
         .count()
         .get();
 
@@ -722,7 +723,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
     ];
     final logRef = facilityRef
         .collection(Collections.activityLogs)
-        .doc('delete_client_${clientId}_${DateTime.now().millisecondsSinceEpoch}');
+        .doc('delete_client_${clientId}_${AppClock.now().millisecondsSinceEpoch}');
 
     // Thrown outside the transaction, so it reaches the screen as itself on
     // every platform (as RecordTrash does).

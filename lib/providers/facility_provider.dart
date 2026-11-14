@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/collections.dart';
 import '../config/app_timeouts.dart';
+import '../utils/app_clock.dart';
 
 class FacilityProvider with ChangeNotifier {
   String? _facilityId;
@@ -192,7 +193,7 @@ class FacilityProvider with ChangeNotifier {
     if (hours == null) return null;
     if (hours['allowAnytime'] == true) return null;
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final String closedKey;
     final String timeKey;
     if (now.weekday == DateTime.saturday) {
@@ -227,7 +228,7 @@ class FacilityProvider with ChangeNotifier {
     if (hours == null) return true;
     if (hours['allowAnytime'] == true) return true;
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final String closedKey;
     if (now.weekday == DateTime.saturday) {
       closedKey = 'saturdayClosed';
@@ -263,7 +264,7 @@ class FacilityProvider with ChangeNotifier {
     final hours = _businessHours;
     if (hours == null) return false;
     if (hours['allowAnytime'] == true) return false;
-    final now = DateTime.now();
+    final now = AppClock.now();
     final String closedKey;
     if (now.weekday == DateTime.saturday) {
       closedKey = 'saturdayClosed';

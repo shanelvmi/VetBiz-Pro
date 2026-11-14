@@ -12,6 +12,7 @@ import '../utils/activity_logger.dart';
 import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/activity_type.dart';
+import '../utils/app_clock.dart';
 
 class ProductProvider with ChangeNotifier {
   // Tests pass an in-memory Firestore (E4d-2 captures Add Product and Add
@@ -175,7 +176,7 @@ class ProductProvider with ChangeNotifier {
           .collection(Collections.products)
           .doc();
 
-      final now = DateTime.now();
+      final now = AppClock.now();
 
       final newProduct = product.copyWith(
         id: docRef.id,
@@ -354,7 +355,7 @@ class ProductProvider with ChangeNotifier {
           buyPrice: buyPrice,
           stockQty: toSellable ? 0 : stockQty,
           sellableQty: toSellable ? stockQty : 0,
-          receivedAt: DateTime.now(),
+          receivedAt: AppClock.now(),
         );
         await batchRef.set(batch.toMap());
       }
@@ -450,7 +451,7 @@ class ProductProvider with ChangeNotifier {
             facilityId: current.facilityId,
             target: current.target,
             createdAt: current.createdAt,
-            updatedAt: DateTime.now(),
+            updatedAt: AppClock.now(),
           );
           notifyListeners();
         }
@@ -544,7 +545,7 @@ class ProductProvider with ChangeNotifier {
           facilityId: current.facilityId,
           target: current.target,
           createdAt: current.createdAt,
-          updatedAt: DateTime.now(),
+          updatedAt: AppClock.now(),
         );
         notifyListeners();
       }
@@ -578,7 +579,7 @@ class ProductProvider with ChangeNotifier {
     // relying on this aggregate.
     DateTime? soonestGoodExpiry;
     DateTime? soonestExpiredExpiry;
-    final now = DateTime.now();
+    final now = AppClock.now();
 
     for (final state in batchStates.values) {
       final stock = state['stockQty'] as int? ?? 0;
@@ -735,7 +736,7 @@ class ProductProvider with ChangeNotifier {
           facilityId: current.facilityId,
           target: current.target,
           createdAt: current.createdAt,
-          updatedAt: DateTime.now(),
+          updatedAt: AppClock.now(),
         );
         notifyListeners();
       }
@@ -773,7 +774,7 @@ class ProductProvider with ChangeNotifier {
       if (facilityId.isEmpty) return;
 
       final updated = updatedProduct.copyWith(
-        updatedAt: DateTime.now(),
+        updatedAt: AppClock.now(),
       );
 
       await _firestore
@@ -1086,7 +1087,7 @@ class ProductProvider with ChangeNotifier {
       final updatedProduct = product.copyWith(
         stockQty: newStock,
         sellableQty: newSellable,
-        updatedAt: DateTime.now(),
+        updatedAt: AppClock.now(),
       );
       final index = _products.indexWhere((p) => p.id == updatedProduct.id);
       if (index != -1) {
@@ -1210,7 +1211,7 @@ class ProductProvider with ChangeNotifier {
       final updatedProduct = product.copyWith(
         stockQty: newStockQty,
         sellableQty: newSellableQty,
-        updatedAt: DateTime.now(),
+        updatedAt: AppClock.now(),
       );
       final index = _products.indexWhere((p) => p.id == updatedProduct.id);
       if (index != -1) {

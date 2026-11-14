@@ -5,6 +5,7 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../config/app_limits.dart';
 import '../config/app_rules.dart';
+import '../utils/app_clock.dart';
 
 /// Short-lived, single-use codes for inviting a specific Assistant to
 /// join a facility - deliberately separate from the facility's own
@@ -67,7 +68,7 @@ class InviteCodeService {
 
     final data = snap.docs.first.data();
     final expiresAt = (data['expiresAt'] as Timestamp?)?.toDate();
-    if (expiresAt == null || DateTime.now().isAfter(expiresAt)) return null;
+    if (expiresAt == null || AppClock.now().isAfter(expiresAt)) return null;
 
     return {'code': snap.docs.first.id, 'expiresAt': expiresAt};
   }

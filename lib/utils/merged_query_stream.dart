@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'app_clock.dart';
 
 typedef LogDoc = QueryDocumentSnapshot<Map<String, dynamic>>;
 
@@ -132,5 +133,5 @@ Stream<T> shareLatest<T>(Stream<T> Function() open) {
 // An entry whose server timestamp hasn't landed yet counts as newest.
 int _millis(LogDoc d) {
   final ts = d.data()['timestamp'];
-  return ts is Timestamp ? ts.millisecondsSinceEpoch : DateTime.now().millisecondsSinceEpoch;
+  return ts is Timestamp ? ts.millisecondsSinceEpoch : AppClock.now().millisecondsSinceEpoch;
 }

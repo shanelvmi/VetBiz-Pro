@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../utils/app_clock.dart';
 
 class Payment {
   final String id;
@@ -49,7 +50,7 @@ class Payment {
           .map((e) => Map<String, dynamic>.from(e))
           .toList(),
       amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? AppClock.now(),
       paidById: data['paidById'] as String?,
       // clientName/clientPhone: prefer what's actually on the document
       // itself (written directly at payment-creation time by all three

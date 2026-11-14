@@ -7,6 +7,7 @@ import '../data/subscription_notice_stage.dart';
 import '../config/app_rules.dart';
 import '../config/app_date_format.dart';
 import '../l10n/l10n.dart';
+import '../utils/app_clock.dart';
 
 enum SubscriptionStatus { trial, active, grace, locked }
 
@@ -49,7 +50,7 @@ class SubscriptionProvider with ChangeNotifier {
 
   int? get daysRemaining {
     if (expiresAt == null) return null;
-    final diff = expiresAt!.difference(DateTime.now());
+    final diff = expiresAt!.difference(AppClock.now());
     return diff.inHours >= 0 ? (diff.inHours / 24).ceil() : -((-diff.inHours) / 24).ceil();
   }
 
@@ -199,7 +200,7 @@ class SubscriptionProvider with ChangeNotifier {
   /// an open trial, not locked, so this never silently locks out an
   /// existing shop, and never retroactively changes one either.
   SubscriptionStatus _computeStatus() {
-    final now = DateTime.now();
+    final now = AppClock.now();
 
     if (_expiresAt != null) {
       if (now.isBefore(_expiresAt!)) return SubscriptionStatus.active;

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/debt.dart';
 import '../data/collections.dart';
 import '../config/app_limits.dart';
+import '../utils/app_clock.dart';
 
 class DebtProvider with ChangeNotifier {
   DebtProvider({FirebaseFirestore? firestore}) : _injectedFirestore = firestore;
@@ -169,7 +170,7 @@ class DebtProvider with ChangeNotifier {
         final updatedDebt = existingDebt.copyWith(
           amountOwed: existingDebt.amountOwed + debt.amountOwed,
           items: [...existingDebt.items, ...debt.items],
-          updatedAt: DateTime.now(),
+          updatedAt: AppClock.now(),
         );
         await updateDebt(updatedDebt, _facilityId!);
       }

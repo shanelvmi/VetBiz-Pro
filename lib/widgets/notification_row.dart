@@ -6,6 +6,7 @@ import '../l10n/l10n.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
+import '../utils/app_clock.dart';
 
 /// "Just now", "5m ago", "2h ago", "3d ago", or a plain date once it's
 /// more than a week old - shared by every screen that shows a
@@ -13,7 +14,7 @@ import '../theme/theme_context.dart';
 /// way regardless of which screen it's shown on.
 String relativeTime(DateTime? dt) {
   if (dt == null) return '';
-  final diff = DateTime.now().difference(dt);
+  final diff = AppClock.now().difference(dt);
   if (diff.inMinutes < 1) return L10n.current.time_justNow;
   if (diff.inMinutes < 60) return L10n.current.time_minutesAgo(diff.inMinutes);
   if (diff.inHours < 24) return L10n.current.time_hoursAgo(diff.inHours);
