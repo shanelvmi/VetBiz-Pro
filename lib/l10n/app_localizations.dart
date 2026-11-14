@@ -12731,6 +12731,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{visits, plural, =1{Visit activity, 1 visit, most {name}} other{Visit activity, {visits} visits, most {name}}}'**
   String home_chartVisitsSummary(int visits, String name);
+
+  /// Phone profile page (HUB4b): its title, opened from the avatar on Home.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile_pageTitle;
+
+  /// Phone profile page (HUB4b): the title of the sheet listing the person's facilities, opened from the Current facility card.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch facility'**
+  String get profile_switchFacility;
+
+  /// Short message after switching facility from the profile page (HUB4b); facility is the name as typed.
+  ///
+  /// In en, this message translates to:
+  /// **'Switched to {facility}'**
+  String profile_switchedTo(String facility);
+
+  /// Phone Home (HUB4b): the title of the first-time checklist card of a new facility.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up your facility'**
+  String get home_setupTitle;
+
+  /// Phone Home (HUB4b), checklist step; opens Add Product.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first product'**
+  String get home_setupAddProduct;
+
+  /// Phone Home (HUB4b), checklist step; opens Add Client.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a client'**
+  String get home_setupAddClient;
+
+  /// Phone Home (HUB4b), checklist step; opens Record Sale.
+  ///
+  /// In en, this message translates to:
+  /// **'Record your first sale'**
+  String get home_setupRecordSale;
+
+  /// Phone Home (HUB4b): the checklist card's button that hides it for this facility on this device.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get home_setupHide;
+
+  /// Phone Home (HUB4b): the checklist card's last line, opening a sheet with every step.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more step} other{{count} more steps}}'**
+  String home_setupMore(int count);
+
+  /// Phone Home (HUB4b), what a screen reader says for a checklist step already done; step is the step's text.
+  ///
+  /// In en, this message translates to:
+  /// **'{step}: done'**
+  String home_setupStepDone(String step);
+
+  /// Phone Home (HUB4b), what a screen reader says for a checklist step not done yet; step is the step's text.
+  ///
+  /// In en, this message translates to:
+  /// **'{step}: to do'**
+  String home_setupStepToDo(String step);
 }
 
 class _AppLocalizationsDelegate

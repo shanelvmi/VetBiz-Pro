@@ -7767,4 +7767,51 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get profile_pageTitle => 'Profile';
+
+  @override
+  String get profile_switchFacility => 'Switch facility';
+
+  @override
+  String profile_switchedTo(String facility) {
+    return 'Switched to $facility';
+  }
+
+  @override
+  String get home_setupTitle => 'Set up your facility';
+
+  @override
+  String get home_setupAddProduct => 'Add your first product';
+
+  @override
+  String get home_setupAddClient => 'Add a client';
+
+  @override
+  String get home_setupRecordSale => 'Record your first sale';
+
+  @override
+  String get home_setupHide => 'Hide';
+
+  @override
+  String home_setupMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more steps',
+      one: '1 more step',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_setupStepDone(String step) {
+    return '$step: done';
+  }
+
+  @override
+  String home_setupStepToDo(String step) {
+    return '$step: to do';
+  }
 }

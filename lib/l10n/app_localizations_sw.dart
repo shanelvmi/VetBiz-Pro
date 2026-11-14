@@ -7811,4 +7811,51 @@ class AppLocalizationsSw extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get profile_pageTitle => 'Wasifu';
+
+  @override
+  String get profile_switchFacility => 'Badilisha kituo';
+
+  @override
+  String profile_switchedTo(String facility) {
+    return 'Umehamia $facility';
+  }
+
+  @override
+  String get home_setupTitle => 'Andaa kituo chako';
+
+  @override
+  String get home_setupAddProduct => 'Ongeza bidhaa yako ya kwanza';
+
+  @override
+  String get home_setupAddClient => 'Ongeza mteja';
+
+  @override
+  String get home_setupRecordSale => 'Rekodi mauzo yako ya kwanza';
+
+  @override
+  String get home_setupHide => 'Ficha';
+
+  @override
+  String home_setupMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Hatua $count zaidi',
+      one: 'Hatua 1 zaidi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String home_setupStepDone(String step) {
+    return '$step: imekamilika';
+  }
+
+  @override
+  String home_setupStepToDo(String step) {
+    return '$step: bado';
+  }
 }
