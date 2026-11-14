@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_defaults.dart';
 import '../data/home_card_mode.dart';
 import '../data/home_chart_range.dart';
+import '../data/home_setup_state.dart';
 import '../data/ui_theme_mode.dart';
 import '../l10n/l10n.dart';
 import '../theme/app_palette.dart';
@@ -23,6 +24,8 @@ class UiSettingsProvider with ChangeNotifier {
   static const String _homeAmountsHiddenKey = 'ui_home_amounts_hidden';
   static const String _homeCardModeKey = 'ui_home_card_mode';
   static const String _homeChartRangeKey = 'ui_home_chart_range';
+  // HUB4b: one key per facility, the id appended.
+  static const String homeSetupKeyPrefix = 'ui_home_setup_';
 
   bool _layoutFixed = false;
   String _colorThemeId = AppColorTheme.defaultId;
@@ -31,6 +34,7 @@ class UiSettingsProvider with ChangeNotifier {
   bool _homeAmountsHidden = false;
   HomeCardMode _homeCardMode = HomeCardMode.defaultMode;
   HomeChartRange _homeChartRange = HomeChartRange.defaultRange;
+  final Map<String, HomeSetupState> _homeSetup = {};
   bool _loaded = false;
 
   UiSettingsProvider() {
@@ -70,6 +74,25 @@ class UiSettingsProvider with ChangeNotifier {
   /// remembered on this device only.
   HomeChartRange get homeChartRange => _homeChartRange;
 
+  /// HUB4b: the phone Home's first-time checklist for [facilityId] (null:
+  /// never seen as new on this device). Remembered on this device only.
+  HomeSetupState? homeSetupState(String facilityId) => _homeSetup[facilityId];
+
+  /// HUB4b: saves where the checklist stands. Home calls it while it builds
+  /// (the card already reflects the new state), so only the Hide button's
+  /// change ([notify]) tells the listeners.
+  Future<void> setHomeSetupState(String facilityId, HomeSetupState state, {bool notify = false}) async {
+    if (_homeSetup[facilityId] == state) return;
+    _homeSetup[facilityId] = state;
+    if (notify) notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('$homeSetupKeyPrefix$facilityId', state.key);
+    } catch (e) {
+      debugPrint('[UI SETTINGS] could not save the Home checklist: $e');
+    }
+  }
+
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -94,6 +117,13 @@ class UiSettingsProvider with ChangeNotifier {
       _homeAmountsHidden = prefs.getBool(_homeAmountsHiddenKey) ?? false;
       _homeCardMode = HomeCardMode.fromKey(prefs.getString(_homeCardModeKey));
       _homeChartRange = HomeChartRange.fromKey(prefs.getString(_homeChartRangeKey));
+      for (final key in prefs.getKeys()) {
+        if (!key.startsWith(homeSetupKeyPrefix)) continue;
+        final value = prefs.get(key);
+        final state = HomeSetupState.fromKey(value is String ? value : null);
+        // A state saved since this load started is newer: kept.
+        if (state != null) _homeSetup.putIfAbsent(key.substring(homeSetupKeyPrefix.length), () => state);
+      }
     } catch (e) {
       // Settings are a convenience: if they can't be read, the defaults stand.
       debugPrint('[UI SETTINGS] could not read saved settings: $e');
