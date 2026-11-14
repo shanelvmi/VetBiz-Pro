@@ -44,6 +44,8 @@ class AppDateFormat {
   /// HUB3: the live line's older events ("Wed 04 Nov").
   static const String weekdayDayPadMonthShortPattern = 'EEE dd MMM';
   static const String dayPattern = 'd';
+  /// HUB4: a weekday's initial ("M", Kiswahili "J"), under Home's Sales chart.
+  static const String weekdayInitialPattern = 'EEEEE';
   static const String yearPattern = 'y';
 
   static DateFormat get date => DateFormat(datePattern);

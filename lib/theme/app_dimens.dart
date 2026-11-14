@@ -664,6 +664,51 @@ class HomeChartMetrics {
   static const double productBarMin = 0.04;
   static const int productNameFlex = 5;
   static const int productBarFlex = 4;
+
+  /// HUB4: the carousel's header row: the dots at the left, the 7d | 30d
+  /// switch at the right, drawn [rangeHeight] high in a [header] row; its
+  /// touch area is [target] high (reaching into the page's top padding),
+  /// each option at least [rangeSegment] wide. A page's body under
+  /// [bodyMin] draws nothing (the smallest region); a donut under
+  /// [donutTextMin] has no text in its centre.
+  static const double header = 40;
+  static const double rangeHeight = AppSpacing.s32;
+  static const double rangeSegment = 44;
+  static const double target = 48;
+  static const double bodyMin = AppSpacing.s32;
+  static const double donutTextMin = 64;
+  static const double donutStart = -90;
+  static const double donutShare = 0.45;
+
+  /// HUB4 Sales line: the faint dotted guides (0, half, top), a marker of
+  /// [marker] radius on each day with a value, the least smoothing that
+  /// still reads as a curve, the day labels' row; under [plotMin] the
+  /// legend gives its room to the plot.
+  static const double guideLine = 1;
+  static const List<int> guideDash = [2, 3];
+  static const double marker = 3;
+  static const double curveSmoothness = 0.15;
+  static const double dayLabels = AppSpacing.s16;
+  static const double legendRow = AppSpacing.s16;
+  static const int weekDays = 7;
+  static const int dayLabelEvery = 5;
+  static const double plotMin = 40;
+
+  /// HUB4 Product movement: rows [movementRow] high with a square image of
+  /// [movementImage], a rank column of [rankWidth].
+  static const double movementRow = 48;
+  static const double movementImage = AppSpacing.s32;
+  static const double rankWidth = AppSpacing.s16;
+
+  /// HUB4 Visit activity: the ring [ringWidth] thick ([ringTouched] more
+  /// on the chosen slice), [sliceGap] between slices; the legend's swatch
+  /// and rows; the count in the centre.
+  static const double ringWidth = AppSpacing.s14;
+  static const double ringTouched = AppSpacing.s4;
+  static const double sliceGap = AppSpacing.s2;
+  static const double legendSwatch = AppSpacing.s10;
+  static const double legendLine = AppSpacing.s20;
+  static const double centreCount = AppFontSize.f18;
 }
 
 /// HUB1: the action panel docked at the bottom of the phone Home (the hub
