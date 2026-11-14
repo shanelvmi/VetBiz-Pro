@@ -23,15 +23,6 @@ final _token = RegExp(r'(?<![\w.])(show[A-Z]\w*|[A-Z]\w*Screen)\(');
 Set<String> _destinations(String source, {String? own}) =>
     {for (final m in _token.allMatches(source)) m.group(1)!}..removeAll({..._generic, if (own != null) own});
 
-/// The body of the method that starts with [signature] (to its closing
-/// brace at the method's indentation).
-String _method(String source, String signature) {
-  final start = source.indexOf(signature);
-  expect(start, isNonNegative, reason: 'not found: $signature');
-  final end = source.indexOf('\n  }\n', start);
-  return source.substring(start, end);
-}
-
 // HUB3: a checkout with CRLF line endings (core.autocrlf) reads the same.
 String _read(String path) => File(path).readAsStringSync().replaceAll('\r\n', '\n');
 
@@ -40,8 +31,14 @@ Set<String> _panel() => {
       ..._destinations(_read('lib/screens/dashboard/record_actions.dart')),
     };
 
-Set<String> _profileMenu() =>
-    _destinations(_method(_read('lib/screens/dashboard/dashboard_screen.dart'), 'Widget _buildEndDrawerContent()'));
+// HUB4b: the drawer and the phone profile page share one list
+// (profileActionsFor) whose handlers the dashboard gives in _profileHandlers.
+Set<String> _profileMenu() {
+  final dashboard = _read('lib/screens/dashboard/dashboard_screen.dart');
+  final start = dashboard.indexOf('ProfileHandlers _profileHandlers(');
+  expect(start, isNonNegative, reason: 'not found: _profileHandlers');
+  return _destinations(dashboard.substring(start, dashboard.indexOf('\n      );\n', start)));
+}
 
 Set<String> _settingsScreen() =>
     _destinations(_read('lib/screens/settings/settings_screen.dart'), own: 'SettingsScreen');
