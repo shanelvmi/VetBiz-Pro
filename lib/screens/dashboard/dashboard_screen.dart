@@ -40,6 +40,10 @@ import 'subscription_banner.dart';
 import 'all_details_screen.dart';
 import 'needs_attention.dart';
 import 'phone_home.dart';
+import 'profile_actions.dart';
+import '../../models/facility_entry.dart';
+import '../../utils/facility_activation.dart';
+import '../../widgets/profile/profile_page.dart';
 import 'home_chart_carousel.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_layout.dart';
@@ -722,6 +726,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
   // The phone top bar's user document, made once (S9).
   late final Stream<DocumentSnapshot> _userDocStream = userDoc.snapshots();
+  // HUB4b: what the top bar last received from it, to seed the profile page.
+  DocumentSnapshot? _heldUserDoc;
 
   @override
   void setState(VoidCallback fn) {
@@ -1666,7 +1672,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             appBar: _buildPhoneHomeAppBar(context),
             // PH8a: the subscription banner over Home's top, from here.
             banner: _buildPhoneSubscriptionBanner(context),
-            endDrawer: endDrawer,
+            // HUB4b: no end drawer on a phone: the avatar pushes the profile page.
             // RV1: the skeleton at once, then Home as one fade and rise when
             // the period totals and the debts have answered (or 1.2 s);
             // Needs attention is a late slot.
@@ -1919,6 +1925,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
       title: StreamBuilder<DocumentSnapshot>(
         stream: _userDocStream,
         builder: (context, snapshot) {
+          if (snapshot.hasData) _heldUserDoc = snapshot.data;
           final data = _profileData(snapshot);
           final name = (data['fullName'] ?? '').toString();
           return PhoneHomeTopBar(
@@ -1926,7 +1933,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             greeting: name.isEmpty ? greetingTime() : context.l10n.dashboard_greeting(greetingTime(), name),
             name: name,
             avatarUrl: data['avatarUrl'] as String?,
-            onAvatar: () => Scaffold.of(context).openEndDrawer(),
+            onAvatar: _openProfilePage,
           );
         },
       ),
@@ -2883,8 +2890,8 @@ Widget _buildDrawerContent() {
   }
 
   // The avatar here is display only (G2): the photo is changed or removed
-  // in Edit Profile. The actions, their order and who sees them are as
-  // before; Sign out is the last row (it was a round button in the corner).
+  // in Edit Profile. The actions, their order and who sees them are
+  // profileActionsFor's (HUB4b: the same list as the phone's profile page).
   Widget _buildEndDrawerContent() {
     return StreamBuilder<DocumentSnapshot>(
       stream: userDoc.snapshots(),
@@ -2904,79 +2911,85 @@ Widget _buildDrawerContent() {
           facilityType: facilities.selectedFacilityType ?? '',
           facilityTypeDetail: facilities.selectedFacilityTypeDetail,
           onClose: () => Navigator.of(context).pop(),
-          actions: [
-            ProfileDrawerAction(
-              icon: Icons.edit_outlined,
-              label: context.l10n.common_editProfile,
-              onTap: () async {
-                final snapshot = await userDoc.get();
-                if (!snapshot.exists || !context.mounted) return;
-
-                final rawUserData = snapshot.data();
-                final userData = (rawUserData != null)
-                    ? Map<String, dynamic>.from(rawUserData)
-                    : <String, dynamic>{};
-
-                // A modal over the Dashboard on wide screens (full screen
-                // on a phone), like the other edit screens.
-                showEditProfileScreen(context, userData: userData);
-              },
-            ),
-            if (isAdmin) ...[
-              ProfileDrawerAction(
-                icon: AppIcons.team.outlined,
-                label: context.l10n.team_title,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ManageAssistantsScreen())),
-              ),
-              ProfileDrawerAction(
-                icon: AppIcons.facilities.outlined,
-                label: context.l10n.dashboard_viewFacilities,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => FacilityScreen())),
-              ),
-            ],
-            ProfileDrawerAction(
-              icon: Icons.lock_outline,
-              label: context.l10n.dashboard_changePassword,
-              onTap: () {
-                final email = FirebaseAuth.instance.currentUser?.email;
-                if (email != null) _showChangePasswordDialog(email);
-              },
-            ),
-            if (isAdmin)
-              ProfileDrawerAction(
-                icon: AppIcons.activityLog.filled,
-                label: context.l10n.export_activityLog,
-                // Full screen, like the other drawer items (Manage Assistants,
-                // View Facilities).
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityLogScreen())),
-              ),
-            // HUB1 (the owner's split): the profile menu is the person and
-            // Settings, at every width; the action panel is daily work and the
-            // Settings screen configuration. Help left Settings for here.
-            ProfileDrawerAction(
-              icon: AppIcons.settings.outlined,
-              label: context.l10n.settings_title,
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsScreen())),
-            ),
-            ProfileDrawerAction(
-              icon: AppIcons.help.outlined,
-              label: context.l10n.dashboard_help,
-              // The platform-set contact (app_config/support_contact), as the
-              // wide top bar's Help.
-              onTap: () => showSupportContactDialog(context),
-            ),
-            ProfileDrawerAction(
-              icon: Icons.power_settings_new,
-              label: context.l10n.common_logout,
-              destructive: true,
-              onTap: () => _confirmLogout(context),
-            ),
-          ],
+          actions: profileActionsFor(context.l10n, isAdmin: isAdmin, on: _profileHandlers(context)),
         );
       },
     );
   }
 
+  /// What the profile actions do, from [context] (the drawer's, or the phone
+  /// profile page's: a screen opened from either is pushed above it, and
+  /// Back returns to it).
+  ProfileHandlers _profileHandlers(BuildContext context) => ProfileHandlers(
+        editProfile: () async {
+          final snapshot = await userDoc.get();
+          if (!snapshot.exists || !context.mounted) return;
+
+          final rawUserData = snapshot.data();
+          final userData = (rawUserData != null)
+              ? Map<String, dynamic>.from(rawUserData)
+              : <String, dynamic>{};
+
+          // A modal over the Dashboard on wide screens (full screen
+          // on a phone), like the other edit screens.
+          showEditProfileScreen(context, userData: userData);
+        },
+        team: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ManageAssistantsScreen())),
+        facilities: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => FacilityScreen())),
+        changePassword: () {
+          final email = FirebaseAuth.instance.currentUser?.email;
+          if (email != null) _showChangePasswordDialog(email);
+        },
+        // Full screen, like the other drawer items (Manage Assistants,
+        // View Facilities).
+        activityLog: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityLogScreen())),
+        settings: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsScreen())),
+        // The platform-set contact (app_config/support_contact), as the
+        // wide top bar's Help.
+        help: () => showSupportContactDialog(context),
+        signOut: () => _confirmLogout(context),
+      );
+
+  /// HUB4b: the phone's avatar opens the full-screen profile (the app's page
+  /// transition) instead of the end drawer. It reads nothing and listens to
+  /// nothing new: the user document is the top bar's own stream (a broadcast:
+  /// this joins its one listener), seeded with what the bar last received,
+  /// and the facility comes from the provider. Back returns to Home as it was.
+  void _openProfilePage() {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => StreamBuilder<DocumentSnapshot>(
+        initialData: _heldUserDoc,
+        stream: _userDocStream,
+        builder: (pageContext, snapshot) {
+          final data = _profileData(snapshot);
+          final isAdmin = Provider.of<UserRoleProvider>(pageContext).isAdmin;
+          final facilities = pageContext.watch<FacilityProvider>();
+          // The person's own list, as the facility picker gets it (the same
+          // user document, already held).
+          final mine = FacilityEntry.listFrom(data['facilities']);
+          return ProfilePage(
+            avatarUrl: data['avatarUrl'] as String?,
+            name: (data['fullName'] ?? '').toString(),
+            roleLabel: _profileRoleLabel(data),
+            email: (data['email'] ?? '').toString(),
+            phone: (data['phone'] ?? '').toString(),
+            facility: FacilityDisplay.name(facilities.selectedFacilityName),
+            facilityType: facilities.selectedFacilityType ?? '',
+            facilityTypeDetail: facilities.selectedFacilityTypeDetail,
+            actions: profileActionsFor(pageContext.l10n, isAdmin: isAdmin, on: _profileHandlers(pageContext)),
+            onSwitchFacility: mine.length < 2
+                ? null
+                : () => showSwitchFacilitySheet(
+                      pageContext,
+                      facilities: mine,
+                      currentId: facilities.selectedFacilityId,
+                      onPick: (f) => switchFacilityFromProfile(pageContext, f, role: data[Fields.role] as String?),
+                    ),
+          );
+        },
+      ),
+    ));
+  }
 }
 
 /// PH4: pinged on every dashboard setState, for the All details page.

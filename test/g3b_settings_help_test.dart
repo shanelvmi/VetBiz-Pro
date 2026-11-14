@@ -60,7 +60,8 @@ void main() {
       expect(settings.contains('showSupportContactDialog'), isFalse);
       final dashboard = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync();
       final menu = dashboard.substring(dashboard.indexOf('Widget _buildEndDrawerContent()'));
-      expect(menu.contains('onTap: () => showSupportContactDialog(context),'), isTrue);
+      // HUB4b: the drawer and the phone profile page share one handler.
+      expect(menu.contains('help: () => showSupportContactDialog(context),'), isTrue);
     });
 
     test('no hard-coded support contact', () {

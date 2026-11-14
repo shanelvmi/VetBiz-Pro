@@ -20,6 +20,9 @@ import '../theme/app_layout.dart';
 import '../theme/app_motion.dart';
 import '../data/fields.dart';
 import '../widgets/vetbiz_loading_indicator.dart';
+import '../models/facility_entry.dart';
+import '../ui/feedback/app_feedback.dart';
+import 'facility_display.dart';
 
 /// The screen a facility opens on. Tests put a stand-in here (REFRESH-1): the
 /// real DashboardScreen needs the whole signed-in app around it.
@@ -232,4 +235,14 @@ class _DashboardEntryLoaderState extends State<_DashboardEntryLoader> {
             ),
     );
   }
+}
+
+/// HUB4b: the phone profile's Switch facility: the facility picker's own
+/// activation (RELOAD1 remembers it, every provider is reset and listens
+/// again, the new facility's Home is shown), then a short message.
+Future<void> switchFacilityFromProfile(BuildContext context, FacilityEntry facility, {String? role}) async {
+  await activateFacilityAndGoToDashboard(context: context, facility: facility.toMap(), role: role);
+  AppFeedback.success(L10n.current.profile_switchedTo(
+    FacilityDisplay.name(facility.name, fallback: L10n.current.facilities_yourFacility),
+  ));
 }
