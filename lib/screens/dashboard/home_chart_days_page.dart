@@ -2,58 +2,62 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../config/app_date_format.dart';
+import '../../config/app_ranges.dart';
 import '../../config/money.dart';
+import '../../data/home_chart_range.dart';
 import '../../l10n/l10n.dart';
 import '../../services/home_chart_data.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../utils/app_clock.dart';
 import '../../widgets/reveal/reveal.dart';
 import 'home_chart_page.dart';
 
-/// Amounts in tabular figures, so digits do not shift as they change.
-const _tabular = [FontFeature.tabularFigures()];
-
-/// Sales (a line, the previous week dashed) or Vet services (bars) over the
-/// last 7 days, from the shared 14-day read.
-class HomeChartDaysPage extends StatefulWidget {
+/// HUB4 (1): the Sales page: the period's sales as a line (barely smoothed,
+/// so it cannot invent a hill between a day with sales and one without), a
+/// soft area under it and a marker on each day with a value; the period
+/// before as a thin dashed line; three faint dotted guides (0, half and a
+/// clean top) labelled in a left column; the days under the plot (a week's
+/// initials, every 5th date of 30 days). A tap or a press on a day shows its
+/// date and amount. While [hidden], the shape and the guides only: no
+/// labels, no tooltip, a summary without amounts. Every value zero: the
+/// guides and days, one muted line and, when given, Record a sale.
+class HomeChartSalesPage extends StatefulWidget {
   final Future<HomeChartDays> future;
-  final String title;
-  final bool legend;
-  final bool bars;
-  final double? today;
-  final List<double> Function(HomeChartDays) pick;
-  final List<double> Function(HomeChartDays)? previous;
-  final bool hidden;
-  final VoidCallback onOpen;
+  final HomeChartRange range;
 
-  const HomeChartDaysPage({
+  /// Today's live sales (the card's Today total); null keeps the read's.
+  final double? today;
+  final bool hidden;
+
+  /// Record a sale on the empty page (null: not offered to this person).
+  final VoidCallback? onRecordSale;
+
+  const HomeChartSalesPage({
     super.key,
     required this.future,
-    required this.title,
-    required this.pick,
+    required this.range,
     required this.hidden,
-    required this.onOpen,
-    this.legend = false,
-    this.bars = false,
     this.today,
-    this.previous,
+    this.onRecordSale,
   });
 
   @override
-  State<HomeChartDaysPage> createState() => _HomeChartDaysPageState();
+  State<HomeChartSalesPage> createState() => _HomeChartSalesPageState();
 }
 
-class _HomeChartDaysPageState extends State<HomeChartDaysPage> {
+class _HomeChartSalesPageState extends State<HomeChartSalesPage> {
   HomeChartDays? _days;
   bool _answered = false;
 
-  // The day whose exact amount is shown (a long press), or none.
-  int? _pressed;
-  double _chartLeft = 0;
-  double _chartWidth = 1;
+  // The day whose exact amount is shown (a tap or a press), or none.
+  int? _shown;
+  double _plotLeft = 0;
+  double _plotWidth = 1;
 
   @override
   void initState() {
@@ -73,106 +77,104 @@ class _HomeChartDaysPageState extends State<HomeChartDaysPage> {
     );
   }
 
-  HomeChartDays? get _live =>
-      _days?.withToday(sales: widget.legend ? widget.today : null, services: widget.bars ? widget.today : null);
+  HomeChartDays? get _live => _days?.withToday(sales: widget.today);
 
-  void _press(Offset local) {
-    if (widget.hidden || _live == null) return;
-    final x = local.dx - HomeChartMetrics.padding - _chartLeft;
-    final i = (x / _chartWidth * HomeChartDays.week).floor().clamp(0, HomeChartDays.week - 1);
-    if (i != _pressed) setState(() => _pressed = i);
-  }
+  int _dayAt(Offset local, int span) =>
+      ((local.dx - _plotLeft) / _plotWidth * (span - 1)).round().clamp(0, span - 1);
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final l10n = context.l10n;
+    final span = widget.range.days;
     final days = _live;
-    final values = days == null ? const <double>[] : widget.pick(days);
+    final values = days?.currentSales ?? List<double>.filled(span, 0);
     final empty = values.every((v) => v == 0);
-    Widget? trailing;
-    if (widget.legend) {
-      trailing = _Legend(current: l10n.home_chartThisWeek, previous: l10n.home_chartLastWeek);
-    } else if (!widget.hidden && days != null && !empty) {
-      trailing = Text(
-        Money.format(values.fold<double>(0, (a, b) => a + b)),
-        key: const ValueKey('home-chart-total'),
-        style: TextStyle(
-          fontSize: HomeChartMetrics.title,
-          fontWeight: AppFontWeight.semibold,
-          fontFeatures: _tabular,
-          color: colors.textPrimary,
-        ),
-      );
-    }
+    final total = values.fold<double>(0, (a, b) => a + b);
+    final best = empty ? 0 : values.indexOf(values.reduce(math.max));
+    final summary = widget.hidden || days == null || empty
+        ? l10n.home_chartSalesSummaryHidden(span)
+        : l10n.home_chartSalesSummary(span, Money.format(total), AppDateFormat.dateShort.format(days.currentDays[best]));
     final body = LayoutBuilder(
-      builder: (context, constraints) {
-        _chartLeft = widget.hidden ? 0 : HomeChartMetrics.axisReserved;
-        _chartWidth = math.max(1, constraints.maxWidth - _chartLeft);
+      builder: (context, box) {
+        final legend = box.maxHeight - HomeChartMetrics.legendRow - HomeChartMetrics.dayLabels >= HomeChartMetrics.plotMin;
         return LateSlot(
           ready: _answered,
-          child:
-              days == null || empty
-                  ? const HomeChartEmpty()
-                  : (widget.bars ? _bars(context, days, values) : _line(context, days, values)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (legend && !empty) _Legend(span: span),
+              Expanded(
+                child: empty
+                    ? HomeChartEmpty(
+                        message: l10n.home_chartNoSales(span),
+                        action: widget.onRecordSale == null ? null : l10n.home_chartRecordSale,
+                        onAction: widget.onRecordSale,
+                        behind: ExcludeSemantics(child: _chart(context, null, values, span)),
+                      )
+                    : ExcludeSemantics(child: _touchable(context, days!, values, span)),
+              ),
+            ],
+          ),
         );
       },
     );
     return HomeChartPage(
-      title: widget.title,
-      trailing: trailing,
+      title: l10n.dashboard_sales,
+      period: span == HomeChartRange.month.days ? l10n.services_last30 : l10n.services_last7,
+      summary: summary,
       body: body,
-      onOpen: widget.onOpen,
-      onPressStart: widget.hidden ? null : (d) => _press(d.localPosition),
-      onPressMove: widget.hidden ? null : (d) => _press(d.localPosition),
-      onPressEnd: widget.hidden ? null : () => setState(() => _pressed = null),
     );
   }
 
-  AxisTitles _guides(BuildContext context, double top) => AxisTitles(
-    sideTitles: SideTitles(
-      showTitles: !widget.hidden,
-      reservedSize: HomeChartMetrics.axisReserved,
-      interval: top / HomeChartMetrics.guideCount,
-      getTitlesWidget:
-          (value, meta) =>
-              value == 0 || value > top
-                  ? const SizedBox.shrink()
-                  : Text(
-                    Money.axis(value),
-                    style: TextStyle(fontSize: HomeChartMetrics.axisLabel, color: context.colors.textMuted),
-                  ),
-    ),
-  );
+  Widget _touchable(BuildContext context, HomeChartDays days, List<double> values, int span) {
+    if (widget.hidden) return _chart(context, days, values, span);
+    return LayoutBuilder(
+      builder: (context, box) {
+        _plotLeft = HomeChartMetrics.axisReserved;
+        _plotWidth = math.max(1, box.maxWidth - _plotLeft);
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapUp: (d) {
+            final i = _dayAt(d.localPosition, span);
+            setState(() => _shown = _shown == i ? null : i);
+          },
+          onLongPressStart: (d) => setState(() => _shown = _dayAt(d.localPosition, span)),
+          onLongPressMoveUpdate: (d) => setState(() => _shown = _dayAt(d.localPosition, span)),
+          onLongPressEnd: (_) => setState(() => _shown = null),
+          child: _chart(context, days, values, span),
+        );
+      },
+    );
+  }
 
-  FlTitlesData _titles(BuildContext context, double top) => FlTitlesData(
-    leftTitles: _guides(context, top),
-    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-    bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-  );
-
-  String _tooltip(HomeChartDays days, int i, double value) =>
-      '${AppDateFormat.dateShort.format(days.thisWeekDays[i])}\n${Money.format(value)}';
-
-  TextStyle _tooltipStyle(BuildContext context) => TextStyle(
-    color: context.colors.onChartTooltip,
-    fontWeight: AppFontWeight.bold,
-    fontSize: HomeChartMetrics.axisLabel,
-  );
-
-  Widget _line(BuildContext context, HomeChartDays days, List<double> values) {
+  /// [days] null: the empty page's faint frame (guides and days only).
+  Widget _chart(BuildContext context, HomeChartDays? days, List<double> values, int span) {
     final colors = context.colors;
-    final previous = widget.previous?.call(days) ?? const <double>[];
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final previous = days?.previousSales ?? const <double>[];
     final top = homeChartNiceMax([...values, ...previous].reduce(math.max));
+    final labels = days != null && !widget.hidden;
+    final dates = days?.currentDays ??
+        [for (var i = 0; i < span; i++) DateUtils.dateOnly(AppClock.now()).subtract(AppRanges.day * (span - 1 - i))];
+    final axis = TextStyle(fontSize: HomeChartMetrics.axisLabel, color: colors.textMuted);
     List<FlSpot> spots(List<double> v) => [for (var i = 0; i < v.length; i++) FlSpot(i.toDouble(), v[i])];
     final current = LineChartBarData(
+      show: days != null,
       spots: spots(values),
       isCurved: true,
+      curveSmoothness: HomeChartMetrics.curveSmoothness,
       preventCurveOverShooting: true,
       color: colors.primary,
       barWidth: HomeChartMetrics.line,
-      dotData: const FlDotData(show: false),
+      dotData: FlDotData(
+        checkToShowDot: (spot, _) => spot.y > 0,
+        getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
+          radius: HomeChartMetrics.marker,
+          color: colors.primary,
+          strokeWidth: HomeChartMetrics.guideLine,
+          strokeColor: colors.surface,
+        ),
+      ),
       belowBarData: BarAreaData(show: true, color: colors.primary.withValues(alpha: HomeChartMetrics.areaAlpha)),
     );
     final bars = [
@@ -180,6 +182,7 @@ class _HomeChartDaysPageState extends State<HomeChartDaysPage> {
         LineChartBarData(
           spots: spots(previous),
           isCurved: true,
+          curveSmoothness: HomeChartMetrics.curveSmoothness,
           preventCurveOverShooting: true,
           color: colors.textMuted,
           barWidth: HomeChartMetrics.previousLine,
@@ -188,108 +191,112 @@ class _HomeChartDaysPageState extends State<HomeChartDaysPage> {
         ),
       current,
     ];
-    final pressed = _pressed;
-    return LineChart(
-      LineChartData(
-        minX: 0,
-        maxX: (HomeChartDays.week - 1).toDouble(),
-        minY: 0,
-        maxY: top,
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: true, border: Border(bottom: BorderSide(color: colors.border))),
-        titlesData: _titles(context, top),
-        lineBarsData: bars,
-        showingTooltipIndicators: [
-          if (pressed != null && !widget.hidden)
-            ShowingTooltipIndicators([LineBarSpot(current, bars.length - 1, current.spots[pressed])]),
-        ],
-        lineTouchData: LineTouchData(
-          enabled: false,
-          touchTooltipData: LineTouchTooltipData(
-            fitInsideHorizontally: true,
-            fitInsideVertically: true,
-            getTooltipItems:
-                (spots) => [
-                  for (final s in spots) LineTooltipItem(_tooltip(days, s.x.toInt(), s.y), _tooltipStyle(context)),
-                ],
-          ),
-        ),
-      ),
-      duration: Duration.zero,
-    );
-  }
-
-  Widget _bars(BuildContext context, HomeChartDays days, List<double> values) {
-    final colors = context.colors;
-    final top = homeChartNiceMax(values.reduce(math.max));
-    final pressed = _pressed;
-    return BarChart(
-      BarChartData(
-        minY: 0,
-        maxY: top,
-        alignment: BarChartAlignment.spaceAround,
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: true, border: Border(bottom: BorderSide(color: colors.border))),
-        titlesData: _titles(context, top),
-        barGroups: [
-          for (var i = 0; i < values.length; i++)
-            BarChartGroupData(
-              x: i,
-              showingTooltipIndicators: [if (i == pressed && !widget.hidden) 0],
-              barRods: [
-                BarChartRodData(
-                  toY: values[i],
-                  color: colors.primary,
-                  width: math.max(
-                    HomeChartMetrics.barMinWidth,
-                    _chartWidth / HomeChartDays.week * HomeChartMetrics.barFill,
-                  ),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(HomeChartMetrics.barRadius)),
+    final shown = _shown;
+    return Padding(
+      // Room for the top guide's label, so it never reaches the period line.
+      padding: const EdgeInsets.only(top: HomeChartMetrics.titleGap),
+      child: LineChart(
+        LineChartData(
+          minX: 0,
+          maxX: (span - 1).toDouble(),
+          minY: 0,
+          maxY: top,
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+          extraLinesData: ExtraLinesData(horizontalLines: [
+            for (final y in homeChartGuides(top))
+              HorizontalLine(
+                y: y,
+                color: colors.border,
+                strokeWidth: HomeChartMetrics.guideLine,
+                dashArray: HomeChartMetrics.guideDash,
+              ),
+          ]),
+          titlesData: FlTitlesData(
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: labels,
+                reservedSize: HomeChartMetrics.axisReserved,
+                interval: top / 2,
+                getTitlesWidget: (value, meta) => SideTitleWidget(
+                  axisSide: meta.axisSide,
+                  child: Text(Money.axis(value), key: ValueKey('home-chart-guide-${value.round()}'), style: axis),
                 ),
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: HomeChartMetrics.dayLabels,
+                interval: 1,
+                getTitlesWidget: (value, meta) {
+                  final i = value.round();
+                  if (i < 0 || i >= span || value != i || !homeChartDayLabelled(i, span)) return const SizedBox.shrink();
+                  final text = span <= HomeChartMetrics.weekDays
+                      ? DateFormat(AppDateFormat.weekdayInitialPattern, locale).format(dates[i])
+                      : DateFormat(AppDateFormat.dayPattern, locale).format(dates[i]);
+                  return SideTitleWidget(axisSide: meta.axisSide, space: 0, child: Text(text, style: axis));
+                },
+              ),
+            ),
+          ),
+          lineBarsData: bars,
+          showingTooltipIndicators: [
+            if (shown != null && labels && shown < span)
+              ShowingTooltipIndicators([LineBarSpot(current, bars.length - 1, current.spots[shown])]),
+          ],
+          lineTouchData: LineTouchData(
+            enabled: false,
+            touchTooltipData: LineTouchTooltipData(
+              fitInsideHorizontally: true,
+              fitInsideVertically: true,
+              getTooltipItems: (spots) => [
+                for (final s in spots)
+                  LineTooltipItem(
+                    '${AppDateFormat.dateShort.format(dates[s.x.toInt()])}\n${Money.format(s.y)}',
+                    TextStyle(
+                      color: colors.onChartTooltip,
+                      fontWeight: AppFontWeight.bold,
+                      fontSize: HomeChartMetrics.axisLabel,
+                    ),
+                  ),
               ],
             ),
-        ],
-        barTouchData: BarTouchData(
-          enabled: false,
-          touchTooltipData: BarTouchTooltipData(
-            fitInsideHorizontally: true,
-            fitInsideVertically: true,
-            getTooltipItem:
-                (group, _, rod, __) => BarTooltipItem(_tooltip(days, group.x, rod.toY), _tooltipStyle(context)),
           ),
         ),
+        duration: Duration.zero,
       ),
-      swapAnimationDuration: Duration.zero,
     );
   }
 }
 
-/// "This week" (a solid swatch) and "Last week" (dashed), one small line.
+/// "Last 7 days" (a solid swatch) and "Previous 7 days" (dashed, muted).
 class _Legend extends StatelessWidget {
-  final String current;
-  final String previous;
+  final int span;
 
-  const _Legend({required this.current, required this.previous});
+  const _Legend({required this.span});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final l10n = context.l10n;
     Widget item(Color color, String label, {required bool dashed}) => Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
           width: HomeChartMetrics.swatch,
           height: HomeChartMetrics.line,
-          child:
-              dashed
-                  ? Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      for (var i = 0; i < 2; i++)
-                        SizedBox(width: HomeChartMetrics.swatch / 3, child: ColoredBox(color: color)),
-                    ],
-                  )
-                  : ColoredBox(color: color),
+          child: dashed
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    for (var i = 0; i < 2; i++)
+                      SizedBox(width: HomeChartMetrics.swatch / 3, child: ColoredBox(color: color)),
+                  ],
+                )
+              : ColoredBox(color: color),
         ),
         const SizedBox(width: AppSpacing.s4),
         Flexible(
@@ -302,14 +309,21 @@ class _Legend extends StatelessWidget {
         ),
       ],
     );
-    return Flexible(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Flexible(child: item(colors.primary, current, dashed: false)),
-          const SizedBox(width: AppSpacing.s8),
-          Flexible(child: item(colors.textMuted, previous, dashed: true)),
-        ],
+    return ExcludeSemantics(
+      child: SizedBox(
+        key: const ValueKey('home-chart-legend'),
+        height: HomeChartMetrics.legendRow,
+        child: Row(
+          children: [
+            Flexible(
+              child: item(colors.primary,
+                  span == HomeChartRange.month.days ? l10n.services_last30 : l10n.services_last7,
+                  dashed: false),
+            ),
+            const SizedBox(width: AppSpacing.s12),
+            Flexible(child: item(colors.textMuted, l10n.home_chartPreviousDays(span), dashed: true)),
+          ],
+        ),
       ),
     );
   }

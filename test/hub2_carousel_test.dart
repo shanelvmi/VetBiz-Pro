@@ -1,15 +1,20 @@
-// HUB2 (3): Home's chart carousel: the three pages in order with their
-// titles, the dots (the shown one longer), lazy loading (the 14 days asked
-// once for both pages that need them, the products only when their page is
-// shown), the empty line, the eye (no guide labels or total while hidden;
-// quantities stay), a tap opening Insights, the short guide labels, and the
-// colours' contrast in the four themes, Light and Dark.
+// HUB2 (3), updated for HUB4: Home's chart carousel: the three pages in
+// order with their titles (Vet services is now Visit activity), the dots
+// (the shown one longer), lazy loading (each page's data asked once, when
+// first shown), the empty lines, the eye (no guide labels while hidden;
+// quantities and visit counts stay), the short guide labels, and the
+// colours' contrast in the four themes, Light and Dark. HUB4: a tap no
+// longer opens Insights (hub4_carousel_test: the tooltip, the rows, the
+// slices).
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/money.dart';
+import 'package:vetbiz_pro/data/home_chart_range.dart';
 import 'package:vetbiz_pro/screens/dashboard/home_chart_carousel.dart';
 import 'package:vetbiz_pro/services/home_chart_data.dart';
+import 'package:vetbiz_pro/services/home_movement.dart';
 import 'package:vetbiz_pro/services/insights_data_loader.dart';
+import 'package:vetbiz_pro/services/service_breakdown.dart';
 import 'package:vetbiz_pro/theme/app_colors.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/color_math.dart';
@@ -26,22 +31,25 @@ HomeChartDays _days({bool empty = false}) => HomeChartDays(
       services: [for (var i = 0; i < 14; i++) empty ? 0 : (i.isEven ? 5000.0 : 0)],
     );
 
-const _top = [
-  ProductMovement(matrixLongProductName, 12),
-  ProductMovement('Dewormer', 8),
-  ProductMovement(ProductMovement.unknownName, 2),
-];
+const _top = HomeMovement(top: [
+  TopSeller(matrixLongProductName, 12, null),
+  TopSeller('Dewormer', 8, null),
+  TopSeller(ProductMovement.unknownName, 2, null),
+], slow: []);
+
+const _visits = [ServiceSlice('Vaccination', 3, 15000)];
 
 class _Calls {
-  int days = 0, products = 0, opened = 0;
+  int days = 0, products = 0, visits = 0;
 }
 
 Future<_Calls> _pump(
   WidgetTester tester, {
   bool hidden = false,
   HomeChartDays? days,
-  List<ProductMovement> top = _top,
-  double height = 220,
+  HomeMovement top = _top,
+  List<ServiceSlice> visits = _visits,
+  double height = 252,
   MatrixLook look = MatrixLook.light,
 }) async {
   final calls = _Calls();
@@ -55,16 +63,22 @@ Future<_Calls> _pump(
         child: SizedBox(
           height: height,
           child: HomeChartCarousel(
-            days: () {
+            days: (_) {
               calls.days++;
               return Future.value(days ?? _days());
             },
-            products: () {
+            movement: (_) {
               calls.products++;
               return Future.value(top);
             },
+            visits: (_) {
+              calls.visits++;
+              return Future.value(visits);
+            },
+            range: HomeChartRange.week,
+            onRangeChanged: (_) {},
             amountsHidden: hidden,
-            onOpen: () => calls.opened++,
+            onOpenProduct: (_) {},
           ),
         ),
       ),
@@ -80,33 +94,32 @@ Future<void> _next(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('Sales first, then Product movement, then Vet services; the dots follow', (tester) async {
+  testWidgets('Sales first, then Product movement, then Visit activity; the dots follow', (tester) async {
     await _pump(tester);
     expect(find.text('Sales'), findsOneWidget);
-    expect(find.text('This week'), findsOneWidget);
-    expect(find.text('Last week'), findsOneWidget);
+    expect(find.text('Last 7 days'), findsWidgets);
+    expect(find.text('Previous 7 days'), findsOneWidget);
     double dot(int i) => tester.getSize(find.byKey(ValueKey('home-chart-dot-$i'))).width;
     expect(dot(0), greaterThan(dot(1)));
     await _next(tester);
     expect(find.text('Product movement'), findsOneWidget);
     expect(dot(1), greaterThan(dot(0)));
     await _next(tester);
-    expect(find.text('Vet services'), findsOneWidget);
-    expect(find.byKey(const ValueKey('home-chart-total')), findsOneWidget);
-    expect(find.text(Money.format(15000)), findsOneWidget, reason: '5000 on 3 of the last 7 days');
+    expect(find.text('Visit activity'), findsOneWidget);
+    expect(find.byKey(const ValueKey('home-chart-donut-count')), findsOneWidget);
     expect(tester.takeException(), isNull);
   }, skip: _skip);
 
-  testWidgets('lazy: the 14 days asked once for both pages, the products only when shown', (tester) async {
+  testWidgets('lazy: each page asks once, when first shown', (tester) async {
     final calls = await _pump(tester);
-    expect((calls.days, calls.products), (1, 0));
+    expect((calls.days, calls.products, calls.visits), (1, 0, 0));
     await _next(tester);
     expect(calls.products, 1);
     await _next(tester);
-    expect((calls.days, calls.products), (1, 1));
+    expect((calls.days, calls.products, calls.visits), (1, 1, 1));
     await tester.fling(find.byKey(const ValueKey('home-chart-pages')), const Offset(600, 0), 1000);
     await tester.pumpAndSettle();
-    expect((calls.days, calls.products), (1, 1));
+    expect((calls.days, calls.products, calls.visits), (1, 1, 1));
   }, skip: _skip);
 
   testWidgets('the products: names (a long one ends in an ellipsis), quantities, Unknown shown in words',
@@ -120,35 +133,25 @@ void main() {
     expect(tester.takeException(), isNull);
   }, skip: _skip);
 
-  testWidgets('nothing this week: one muted line on each page', (tester) async {
-    await _pump(tester, days: _days(empty: true), top: const []);
-    expect(find.text('No data yet for this week'), findsOneWidget);
+  testWidgets('nothing in the period: one muted line on each page', (tester) async {
+    await _pump(tester, days: _days(empty: true), top: const HomeMovement(top: [], slow: []), visits: const []);
+    expect(find.text('No sales in the last 7 days'), findsOneWidget);
     await _next(tester);
-    expect(find.text('No data yet for this week'), findsOneWidget);
+    expect(find.text('Nothing sold in the last 7 days'), findsWidgets);
     await _next(tester);
-    expect(find.text('No data yet for this week'), findsOneWidget);
-    expect(find.byKey(const ValueKey('home-chart-total')), findsNothing);
+    expect(find.text('No visits in the last 7 days'), findsOneWidget);
   }, skip: _skip);
 
-  testWidgets('hidden amounts: no guide labels and no total; quantities stay', (tester) async {
+  testWidgets('hidden amounts: no guide labels; quantities and visit counts stay', (tester) async {
     await _pump(tester);
-    expect(find.text('100k'), findsOneWidget, reason: 'the top guide label, shown');
+    expect(find.text('200k'), findsOneWidget, reason: 'the top guide label, shown');
     await _pump(tester, hidden: true);
+    expect(find.text('200k'), findsNothing);
     expect(find.text('100k'), findsNothing);
-    expect(find.text('50k'), findsNothing);
     await _next(tester);
     expect(find.text('12'), findsOneWidget);
     await _next(tester);
-    expect(find.byKey(const ValueKey('home-chart-total')), findsNothing);
-  }, skip: _skip);
-
-  testWidgets('a tap on a page opens Insights', (tester) async {
-    final calls = await _pump(tester);
-    await tester.tap(find.text('Sales'));
-    expect(calls.opened, 1);
-    await _next(tester);
-    await tester.tap(find.text('Dewormer'));
-    expect(calls.opened, 2);
+    expect(find.text('3'), findsOneWidget);
   }, skip: _skip);
 
   testWidgets('the smallest region in Kiswahili and Dark: no overflow', (tester) async {
@@ -168,7 +171,7 @@ void main() {
     expect(Money.axis(10000000), '10M');
     expect(homeChartNiceMax(70000), 100000);
     expect(homeChartNiceMax(140000), 200000);
-    expect(homeChartNiceMax(22000), 50000, reason: "HUB4: 1, 2 or 5 times a power of ten");
+    expect(homeChartNiceMax(22000), 50000, reason: 'HUB4: 1, 2 or 5 times a power of ten');
     expect(homeChartNiceMax(0), 1);
   }, skip: _skip);
 

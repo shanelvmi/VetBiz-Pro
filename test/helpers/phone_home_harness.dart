@@ -11,7 +11,9 @@ import 'package:vetbiz_pro/screens/dashboard/hub_destinations.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_hub.dart';
 import 'package:vetbiz_pro/services/home_chart_data.dart';
-import 'package:vetbiz_pro/services/insights_data_loader.dart';
+import 'package:vetbiz_pro/data/home_chart_range.dart';
+import 'package:vetbiz_pro/services/home_movement.dart';
+import 'package:vetbiz_pro/services/service_breakdown.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'screen_size_matrix.dart';
@@ -138,26 +140,45 @@ Future<void> pumpPhoneHome(WidgetTester tester, Widget screen, {Size size = cons
 List<String> drawnTexts(WidgetTester tester) =>
     find.byType(RichText).evaluate().map((e) => (e.widget as RichText).text.toPlainText()).toList();
 
-/// HUB2: the chart carousel with fixed data (answered at once), as Home
-/// builds it, counting what it asks for.
+/// HUB2, HUB4: the chart carousel with fixed data (answered at once), as
+/// Home builds it, counting what it asks for. [opened] counts the products
+/// opened from Product movement.
 class HarnessCharts {
-  int days = 0, products = 0, opened = 0;
+  int days = 0, products = 0, visits = 0, opened = 0;
 
-  Widget build({bool hidden = false}) => HomeChartCarousel(
-        days: () {
+  Widget build({bool hidden = false, HomeChartRange range = HomeChartRange.week}) => HomeChartCarousel(
+        days: (r) {
           days++;
           final today = DateTime(ph4Now.year, ph4Now.month, ph4Now.day);
+          final n = 2 * r.days;
           return Future.value(HomeChartDays(
-            firstDay: today.subtract(const Duration(days: 13)),
-            sales: [for (var i = 0; i < 14; i++) matrixBigAmount / (i + 1)],
-            services: [for (var i = 0; i < 14; i++) i.isEven ? matrixBigAmount / 10 : 0],
+            firstDay: today.subtract(Duration(days: n - 1)),
+            sales: [for (var i = 0; i < n; i++) matrixBigAmount / (i + 1)],
+            services: [for (var i = 0; i < n; i++) i.isEven ? matrixBigAmount / 10 : 0],
+            span: r.days,
           ));
         },
-        products: () {
+        movement: (r) {
           products++;
-          return Future.value(const [ProductMovement(matrixLongProductName, 12345678), ProductMovement('Dewormer', 8)]);
+          return Future.value(HomeMovement(
+            top: [
+              TopSeller(matrixLongProductName, 12345678, ph4Product('long')),
+              const TopSeller('Dewormer', 8, null),
+            ],
+            slow: [ph4Product('Vaccine')],
+          ));
         },
+        visits: (r) {
+          visits++;
+          return Future.value(const [
+            ServiceSlice(matrixLongProductName, 7, matrixBigAmount),
+            ServiceSlice('Vaccination', 3, 30000),
+            ServiceSlice(ServiceSlice.otherKey, 1, 500, tail: true),
+          ]);
+        },
+        range: range,
+        onRangeChanged: (_) {},
         amountsHidden: hidden,
-        onOpen: () => opened++,
+        onOpenProduct: (_) => opened++,
       );
 }

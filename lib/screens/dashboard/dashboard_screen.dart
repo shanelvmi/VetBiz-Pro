@@ -15,6 +15,9 @@ import '../../services/session_validity_service.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../services/home_chart_data.dart';
 import '../../services/insights_data_loader.dart';
+import '../../services/home_movement.dart';
+import '../../services/service_breakdown.dart';
+import '../../data/home_chart_range.dart';
 import '../../services/sales_summary_service.dart';
 import '../../services/notification_feed.dart';
 import '../../services/announcement_service.dart';
@@ -38,7 +41,6 @@ import 'all_details_screen.dart';
 import 'needs_attention.dart';
 import 'phone_home.dart';
 import 'home_chart_carousel.dart';
-import 'insights_screen.dart' show showInsightsScreen;
 import '../../theme/app_icons.dart';
 import '../../theme/app_layout.dart';
 import '../products/stock_alerts_screen.dart';
@@ -1718,7 +1720,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     onPeriodChanged: (val) => setState(() => selectedFilter = val),
                     attention: attention,
                     attentionReady: productProvider.loaded && debtProvider.loaded,
-                    charts: _homeCharts(homeContext, uiSettings.homeAmountsHidden),
+                    charts: _homeCharts(homeContext, uiSettings, isAdmin: isAdmin),
                     onAllDetails: _openAllDetails,
                     onAttention: () => showAttentionSheet(
                       homeContext,
@@ -1949,24 +1951,48 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     _returnToHome();
   }
 
-  /// HUB2 (3): Home's chart carousel. It reads nothing of its own: the 14
-  /// days come from the shared loader (one range get of each daily summary,
-  /// kept for the session), the products from Insights' shared sales read,
-  /// asked only when that page is shown; today is the live period totals
-  /// while the period is Today.
-  Widget? _homeCharts(BuildContext homeContext, bool amountsHidden) {
+  /// HUB2 (3), HUB4: Home's chart carousel. It reads nothing of its own:
+  /// the days come from the shared loader (one range get of each daily
+  /// summary: 14 days, or 60 for 30d, kept for the session), Product
+  /// movement from Insights' shared sales window and the products held, Visit
+  /// activity from Insights' shared services window; each asked only when
+  /// its page is first shown. Today is the live period total while the
+  /// period is Today. The card's switch and the carousel follow each other.
+  Widget? _homeCharts(BuildContext homeContext, UiSettingsProvider ui, {required bool isAdmin}) {
     final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId == null) return null;
+    final products = Provider.of<ProductProvider>(context, listen: false);
+    final locked = Provider.of<SubscriptionProvider>(context, listen: false).isLocked;
     final live = selectedFilter == dashboardPeriods.first && !_isPeriodLoading;
+    DateTime since(HomeChartRange r) => _today().subtract(AppRanges.day * (r.days - 1));
+    // An empty page's action, for the roles that may and an unlocked
+    // facility, through the panel's guard and forms.
+    VoidCallback? action(HubTile tile) => locked || !hubTileAllowed(tile, isAdmin: isAdmin)
+        ? null
+        : () => runHubTile(homeContext, tile, onDone: _returnToHome);
     return HomeChartCarousel(
       key: ValueKey('home-charts-$facilityId'),
-      days: () => HomeChartLoader.shared.days(facilityId),
-      products: () => InsightsDataLoader.shared.sales(facilityId).then((sales) => topProductsByQuantity(sales,
-          since: _today().subtract(AppRanges.day * (HomeChartDays.week - 1)))),
+      days: (r) => HomeChartLoader.shared.days(facilityId, range: r),
+      movement: (r) => InsightsDataLoader.shared
+          .sales(facilityId, days: r.days)
+          .then((sales) => homeMovement(sales, products.products, since: since(r))),
+      visits: (r) => InsightsDataLoader.shared
+          .services(facilityId, days: r.days)
+          .then((services) => serviceBreakdownOf(services, since: since(r))),
+      range: ui.homeChartRange,
+      onRangeChanged: ui.setHomeChartRange,
+      mode: ui.homeCardMode,
+      onModeChanged: ui.setHomeCardMode,
       todaySales: live ? _periodTotals.totalSales : null,
-      todayServices: live ? _periodTotals.totalServiceRevenue : null,
-      amountsHidden: amountsHidden,
-      onOpen: () => showInsightsScreen(homeContext),
+      amountsHidden: ui.homeAmountsHidden,
+      noProducts: products.loaded && products.products.isEmpty,
+      onRecordSale: action(HubTile.recordSale),
+      onRecordVisit: action(HubTile.recordVisit),
+      onAddProduct: action(HubTile.addProduct),
+      onOpenProduct: (p) async {
+        await openProductPhoneDetails(homeContext, p);
+        _returnToHome();
+      },
     );
   }
 
