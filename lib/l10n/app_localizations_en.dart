@@ -7552,4 +7552,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get home_chartProducts => 'Product movement';
+
+  @override
+  String get home_periodWeekShort => 'Week';
+
+  @override
+  String get home_periodMonthShort => 'Month';
+
+  @override
+  String get home_periodYearShort => 'Year';
+
+  @override
+  String get home_liveVisit => 'Visit';
+
+  @override
+  String home_liveLine(String kind, String client, String time) {
+    return '$kind · $client · $time';
+  }
+
+  @override
+  String home_liveLineAmount(
+    String kind,
+    String client,
+    String amount,
+    String time,
+  ) {
+    return '$kind · $client · $amount · $time';
+  }
+
+  @override
+  String home_liveTypeTime(String kind, String time) {
+    return '$kind · $time';
+  }
+
+  @override
+  String home_liveTypeClient(String kind, String client) {
+    return '$kind · $client';
+  }
+
+  @override
+  String home_liveTypeClientAmount(String kind, String client, String amount) {
+    return '$kind · $client · $amount';
+  }
+
+  @override
+  String home_liveYesterday(String time) {
+    return 'Yesterday $time';
+  }
+
+  @override
+  String get home_liveOffline => 'Offline';
+
+  @override
+  String home_liveOfflineLead(String line) {
+    return 'Offline · $line';
+  }
+
+  @override
+  String home_deltaUp(int percent) {
+    return 'up $percent% vs yesterday';
+  }
+
+  @override
+  String home_deltaDown(int percent) {
+    return 'down $percent% vs yesterday';
+  }
+
+  @override
+  String get home_deltaSame => 'same as yesterday';
 }

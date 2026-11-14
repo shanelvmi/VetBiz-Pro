@@ -12510,6 +12510,101 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Product movement'**
   String get home_chartProducts;
+
+  /// Phone Home (HUB3), the Today card's period chip, short for This Week (Today keeps common_today). Stored and compared as This Week; only shown.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get home_periodWeekShort;
+
+  /// Phone Home (HUB3), the Today card's period chip, short for This Month. Stored and compared as This Month; only shown.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get home_periodMonthShort;
+
+  /// Phone Home (HUB3), the Today card's period chip, short for This Year. Stored and compared as This Year; only shown.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get home_periodYearShort;
+
+  /// Phone Home (HUB3), the live line: the kind of the latest event when it is a service (a vet visit), for example Visit · Hamisi Ally · 10:05.
+  ///
+  /// In en, this message translates to:
+  /// **'Visit'**
+  String get home_liveVisit;
+
+  /// Phone Home (HUB3), the live line under the Today card's amount: the latest event, its client (or Walk-in) and its time, for example Visit · Hamisi Ally · 10:05. kind, client and time are already formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} · {client} · {time}'**
+  String home_liveLine(String kind, String client, String time);
+
+  /// Phone Home (HUB3), the live line for a sale or a payment: the kind, the client (or Walk-in), the amount and the time, for example Sale · Amina Juma · Tsh 45,000 · 10:15. All four are already formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} · {client} · {amount} · {time}'**
+  String home_liveLineAmount(
+    String kind,
+    String client,
+    String amount,
+    String time,
+  );
+
+  /// Phone Home (HUB3), the live line for any other event (an expense, a product, a deletion): its kind and time, for example Transactions · 08:00.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} · {time}'**
+  String home_liveTypeTime(String kind, String time);
+
+  /// Phone Home (HUB3), the live line while the event's time is not stamped yet: the kind and the client.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} · {client}'**
+  String home_liveTypeClient(String kind, String client);
+
+  /// Phone Home (HUB3), the live line for a sale or a payment while its time is not stamped yet.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} · {client} · {amount}'**
+  String home_liveTypeClientAmount(String kind, String client, String amount);
+
+  /// Phone Home (HUB3), the live line's time for an event yesterday, for example Yesterday 16:40. time is HH:mm.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday {time}'**
+  String home_liveYesterday(String time);
+
+  /// Phone Home (HUB3), the live line when the device has no data connection (the dot becomes a ring).
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get home_liveOffline;
+
+  /// Phone Home (HUB3), the live line while offline: Offline, then the start of the latest event's line (the last event known).
+  ///
+  /// In en, this message translates to:
+  /// **'Offline · {line}'**
+  String home_liveOfflineLead(String line);
+
+  /// Phone Home (HUB3), the small chip right of the Today card's amount (Today only): today's total is this many percent above yesterday's. Shown with an up arrow.
+  ///
+  /// In en, this message translates to:
+  /// **'up {percent}% vs yesterday'**
+  String home_deltaUp(int percent);
+
+  /// Phone Home (HUB3), the Today card's chip: today's total is this many percent below yesterday's. Shown with a down arrow.
+  ///
+  /// In en, this message translates to:
+  /// **'down {percent}% vs yesterday'**
+  String home_deltaDown(int percent);
+
+  /// Phone Home (HUB3), the Today card's chip: today's total equals yesterday's.
+  ///
+  /// In en, this message translates to:
+  /// **'same as yesterday'**
+  String get home_deltaSame;
 }
 
 class _AppLocalizationsDelegate
