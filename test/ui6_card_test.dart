@@ -15,7 +15,7 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 // Before UI6 at 390x844 (HUB4b, the harness with charts): the card was 187
 // high and the chart region 255, its line under the amount 17 (the 12 px

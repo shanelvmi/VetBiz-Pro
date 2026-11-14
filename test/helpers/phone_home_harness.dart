@@ -79,7 +79,6 @@ final ph4Greeting = 'Good afternoon, Mr. ${matrixLongClientName.split(' ').first
 /// [attentionReady] is Needs attention's late slot.
 Widget phoneHomeHarness({
   RevealGate? gate,
-  Widget? live,
   HomeDelta? delta,
   bool attentionReady = true,
   PhoneHomeFigures figures = ph4BigFigures,
@@ -131,7 +130,6 @@ Widget phoneHomeHarness({
               amountsHidden: amountsHidden,
               onToggleAmounts: onToggleAmounts ?? () {},
               charts: charts,
-              live: live,
               delta: delta,
               setup: setup,
               setupReady: setupReady,

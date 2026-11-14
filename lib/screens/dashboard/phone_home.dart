@@ -134,9 +134,8 @@ class PhoneHome extends StatelessWidget {
   final HomeCardMode mode;
   final ValueChanged<HomeCardMode>? onModeChanged;
 
-  /// HUB3: the card's live line and its delta vs yesterday (TodayCard). The
-  /// skeleton draws neither: the live line's room is kept empty.
-  final Widget? live;
+  /// HUB3: the card's delta vs yesterday (TodayCard). The skeleton draws
+  /// none: the chip sits in the amount's row, so the size is the same.
   final HomeDelta? delta;
 
   /// HUB4b: the first-time checklist's rows (homeSetupFor), shown in the
@@ -167,7 +166,6 @@ class PhoneHome extends StatelessWidget {
     this.onToggleAmounts,
     this.mode = HomeCardMode.sales,
     this.onModeChanged,
-    this.live,
     this.delta,
     this.setup = const [],
     this.setupReady = true,
@@ -238,7 +236,6 @@ class PhoneHome extends StatelessWidget {
       onToggleAmounts: onToggleAmounts,
       mode: mode,
       onModeChanged: onModeChanged,
-      live: skeleton ? null : live,
       delta: skeleton ? null : delta,
     );
     // HUB1: the end of the page clears the folded action panel.

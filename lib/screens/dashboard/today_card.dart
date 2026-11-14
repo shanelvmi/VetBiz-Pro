@@ -16,15 +16,29 @@ import 'dashboard_figures.dart';
 /// Amounts in tabular figures, so digits do not shift as they change.
 const _tabular = [FontFeature.tabularFigures()];
 
+/// The height of one line of [style] (measured on the currency), so a hidden
+/// amount and the eye beside it keep the shown amount's line.
+double _lineHeightOf(BuildContext context, TextStyle style) {
+  final painter = TextPainter(
+    text: TextSpan(text: AppDefaults.currencySymbol, style: DefaultTextStyle.of(context).style.merge(style)),
+    textScaler: MediaQuery.textScalerOf(context),
+    textDirection: Directionality.of(context),
+    maxLines: 1,
+  )..layout();
+  final height = painter.height;
+  painter.dispose();
+  return height;
+}
+
 /// The one Today card on the brand gradient (NAV1), HUB2's three rows: the
 /// Sales | Visits switch with the exact range under it, and the period
 /// chip; the big amount with the eye at the row's right end (it hides every
 /// amount on the card, and only here); three figures, then a chevron.
 /// HUB3: the switch is sized to its options (the chosen one a white pill),
 /// the chip shows a short label and sits 16 px from the right edge as the
-/// switch does from the left; under the amount, in the line "No sales yet"
-/// used, the live line ([live]); right of the amount, for Today, how it
-/// compares with yesterday ([delta]). Sales:
+/// switch does from the left; right of the amount, for Today, how it
+/// compares with yesterday ([delta]). UI6: HUB3's live line under the
+/// amount is gone; the amount's row is followed by the figures. Sales:
 /// Collected, Owed and (admins only, as the Net Profit card's masking today)
 /// Net profit. Vet services: the service revenue, then Visits, Collected and
 /// Owed (the brief's FALLBACK: the daily service summaries hold no paid or
@@ -56,10 +70,6 @@ class TodayCard extends StatelessWidget {
   final HomeCardMode mode;
   final ValueChanged<HomeCardMode>? onModeChanged;
 
-  /// HUB3 (2): the live line (HomeLiveFeed), one line high; null keeps its
-  /// line empty.
-  final Widget? live;
-
   /// HUB3 (3): today against yesterday (homeDeltaFor); null shows none.
   final HomeDelta? delta;
 
@@ -75,7 +85,6 @@ class TodayCard extends StatelessWidget {
     this.onToggleAmounts,
     this.mode = HomeCardMode.sales,
     this.onModeChanged,
-    this.live,
     this.delta,
   });
 
@@ -98,7 +107,12 @@ class TodayCard extends StatelessWidget {
             if (isAdmin) (l10n.home_netProfit, money(figures.netProfit), true),
           ];
     final amount = services ? figures.serviceRevenue : figures.sales;
-    final muted = TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.onBrandSurfaceMuted);
+    final amountStyle = TextStyle(
+      fontSize: PhoneHomeMetrics.salesValue,
+      fontWeight: AppFontWeight.semibold,
+      fontFeatures: _tabular,
+      color: colors.onBrandSurface,
+    );
     void swipe(DragEndDetails details) {
       final velocity = details.primaryVelocity ?? 0;
       if (onModeChanged == null || velocity.abs() < HomeCardMetrics.swipeVelocity) return;
@@ -162,62 +176,69 @@ class TodayCard extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // UI5's exact range, under the switch.
-                    Text(
-                      periodLabel,
-                      key: const ValueKey('home-card-range'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: HomeCardMetrics.rangeLabel, color: colors.onBrandSurfaceMuted),
-                    ),
-                    Row(
+                    // UI6: the range, the amount's row and the gap under it
+                    // share a Stack with the eye. The amount's own line sets
+                    // the row's height (the live line is gone, so the card is
+                    // that line shorter); the eye's 48 px target, centred on
+                    // it at the row's end, reaches into the range's line
+                    // above and the gap below, both inside the Stack, so all
+                    // of it still answers a tap.
+                    Stack(
+                      clipBehavior: Clip.none,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: _Amount(
-                                      value: money(amount),
-                                      hidden: amountsHidden,
-                                      blur: PhoneHomeMetrics.maskBlurLarge,
-                                      style: TextStyle(
-                                        fontSize: PhoneHomeMetrics.salesValue,
-                                        fontWeight: AppFontWeight.semibold,
-                                        fontFeatures: _tabular,
-                                        color: colors.onBrandSurface,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // UI5's exact range, under the switch.
+                            Text(
+                              periodLabel,
+                              key: const ValueKey('home-card-range'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: HomeCardMetrics.rangeLabel, color: colors.onBrandSurfaceMuted),
+                            ),
+                            Row(
+                              key: const ValueKey('home-card-amount-row'),
+                              children: [
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Flexible(
+                                        child: _Amount(
+                                          value: money(amount),
+                                          hidden: amountsHidden,
+                                          blur: PhoneHomeMetrics.maskBlurLarge,
+                                          style: amountStyle,
+                                        ),
                                       ),
-                                    ),
+                                      // HUB3 (3): beside the amount, never
+                                      // taller than its line; the eye hides
+                                      // it too.
+                                      if (delta != null && !amountsHidden) ...[
+                                        const SizedBox(width: AppSpacing.s8),
+                                        Flexible(child: _DeltaChip(delta: delta!)),
+                                      ],
+                                    ],
                                   ),
-                                  // HUB3 (3): beside the amount, never taller
-                                  // than its line; the eye hides it too.
-                                  if (delta != null && !amountsHidden) ...[
-                                    const SizedBox(width: AppSpacing.s8),
-                                    Flexible(child: _DeltaChip(delta: delta!)),
-                                  ],
-                                ],
-                              ),
-                              // HUB3 (2): the line "No sales yet" used, one
-                              // line high in every state, so the card keeps
-                              // one height.
-                              live ??
-                                  Visibility(
-                                    visible: false,
-                                    maintainSize: true,
-                                    maintainAnimation: true,
-                                    maintainState: true,
-                                    child: Text(' ', maxLines: 1, style: muted),
-                                  ),
-                            ],
-                          ),
+                                ),
+                                // The eye's room in the row.
+                                if (onToggleAmounts != null) const SizedBox(width: PhoneHomeMetrics.linkHeight),
+                              ],
+                            ),
+                            const SizedBox(height: PhoneHomeMetrics.cardRowGap),
+                          ],
                         ),
-                        if (onToggleAmounts != null) _EyeButton(hidden: amountsHidden, onPressed: onToggleAmounts!),
+                        if (onToggleAmounts != null)
+                          PositionedDirectional(
+                            end: 0,
+                            bottom: PhoneHomeMetrics.cardRowGap +
+                                (_lineHeightOf(context, amountStyle) - PhoneHomeMetrics.linkHeight) / 2,
+                            child: _EyeButton(hidden: amountsHidden, onPressed: onToggleAmounts!),
+                          ),
                       ],
                     ),
-                    const SizedBox(height: PhoneHomeMetrics.cardRowGap),
                     Row(
+                      key: const ValueKey('home-card-stats'),
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         for (var i = 0; i < stats.length; i++) ...[
@@ -301,16 +322,8 @@ class _Amount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final painter = TextPainter(
-      text: TextSpan(text: AppDefaults.currencySymbol, style: DefaultTextStyle.of(context).style.merge(style)),
-      textScaler: MediaQuery.textScalerOf(context),
-      textDirection: Directionality.of(context),
-      maxLines: 1,
-    )..layout();
-    final lineHeight = painter.height;
-    painter.dispose();
     return SizedBox(
-      height: lineHeight,
+      height: _lineHeightOf(context, style),
       child: FittedBox(
         fit: BoxFit.scaleDown,
         alignment: Alignment.centerLeft,

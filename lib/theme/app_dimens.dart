@@ -630,8 +630,9 @@ class HomeChartMetrics {
   HomeChartMetrics._();
 
   static const double minHeight = 120;
-  /// 340, not the brief's "about 280": 412x915 has 326 free under the strip.
-  static const double maxHeight = 340;
+  /// 340, not the brief's "about 280": 412x915 had 326 free under the strip.
+  /// UI6: 360, as the card lost its live line and 412x915 has 343 free.
+  static const double maxHeight = 360;
   static const double gap = AppSpacing.s12;
 
   static const double radius = AppRadius.r16;
