@@ -17,7 +17,7 @@ import 'package:vetbiz_pro/services/home_chart_data.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = true;
+const _skip = false;
 
 String _read(String path) => File(path).readAsStringSync().replaceAll('\r\n', '\n');
 

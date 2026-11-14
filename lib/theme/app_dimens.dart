@@ -605,22 +605,6 @@ class HomeCardMetrics {
   static const double deltaLabel = AppFontSize.f12;
 }
 
-/// HUB3 (2): the Today card's live line: the [dot] (a ring of [ringWidth]
-/// offline) [dotGap] before the text; a new event rises [slide] of the
-/// line and fades in over the first [slideShare] of
-/// AppMotion.liveLineArrive, under a highlight of the card's ink at
-/// [highlightAlpha] that fades over the whole of it.
-class HomeLiveMetrics {
-  HomeLiveMetrics._();
-
-  static const double dot = 6;
-  static const double ringWidth = 1.5;
-  static const double dotGap = AppSpacing.s6;
-  static const double slide = 0.6;
-  static const double slideShare = 0.35;
-  static const double highlightAlpha = 0.16;
-}
-
 /// HUB2: Home's chart carousel (home_chart_carousel.dart). The region fills
 /// the free height between the strip (or the card) and the panel, [gap]
 /// below them, between [minHeight] and [maxHeight]; with less than
