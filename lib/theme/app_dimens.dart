@@ -673,7 +673,7 @@ class HomeChartMetrics {
   /// [donutTextMin] has no text in its centre.
   static const double header = 40;
   static const double rangeHeight = AppSpacing.s32;
-  static const double rangeSegment = 44;
+  static const double rangeSegment = 48;
   static const double target = 48;
   static const double bodyMin = AppSpacing.s32;
   static const double donutTextMin = 64;
