@@ -15,6 +15,7 @@ import 'package:vetbiz_pro/screens/dashboard/subscription_banner.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
+import 'package:vetbiz_pro/theme/color_math.dart';
 import 'package:vetbiz_pro/theme/theme_context.dart';
 import 'package:vetbiz_pro/widgets/phone_list/phone_list_scaffold.dart';
 import 'package:vetbiz_pro/widgets/phone_list/phone_quick_chips.dart';
@@ -178,12 +179,13 @@ void main() {
               SubscriptionBannerKind.calmTrial => colors.info,
               _ => colors.warning,
             };
-            // PH8a-fix: the role is the fill now (it floats over the content);
-            // the icon is the ink that reads on it (ph8a_fix_banner_test.dart).
+            // HUB3: the fill is a soft tint of the role (it floats over the
+            // content); the icon's ink reads on it (hub3_banner_test.dart).
             final fill = tester.widget<DecoratedBox>(find.byKey(const ValueKey('phone-subscription-banner-fill')));
-            expect((fill.decoration as BoxDecoration).color, role.withValues(alpha: PhoneBannerMetrics.overlayAlpha));
-            expect(tester.widget<Icon>(find.descendant(of: find.byKey(_banner), matching: find.byType(Icon)).first).color,
-                colors.bannerInk);
+            final tint = Color.alphaBlend(role.withValues(alpha: PhoneBannerMetrics.tintAlpha), colors.surface);
+            expect((fill.decoration as BoxDecoration).color, tint.withValues(alpha: PhoneBannerMetrics.overlayAlpha));
+            final icon = tester.widget<Icon>(find.descendant(of: find.byKey(_banner), matching: find.byType(Icon)).first);
+            expect(ColorMath.contrast(icon.color!, ColorMath.composite(tint, colors.background)), greaterThanOrEqualTo(4.5));
           }
         }, skip: _skip);
       }

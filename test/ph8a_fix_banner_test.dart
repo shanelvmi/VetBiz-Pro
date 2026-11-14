@@ -124,7 +124,9 @@ void main() {
         SubscriptionBannerKind.calmTrial => colors.info,
         _ => colors.warning,
       };
-      expect(box.color, role.withValues(alpha: PhoneBannerMetrics.overlayAlpha), reason: '$state');
+      // HUB3: the fill is a soft tint of the role, still see-through.
+      final tint = Color.alphaBlend(role.withValues(alpha: PhoneBannerMetrics.tintAlpha), colors.surface);
+      expect(box.color, tint.withValues(alpha: PhoneBannerMetrics.overlayAlpha), reason: '$state');
       expect(box.borderRadius, BorderRadius.circular(PhoneBannerMetrics.overlayRadius));
       expect(PhoneBannerMetrics.overlayRadius, 12);
       expect(box.boxShadow, isNotEmpty);
@@ -149,14 +151,19 @@ void main() {
                 theme: theme,
                 dark: dark));
             final fill = (tester.widget<DecoratedBox>(find.byKey(_fill)).decoration as BoxDecoration).color!;
+            // HUB3: the action is a pill in the solid role with its own ink
+            // (hub3_banner_test.dart); everything else is on the fill.
+            final action = find.byKey(const ValueKey('phone-subscription-banner-action'));
             final inks = <Color>[
-              for (final p in tester.renderObjectList<RenderParagraph>(
-                  find.descendant(of: find.byKey(_banner), matching: find.byType(RichText))))
+              for (final p in tester.renderObjectList<RenderParagraph>(find.descendant(
+                  of: find.byKey(_banner),
+                  matching: find.byWidgetPredicate((w) =>
+                      w is RichText && find.descendant(of: action, matching: find.byWidget(w)).evaluate().isEmpty))))
                 p.text.style!.color!,
               for (final i in tester.widgetList<Icon>(find.descendant(of: find.byKey(_banner), matching: find.byType(Icon))))
                 i.color!,
             ];
-            expect(inks.length, greaterThanOrEqualTo(4), reason: 'the line, the action, the icon and the close');
+            expect(inks.length, greaterThanOrEqualTo(3), reason: 'the line, the icon and the close');
             for (final backdrop in [const Color(0xFF000000), const Color(0xFFFFFFFF)]) {
               final over = ColorMath.composite(fill, backdrop);
               for (final ink in inks) {
