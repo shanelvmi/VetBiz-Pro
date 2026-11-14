@@ -2067,3 +2067,18 @@ home_chartThisWeek,This week,Wiki hii,"Phone Home (HUB2), the Sales chart legend
 home_chartLastWeek,Last week,Wiki iliyopita,"Phone Home (HUB2), the Sales chart legend: the dashed line, the 7 days before.",draft
 home_chartNoData,No data yet for this week,Bado hakuna data ya wiki hii,"Phone Home (HUB2), a chart page with nothing to draw for the last 7 days.",draft
 home_chartProducts,Product movement,Mwenendo wa bidhaa,"Phone Home (HUB2), the title of the chart page of the 5 products sold in the largest quantity in the last 7 days.",draft
+home_periodWeekShort,Week,Wiki,"Phone Home (HUB3), the Today card's period chip, short for This Week (Today keeps common_today). Stored and compared as This Week; only shown.",draft
+home_periodMonthShort,Month,Mwezi,"Phone Home (HUB3), the Today card's period chip, short for This Month. Stored and compared as This Month; only shown.",draft
+home_periodYearShort,Year,Mwaka,"Phone Home (HUB3), the Today card's period chip, short for This Year. Stored and compared as This Year; only shown.",draft
+home_liveVisit,Visit,Ziara,"Phone Home (HUB3), the live line: the kind of the latest event when it is a service (a vet visit), for example Visit · Hamisi Ally · 10:05.",draft
+home_liveLine,{kind} · {client} · {time},{kind} · {client} · {time},"Phone Home (HUB3), the live line under the Today card's amount: the latest event, its client (or Walk-in) and its time, for example Visit · Hamisi Ally · 10:05. kind, client and time are already formatted.",draft
+home_liveLineAmount,{kind} · {client} · {amount} · {time},{kind} · {client} · {amount} · {time},"Phone Home (HUB3), the live line for a sale or a payment: the kind, the client (or Walk-in), the amount and the time, for example Sale · Amina Juma · Tsh 45,000 · 10:15. All four are already formatted.",draft
+home_liveTypeTime,{kind} · {time},{kind} · {time},"Phone Home (HUB3), the live line for any other event (an expense, a product, a deletion): its kind and time, for example Transactions · 08:00.",draft
+home_liveTypeClient,{kind} · {client},{kind} · {client},"Phone Home (HUB3), the live line while the event's time is not stamped yet: the kind and the client.",draft
+home_liveTypeClientAmount,{kind} · {client} · {amount},{kind} · {client} · {amount},"Phone Home (HUB3), the live line for a sale or a payment while its time is not stamped yet.",draft
+home_liveYesterday,Yesterday {time},Jana {time},"Phone Home (HUB3), the live line's time for an event yesterday, for example Yesterday 16:40. time is HH:mm.",draft
+home_liveOffline,Offline,Nje ya mtandao,"Phone Home (HUB3), the live line when the device has no data connection (the dot becomes a ring).",draft
+home_liveOfflineLead,Offline · {line},Nje ya mtandao · {line},"Phone Home (HUB3), the live line while offline: Offline, then the start of the latest event's line (the last event known).",draft
+home_deltaUp,up {percent}% vs yesterday,juu {percent}% kuliko jana,"Phone Home (HUB3), the small chip right of the Today card's amount (Today only): today's total is this many percent above yesterday's. Shown with an up arrow.",draft
+home_deltaDown,down {percent}% vs yesterday,chini {percent}% kuliko jana,"Phone Home (HUB3), the Today card's chip: today's total is this many percent below yesterday's. Shown with a down arrow.",draft
+home_deltaSame,same as yesterday,sawa na jana,"Phone Home (HUB3), the Today card's chip: today's total equals yesterday's.",draft
