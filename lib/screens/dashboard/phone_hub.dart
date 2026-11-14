@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_layout.dart';
 import '../../theme/app_motion.dart';
+import '../../widgets/reveal/reveal.dart';
 import 'home_action_panel.dart';
 
 /// HUB1: the phone shell is now just Home (the owner's hub, phone_shell.md D1
@@ -28,7 +29,15 @@ class PhoneHub extends StatelessWidget {
   /// bar; null when hidden. Pushed screens never show it.
   final Widget? banner;
 
-  const PhoneHub({super.key, this.appBar, this.endDrawer, required this.home, required this.panel, this.banner});
+  /// HUB3 (5): Home's reveal gate. The panel joins Home's reveal: not drawn
+  /// while the skeleton shows (Home keeps its room all the same), then it
+  /// rises and fades in with the content, through the same gate (one
+  /// ScreenReveal each, the same motion); at once when the gate is already
+  /// open (a return to Home). Null: the panel shows at once.
+  final RevealGate? reveal;
+
+  const PhoneHub(
+      {super.key, this.appBar, this.endDrawer, required this.home, required this.panel, this.banner, this.reveal});
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -43,7 +52,11 @@ class PhoneHub extends StatelessWidget {
                   child: _withBanner(banner, Builder(builder: home)),
                 ),
               ),
-              Positioned.fill(child: panel),
+              Positioned.fill(
+                child: reveal == null
+                    ? panel
+                    : ScreenReveal(key: const ValueKey('hub-panel-reveal'), gate: reveal!, skeleton: const SizedBox.shrink(), child: panel),
+              ),
             ],
           ),
         ),

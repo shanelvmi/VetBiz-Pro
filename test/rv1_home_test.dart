@@ -15,6 +15,7 @@ import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 import 'package:vetbiz_pro/screens/dashboard/sales_revenue_chart.dart';
 import 'package:vetbiz_pro/theme/app_breakpoints.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
+import 'package:vetbiz_pro/theme/app_motion.dart';
 import 'package:vetbiz_pro/utils/merged_query_stream.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
@@ -41,7 +42,11 @@ RevealGate _pendingGate(ValueNotifier<bool> answered) =>
 /// what is near the screen), one each.
 Map<Type, Rect> _rects(WidgetTester tester, List<Type> types) => {
       for (final t in types)
-        if (find.byType(t).evaluate().isNotEmpty) t: tester.getRect(find.byType(t)),
+        // HUB3 (5): the panel is offstage during the skeleton (still laid out in
+        // its place) and rises with the content.
+        if (find.byType(t, skipOffstage: t != HomeActionPanel).evaluate().isNotEmpty)
+          t: tester.getRect(find.byType(t, skipOffstage: t != HomeActionPanel)).shift(Offset(
+              0, t == HomeActionPanel && find.byType(HomeActionPanel).evaluate().isEmpty ? -AppMotion.revealRise : 0)),
     };
 
 void main() {
@@ -58,8 +63,8 @@ void main() {
           await pumpAtSize(tester, screen: phoneHomeHarness(gate: gate), size: s.size, look: look);
           expect(find.byType(SkeletonPulse), findsWidgets, reason: 'the skeleton at once');
           await checkCase(tester, phone: true, where: '$where skeleton');
-          // UI5: the card and the attention strip; HUB1: the action panel (it
-          // is not part of the reveal: the same in both).
+          // UI5: the card and the attention strip; HUB1: the action panel (HUB3:
+          // it joins the reveal, in the same place before and after).
           const slots = [TodayCard, AttentionStrip, HomeActionPanel];
           final skeleton = _rects(tester, slots);
           expect(skeleton.keys, contains(TodayCard));

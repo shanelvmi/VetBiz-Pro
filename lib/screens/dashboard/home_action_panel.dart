@@ -16,8 +16,9 @@ import 'hub_tiles.dart';
 /// rows of four tiles (hubCollapsedTilesFor); dragged up, or its handle
 /// tapped, it fills the body under the top bar with Find a feature and the
 /// named groups (hubGroupsFor). A tile collapses it and runs [onTile]. Escape
-/// and the system Back collapse it before they leave Home. It holds no data,
-/// so it is not part of Home's reveal: it shows at once.
+/// and the system Back collapse it before they leave Home. It holds no data;
+/// HUB3 (5): it still arrives with Home's reveal (PhoneHub.reveal), since a
+/// panel drawn before the card and the chart looked broken.
 ///
 /// It must fill the body (a DraggableScrollableSheet sizes itself as a share
 /// of its parent); Home pads its end by [collapsedHeightOf].
@@ -42,8 +43,15 @@ class HomeActionPanel extends StatefulWidget {
       HomePanelMetrics.handleArea +
       collapsedRowsOf(context) * hubTileHeight(context) +
       (collapsedRowsOf(context) - 1) * PhoneHomeMetrics.gridGap +
-      HomePanelMetrics.bottomPadding +
-      AppSafeArea.bottomOf(context);
+      bottomRoomOf(context);
+
+  /// The room under the last row: the padding and the home indicator; HUB3
+  /// (6): a little more on a phone with a bottom inset, so the second row
+  /// does not sit on the gesture bar.
+  static double bottomRoomOf(BuildContext context) {
+    final inset = AppSafeArea.bottomOf(context);
+    return HomePanelMetrics.bottomPadding + inset + (inset > 0 ? HomePanelMetrics.insetExtraPadding : 0);
+  }
 
   @override
   State<HomeActionPanel> createState() => _HomeActionPanelState();
@@ -235,7 +243,7 @@ class _HomeActionPanelState extends State<HomeActionPanel> {
                               );
                             }),
                     ),
-                    SizedBox(height: HomePanelMetrics.bottomPadding + AppSafeArea.bottomOf(context)),
+                    SizedBox(height: HomeActionPanel.bottomRoomOf(context)),
                   ],
                 ),
               );

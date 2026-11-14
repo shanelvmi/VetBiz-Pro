@@ -71,10 +71,13 @@ final ph4Greeting = 'Good afternoon, Mr. ${matrixLongClientName.split(' ').first
 /// The phone home under its top bar (UI5: the facility name over the
 /// greeting, the bell, no Help) with the action panel docked over its bottom,
 /// as the hub shows it (HUB1). With [gate] (RV1),
-/// inside its ScreenReveal with its skeleton, as the dashboard builds it;
+/// inside its ScreenReveal with its skeleton, as the dashboard builds it
+/// (HUB3: the panel joins the same reveal);
 /// [attentionReady] is Needs attention's late slot.
 Widget phoneHomeHarness({
   RevealGate? gate,
+  Widget? live,
+  HomeDelta? delta,
   bool attentionReady = true,
   PhoneHomeFigures figures = ph4BigFigures,
   bool isAdmin = true,
@@ -91,6 +94,7 @@ Widget phoneHomeHarness({
   Widget? charts,
 }) =>
     PhoneHub(
+      reveal: gate,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: PhoneHomeTopBar(
@@ -120,6 +124,8 @@ Widget phoneHomeHarness({
               amountsHidden: amountsHidden,
               onToggleAmounts: onToggleAmounts ?? () {},
               charts: charts,
+              live: live,
+              delta: delta,
             );
         return gate == null ? home() : ScreenReveal(gate: gate, skeleton: home(skeleton: true), child: home());
       },
