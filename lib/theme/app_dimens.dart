@@ -133,6 +133,8 @@ class AppSizes {
   static const double profileAvatarBar = 32;
   static const double profileAvatarDrawer = 72;
   static const double profileAvatarEditor = 68;
+  // HUB4b: the phone profile page's large avatar.
+  static const double profileAvatarPage = 88;
   static const double profileNameMax = 160;
 
   /// A small round status indicator (online, stock status, submitted,

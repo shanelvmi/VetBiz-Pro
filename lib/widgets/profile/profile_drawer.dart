@@ -7,9 +7,20 @@ import '../../theme/theme_context.dart';
 import '../facility_type_tag.dart';
 import 'profile_avatar.dart';
 
+/// HUB4b: what a profile action is. The phone's full-screen profile page
+/// groups the drawer's own list by it, so both show the same items with the
+/// same gates and there is no second copy to drift.
+enum ProfileItem { editProfile, team, facilities, changePassword, activityLog, settings, help, signOut }
+
 /// One action in the profile drawer.
 class ProfileDrawerAction {
-  const ProfileDrawerAction({required this.icon, required this.label, required this.onTap, this.destructive = false});
+  const ProfileDrawerAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.destructive = false,
+    this.item,
+  });
 
   final IconData icon;
   final String label;
@@ -17,6 +28,9 @@ class ProfileDrawerAction {
 
   /// Shown in the danger colour (Sign out).
   final bool destructive;
+
+  /// HUB4b: its place on the phone profile page (null: the App group's end).
+  final ProfileItem? item;
 }
 
 /// A compact row of the profile drawer: a leading icon and the label, 48 px
@@ -190,4 +204,17 @@ class _DetailRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// HUB4b: the same detail row for the phone profile page. A wrapper, so the
+/// drawer's own tree (and the wide fingerprints) stay exactly as they were.
+class ProfileDetailRow extends StatelessWidget {
+  const ProfileDetailRow({super.key, required this.icon, required this.label, required this.value});
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => _DetailRow(icon: icon, label: label, value: value);
 }
