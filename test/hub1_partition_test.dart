@@ -32,7 +32,8 @@ String _method(String source, String signature) {
   return source.substring(start, end);
 }
 
-String _read(String path) => File(path).readAsStringSync();
+// HUB3: a checkout with CRLF line endings (core.autocrlf) reads the same.
+String _read(String path) => File(path).readAsStringSync().replaceAll('\r\n', '\n');
 
 Set<String> _panel() => {
       ..._destinations(_read('lib/screens/dashboard/hub_destinations.dart')),

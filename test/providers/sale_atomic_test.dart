@@ -82,7 +82,7 @@ void main() {
   test('the activity entry passes the existing rule (own uid, server clock)', () async {
     final fs = newFakeFirestore();
     await seedProduct(fs, id: 'p1', batchQty: {'b1': 5});
-    final startedAt = wallClock().subtract(const Duration(seconds: 1));
+    final startedAt = testNow.subtract(const Duration(seconds: 1));
 
     await newSaleProvider(fs)
         .addSale(testSale(id: 'log1', items: [saleItem('p1', 1)]), testFacilityId);

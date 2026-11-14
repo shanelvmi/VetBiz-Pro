@@ -153,7 +153,7 @@ void main() {
 
   test('the activity entry is activity_logs/service_{id} and passes the existing rule', () async {
     final fs = newFakeFirestore();
-    final startedAt = wallClock().subtract(const Duration(seconds: 1));
+    final startedAt = testNow.subtract(const Duration(seconds: 1));
 
     await newServiceProvider(fs).addService(testService(id: 'log1'));
     await settle();
