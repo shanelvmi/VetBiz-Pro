@@ -556,6 +556,16 @@ class PhoneHomeMetrics {
   static const double attentionStripHeight = 56;
   static const double stripGap = AppSpacing.s12;
 
+  /// HUB4b: the first-time setup card (in the strip's place): a header, at
+  /// most [setupVisibleRows] steps, then an "n more" line, each a 48 px
+  /// target, so its height is known before any data.
+  static const double setupHeader = AppSizes.minTapTarget;
+  static const double setupRow = AppSizes.minTapTarget;
+  static const int setupVisibleRows = 2;
+  /// Below this screen height (360x640) the card takes the strip's own
+  /// shape and height: one line opening the sheet of every step and Hide.
+  static const double setupFullMinScreenHeight = 700;
+
   /// UI5: the action grid: [gridColumns] equal tiles a row, [gridGap] apart,
   /// at least [gridTileHeight] high, a [gridIcon] icon over two reserved
   /// label lines.
