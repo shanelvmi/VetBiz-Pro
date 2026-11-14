@@ -2103,3 +2103,14 @@ home_chartSalesSummary,"{count, plural, =1{Sales over the last day, total {total
 home_chartSalesSummaryHidden,"{count, plural, =1{Sales over the last day} other{Sales over the last {count} days}}","{count, plural, =1{Mauzo ya siku iliyopita} other{Mauzo ya siku {count} zilizopita}}","Phone Home (HUB4), the screen reader's Sales chart summary while amounts are hidden.",draft
 home_chartProductsSummary,"{count, plural, =1{Product movement over the last day, top seller {name}} other{Product movement over the last {count} days, top seller {name}}}","{count, plural, =1{Mwenendo wa bidhaa wa siku iliyopita, inayoongoza {name}} other{Mwenendo wa bidhaa wa siku {count} zilizopita, inayoongoza {name}}}","Phone Home (HUB4), what a screen reader says for the Product movement page.",draft
 home_chartVisitsSummary,"{visits, plural, =1{Visit activity, 1 visit, most {name}} other{Visit activity, {visits} visits, most {name}}}","{visits, plural, =1{Shughuli za ziara, ziara 1, nyingi zaidi {name}} other{Shughuli za ziara, ziara {visits}, nyingi zaidi {name}}}","Phone Home (HUB4), what a screen reader says for the Visit activity page: the visits in the period and the most frequent type.",draft
+profile_pageTitle,Profile,Wasifu,"Phone profile page (HUB4b): its title, opened from the avatar on Home.",draft
+profile_switchFacility,Switch facility,Badilisha kituo,"Phone profile page (HUB4b): the title of the sheet listing the person's facilities, opened from the Current facility card.",draft
+profile_switchedTo,Switched to {facility},Umehamia {facility},"Short message after switching facility from the profile page (HUB4b); facility is the name as typed.",draft
+home_setupTitle,Set up your facility,Andaa kituo chako,Phone Home (HUB4b): the title of the first-time checklist card of a new facility.,draft
+home_setupAddProduct,Add your first product,Ongeza bidhaa yako ya kwanza,"Phone Home (HUB4b), checklist step; opens Add Product.",draft
+home_setupAddClient,Add a client,Ongeza mteja,"Phone Home (HUB4b), checklist step; opens Add Client.",draft
+home_setupRecordSale,Record your first sale,Rekodi mauzo yako ya kwanza,"Phone Home (HUB4b), checklist step; opens Record Sale.",draft
+home_setupHide,Hide,Ficha,Phone Home (HUB4b): the checklist card's button that hides it for this facility on this device.,draft
+home_setupMore,"{count, plural, =1{1 more step} other{{count} more steps}}","{count, plural, =1{Hatua 1 zaidi} other{Hatua {count} zaidi}}","Phone Home (HUB4b): the checklist card's last line, opening a sheet with every step.",draft
+home_setupStepDone,{step}: done,{step}: imekamilika,"Phone Home (HUB4b), what a screen reader says for a checklist step already done; step is the step's text.",draft
+home_setupStepToDo,{step}: to do,{step}: bado,"Phone Home (HUB4b), what a screen reader says for a checklist step not done yet; step is the step's text.",draft
