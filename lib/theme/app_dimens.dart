@@ -584,6 +584,29 @@ class HomeCardMetrics {
   static const double segmentLabel = AppFontSize.f13;
   static const double rangeLabel = AppFontSize.f12;
   static const double swipeVelocity = 300;
+
+  /// HUB3 (3): the delta chip right of the amount, shorter than the amount's
+  /// line so it never makes the card taller.
+  static const double deltaHeight = 22;
+  static const double deltaPadding = AppSpacing.s8;
+  static const double deltaIcon = AppIconSize.i14;
+  static const double deltaLabel = AppFontSize.f12;
+}
+
+/// HUB3 (2): the Today card's live line: the [dot] (a ring of [ringWidth]
+/// offline) [dotGap] before the text; a new event rises [slide] of the
+/// line and fades in over the first [slideShare] of
+/// AppMotion.liveLineArrive, under a highlight of the card's ink at
+/// [highlightAlpha] that fades over the whole of it.
+class HomeLiveMetrics {
+  HomeLiveMetrics._();
+
+  static const double dot = 6;
+  static const double ringWidth = 1.5;
+  static const double dotGap = AppSpacing.s6;
+  static const double slide = 0.6;
+  static const double slideShare = 0.35;
+  static const double highlightAlpha = 0.16;
 }
 
 /// HUB2: Home's chart carousel (home_chart_carousel.dart). The region fills
@@ -669,6 +692,9 @@ class HomePanelMetrics {
   /// indicator's inset is added).
   static const double padding = AppSpacing.s16;
   static const double bottomPadding = AppSpacing.s12;
+
+  /// HUB3 (6): added under the last row when the phone has a bottom inset.
+  static const double insetExtraPadding = AppSpacing.s6;
 
   /// Collapsed: exactly this many rows of PhoneHomeMetrics.gridColumns; a
   /// phone held sideways (wider than tall) folds the same tiles into
@@ -888,6 +914,12 @@ class PhoneBannerMetrics {
   /// over the content and never blended into the surface (the ink is
   /// AppColors.bannerInk, which passes 4.5:1 over black and white content).
   static const double overlayAlpha = 0.92;
+
+  /// HUB3: the soft tint (the status role over the surface, before the
+  /// overlay alpha), its 1 px border, and the action's filled pill.
+  static const double tintAlpha = 0.16;
+  static const double borderAlpha = AppAlpha.a40;
+  static const double pillHeight = 28;
   static const double overlayMargin = AppSpacing.s8;
   static const double overlayRadius = AppRadius.r12;
   static const double shadowAlpha = AppAlpha.a20;

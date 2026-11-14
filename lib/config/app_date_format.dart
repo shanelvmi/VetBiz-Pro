@@ -41,6 +41,8 @@ class AppDateFormat {
   /// UI5: the Today card's period label ("Mon 9 Nov", the "3" of "3–9 Nov",
   /// "2026"), always formatted in the current locale.
   static const String weekdayDayMonthShortPattern = 'EEE d MMM';
+  /// HUB3: the live line's older events ("Wed 04 Nov").
+  static const String weekdayDayPadMonthShortPattern = 'EEE dd MMM';
   static const String dayPattern = 'd';
   static const String yearPattern = 'y';
 

@@ -143,3 +143,40 @@ List<DashboardFigure> dashboardFiguresFor({required bool isAdmin}) => [
 /// Whether [isAdmin]'s grid card or All details row for [figure] is drawn.
 bool dashboardShowsFigure(DashboardFigure figure, {required bool isAdmin}) =>
     dashboardFiguresFor(isAdmin: isAdmin).contains(figure);
+
+/// HUB3: the period chip's short label (Today, Week, Month, Year); the menu
+/// keeps [dashboardPeriodLabel]. An unknown period is Today.
+String dashboardPeriodShortLabel(AppLocalizations l, String period) => switch (period) {
+      'This Week' => l.home_periodWeekShort,
+      'This Month' => l.home_periodMonthShort,
+      'This Year' => l.home_periodYearShort,
+      _ => l.common_today,
+    };
+
+/// HUB3 (3): today's total against yesterday's, as a whole percent
+/// ([percent] negative when down), or new ([percent] null: yesterday had
+/// nothing).
+class HomeDelta {
+  final int? percent;
+
+  const HomeDelta.change(int this.percent);
+  const HomeDelta.fresh() : percent = null;
+
+  @override
+  bool operator ==(Object other) => other is HomeDelta && other.percent == percent;
+
+  @override
+  int get hashCode => percent.hashCode;
+
+  @override
+  String toString() => 'HomeDelta(${percent ?? 'new'})';
+}
+
+/// HUB3 (3): the Today card's delta, for the Today [period] only: [today]
+/// (the live total) against [yesterday] (the daily summary Home already
+/// read; null while it has not answered). Nothing when both are zero.
+HomeDelta? homeDeltaFor({required String period, required double today, required double? yesterday}) {
+  if (period != dashboardPeriods.first || yesterday == null) return null;
+  if (yesterday == 0) return today == 0 ? null : const HomeDelta.fresh();
+  return HomeDelta.change(((today - yesterday) / yesterday * 100).round());
+}

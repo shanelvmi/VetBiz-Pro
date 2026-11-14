@@ -26,6 +26,29 @@ class ColorMath {
     return (math.max(a, b) + 0.05) / (math.min(a, b) + 0.05);
   }
 
+  /// HUB3: [c] itself when it reaches [target] on every one of [on];
+  /// otherwise its lightness moved, in small steps, away from them (darker
+  /// on light ones, lighter on dark ones) until it does, ending at black or
+  /// white. The hue stays, so a role's ink still reads as that role.
+  static Color readableOn(Color c, List<Color> on, {double target = 4.5}) {
+    bool reads(Color x) => on.every((b) => contrast(x, b) >= target);
+    if (reads(c)) return c;
+    final light = on.map(luminance).reduce(math.max) > 0.18;
+    final hsl = HSLColor.fromColor(c);
+    for (var k = 1;; k++) {
+      final l = hsl.lightness + (light ? -k : k) * _readableStep;
+      if (l <= 0 || l >= 1) return HSLColor.fromAHSL(1, hsl.hue, hsl.saturation, l.clamp(0.0, 1.0)).toColor();
+      final moved = hsl.withLightness(l).toColor();
+      if (reads(moved)) return moved;
+    }
+  }
+
+  static const double _readableStep = 0.01;
+
+  /// Pure black and pure white: the worst backdrops a see-through surface
+  /// can float over.
+  static const List<Color> extremes = [Color(0xFF000000), Color(0xFFFFFFFF)];
+
   static List<double> _lab(Color c) {
     double lin(double v) => v <= 0.04045 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
     final r = lin(c.r), g = lin(c.g), b = lin(c.b);
