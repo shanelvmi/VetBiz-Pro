@@ -98,8 +98,9 @@ void main() {
           final label = tester.widget<Text>(find.textContaining('Sales'));
           for (final end in gradient.colors) {
             expect(ColorMath.contrast(sales.style!.color!, end), greaterThanOrEqualTo(4.5));
-            expect(ColorMath.contrast(Color.alphaBlend(label.style!.color!, end), end), greaterThanOrEqualTo(4.5));
           }
+          // HUB3: the chosen option's label sits on its white pill, in the deep ink.
+          expect(ColorMath.contrast(label.style!.color!, colors.onBrandSurface), greaterThanOrEqualTo(4.5));
         }, skip: _skip);
       }
     }

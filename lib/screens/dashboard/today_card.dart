@@ -17,9 +17,14 @@ import 'dashboard_figures.dart';
 const _tabular = [FontFeature.tabularFigures()];
 
 /// The one Today card on the brand gradient (NAV1), HUB2's three rows: the
-/// Sales | Vet services switch with the exact range under it, and the period
+/// Sales | Visits switch with the exact range under it, and the period
 /// chip; the big amount with the eye at the row's right end (it hides every
-/// amount on the card, and only here); three figures, then a chevron. Sales:
+/// amount on the card, and only here); three figures, then a chevron.
+/// HUB3: the switch is sized to its options (the chosen one a white pill),
+/// the chip shows a short label and sits 16 px from the right edge as the
+/// switch does from the left; under the amount, in the line "No sales yet"
+/// used, the live line ([live]); right of the amount, for Today, how it
+/// compares with yesterday ([delta]). Sales:
 /// Collected, Owed and (admins only, as the Net Profit card's masking today)
 /// Net profit. Vet services: the service revenue, then Visits, Collected and
 /// Owed (the brief's FALLBACK: the daily service summaries hold no paid or
@@ -51,6 +56,13 @@ class TodayCard extends StatelessWidget {
   final HomeCardMode mode;
   final ValueChanged<HomeCardMode>? onModeChanged;
 
+  /// HUB3 (2): the live line (HomeLiveFeed), one line high; null keeps its
+  /// line empty.
+  final Widget? live;
+
+  /// HUB3 (3): today against yesterday (homeDeltaFor); null shows none.
+  final HomeDelta? delta;
+
   const TodayCard({
     super.key,
     required this.figures,
@@ -63,6 +75,8 @@ class TodayCard extends StatelessWidget {
     this.onToggleAmounts,
     this.mode = HomeCardMode.sales,
     this.onModeChanged,
+    this.live,
+    this.delta,
   });
 
   @override
@@ -84,7 +98,7 @@ class TodayCard extends StatelessWidget {
             if (isAdmin) (l10n.home_netProfit, money(figures.netProfit), true),
           ];
     final amount = services ? figures.serviceRevenue : figures.sales;
-    final none = !figures.loading && amount == 0;
+    final muted = TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.onBrandSurfaceMuted);
     void swipe(DragEndDetails details) {
       final velocity = details.primaryVelocity ?? 0;
       if (onModeChanged == null || velocity.abs() < HomeCardMetrics.swipeVelocity) return;
@@ -130,21 +144,28 @@ class TodayCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: _ModeSwitch(mode: mode, onChanged: onModeChanged),
+                    // HUB3: the chip's visible edge as far from the card's
+                    // right edge as the switch's from its left (the padding's
+                    // right side is the eye's, whose 48 px target needs it).
+                    Padding(
+                      padding: const EdgeInsets.only(right: PhoneHomeMetrics.cardPadding - AppSpacing.s4),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: _ModeSwitch(mode: mode, onChanged: onModeChanged),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: AppSpacing.s8),
-                        _PeriodChip(period: period, onChanged: onPeriodChanged),
-                      ],
+                          const SizedBox(width: AppSpacing.s8),
+                          _PeriodChip(period: period, onChanged: onPeriodChanged),
+                        ],
+                      ),
                     ),
                     // UI5's exact range, under the switch.
                     Text(
                       periodLabel,
+                      key: const ValueKey('home-card-range'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(fontSize: HomeCardMetrics.rangeLabel, color: colors.onBrandSurfaceMuted),
@@ -155,31 +176,40 @@ class TodayCard extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _Amount(
-                                value: money(amount),
-                                hidden: amountsHidden,
-                                blur: PhoneHomeMetrics.maskBlurLarge,
-                                style: TextStyle(
-                                  fontSize: PhoneHomeMetrics.salesValue,
-                                  fontWeight: AppFontWeight.semibold,
-                                  fontFeatures: _tabular,
-                                  color: colors.onBrandSurface,
-                                ),
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: _Amount(
+                                      value: money(amount),
+                                      hidden: amountsHidden,
+                                      blur: PhoneHomeMetrics.maskBlurLarge,
+                                      style: TextStyle(
+                                        fontSize: PhoneHomeMetrics.salesValue,
+                                        fontWeight: AppFontWeight.semibold,
+                                        fontFeatures: _tabular,
+                                        color: colors.onBrandSurface,
+                                      ),
+                                    ),
+                                  ),
+                                  // HUB3 (3): beside the amount, never taller
+                                  // than its line; the eye hides it too.
+                                  if (delta != null && !amountsHidden) ...[
+                                    const SizedBox(width: AppSpacing.s8),
+                                    Flexible(child: _DeltaChip(delta: delta!)),
+                                  ],
+                                ],
                               ),
-                              // Always laid out, shown only when there is nothing, so
-                              // the card keeps one height.
-                              Visibility(
-                                visible: none,
-                                maintainSize: true,
-                                maintainAnimation: true,
-                                maintainState: true,
-                                child: Text(
-                                  services ? l10n.home_noVisitsYet : l10n.home_noSalesYet,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.onBrandSurfaceMuted),
-                                ),
-                              ),
+                              // HUB3 (2): the line "No sales yet" used, one
+                              // line high in every state, so the card keeps
+                              // one height.
+                              live ??
+                                  Visibility(
+                                    visible: false,
+                                    maintainSize: true,
+                                    maintainAnimation: true,
+                                    maintainState: true,
+                                    child: Text(' ', maxLines: 1, style: muted),
+                                  ),
                             ],
                           ),
                         ),
@@ -368,13 +398,12 @@ class _EyeButton extends StatelessWidget {
       );
 }
 
-/// HUB2: the card's Sales | Vet services switch: a faint outlined track
-/// [HomeCardMetrics.segmentHeight] high, the chosen option filled as the period
-/// chip is (a soft fill, full ink; the other muted ink: never a bright box,
-/// which Dark would not allow), each option a 48 high target;| Vet services switch: a soft track
-/// [HomeCardMetrics.segmentHeight] high with the chosen option filled, each
+/// HUB2: the card's Sales | Visits switch: a faint outlined track
+/// [HomeCardMetrics.segmentHeight] high and only as wide as its options, each
 /// option a 48 high target; a label too long for a narrow card ends in an
-/// ellipsis rather than pushing the chip out.
+/// ellipsis rather than pushing the chip out. HUB3 (the owner, after Light
+/// and Dark): the chosen option is a strong state, a white pill with the
+/// card's deep ink (brandGradientStart); the other keeps the muted ink.
 class _ModeSwitch extends StatelessWidget {
   final HomeCardMode mode;
   final ValueChanged<HomeCardMode>? onChanged;
@@ -395,6 +424,7 @@ class _ModeSwitch extends StatelessWidget {
           Positioned.fill(
             child: Center(
               child: Container(
+                key: const ValueKey('home-card-mode-track'),
                 height: HomeCardMetrics.segmentHeight,
                 decoration: BoxDecoration(
                   border: Border.all(color: colors.onBrandSurfaceSubtle),
@@ -423,22 +453,23 @@ class _ModeSwitch extends StatelessWidget {
                           height: PhoneHomeMetrics.linkHeight,
                           child: Center(
                             child: AnimatedContainer(
+                              key: ValueKey('home-card-mode-pill-${m.key}'),
                               duration: duration,
                               height: pill,
                               alignment: Alignment.center,
                               padding: const EdgeInsets.symmetric(horizontal: HomeCardMetrics.segmentPadding),
                               decoration: BoxDecoration(
-                                color: colors.onBrandSurface.withValues(alpha: m == mode ? PhoneHomeMetrics.circleAlpha : 0),
+                                color: colors.onBrandSurface.withValues(alpha: m == mode ? 1 : 0),
                                 borderRadius: BorderRadius.circular(pill),
                               ),
                               child: Text(
-                                m == HomeCardMode.sales ? l10n.dashboard_sales : l10n.home_vetServices,
+                                m == HomeCardMode.sales ? l10n.dashboard_sales : l10n.home_visits,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: HomeCardMetrics.segmentLabel,
                                   fontWeight: AppFontWeight.semibold,
-                                  color: m == mode ? colors.onBrandSurface : colors.onBrandSurfaceMuted,
+                                  color: m == mode ? colors.brandGradientStart : colors.onBrandSurfaceMuted,
                                 ),
                               ),
                             ),
@@ -456,8 +487,9 @@ class _ModeSwitch extends StatelessWidget {
   }
 }
 
-/// The date chip: today's period picker (Today, This Week, This Month, This
-/// Year), 36 high in a 48 target.
+/// The date chip: today's period picker, 36 high in a 48 target. HUB3: the
+/// chip shows the short label (Today, Week, Month, Year); the menu keeps the
+/// full ones (Today, This Week, This Month, This Year).
 class _PeriodChip extends StatelessWidget {
   final String period;
   final ValueChanged<String> onChanged;
@@ -479,6 +511,7 @@ class _PeriodChip extends StatelessWidget {
         child: Center(
           widthFactor: 1,
           child: Container(
+            key: const ValueKey('home-period-chip'),
             height: PhoneHomeMetrics.chipHeight,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
             decoration: BoxDecoration(
@@ -491,7 +524,7 @@ class _PeriodChip extends StatelessWidget {
                 Icon(Icons.calendar_today_outlined, size: PhoneHomeMetrics.chipIcon, color: colors.onBrandSurface),
                 const SizedBox(width: AppSpacing.s6),
                 Text(
-                  dashboardPeriodLabel(l10n, period),
+                  dashboardPeriodShortLabel(l10n, period),
                   style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.onBrandSurface),
                 ),
                 Icon(Icons.arrow_drop_down, size: PhoneHomeMetrics.rowIcon, color: colors.onBrandSurface),
@@ -504,3 +537,52 @@ class _PeriodChip extends StatelessWidget {
   }
 }
 
+
+/// HUB3 (3): today against yesterday, right of the big amount: an arrow and
+/// the words ("up 12% vs yesterday", "New"), never colour alone. In the card's
+/// own ink on the period chip's soft fill: on the brand gradient neither
+/// trendUp nor trendDown reaches 3:1 in every theme, so the arrow's shape and
+/// the words carry the direction. One line, shorter than the amount's.
+class _DeltaChip extends StatelessWidget {
+  final HomeDelta delta;
+
+  const _DeltaChip({required this.delta});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final colors = context.colors;
+    final percent = delta.percent;
+    final (icon, text) = switch (percent) {
+      null => (Icons.arrow_upward, l10n.summary_trendNew),
+      0 => (Icons.trending_flat, l10n.home_deltaSame),
+      > 0 => (Icons.arrow_upward, l10n.home_deltaUp(percent)),
+      _ => (Icons.arrow_downward, l10n.home_deltaDown(-percent)),
+    };
+    return Container(
+      key: const ValueKey('home-delta'),
+      height: HomeCardMetrics.deltaHeight,
+      padding: const EdgeInsets.symmetric(horizontal: HomeCardMetrics.deltaPadding),
+      decoration: BoxDecoration(
+        color: colors.onBrandSurface.withValues(alpha: PhoneHomeMetrics.circleAlpha),
+        borderRadius: BorderRadius.circular(HomeCardMetrics.deltaHeight),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: HomeCardMetrics.deltaIcon, color: colors.onBrandSurface),
+          const SizedBox(width: AppSpacing.s4),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                  fontSize: HomeCardMetrics.deltaLabel, fontWeight: AppFontWeight.semibold, color: colors.onBrandSurface),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

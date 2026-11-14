@@ -38,6 +38,11 @@ final surfaceScanAlwaysAllowed = [
   // K0: the startup loading screen shows before the saved mode is read, so
   // it stays Pasture light (the short light flash was accepted).
   SurfaceScanAllow('the startup loading screen', (w) => w is VetBizLoadingTheme || w is VetBizLoadingIndicator),
+  // HUB3 (the owner, after Light and Dark): the Today card's chosen Sales |
+  // Visits option is a white pill with the card's deep ink, a strong state,
+  // in Dark too (the card is the brand gradient in both modes).
+  SurfaceScanAllow("the Today card's chosen switch option",
+      (w) => w.key is ValueKey<String> && (w.key! as ValueKey<String>).value.startsWith('home-card-mode-pill-')),
 ];
 
 /// Wrap a subtree in this key to leave it out of the scan; the reason is the

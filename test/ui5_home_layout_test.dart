@@ -12,6 +12,7 @@ import 'package:vetbiz_pro/screens/dashboard/needs_attention.dart';
 import 'package:vetbiz_pro/screens/dashboard/home_action_panel.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
+import 'package:vetbiz_pro/theme/app_motion.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'helpers/phone_home_harness.dart';
@@ -127,7 +128,8 @@ void main() {
       expect(find.text('This Month'), findsOneWidget, reason: 'the period menu opened');
     }, skip: _skip);
 
-    testWidgets('"No sales yet" only without sales; one card size hidden, shown, every period', (tester) async {
+    testWidgets('one card size with and without sales, hidden, shown, every period (HUB3: no "No sales yet")',
+        (tester) async {
       Future<Rect> size(PhoneHomeFigures f, {bool hidden = false, String period = 'Today', String label = 'Mon 9 Nov'}) async {
         await pumpPhoneHome(
           tester,
@@ -136,14 +138,10 @@ void main() {
         return _card(tester);
       }
 
-      // The line always keeps its room; Visibility shows it only without sales.
-      bool noSalesShown() => tester
-          .widget<Visibility>(find.ancestor(of: find.text('No sales yet'), matching: find.byType(Visibility)))
-          .visible;
+      // The line under the amount (the live line now) always keeps its room.
       final shown = await size(ph4BigFigures);
-      expect(noSalesShown(), isFalse);
       final none = await size(_noSales);
-      expect(noSalesShown(), isTrue);
+      expect(find.text('No sales yet'), findsNothing);
       expect(none, shown);
       expect(await size(ph4BigFigures, hidden: true), shown);
       expect(await size(_noSales, hidden: true), shown);
@@ -188,9 +186,15 @@ void main() {
           await pumpAtSize(tester, screen: phoneHomeHarness(gate: gate), size: s.size, look: look);
           expect(find.byType(SkeletonPulse), findsWidgets);
           Map<Type, Rect> rects() => {
-                for (final t in [TodayCard, AttentionStrip, HomeActionPanel])
+                for (final t in [TodayCard, AttentionStrip])
                   // The content is built offstage meanwhile; finders skip it.
                   t: tester.getRect(find.byType(t)),
+                // HUB3 (5): the panel is not drawn during the skeleton (offstage,
+                // still laid out in its place); it rises with the content.
+                // (Offstage, it waits AppMotion.revealRise below its place: its rise's start.)
+                HomeActionPanel: tester
+                    .getRect(find.byType(HomeActionPanel, skipOffstage: false))
+                    .shift(Offset(0, find.byType(HomeActionPanel).evaluate().isEmpty ? -AppMotion.revealRise : 0)),
               };
           final before = rects();
           answered.value = true;

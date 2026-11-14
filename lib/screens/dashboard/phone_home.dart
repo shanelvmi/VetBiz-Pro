@@ -128,9 +128,14 @@ class PhoneHome extends StatelessWidget {
   final bool amountsHidden;
   final VoidCallback? onToggleAmounts;
 
-  /// HUB2: the card's Sales | Vet services switch (null: no switching).
+  /// HUB2: the card's Sales | Visits switch (null: no switching).
   final HomeCardMode mode;
   final ValueChanged<HomeCardMode>? onModeChanged;
+
+  /// HUB3: the card's live line and its delta vs yesterday (TodayCard). The
+  /// skeleton draws neither: the live line's room is kept empty.
+  final Widget? live;
+  final HomeDelta? delta;
 
   const PhoneHome({
     super.key,
@@ -150,6 +155,8 @@ class PhoneHome extends StatelessWidget {
     this.onToggleAmounts,
     this.mode = HomeCardMode.sales,
     this.onModeChanged,
+    this.live,
+    this.delta,
   });
 
   /// The strip's slot: while its data has not answered, a reserved place of
@@ -198,6 +205,8 @@ class PhoneHome extends StatelessWidget {
       onToggleAmounts: onToggleAmounts,
       mode: mode,
       onModeChanged: onModeChanged,
+      live: skeleton ? null : live,
+      delta: skeleton ? null : delta,
     );
     // HUB1: the end of the page clears the folded action panel.
     final bottom = PhoneHomeMetrics.pagePadding + HomePanelInsets.bottomOf(context);

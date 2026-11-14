@@ -87,11 +87,11 @@ void main() {
   setUpAll(() => initializeDateFormatting());
 
   group('the switch', () {
-    testWidgets('two options, Sales then Vet services, the chosen one selected', (tester) async {
+    testWidgets('two options, Sales then Visits (HUB3: was Vet services), the chosen one selected', (tester) async {
       final semantics = tester.ensureSemantics();
       await _pump(tester);
       expect(find.text('Sales'), findsOneWidget);
-      expect(find.text('Vet services'), findsOneWidget);
+      expect(find.descendant(of: _option(HomeCardMode.services), matching: find.text('Visits')), findsOneWidget);
       expect(tester.getCenter(_option(HomeCardMode.sales)).dx,
           lessThan(tester.getCenter(_option(HomeCardMode.services)).dx));
       expect(_selected(tester, HomeCardMode.sales), isTrue);
@@ -174,22 +174,18 @@ void main() {
       expect(find.text(Money.format(84000)), findsOneWidget, reason: 'totalServiceRevenue');
       expect(find.text(Money.format(1250000)), findsNothing);
       final labels = ['Visits', 'Collected', 'Owed'];
+      // HUB3: the switch says Visits too; the figures are the last ones.
+      Finder stat(String t) => find.text(t).last;
       for (final t in [...labels, '7', Money.format(980000), Money.format(310000)]) {
-        expect(find.text(t), findsOneWidget, reason: t);
+        expect(stat(t), findsOneWidget, reason: t);
       }
       expect(find.text('Net profit'), findsNothing, reason: 'no service profit column in the fallback');
-      final xs = [for (final l in labels) tester.getTopLeft(find.text(l)).dx];
+      final xs = [for (final l in labels) tester.getTopLeft(stat(l)).dx];
       expect(xs, orderedEquals([...xs]..sort()));
     }, skip: _skip);
 
-    testWidgets('no sales, no visits: the reserved line says so', (tester) async {
-      const none = PhoneHomeFigures(sales: 0, collected: 0, owed: 0, netProfit: 0);
-      await _pump(tester, figures: none);
-      expect(find.text('No sales yet'), findsOneWidget);
-      await _pump(tester, figures: none, mode: HomeCardMode.services);
-      expect(find.text('No visits yet'), findsOneWidget);
-      expect(find.text('No sales yet'), findsNothing);
-    }, skip: _skip);
+    // HUB3: "No sales yet" and "No visits yet" are gone (the zero says it;
+    // the line is the live line now): hub3_header_test.dart.
 
     testWidgets('an assistant sees no Net profit in either choice', (tester) async {
       await _pump(tester, isAdmin: false);
@@ -198,7 +194,7 @@ void main() {
       expect(find.text('Collected'), findsOneWidget);
       await _pump(tester, isAdmin: false, mode: HomeCardMode.services);
       expect(find.text('Net profit'), findsNothing);
-      expect(find.text('Visits'), findsOneWidget);
+      expect(find.text('Visits'), findsNWidgets(2), reason: 'the switch and the figure');
     }, skip: _skip);
 
     testWidgets('the eye hides every amount in both choices; Visits is a count and stays', (tester) async {
