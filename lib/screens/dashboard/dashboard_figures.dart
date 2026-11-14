@@ -4,6 +4,7 @@ import '../../config/app_date_format.dart';
 import '../../config/app_ranges.dart';
 import '../../l10n/l10n.dart';
 import '../../services/dashboard_summary_service.dart';
+import '../../utils/app_clock.dart';
 
 /// The dashboard's period choices. Stored and compared in English (the
 /// dashboard's selectedFilter); only [dashboardPeriodLabel] is shown.
@@ -20,7 +21,7 @@ String dashboardPeriodLabel(AppLocalizations l, String period) => switch (period
 /// one place it is worked out: the Today card's label shows this same range.
 /// Monday starts the week; an unknown period is Today.
 (DateTime, DateTime) dashboardPeriodRange(String period, {DateTime? now}) {
-  final at = now ?? DateTime.now();
+  final at = now ?? AppClock.now();
   final today = DateTime(at.year, at.month, at.day);
   return switch (period) {
     'This Week' => (today.subtract(AppRanges.day * (at.weekday - 1)), at),

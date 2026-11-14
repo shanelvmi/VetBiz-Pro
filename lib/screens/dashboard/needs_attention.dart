@@ -11,6 +11,7 @@ import '../../theme/theme_context.dart';
 import '../../widgets/app_sheet.dart';
 import '../../widgets/press_scale.dart';
 import '../products/stock_alerts_screen.dart';
+import '../../utils/app_clock.dart';
 
 /// Where a Needs attention row leads.
 enum AttentionTarget { stockAlerts, debtors, team }
@@ -64,7 +65,7 @@ AttentionCounts attentionCountsFor({
     final seen = oldest[d.clientId];
     if (seen == null || d.timestamp.isBefore(seen)) oldest[d.clientId] = d.timestamp;
   }
-  final cutoff = (now ?? DateTime.now()).subtract(AppRanges.day * overdueDays);
+  final cutoff = (now ?? AppClock.now()).subtract(AppRanges.day * overdueDays);
   final overdue = oldest.values.where((t) => !t.isAfter(cutoff)).length;
   return AttentionCounts(stock: stock.length, expiry: expiry.length, overdueDebtors: overdue, overdueDays: overdueDays);
 }

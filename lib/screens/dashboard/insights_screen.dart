@@ -19,6 +19,7 @@ import '../../theme/app_motion.dart';
 import '../../ui/feedback/friendly_error.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
+import '../../utils/app_clock.dart';
 
 /// A simple insights view - a 14-day sales trend and your top 5
 /// products by revenue over the last 30 days. Deliberately kept to two
@@ -83,7 +84,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       return;
     }
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
     _trendStart = today.subtract(AppRanges.insightsTrendBack);
     // Matches exactly what's displayed - the trend chart and the
@@ -175,7 +176,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
     final debtProvider = Provider.of<DebtProvider>(context, listen: false);
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(AppRanges.day);
     // "Normal" is judged against the preceding 7 days, not a single

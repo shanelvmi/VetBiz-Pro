@@ -15,6 +15,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../utils/app_clock.dart';
 
 /// The detail behind Overview's own summary cards - day-to-day earnings,
 /// individual recent payments, revenue by plan, and the
@@ -61,7 +62,7 @@ class _OverviewDetailsScreenState extends State<OverviewDetailsScreen> {
       _error = null;
     });
     try {
-      final now = DateTime.now();
+      final now = AppClock.now();
       // A wider window than Overview's own "this month" figure, so
       // this screen actually adds context rather than repeating it -
       // bounded to 90 days rather than every payment ever made, since

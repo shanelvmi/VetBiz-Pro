@@ -13,6 +13,7 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/restore_feedback.dart';
 import '../../utils/activity_logger.dart';
+import '../../utils/app_clock.dart';
 
 /// PH8a: what Trash does with a deleted record, the same on every width (the
 /// tabs on wider windows, the one list on a phone). Moved from the tabs'
@@ -68,7 +69,7 @@ const int trashWarningThresholdDays = 7;
 int? trashDaysRemaining(DateTime? deletedAt) {
   if (deletedAt == null) return null;
   final purgeDate = deletedAt.add(AppRules.trashRetention);
-  return purgeDate.difference(DateTime.now()).inDays;
+  return purgeDate.difference(AppClock.now()).inDays;
 }
 
 /// When the record leaves Trash for good, and in which colour to say it

@@ -15,6 +15,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../utils/app_clock.dart';
 
 /// A snapshot of the whole business - how many facilities, in what state, and
 /// how much has actually been collected this month. Reads every facility
@@ -57,7 +58,7 @@ class _OverviewTabState extends State<OverviewTab> {
       if (!mounted) return;
       setState(() {
         _stats = stats;
-        _lastRefreshed = DateTime.now();
+        _lastRefreshed = AppClock.now();
         _isLoading = false;
       });
     } catch (e) {
@@ -70,7 +71,7 @@ class _OverviewTabState extends State<OverviewTab> {
   }
 
   Future<Map<String, dynamic>> _loadStats() async {
-    final now = DateTime.now();
+    final now = AppClock.now();
     final monthStart = DateTime(now.year, now.month, 1);
 
     // All three are independent - none depends on another's result - so

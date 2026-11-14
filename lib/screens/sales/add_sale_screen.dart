@@ -39,6 +39,7 @@ import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_choice_field.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
 import '../../widgets/phone_form/picker_sheet.dart';
+import '../../utils/app_clock.dart';
 
 // --- Custom Formatter ---
 // --- Add Sale Screen ---
@@ -606,7 +607,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
     final facilityId = facilityProvider.selectedFacility?['id'] ?? '';
     if (facilityId.isEmpty) return [];
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final expiredPortion = <(String, String, int)>[];
 
     for (final item in items) {
@@ -812,8 +813,8 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
         id: _saleId,
         clientId: selectedClient?.id,
         clientName: selectedClient?.name,
-        timestamp: DateTime.now(),
-        updatedAt: DateTime.now(),
+        timestamp: AppClock.now(),
+        updatedAt: AppClock.now(),
         items: updatedItems,
         totalAmount: totalAmount,
         totalPaid: totalPaid,

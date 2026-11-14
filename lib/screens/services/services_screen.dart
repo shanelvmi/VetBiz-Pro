@@ -37,6 +37,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/restore_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
+import '../../utils/app_clock.dart';
 
 class ServicesScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
@@ -136,7 +137,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
     setState(() => _isSummaryLoading = true);
     try {
-      final cutoff = DateTime.now().subtract(AppRanges.defaultListRange);
+      final cutoff = AppClock.now().subtract(AppRanges.defaultListRange);
       final snap = await _db
           .collection(Collections.facilities)
           .doc(facilityId)
@@ -644,7 +645,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final status = _getPaymentStatus(service.totalPaid, service.totalAmount);
     final statusColor = _statusColor(service.totalPaid, service.totalAmount);
     final isSelected = _selectedService?.id == service.id;
-    final serviceDate = service.serviceDate ?? DateTime.now();
+    final serviceDate = service.serviceDate ?? AppClock.now();
 
     return InkWell(
       onTap: () => setState(() => _selectedService = service),
@@ -861,7 +862,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   Widget _serviceTile(Service service, {required bool grouped}) {
     final l10n = context.l10n;
-    final date = service.serviceDate ?? DateTime.now();
+    final date = service.serviceDate ?? AppClock.now();
     final client = service.clientName ?? l10n.common_walkIn;
     final amount = Money.format(service.totalAmount);
     final status = l10n.paymentStatusLabel(_getPaymentStatus(service.totalPaid, service.totalAmount));
@@ -928,7 +929,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
         banner: controller.newRecordsAvailable > 0 ? _buildNewRecordsBanner(controller) : null,
         items: controller.loadedItems,
         idOf: (s) => s.id,
-        dateOf: (s) => s.serviceDate ?? DateTime.now(),
+        dateOf: (s) => s.serviceDate ?? AppClock.now(),
         amountOf: (s) => s.totalAmount,
         grouped: _searchQuery.isEmpty,
         tileBuilder: (context, s, {required grouped}) => _serviceTile(s, grouped: grouped),
@@ -1004,7 +1005,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
       {VoidCallback? onDeleted}) {
     final status = _getPaymentStatus(service.totalPaid, service.totalAmount);
     final statusColor = _statusColor(service.totalPaid, service.totalAmount);
-    final serviceDate = service.serviceDate ?? DateTime.now();
+    final serviceDate = service.serviceDate ?? AppClock.now();
     final client =
         service.clientId != null ? Provider.of<ClientProvider>(context, listen: false).getClientById(service.clientId!) : null;
 

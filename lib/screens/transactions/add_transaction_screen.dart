@@ -29,6 +29,7 @@ import '../../l10n/l10n.dart';
 import '../../constants/transaction_categories.dart';
 import '../../widgets/app_sheet.dart';
 import '../../utils/subscription_guard.dart';
+import '../../utils/app_clock.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
@@ -153,7 +154,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     final newTx = TransactionModel(
       id: '',
-      date: DateTime.now(),
+      date: AppClock.now(),
       description: description,
       amount: amount,
       type: type!, // stored lowercase

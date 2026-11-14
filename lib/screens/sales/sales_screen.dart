@@ -34,6 +34,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/restore_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
+import '../../utils/app_clock.dart';
 
 class SalesScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH3).
@@ -143,7 +144,7 @@ class _SalesScreenState extends State<SalesScreen> {
 
     setState(() => _isSummaryLoading = true);
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final start = now.subtract(AppRanges.defaultListRange);
     final previousCollected = _rangeSummary?['totalCollected'];
 

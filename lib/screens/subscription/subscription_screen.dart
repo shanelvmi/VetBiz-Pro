@@ -34,6 +34,7 @@ import '../../widgets/app_sheet.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
+import '../../utils/app_clock.dart';
 
 /// Who submitted a payment claim, as the claim stores it: submittedBy is
 /// for people to read (the email, which the review shows; the uid when
@@ -206,7 +207,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       String? proofUrl;
       if (_proofBytes != null) {
         final ref = (widget.storage ?? FirebaseStorage.instance).ref().child(
-            'payment_proofs/$facilityId/${DateTime.now().millisecondsSinceEpoch}.jpg');
+            'payment_proofs/$facilityId/${AppClock.now().millisecondsSinceEpoch}.jpg');
         await ref.putData(_proofBytes!, UploadContentTypes.jpeg).timeout(
           AppTimeouts.proofUpload,
           // A TimeoutException, so FriendlyError shows its "took too long"

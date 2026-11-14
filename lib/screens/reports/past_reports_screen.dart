@@ -20,6 +20,7 @@ import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
+import '../../utils/app_clock.dart';
 
 class PastReportsScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
@@ -81,7 +82,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
   Object? _loadError;
 
   DateTime get _todayStart {
-    final now = DateTime.now();
+    final now = AppClock.now();
     return DateTime(now.year, now.month, now.day);
   }
 
@@ -112,7 +113,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
       _hasMore = true;
     });
     try {
-      final cutoff = _timeFilter.cutoff(DateTime.now());
+      final cutoff = _timeFilter.cutoff(AppClock.now());
       final pageFuture = _reportService.getReportsPage(
         facilityId: facilityId,
         limit: _pageSize,
@@ -148,7 +149,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
     if (facilityId == null) return;
     setState(() => _isLoadingMore = true);
     try {
-      final cutoff = _timeFilter.cutoff(DateTime.now());
+      final cutoff = _timeFilter.cutoff(AppClock.now());
       final page = await _reportService.getReportsPage(
         facilityId: facilityId,
         limit: _pageSize,

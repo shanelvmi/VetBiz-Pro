@@ -89,6 +89,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_motion.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/facility_display.dart';
+import '../../utils/app_clock.dart';
 
 // The light ink on the brand areas (sidebar items and labels, the logo
 // plate, the profile drawer buttons). In light it stays `background`, value
@@ -441,7 +442,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   final SubscriptionBannerSnooze _subscriptionSnooze = SubscriptionBannerSnooze();
 
   void _snoozeSubscriptionBanner() {
-    setState(() => _subscriptionSnooze.snooze(DateTime.now()));
+    setState(() => _subscriptionSnooze.snooze(AppClock.now()));
   }
 
   // The pill deliberately doesn't appear the instant Dashboard loads,
@@ -679,7 +680,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
   DateTime _today() {
-    final now = DateTime.now();
+    final now = AppClock.now();
     return DateTime(now.year, now.month, now.day);
   }
 
@@ -796,7 +797,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
   (DateTime, DateTime) _previousPeriodRangeForFilter(String filter) {
-    final now = DateTime.now();
+    final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
 
     switch (filter) {
@@ -903,7 +904,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   void _loadTodayGlance(String facilityId) {
     if (!_hasLoadedDashboardOnce) setState(() => _isGlanceLoading = true);
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
     final requestId = ++_glanceRequestId;
 
@@ -939,7 +940,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
   (DateTime, DateTime, int) _chartDateRange() {
-    final now = DateTime.now();
+    final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
     final days = _chartPeriod == 'Last 30 days' ? 30 : 7;
     return (today.subtract(Duration(days: days - 1)), today, days);
@@ -1058,7 +1059,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
   String greetingTime() {
-    final hour = DateTime.now().hour;
+    final hour = AppClock.now().hour;
     if (hour < 12) return context.l10n.dashboard_goodMorning;
     if (hour < 17) return context.l10n.dashboard_goodAfternoon;
     return context.l10n.dashboard_goodEvening;
@@ -1300,7 +1301,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                     final dateTimeRow = StreamBuilder(
                                       stream: Stream.periodic(AppTimeouts.clockTick),
                                       builder: (context, _) {
-                                        final now = DateTime.now();
+                                        final now = AppClock.now();
                                         return Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
@@ -1719,7 +1720,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // PH8a: what to tell (and whether), from the one rule the phone banner
     // shares: locked, grace, the calm trial, the last 7 days.
     final state = subscriptionBannerFor(status: sub.status, daysRemaining: sub.daysRemaining, inCalmTrial: isInTrialInfo);
-    final isSnoozed = _subscriptionSnooze.isSnoozed(DateTime.now());
+    final isSnoozed = _subscriptionSnooze.isSnoozed(AppClock.now());
     final shouldShow = state != null && !isSnoozed && _subscriptionPillDelayPassed;
 
     final isLocked = sub.status == SubscriptionStatus.locked;
@@ -1819,7 +1820,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     final sub = Provider.of<SubscriptionProvider>(context);
     final state =
         subscriptionBannerFor(status: sub.status, daysRemaining: sub.daysRemaining, inCalmTrial: sub.isInCalmTrial);
-    if (state == null || _subscriptionSnooze.isSnoozed(DateTime.now()) || !_subscriptionPillDelayPassed) return null;
+    if (state == null || _subscriptionSnooze.isSnoozed(AppClock.now()) || !_subscriptionPillDelayPassed) return null;
     return PhoneSubscriptionBanner(
       key: const ValueKey('phone-subscription-banner'),
       state: state,

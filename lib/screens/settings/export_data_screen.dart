@@ -26,6 +26,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
 import '../../data/payment_status.dart';
+import '../../utils/app_clock.dart';
 
 /// One logical table of data - a title (shown as its own line in CSV,
 /// its own sheet/tab name in xlsx), a header row, and the data rows
@@ -328,7 +329,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                   DateFormat(DataKeys.isoDay).format(_selectedDateRange!.end));
 
       final baseName = _selectedDataType.replaceAll(RegExp(r'[^A-Za-z0-9]+'), '_');
-      final timestamp = DateFormat(DataKeys.exportFileStamp).format(DateTime.now());
+      final timestamp = DateFormat(DataKeys.exportFileStamp).format(AppClock.now());
 
       if (_selectedFormat == 'xlsx') {
         bytes = _renderXlsx(sections, dateRangeLabel);
@@ -723,7 +724,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
   }
 
   Future<void> _pickDateRange() async {
-    final now = DateTime.now();
+    final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
 
     Future<void> apply(DateTimeRange? range) async {

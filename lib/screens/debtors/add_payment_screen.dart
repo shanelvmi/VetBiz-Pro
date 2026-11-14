@@ -29,6 +29,7 @@ import '../../widgets/field_message_slot.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
 import '../../widgets/phone_form/picker_sheet.dart';
+import '../../utils/app_clock.dart';
 
 class AddPaymentScreen extends StatefulWidget {
   final Client? preselectedClient;
@@ -403,7 +404,7 @@ class _AddPaymentScreenState extends State<AddPaymentScreen> {
       if (service != null) {
         final updatedService = service.copyWith(
           totalPaid: service.totalPaid + amount,
-          updatedAt: DateTime.now(),
+          updatedAt: AppClock.now(),
         );
         final serviceRef = _db
             .collection(Collections.facilities)

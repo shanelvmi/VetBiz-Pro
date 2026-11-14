@@ -34,6 +34,7 @@ import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/phone_report/phone_report_row.dart';
 import '../../widgets/phone_report/phone_report_section.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../utils/app_clock.dart';
 
 /// The main View Reports screen - shows today's own report directly,
 /// matching the Daily Closing Report mockup, rather than a separate
@@ -95,7 +96,7 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
     _closingTimer?.cancel();
     _scheduledClosingTime = closingTime;
     if (closingTime == null) return;
-    final duration = closingTime.difference(DateTime.now());
+    final duration = closingTime.difference(AppClock.now());
     if (duration.isNegative) return;
     _closingTimer = Timer(duration, () {
       if (mounted) setState(() {});

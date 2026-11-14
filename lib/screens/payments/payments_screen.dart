@@ -36,6 +36,7 @@ import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
+import '../../utils/app_clock.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -73,8 +74,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   String _searchQuery = '';
   late final TextEditingController _searchController;
 
-  DateTime _rangeStart = DateTime.now();
-  DateTime _rangeEnd = DateTime.now();
+  DateTime _rangeStart = AppClock.now();
+  DateTime _rangeEnd = AppClock.now();
 
   final Map<String, String> _userNames = {};
   Timer? _searchDebounce;
@@ -134,7 +135,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     _searchController = TextEditingController(text: widget.initialClientName ?? '');
     _searchQuery = widget.initialClientName ?? '';
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     if (widget.initialClientId != null) {
       // Viewing one client's history - default to a wide window so their
       // past payments are actually visible, not just "did they pay today".
@@ -347,7 +348,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     setState(() => _isMetricsLoading = true);
     final requestId = ++_metricsRequestId;
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(AppRanges.day);
     final weekStart = now.subtract(AppRanges.week);
@@ -1045,7 +1046,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   /// midnight, Yesterday the whole day before, All the last year (the
   /// one-client view's window, AppRanges.paymentsDefaultRange).
   void _setRangeChip(String chip) {
-    final now = DateTime.now();
+    final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
     setState(() {
       _rangeChip = chip;
@@ -1231,7 +1232,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   Widget _buildDayGroup(String dayKey, List<LedgerEntry> entries, double dayTotal) {
     final date = DateTime.parse(dayKey);
-    final now = DateTime.now();
+    final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
     final yesterday = today.subtract(AppRanges.day);
 

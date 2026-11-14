@@ -14,6 +14,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../utils/app_clock.dart';
 
 class FacilityDetailScreen extends StatefulWidget {
   final String facilityId;
@@ -154,7 +155,7 @@ class _FacilityDetailScreenState extends State<FacilityDetailScreen> {
 
     final currentExpires = facilityData['subscriptionExpiresAt'];
     final currentExpiresDate = currentExpires is Timestamp ? currentExpires.toDate() : null;
-    final now = DateTime.now();
+    final now = AppClock.now();
     final base = (currentExpiresDate != null && currentExpiresDate.isAfter(now)) ? currentExpiresDate : now;
     final newExpiryDate = base.add(Duration(days: durationDays));
     // Always the end of that day, not the exact time-of-day this

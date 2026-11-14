@@ -17,6 +17,7 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../utils/submission_people.dart';
 import '../../config/app_info.dart';
+import '../../utils/app_clock.dart';
 
 /// Embeddable version of the subscription submissions review list -
 /// same logic as the original standalone Subscription Review screen,
@@ -65,7 +66,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
   // reads faster than a full date/time when scanning a list of
   // several pending requests to see which is oldest.
   String _relativeTime(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
+    final diff = AppClock.now().difference(dt);
     if (diff.inMinutes < 1) return 'Just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return '${diff.inHours}h ago';
@@ -79,7 +80,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
   // to notice it.
   Color _urgencyColor(DateTime? submittedAt) {
     if (submittedAt == null) return context.colors.textHint;
-    final days = DateTime.now().difference(submittedAt).inDays;
+    final days = AppClock.now().difference(submittedAt).inDays;
     if (days >= 3) return context.colors.dangerAccent;
     if (days >= 1) return context.colors.warning;
     return context.colors.success;
@@ -98,7 +99,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
     final currentExpires = facilitySnap.data()?['subscriptionExpiresAt'];
     final currentExpiresDate = currentExpires is Timestamp ? currentExpires.toDate() : null;
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final base = (currentExpiresDate != null && currentExpiresDate.isAfter(now)) ? currentExpiresDate : now;
     final newExpiryDate = base.add(Duration(days: plan.durationDays));
     // Always the end of that day, not the exact time-of-day the
@@ -465,7 +466,7 @@ class _SubscriptionRequestsTabState extends State<SubscriptionRequestsTab> {
   /// this is a look-back/audit view, not a growing archive someone
   /// needs to page through.
   Widget _buildAttendedList() {
-    final since = DateTime.now().subtract(Duration(days: _attendedDays));
+    final since = AppClock.now().subtract(Duration(days: _attendedDays));
 
     return StreamBuilder<QuerySnapshot>(
       stream: _db

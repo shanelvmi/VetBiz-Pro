@@ -37,6 +37,7 @@ import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
+import '../../utils/app_clock.dart';
 
 class DebtorsScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
@@ -182,7 +183,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
     setState(() => _isPaidThisMonthLoading = true);
     try {
-      final now = DateTime.now();
+      final now = AppClock.now();
       final monthStart = DateTime(now.year, now.month, 1);
 
       final snap = await _db
@@ -1021,7 +1022,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
         banner: controller.newRecordsAvailable > 0 ? _buildNewRecordsBanner(controller) : null,
         items: [for (final c in controller.loadedItems) _DebtorRow(c, overdueDays)],
         idOf: (d) => d.clientId,
-        dateOf: (d) => d.client.oldestUnpaidDebtDate ?? DateTime.now(),
+        dateOf: (d) => d.client.oldestUnpaidDebtDate ?? AppClock.now(),
         amountOf: (d) => d.totalOwed,
         grouped: false,
         tileBuilder: (context, d, {required grouped}) => _debtorTile(d),
@@ -1171,7 +1172,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   );
                 }
                 final clientDebts = [...snapshot.data!]..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-                final now = DateTime.now();
+                final now = AppClock.now();
                 final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
                 final overdueAmount = clientDebts
                     .where((d) => now.difference(d.timestamp).inDays > overdueDays)
@@ -1286,7 +1287,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   Widget _buildDebtTile(_DebtorRow debtor, Debt debt) {
     final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
-    final isOverdue = DateTime.now().difference(debt.timestamp).inDays > overdueDays;
+    final isOverdue = AppClock.now().difference(debt.timestamp).inDays > overdueDays;
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.s10),
       padding: const EdgeInsets.all(AppSpacing.s12),
@@ -1490,7 +1491,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     try {
       final xfile = XFile.fromData(
         bytes,
-        name: 'active_debts_${DateFormat(DataKeys.fileDateStamp).format(DateTime.now())}.csv',
+        name: 'active_debts_${DateFormat(DataKeys.fileDateStamp).format(AppClock.now())}.csv',
         mimeType: 'text/csv',
       );
       await Share.shareXFiles([xfile], text: ExportTexts.activeDebtsShareText);
@@ -1627,7 +1628,7 @@ class _DebtorRow {
   int get daysSinceOldestDebt {
     final oldest = client.oldestUnpaidDebtDate;
     if (oldest == null) return 0;
-    return DateTime.now().difference(oldest).inDays;
+    return AppClock.now().difference(oldest).inDays;
   }
 
   bool get isOverdue => daysSinceOldestDebt > overdueDays;

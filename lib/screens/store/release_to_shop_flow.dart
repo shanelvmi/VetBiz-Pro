@@ -15,6 +15,7 @@ import '../../data/activity_type.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
+import '../../utils/app_clock.dart';
 
 // The "release to shelf" flow, shared so it behaves identically wherever it's
 // started from - the Stock Store's own Release button and the Product Alerts
@@ -39,7 +40,7 @@ Future<List<(String?, int)>> _simulateExpiredPortion(Product product, int qty) a
   final snap = await batchesRef.where('stockQty', isGreaterThan: 0).get();
   if (snap.docs.isEmpty) return [];
 
-  final now = DateTime.now();
+  final now = AppClock.now();
   final candidates = snap.docs.toList()
     ..sort((a, b) {
       final aExp = a.data()['expiry'] as Timestamp?;

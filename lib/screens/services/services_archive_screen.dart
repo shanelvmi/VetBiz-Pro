@@ -17,6 +17,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
+import '../../utils/app_clock.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   const ServicesArchiveScreen({super.key});
@@ -62,7 +63,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
   @override
   void initState() {
     super.initState();
-    final cutoff = DateTime.now().subtract(AppRanges.archiveCutoff);
+    final cutoff = AppClock.now().subtract(AppRanges.archiveCutoff);
     _searchEnd = cutoff;
     _searchStart = cutoff.subtract(AppRanges.archiveDefaultWindow);
 
@@ -478,7 +479,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     final isSelected = _selectedService?['id'] == service['id'];
     final serviceDate = service['serviceDate'] is Timestamp
         ? (service['serviceDate'] as Timestamp).toDate()
-        : DateTime.now();
+        : AppClock.now();
     final description = (service['description'] as String?) ?? '';
 
     return InkWell(
@@ -640,7 +641,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     final statusColor = _statusColor(totalPaid, totalAmount);
     final serviceDate = service['serviceDate'] is Timestamp
         ? (service['serviceDate'] as Timestamp).toDate()
-        : DateTime.now();
+        : AppClock.now();
     final transactionId = service['transactionId'] as String?;
     final description = (service['description'] as String?) ?? '';
 
@@ -793,7 +794,7 @@ class _SearchServicesArchiveDialog extends StatefulWidget {
 
 class _SearchServicesArchiveDialogState extends State<_SearchServicesArchiveDialog> {
   final DateTime _archiveCutoff =
-      DateTime.now().subtract(AppRanges.archiveCutoff);
+      AppClock.now().subtract(AppRanges.archiveCutoff);
 
   String _dateMode = 'month';
   late DateTime _selectedMonth;

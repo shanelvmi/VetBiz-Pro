@@ -33,6 +33,7 @@ import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
+import '../../utils/app_clock.dart';
 
 /// Who someone is on a facility's team, as this screen shows them. Worked out
 /// from the user record (role, previousRole, who created the facility); not
@@ -1303,7 +1304,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
       items: items,
       idOf: (d) => d.id,
       // No dates: the list keeps today's order (by authority, then status).
-      dateOf: (_) => DateTime.now(),
+      dateOf: (_) => AppClock.now(),
       amountOf: (_) => 0,
       grouped: false,
       // Today's hint sits under your own row when nobody else is there yet.

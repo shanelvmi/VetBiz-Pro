@@ -33,6 +33,7 @@ import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_choice_field.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
 import '../../widgets/phone_form/picker_sheet.dart';
+import '../../utils/app_clock.dart';
 
 /// The client an Edit Service form starts with: the service's own, so an
 /// unchanged edit keeps it and saves without picking the client again; the
@@ -161,7 +162,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
     _selectedCategory = widget.service?.category ?? _categories.first;
 
     // Prefill date: today if new, original if editing
-    _serviceDate = widget.service?.serviceDate ?? DateTime.now();
+    _serviceDate = widget.service?.serviceDate ?? AppClock.now();
     _paymentMethod = widget.service?.paymentMethod;
 
     double totalAmount = widget.service?.totalAmount ?? 0.0;
@@ -283,9 +284,9 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
   Future<void> _pickServiceDate(BuildContext context) async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _serviceDate ?? DateTime.now(),
+      initialDate: _serviceDate ?? AppClock.now(),
       firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
+      lastDate: AppClock.now(),
     );
     if (picked != null) setState(() => _serviceDate = picked);
   }
@@ -1109,7 +1110,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       clientName: _clientTextController.text.trim(),
       serviceDate: _serviceDate,
       providedByName: _providedByController.text.trim(),
-      updatedAt: DateTime.now(),
+      updatedAt: AppClock.now(),
       itemsUsed: _collectItemsUsed(),
       paymentMethod: totalPaid > 0 ? _paymentMethod : null,
       transactionId: _paymentMethod != null && _paymentMethod != PaymentMethod.cash.key && _transactionIdController.text.trim().isNotEmpty

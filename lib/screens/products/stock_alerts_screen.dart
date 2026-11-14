@@ -29,6 +29,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_layout.dart';
+import '../../utils/app_clock.dart';
 
 /// What kind of thing needs attention. Declared in the order they're
 /// shown - most urgent first.
@@ -112,13 +113,13 @@ class StockAlertsScreen extends StatelessWidget {
   /// Cheap yes/no for the bell's red dot - same rule as [currentAlerts],
   /// without building or sorting the list.
   static bool hasAnyAlert(List<Product> products) {
-    final now = DateTime.now();
+    final now = AppClock.now();
     return products.any((p) => _kindsFor(p, now).isNotEmpty);
   }
 
   /// Everything that needs attention, most urgent first.
   static List<StockAlert> currentAlerts(List<Product> products) {
-    final now = DateTime.now();
+    final now = AppClock.now();
     final alerts = <StockAlert>[];
     for (final p in products) {
       for (final kind in _kindsFor(p, now)) {
@@ -198,7 +199,7 @@ class StockAlertsScreen extends StatelessWidget {
       case StockAlertKind.expired:
         return l.alerts_messageExpired(p.name, dateFormat.format(p.expiry!), p.totalStock, l.productUnitLabel(p.unit));
       case StockAlertKind.expiringSoon:
-        final days = p.expiry!.difference(DateTime.now()).inDays;
+        final days = p.expiry!.difference(AppClock.now()).inDays;
         final when = days <= 0 ? l.alerts_today : l.alerts_inDays(days);
         return l.alerts_messageExpiring(p.name, when, dateFormat.format(p.expiry!), p.totalStock, l.productUnitLabel(p.unit));
       case StockAlertKind.restockShelf:
@@ -527,7 +528,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
       final batches = await Provider.of<ProductProvider>(context, listen: false)
           .streamBatchesForProduct(p.facilityId, p.id)
           .first;
-      final now = DateTime.now();
+      final now = AppClock.now();
       expiredOnShelf =
           batches.where((b) => b.sellableQty > 0 && b.expiry != null && b.expiry!.isBefore(now)).toList();
     } catch (_) {
@@ -578,7 +579,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
       case StockAlertKind.restockShelf:
         return (context.l10n.alerts_onShelf(p.sellableQty), context.l10n.alerts_shelfMinimum(p.effectiveShelfMinLevel));
       case StockAlertKind.expiringSoon:
-        final days = p.expiry!.difference(DateTime.now()).inDays;
+        final days = p.expiry!.difference(AppClock.now()).inDays;
         final when = days <= 0 ? context.l10n.alerts_expiresToday : context.l10n.alerts_expiresInDays(days);
         return (when, context.l10n.alerts_dateOnHand(_dateFormat.format(p.expiry!), p.totalStock, context.l10n.productUnitLabel(p.unit)));
       case StockAlertKind.expired:

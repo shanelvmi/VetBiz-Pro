@@ -46,6 +46,7 @@ import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_choice_field.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
 import '../../widgets/phone_form/picker_sheet.dart';
+import '../../utils/app_clock.dart';
 
 enum ProductDestination {
   sellable,
@@ -687,7 +688,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
   Future<void> _pickExpiryDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedExpiry ?? DateTime.now(),
+      initialDate: _selectedExpiry ?? AppClock.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
     );
@@ -917,7 +918,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
         return;
       }
 
-      final now = DateTime.now();
+      final now = AppClock.now();
       final isEditingProduct = widget.product != null;
 
       final newProduct = Product(

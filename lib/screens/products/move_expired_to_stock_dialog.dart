@@ -13,6 +13,7 @@ import '../../constants/batch_move_reasons.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
+import '../../utils/app_clock.dart';
 
 /// The one action, worded two ways: Products says "Move to Stock", while
 /// the Stock Store and Product Alerts say "Remove from Sellable" (moving
@@ -44,7 +45,7 @@ Future<void> promptQuantityAndMoveToStock(
   final actionLabel = action.label(context.l10n);
   final qtyController = TextEditingController(text: '${batch.sellableQty}');
   final notesController = TextEditingController();
-  final isAlreadyExpired = batch.expiry != null && batch.expiry!.isBefore(DateTime.now());
+  final isAlreadyExpired = batch.expiry != null && batch.expiry!.isBefore(AppClock.now());
   // A convenience, not a gate - pre-selects the common case (a batch
   // whose own date has already passed) but never stops someone from
   // picking Deteriorated or Other instead, or from moving a batch

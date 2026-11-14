@@ -33,6 +33,7 @@ import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import 'product_phone_parts.dart';
+import '../../utils/app_clock.dart';
 
 class ProductsScreen extends StatefulWidget {
   final String? initialSearchQuery;
@@ -264,7 +265,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       };
     }
 
-    if (product.expiry != null && product.expiry!.isBefore(DateTime.now())) {
+    if (product.expiry != null && product.expiry!.isBefore(AppClock.now())) {
       return {
         'text': 'Expired',
         'color': context.colors.danger,
@@ -303,7 +304,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
       };
     }
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final expiryDate = product.expiry!;
 
     if (expiryDate.difference(now).inDays <= 30) {

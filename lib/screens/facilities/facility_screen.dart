@@ -54,6 +54,7 @@ import '../../widgets/reveal/reveal_image.dart';
 import '../../widgets/app_safe_area.dart';
 import '../../widgets/app_sheet.dart';
 import 'facility_phone_form.dart';
+import '../../utils/app_clock.dart';
 
 class FacilityScreen extends StatefulWidget {
   // PH8b seams: tests pass fakes; the app leaves them null (the default
@@ -186,7 +187,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   /// client document just to count them.
   Future<void> _fetchFacilityExtras(String facilityId) async {
     try {
-      final now = DateTime.now();
+      final now = AppClock.now();
       final monthStart = DateTime(now.year, now.month, 1);
 
       // Started together rather than one at a time - none of these
@@ -235,7 +236,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       int sellableProductCount = 0;
       int lowStockCount = 0;
       int expiredCount = 0;
-      final nowForExpiry = DateTime.now();
+      final nowForExpiry = AppClock.now();
       for (final doc in productsSnap.docs) {
         final data = doc.data();
         final sellPrice = (data['sellPrice'] as num?)?.toDouble() ?? 0.0;
@@ -644,7 +645,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         final storageRef = _storage.ref().child('facility_logos/$newFacilityId.png');
         await storageRef.putData(logoBytes, UploadContentTypes.png);
         final rawDownloadUrl = await storageRef.getDownloadURL();
-        final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
+        final downloadUrl = '$rawDownloadUrl&cb=${AppClock.now().millisecondsSinceEpoch}';
         await _db
             .collection(Collections.facilities)
             .doc(newFacilityId)
@@ -1051,7 +1052,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       // Same cache-busting reasoning as before: Storage returns the
       // same URL for repeat uploads to the same path, so without this,
       // NetworkImage's own cache would keep showing the old logo.
-      final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
+      final downloadUrl = '$rawDownloadUrl&cb=${AppClock.now().millisecondsSinceEpoch}';
       await firestore.collection(Collections.facilities).doc(facilityId).set(
         {'logoUrl': downloadUrl},
         SetOptions(merge: true),
@@ -1106,7 +1107,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       // next fetch re-reads it - using "now" here is a reasonable
       // local approximation so the detail view doesn't show a stale
       // "Last Updated" until fetchFacilities runs again.
-      Fields.updatedAt: DateTime.now(),
+      Fields.updatedAt: AppClock.now(),
     };
 
     // Every member's profile carries a copy of this facility's name and type,
@@ -1585,7 +1586,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
       onSummary: () {},
       items: isLoading && facilities.isEmpty ? const [] : filtered,
       idOf: (f) => '${f[Fields.facilityId]}',
-      dateOf: (_) => DateTime.now(),
+      dateOf: (_) => AppClock.now(),
       amountOf: (_) => 0,
       grouped: false,
       tileBuilder: (context, f, {required grouped}) => _phoneFacilityTile(f),
@@ -2927,7 +2928,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         // "Uncategorized" the same way the catalog screens do).
         final categoryCounts = <String, int>{};
         final needsAttention = <Map<String, dynamic>>[];
-        final now = DateTime.now();
+        final now = AppClock.now();
 
         for (final doc in docs) {
           final data = doc.data() as Map<String, dynamic>;
@@ -3062,7 +3063,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final facilityId = facility[Fields.facilityId] as String?;
     if (facilityId == null) return const SizedBox.shrink();
 
-    final now = DateTime.now();
+    final now = AppClock.now();
     final thisMonthStart = DateTime(now.year, now.month, 1);
     final lastMonthStart = DateTime(now.year, now.month - 1, 1);
     final lastMonthEnd = thisMonthStart.subtract(AppRanges.day);
@@ -3405,7 +3406,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
         _detailsByFacility[facilityId] = {
           ...?_detailsByFacility[facilityId],
           Fields.status: newStatus,
-          Fields.updatedAt: DateTime.now(),
+          Fields.updatedAt: AppClock.now(),
         };
       });
       // Saved the stored status; the message shows its label.

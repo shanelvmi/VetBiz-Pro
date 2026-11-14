@@ -15,6 +15,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
+import '../../utils/app_clock.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   const SalesArchiveScreen({super.key});
@@ -60,7 +61,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   void initState() {
     super.initState();
     final cutoff =
-        DateTime.now().subtract(AppRanges.archiveCutoff);
+        AppClock.now().subtract(AppRanges.archiveCutoff);
     _searchEnd = cutoff;
     _searchStart = cutoff.subtract(AppRanges.archiveDefaultWindow);
 
@@ -433,7 +434,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     final status = _getPaymentStatus(paid, total);
     final statusColor = _statusColor(paid, total);
     final isSelected = _selectedSale?['id'] == sale['id'];
-    final timestamp = (sale['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final timestamp = (sale['timestamp'] as Timestamp?)?.toDate() ?? AppClock.now();
     final items = (sale['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final firstItem = items.isNotEmpty ? items.first : null;
 
@@ -580,7 +581,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     final total = ((sale['totalAmount'] ?? 0.0) as num).toDouble();
     final status = _getPaymentStatus(paid, total);
     final statusColor = _statusColor(paid, total);
-    final timestamp = (sale['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final timestamp = (sale['timestamp'] as Timestamp?)?.toDate() ?? AppClock.now();
     final items = (sale['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final subtotal = items.fold<double>(
         0, (total, i) => total + ((i['unitPrice'] ?? 0.0) as num).toDouble() * ((i['quantity'] ?? 0) as num).toDouble());
@@ -752,7 +753,7 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
   // pickers to that cutoff stops someone picking "this month" and always
   // getting zero results, since nothing that recent has been archived yet.
   final DateTime _archiveCutoff =
-      DateTime.now().subtract(AppRanges.archiveCutoff);
+      AppClock.now().subtract(AppRanges.archiveCutoff);
 
   String _dateMode = 'month';
   late DateTime _selectedMonth;

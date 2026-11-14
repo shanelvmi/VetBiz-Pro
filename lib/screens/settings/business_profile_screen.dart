@@ -19,6 +19,7 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
+import '../../utils/app_clock.dart';
 
 /// A dedicated home for facility-level branding (currently just the
 /// logo) - built for discoverability, since the drawer's own
@@ -88,7 +89,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
       // Firestore has the correct, current URL the whole time. This is
       // exactly why the logo appeared to "not persist" - it was saving
       // correctly, it just wasn't being re-fetched.
-      final downloadUrl = '$rawDownloadUrl&cb=${DateTime.now().millisecondsSinceEpoch}';
+      final downloadUrl = '$rawDownloadUrl&cb=${AppClock.now().millisecondsSinceEpoch}';
 
       await (widget.firestore ?? FirebaseFirestore.instance)
           .collection(Collections.facilities)

@@ -15,6 +15,7 @@ import '../../config/app_limits.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/friendly_error.dart';
+import '../../utils/app_clock.dart';
 
 /// Every registered user across the whole platform, not scoped to one
 /// facility - the missing piece that made "an assistant switching
@@ -231,7 +232,7 @@ class _UsersTabState extends State<UsersTab> {
               .where(
                 'lastActiveAt',
                 isGreaterThanOrEqualTo:
-                    Timestamp.fromDate(DateTime.now().subtract(PresenceHeartbeat.onlineWindow)),
+                    Timestamp.fromDate(AppClock.now().subtract(PresenceHeartbeat.onlineWindow)),
               )
               .snapshots(),
           builder: (context, onlineSnapshot) {
@@ -510,7 +511,7 @@ class _UsersTabState extends State<UsersTab> {
     final lastActiveField = data['lastActiveAt'];
     final lastActiveAt = lastActiveField is Timestamp ? lastActiveField.toDate() : null;
     final isOnline =
-        lastActiveAt != null && DateTime.now().difference(lastActiveAt) <= PresenceHeartbeat.onlineWindow;
+        lastActiveAt != null && AppClock.now().difference(lastActiveAt) <= PresenceHeartbeat.onlineWindow;
 
     return HoverElevateCard(
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.s4, vertical: AppSpacing.s4),

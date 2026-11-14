@@ -12,6 +12,7 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/friendly_error.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
+import '../../utils/app_clock.dart';
 
 /// Generates a short-lived, single-use code for inviting a new
 /// Assistant to join this facility - shown to the Admin to share
@@ -93,7 +94,7 @@ Future<void> showInviteAssistantDialog(BuildContext context, String facilityId) 
             if (!dialogContext.mounted) return;
             setDialogState(() {
               activeCode = code;
-              activeExpiresAt = DateTime.now().add(InviteCodeService.validityDuration);
+              activeExpiresAt = AppClock.now().add(InviteCodeService.validityDuration);
               isLoading = false;
               errorMessage = null;
             });

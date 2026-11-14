@@ -30,6 +30,7 @@ import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
+import '../../utils/app_clock.dart';
 
 class TransactionScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH5b, as
@@ -82,7 +83,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
+    final now = AppClock.now();
     _rangeStart = now.subtract(AppRanges.defaultListRange);
     _rangeEnd = now;
 

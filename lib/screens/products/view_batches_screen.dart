@@ -20,6 +20,7 @@ import '../../widgets/app_sheet.dart';
 import '../../widgets/app_safe_area.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
+import '../../utils/app_clock.dart';
 
 /// Full management view for one product's stock - every batch on file,
 /// with a way to correct or top up any of them directly, plus a clear
@@ -411,7 +412,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                           );
                         }
 
-                        final now = DateTime.now();
+                        final now = AppClock.now();
 
                         return Column(
                           children: batches.map((batch) {

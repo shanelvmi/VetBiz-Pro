@@ -33,6 +33,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../l10n/l10n.dart';
+import '../../utils/app_clock.dart';
 
 /// Everything that needs your attention, facility-wide - subscription
 /// status, urgent announcements, payments, debts, and system messages.
@@ -928,8 +929,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _pickDateRange() async {
     final picked = await showDateRangePicker(
       context: context,
-      firstDate: DateTime.now().subtract(AppRanges.year),
-      lastDate: DateTime.now(),
+      firstDate: AppClock.now().subtract(AppRanges.year),
+      lastDate: AppClock.now(),
       initialDateRange: _dateRange,
     );
     if (picked != null) {
@@ -1525,7 +1526,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _announcementRow(AnnouncementItem item) {
     final a = item.announcement;
     final isPoster = a.kind == AnnouncementKind.poster;
-    final isNew = UpdatesSelection.isNew(a, DateTime.now());
+    final isNew = UpdatesSelection.isNew(a, AppClock.now());
     return _swipe(
       item,
       _AccentCard(

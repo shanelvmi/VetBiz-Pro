@@ -36,6 +36,7 @@ import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/printable_theme.dart';
+import '../../utils/app_clock.dart';
 
 class ClientsScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
@@ -142,7 +143,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
   /// The cards' figures, from every client (ClientProvider.clients); the
   /// phone's summary sheet shows the same (PH5b).
   ({int newThisMonth, String mostActiveType, double mostActivePercent, Client? lastAdded}) _metrics(List<Client> allClients) {
-    final now = DateTime.now();
+    final now = AppClock.now();
     final newThisMonth = allClients
         .where((c) => c.createdAt != null && c.createdAt!.year == now.year && c.createdAt!.month == now.month)
         .length;
@@ -1177,7 +1178,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
         banner: controller.newRecordsAvailable > 0 ? _buildNewRecordsBanner(controller) : null,
         items: controller.loadedItems,
         idOf: (c) => c.id,
-        dateOf: (c) => c.createdAt ?? DateTime.now(),
+        dateOf: (c) => c.createdAt ?? AppClock.now(),
         amountOf: (_) => 0,
         grouped: false,
         tileBuilder: (context, c, {required grouped}) => _clientTile(c),

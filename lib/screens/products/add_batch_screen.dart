@@ -20,6 +20,7 @@ import '../../widgets/app_sheet.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
+import '../../utils/app_clock.dart';
 
 /// Records a new delivery of an existing product as its own batch - a
 /// separate batch number, expiry, and quantity, never overwriting an
@@ -81,8 +82,8 @@ class _AddBatchScreenState extends State<AddBatchScreen> {
   Future<void> _pickExpiry() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().add(AppRanges.year),
-      firstDate: DateTime.now(),
+      initialDate: AppClock.now().add(AppRanges.year),
+      firstDate: AppClock.now(),
       lastDate: DateTime(2100),
     );
     if (picked != null) {

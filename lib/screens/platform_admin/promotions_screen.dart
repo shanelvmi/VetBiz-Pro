@@ -15,6 +15,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../utils/app_clock.dart';
 
 /// Manage subscription discounts/offers - "Nanenane Sale", a
 /// month-end push, a renew-now discount for facilities about to
@@ -479,9 +480,9 @@ Future<void> _showPromotionEditor(BuildContext context, {Promotion? existing}) a
                       onPressed: () async {
                         final picked = await showDatePicker(
                           context: context,
-                          initialDate: endsAt ?? DateTime.now().add(AppRanges.fortnight),
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(AppRanges.year),
+                          initialDate: endsAt ?? AppClock.now().add(AppRanges.fortnight),
+                          firstDate: AppClock.now(),
+                          lastDate: AppClock.now().add(AppRanges.year),
                         );
                         if (picked != null) setDialogState(() => endsAt = picked);
                       },
