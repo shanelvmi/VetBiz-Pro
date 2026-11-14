@@ -57,6 +57,8 @@ import '../../providers/user_role_provider.dart';
 import '../../utils/merged_query_stream.dart';
 import '../subscription/subscription_screen.dart';
 import 'dashboard_panels.dart';
+import 'home_live_line.dart';
+import '../../data/home_card_mode.dart';
 import 'sales_revenue_chart.dart';
 import '../../utils/subscription_guard.dart';
 import '../../utils/force_logout.dart';
@@ -586,6 +588,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     _periodTotalsSub?.cancel();
     _changes.dispose();
     _bellFeed?.dispose();
+    _liveOnline.dispose();
     super.dispose();
   }
 
@@ -620,7 +623,52 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     if (_recentActivityKey == key && cached != null) return cached;
     _recentActivityKey = key;
     return _recentActivityStream = recentActivityStream(FirebaseFirestore.instance, facilityId,
-        isAdmin: isAdmin, uid: FirebaseAuth.instance.currentUser?.uid ?? '');
+        isAdmin: isAdmin,
+        uid: FirebaseAuth.instance.currentUser?.uid ?? '',
+        onFromCache: (fromCache) => _liveOnline.value = !fromCache);
+  }
+
+  // HUB3 (2): the phone Home's live line: the newest entry of the same
+  // shared stream (no listener of its own; All details' feed then costs
+  // nothing more), and whether that listener is live (its metadata).
+  final ValueNotifier<bool> _liveOnline = ValueNotifier(true);
+  Stream<HomeLiveEvent?>? _liveEvents;
+  Stream<List<LogDoc>>? _liveSource;
+
+  // Made again only when the feed's stream is (another facility or role, a
+  // retry), so the StreamBuilder keeps its subscription across rebuilds.
+  Stream<HomeLiveEvent?> _liveEventsFor(String facilityId, bool isAdmin) {
+    final source = _recentActivityStreamFor(facilityId, isAdmin);
+    final cached = _liveEvents;
+    if (cached != null && identical(source, _liveSource)) return cached;
+    _liveSource = source;
+    return _liveEvents = homeLiveEvents(source);
+  }
+
+  // HUB3 (3): yesterday, for the Today card's delta: the chart's 14 days
+  // (HomeChartLoader's one read, kept for the session: nothing more is read).
+  HomeChartDays? _homeDays;
+  String? _homeDaysKey;
+
+  void _watchHomeDays(String facilityId) {
+    final key = '$facilityId|${_today()}';
+    if (_homeDaysKey == key) return;
+    _homeDaysKey = key;
+    _homeDays = null;
+    HomeChartLoader.shared.days(facilityId).then((days) {
+      if (mounted && _homeDaysKey == key) setState(() => _homeDays = days);
+    }, onError: (Object _) {});
+  }
+
+  HomeDelta? _homeDelta(HomeCardMode mode) {
+    if (_isPeriodLoading) return null;
+    final services = mode == HomeCardMode.services;
+    final days = _homeDays;
+    return homeDeltaFor(
+      period: selectedFilter,
+      today: services ? _periodTotals.totalServiceRevenue : _periodTotals.totalSales,
+      yesterday: days == null ? null : (services ? days.services : days.sales)[HomeChartDays.length - 2],
+    );
   }
   String? _lastLoadedFilter;
   StreamSubscription<DashboardPeriodTotals>? _periodTotalsSub;
@@ -1632,7 +1680,24 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 isAdmin: isAdmin,
                 pendingApprovals: _pendingApprovals,
               );
+              final facilityId = facilityProvider.selectedFacilityId;
+              if (facilityId != null) _watchHomeDays(facilityId);
+              // HUB3 (2): the latest activity, from Recent Activity's stream
+              // (scoped by role as the feed is; both roles see sales and
+              // collections on Home, so the amounts show for both).
+              final live = facilityId == null
+                  ? null
+                  : HomeLiveFeed(
+                      events: _liveEventsFor(facilityId, isAdmin),
+                      online: _liveOnline,
+                      amountsHidden: uiSettings.homeAmountsHidden,
+                      showAmounts: true,
+                      now: AppClock.now,
+                      onTap: () => showActivityLog(homeContext),
+                    );
               PhoneHome home({required bool skeleton}) => PhoneHome(
+                    live: live,
+                    delta: _homeDelta(uiSettings.homeCardMode),
                     skeleton: skeleton,
                     amountsHidden: uiSettings.homeAmountsHidden,
                     onToggleAmounts: () => uiSettings.setHomeAmountsHidden(!uiSettings.homeAmountsHidden),
@@ -1663,9 +1728,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   );
               return ScreenReveal(gate: _phoneRevealGate, skeleton: home(skeleton: true), child: home(skeleton: false));
             },
-            // HUB1: static content (no data), so not part of Home's reveal.
-            // A record action goes through the old "+" sheet's guard and
-            // forms; a place is pushed; Home refreshes as after any return.
+            // HUB3 (5): the panel arrives with Home's reveal, through the
+            // same gate. A record action goes through the old "+" sheet's
+            // guard and forms; a place is pushed; Home refreshes as after
+            // any return.
+            reveal: _phoneRevealGate,
             panel: FutureBuilder<bool>(
               future: _platformAdminFuture,
               builder: (panelContext, snapshot) => HomeActionPanel(
