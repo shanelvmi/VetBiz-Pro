@@ -27,6 +27,7 @@ import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../ui/polish/app_status.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/submission_people.dart';
 import '../../config/app_info.dart';
@@ -591,16 +592,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   Widget _flexibleOnPhone(Widget child) => _phone ? Flexible(child: child) : child;
 }
 
-Color submissionStatusColor(String status, AppColors colors) {
-  switch (PaymentSubmissionStatus.fromKey(status)) {
-    case PaymentSubmissionStatus.approved:
-      return colors.success;
-    case PaymentSubmissionStatus.rejected:
-      return colors.dangerAccent;
-    default:
-      return colors.warning;
-  }
-}
+/// POL1 (owner rule 2): a payment claim's state among the four: approved is
+/// success, pending warning, rejected danger. An unknown key reads as pending
+/// (PaymentSubmissionStatus.fromKey). Pinned by
+/// test/pol1_subscription_history_test.dart.
+AppStatus submissionAppStatus(String status) => switch (PaymentSubmissionStatus.fromKey(status)) {
+      PaymentSubmissionStatus.approved => AppStatus.success,
+      PaymentSubmissionStatus.rejected => AppStatus.danger,
+      _ => AppStatus.warning,
+    };
+
+/// The claim's colour, from [submissionAppStatus] (POL1: it replaced the old
+/// mapping, whose rejected was dangerAccent).
+Color submissionStatusColor(String status, AppColors colors) => submissionAppStatus(status).roleIn(colors);
 
 Widget buildSubmissionCard(BuildContext context, Map<String, dynamic> data, AppColors colors) {
   // The plan's name from its id; the saved English planLabel only for an unknown plan.
