@@ -1398,6 +1398,7 @@ login_emailHint,Enter your email,Weka barua pepe yako,Login email field hint.,dr
 login_passwordHint,Enter your password,Weka nenosiri lako,Login password field hint.,draft
 login_rememberMe,Remember my email,Kumbuka barua pepe yangu,"Login checkbox: keep the email for next time (only the email; AUTH-1).",draft
 login_forgotPassword,Forgot Password?,Umesahau Nenosiri?,Login link that sends a password reset email.,draft
+login_phoneTagline,Run your agrovet or vet centre in one place,Endesha agrovet au kituo chako cha mifugo mahali pamoja,UI8: the line under the app name in the sign-in page's header on a phone.,draft
 login_noAccount,"Don't have an account? ","Huna akaunti? ","Login, before the Register link (ends with a space).",draft
 login_register,Register,Jisajili,Login link to the register screen.,draft
 login_loginButton,Sign in,Ingia,Login button.,draft
@@ -1479,6 +1480,7 @@ register_yourRole,Your role,Nafasi yako,Register section title.,draft
 register_roleCoAdminSubtitle,I help manage a facility,Ninasaidia kusimamia kituo,"Register role card, Co-admin.",draft
 register_roleAdminSubtitle,I own or manage a facility,Ninamiliki au ninasimamia kituo,"Register role card, Admin.",draft
 register_roleAssistantSubtitle,I have an invite code,Nina msimbo wa mwaliko,"Register role card, Assistant.",draft
+register_roleStaffAssistant,Staff/Assistant,Mfanyakazi/Msaidizi,UI8: the role shown on the assistant card of register step 1 on a phone. Display only: the stored value stays 'Assistant' (the role 'assistant').,draft
 register_roleLocked,Your role can't be changed here.,Nafasi yako haiwezi kubadilishwa hapa.,"Edit Profile, under the role cards.",draft
 register_yourFacilities,Your facilities,Vituo vyako,Register section title (owner).,draft
 register_askAdminForInvite,Ask your facility admin for an invite code to join their team.,Muombe msimamizi wa kituo chako msimbo wa mwaliko ili ujiunge na timu yake.,"Register, assistant facility section.",draft
