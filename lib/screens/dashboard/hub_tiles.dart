@@ -74,9 +74,11 @@ class _HubTileGridState extends State<HubTileGrid> {
   }
 }
 
-/// UI5's monochrome tile (the owner's sleek option): a neutral fill, a 1 px
-/// soft border, an icon in the text colour over two reserved label lines, so
-/// every icon shares one top.
+/// UI5's tile (the owner's sleek option): a neutral fill, a 1 px soft
+/// border, an icon over two reserved label lines, so every icon shares one
+/// top. UI6: only the icon takes colour, in the theme's two tones: a record
+/// action's (homeTileIconRecord) or a place's (homeTileIconPlace); the fill,
+/// the border and the label stay neutral.
 class HubTileView extends StatelessWidget {
   final HubTile tile;
   final bool busy;
@@ -111,7 +113,11 @@ class HubTileView extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.s2),
               child: CircularProgressIndicator(strokeWidth: 2, color: colors.textPrimary),
             )
-          : Icon(hubTileIcon(tile), size: PhoneHomeMetrics.gridIcon, color: colors.textPrimary),
+          : Icon(
+              hubTileIcon(tile),
+              size: PhoneHomeMetrics.gridIcon,
+              color: hubTileAction(tile) != null ? colors.homeTileIconRecord : colors.homeTileIconPlace,
+            ),
     );
     return Semantics(
       key: ValueKey('hub-tile-${tile.name}'),

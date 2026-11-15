@@ -19,7 +19,7 @@ import 'package:vetbiz_pro/widgets/press_scale.dart';
 import 'helpers/hub1_hub.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 void _expectTile(WidgetTester tester, HubTile t, AppColors c, String where) {
   final tile = hubTile(t);
