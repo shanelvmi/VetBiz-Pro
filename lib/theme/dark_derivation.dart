@@ -3,6 +3,7 @@ import 'package:flutter/painting.dart';
 import 'app_dimens.dart';
 import 'app_palette.dart';
 import 'color_math.dart';
+import 'theme_derivation.dart';
 
 /// The rules that turn a colour theme into its Dark Mode roles
 /// (docs/design/dark_mode.md section 3, owner approved option 1).
@@ -28,6 +29,9 @@ class DarkDerivation {
   static const double _tintPrimaryStartL = 0.17;
   static const double _tintAccentSaturation = 0.45;
   static const double _tintAccentL = 0.16;
+
+  // UI6: the panel's place icons reach this on the tile (3:1 asked, with room).
+  static const double _tileIconPlaceTarget = 3.5;
 
   static Color _neutral(Color primary, double l) {
     final hsl = HSLColor.fromColor(primary);
@@ -61,6 +65,17 @@ class DarkDerivation {
     final s = hsl.saturation.clamp(_primaryMinSaturation, _primaryMaxSaturation);
     final start = HSLColor.fromAHSL(1, hsl.hue, s, hsl.lightness).toColor();
     return lift(start, 4.5, surfaceMuted(lightPrimary));
+  }
+
+  /// UI6: the phone action panel's PLACE icons (Sales, Products...): the hue
+  /// of the light gradient's deep end (Pasture's teal turned a little
+  /// green), at the dark primary's saturation, lifted until it reaches 3.5
+  /// on the tile (surface). Softer than the RECORD icons (the dark primary,
+  /// 4.5 on surfaceMuted), so the two rows read as two tones.
+  static Color tileIconPlace(Color lightPrimary) {
+    final end = HSLColor.fromColor(ThemeDerivation.brandGradientEnd(lightPrimary));
+    final s = end.saturation.clamp(_primaryMinSaturation, _primaryMaxSaturation);
+    return lift(HSLColor.fromAHSL(1, end.hue, s, end.lightness).toColor(), _tileIconPlaceTarget, surface(lightPrimary));
   }
 
   /// Record Visit's tint: lowered from L 0.17 until the dark primary reaches

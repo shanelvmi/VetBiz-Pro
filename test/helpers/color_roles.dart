@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:vetbiz_pro/theme/app_colors.dart';
 
-/// Every AppColors role by name (the 68 of dark_mode_test plus K3's warningDeep, infoDeep and raisedSurface, K4a's onBrandInk and onBrandSurfaceMuted, K4b's onBrandSurfaceSubtle, brandTealOnBrand, photoScrim, onAccentChip and dangerLabel, K5's quoteFill, onChartTooltip, primaryNote, statusPendingFill and statusOtherFill, K6's selectedCardFill, selectableCardInk, infoChipLabel and chart4ChipLabel, G4's authFooterFill and authFooterMutedText, AN5's authPanelIcon, PH8a-fix's bannerInk, NAV1's brandGradientStart and brandGradientEnd; HUB1 removed NAV1's navBarFill and navBarInactive with the bar), so a test
+/// Every AppColors role by name (the 68 of dark_mode_test plus K3's warningDeep, infoDeep and raisedSurface, K4a's onBrandInk and onBrandSurfaceMuted, K4b's onBrandSurfaceSubtle, brandTealOnBrand, photoScrim, onAccentChip and dangerLabel, K5's quoteFill, onChartTooltip, primaryNote, statusPendingFill and statusOtherFill, K6's selectedCardFill, selectableCardInk, infoChipLabel and chart4ChipLabel, G4's authFooterFill and authFooterMutedText, AN5's authPanelIcon, PH8a-fix's bannerInk, NAV1's brandGradientStart and brandGradientEnd, UI6's homeTileIconRecord and homeTileIconPlace; HUB1 removed NAV1's navBarFill and navBarInactive with the bar), so a test
 /// can compare two sets of roles value for value.
 Map<String, Color> allColorRoles(AppColors c) => {
       'primary': c.primary, 'accent': c.accent, 'background': c.background,
@@ -42,4 +42,5 @@ Map<String, Color> allColorRoles(AppColors c) => {
       'authPanelIcon': c.authPanelIcon,
       'bannerInk': c.bannerInk,
       'brandGradientStart': c.brandGradientStart, 'brandGradientEnd': c.brandGradientEnd,
+      'homeTileIconRecord': c.homeTileIconRecord, 'homeTileIconPlace': c.homeTileIconPlace,
     };

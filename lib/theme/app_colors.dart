@@ -111,6 +111,8 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.bannerInk,
     required this.brandGradientStart,
     required this.brandGradientEnd,
+    required this.homeTileIconRecord,
+    required this.homeTileIconPlace,
   });
 
   // Brand: the theme's own three colours (the roles derived from them are
@@ -384,6 +386,16 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color brandGradientStart;
   final Color brandGradientEnd;
 
+  // UI6: the phone action panel's icons in two tones of the theme (the
+  // tiles keep the surface fill, the border and textPrimary labels). RECORD
+  // tiles (Record Sale, Add Client, every create action) take the primary:
+  // light = the theme primary, dark = the dark primary. PLACE tiles (Sales,
+  // Products, the Daily work and Business groups) a deeper tone of the same
+  // hue: light = brandGradientEnd, dark = DarkDerivation.tileIconPlace.
+  // Both reach 3:1 or more on the tile in every theme (ui6_tile_icons_test).
+  final Color homeTileIconRecord;
+  final Color homeTileIconPlace;
+
   /// The roles for a colour theme. In Pasture every value is the exact
   /// legacy shade. The brand-linked roles and textMuted are derived from the
   /// theme (theme_derivation.dart, docs/design/themes.md sections 4 and 7);
@@ -489,6 +501,8 @@ class AppColors extends ThemeExtension<AppColors> {
         bannerInk: Colors.black,
         brandGradientStart: theme.primary,
         brandGradientEnd: ThemeDerivation.brandGradientEnd(theme.primary),
+        homeTileIconRecord: theme.primary,
+        homeTileIconPlace: ThemeDerivation.brandGradientEnd(theme.primary),
       );
   }
 
@@ -594,6 +608,8 @@ class AppColors extends ThemeExtension<AppColors> {
       authPanelIcon: Colors.white,
       // brandGradientStart and brandGradientEnd keep their light values, as
       // brandSurface does.
+      homeTileIconRecord: DarkDerivation.primary(theme.primary),
+      homeTileIconPlace: DarkDerivation.tileIconPlace(theme.primary),
     );
   }
 
@@ -692,6 +708,8 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? bannerInk,
     Color? brandGradientStart,
     Color? brandGradientEnd,
+    Color? homeTileIconRecord,
+    Color? homeTileIconPlace,
   }) =>
       AppColors(
         primary: primary ?? this.primary,
@@ -787,6 +805,8 @@ class AppColors extends ThemeExtension<AppColors> {
         bannerInk: bannerInk ?? this.bannerInk,
         brandGradientStart: brandGradientStart ?? this.brandGradientStart,
         brandGradientEnd: brandGradientEnd ?? this.brandGradientEnd,
+        homeTileIconRecord: homeTileIconRecord ?? this.homeTileIconRecord,
+        homeTileIconPlace: homeTileIconPlace ?? this.homeTileIconPlace,
       );
 
   @override
@@ -887,6 +907,8 @@ class AppColors extends ThemeExtension<AppColors> {
       bannerInk: l(bannerInk, other.bannerInk),
       brandGradientStart: l(brandGradientStart, other.brandGradientStart),
       brandGradientEnd: l(brandGradientEnd, other.brandGradientEnd),
+      homeTileIconRecord: l(homeTileIconRecord, other.homeTileIconRecord),
+      homeTileIconPlace: l(homeTileIconPlace, other.homeTileIconPlace),
     );
   }
 }
