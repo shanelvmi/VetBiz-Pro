@@ -6,6 +6,7 @@ import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/services/membership_service.dart';
 import 'package:vetbiz_pro/widgets/auth_card.dart';
 import 'package:vetbiz_pro/widgets/auth_footer.dart';
+import 'package:vetbiz_pro/widgets/wizard/wizard_nav_bar.dart';
 
 import 'helpers/register_harness.dart';
 
@@ -71,7 +72,8 @@ void main() {
     await pumpRegister(tester, size: const Size(360, 800), membership: long());
     await assistantTo(tester, 3);
     expect(tester.getSize(find.widgetWithText(FilledButton, en.products_continue)).height, greaterThanOrEqualTo(48));
-    expect(tester.getSize(find.widgetWithText(OutlinedButton, en.wizard_back)).height, greaterThanOrEqualTo(48));
+    // UI8: on the phone Back is the square icon button.
+    expect(tester.getSize(find.byKey(WizardNavBar.squareBackKey)).height, greaterThanOrEqualTo(48));
     expect(tester.getSize(registerField('invite')).height, greaterThanOrEqualTo(48));
     await tapContinue(tester);
     await typeInto(tester, 'email', 'a@example.com');

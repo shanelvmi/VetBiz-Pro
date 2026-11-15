@@ -28,6 +28,11 @@ import 'helpers/register_harness.dart';
 // the other wizard widgets keep their own look; Back and Continue stay pinned
 // above the keyboard; the Sign in link is on step 1; the footer below.
 // Tablets and wide windows: test/fin1_wide_register_unchanged_test.dart.
+// UI8 (owner) changed the phone frame, so these checks follow: a tinted
+// strip at the top holds "Step n of 5", the bar and the controls (no brand
+// row), each step has its round icon above the centred heading, the fields'
+// radius is 16, Sign in is under every step, and there is no footer
+// (test/ui8_phone_register_test.dart).
 const _skip = false;
 
 const _page = ValueKey<String>('register-phone-page');
@@ -98,7 +103,7 @@ void main() {
         expect(find.byType(Card), findsNothing);
         expect(find.text(_en.register_createYourAccount), findsNothing, reason: 'the welcome strip or panel');
         expect(find.text(_en.register_setUpCentre), findsNothing, reason: 'the welcome strip');
-        final header = find.byType(WizardStepHeader);
+        final header = find.byType(WizardStepIntro);
         expect(_upToPage(tester, header).where(_decorated), isEmpty, reason: 'nothing drawn around the wizard');
         // No header bar, strip or panel: no gradient but a button's own.
         final gradients = find.byWidgetPredicate((w) {
@@ -115,10 +120,9 @@ void main() {
           final size = (e.renderObject! as RenderBox).size;
           expect(size.height > 6 || size.width < 40, isTrue, reason: 'a line drawn on the page: ${e.widget}');
         }
-        // The brand row at the top: the mark, the name and the toggle.
+        // The strip at the top (UI8): the step count and the toggle.
         final brand = find.byKey(_brand);
-        expect(find.descendant(of: brand, matching: find.text(AppInfo.logoMark)), findsOneWidget);
-        expect(find.descendant(of: brand, matching: find.text(AppInfo.name)), findsOneWidget);
+        expect(find.descendant(of: brand, matching: find.text(_en.wizard_stepOf(step, 5))), findsOneWidget);
         expect(find.descendant(of: brand, matching: find.byType(AuthThemeToggle)), findsOneWidget);
         expect(_rect(tester, find.byType(AuthThemeToggle)).height, greaterThanOrEqualTo(48));
         expect(_rect(tester, brand).top, lessThan(32));
@@ -126,10 +130,10 @@ void main() {
         // The column: 24 px in from the sides.
         expect(_rect(tester, header).left, 24);
         expect(_rect(tester, header).width, 390 - 48);
-        // Back and Continue pinned (not in the page), the footer below.
+        // Back and Continue pinned (not in the page); UI8: no footer.
         expect(find.descendant(of: find.byKey(_page), matching: find.byType(WizardNavBar)), findsNothing);
         expect(find.byType(WizardNavBar), findsOneWidget);
-        expect(find.byType(AuthFooter), findsOneWidget);
+        expect(find.byType(AuthFooter), findsNothing);
         await finishRegister(tester);
       }, skip: _skip);
     }
@@ -137,22 +141,21 @@ void main() {
 
   testWidgets('560 wide (still a phone): the column keeps 420 at most', (tester) async {
     await pumpRegister(tester, size: const Size(560, 900));
-    expect(_rect(tester, find.byType(WizardStepHeader)).width, lessThanOrEqualTo(420 - 48));
+    expect(_rect(tester, find.byType(WizardStepIntro)).width, lessThanOrEqualTo(420 - 48));
     expect(find.byKey(AuthCard.surfaceKey), findsNothing);
     await finishRegister(tester);
   }, skip: _skip);
 
   for (final step in [1, 2, 3, 4, 5]) {
-    testWidgets('390x844 step $step: the step header and the heading are centred', (tester) async {
+    // UI8: the step count is in the strip at the top (left, with the controls
+    // at the right); the heading under it stays centred.
+    testWidgets('390x844 step $step: the heading is centred', (tester) async {
       await pumpRegister(tester, size: const Size(390, 844));
       await toOwnerStep(tester, step);
       await _toTop(tester);
       final centre = _rect(tester, find.byKey(_page)).center.dx;
-      final header = find.byType(WizardStepHeader);
       final intro = find.byType(WizardStepIntro);
       final texts = [
-        find.descendant(of: header, matching: find.text(_en.wizard_stepOf(step, 5))),
-        for (final e in find.descendant(of: header, matching: find.byType(Text)).evaluate()) find.byWidget(e.widget),
         for (final e in find.descendant(of: intro, matching: find.byType(Text)).evaluate()) find.byWidget(e.widget),
       ];
       for (final t in texts) {
@@ -204,7 +207,7 @@ void main() {
         final border = d.enabledBorder! as OutlineInputBorder;
         expect(border.borderSide.width, 1);
         expect(border.borderSide.color, colors.textMuted);
-        expect(border.borderRadius, BorderRadius.circular(14));
+        expect(border.borderRadius, BorderRadius.circular(16));
         if (d.hintText != null) expect(d.hintStyle?.color, colors.textSecondary);
       }
       for (final e in _fieldBoxes.evaluate()) {

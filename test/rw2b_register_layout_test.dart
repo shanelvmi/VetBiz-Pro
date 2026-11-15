@@ -5,6 +5,7 @@ import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/widgets/auth_card.dart';
 import 'package:vetbiz_pro/widgets/auth_footer.dart';
 import 'package:vetbiz_pro/widgets/wizard/wizard_option_card.dart';
+import 'package:vetbiz_pro/widgets/wizard/wizard_nav_bar.dart';
 
 import 'helpers/register_harness.dart';
 
@@ -35,7 +36,8 @@ void main() {
     final next = tester.getRect(find.text(en.products_continue));
     expect(next.top, greaterThanOrEqualTo(0));
     expect(next.bottom, lessThanOrEqualTo(800 - 300));
-    expect(tester.getRect(find.text(en.wizard_back)).bottom, lessThanOrEqualTo(800 - 300));
+    // UI8: on the phone Back is the square icon button.
+    expect(tester.getRect(find.byKey(WizardNavBar.squareBackKey)).bottom, lessThanOrEqualTo(800 - 300));
     // It is the Scaffold's bar, not the card's bottom row.
     expect(find.descendant(of: find.byKey(AuthCard.surfaceKey), matching: find.text(en.products_continue)), findsNothing);
     await finishRegister(tester);

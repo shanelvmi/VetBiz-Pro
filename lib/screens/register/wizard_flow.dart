@@ -177,6 +177,8 @@ extension _WizardFlow on _RegisterScreenState {
       isLast: _step == stepCount - 1,
       submitting: _isSubmitting,
       pinned: pinned,
+      // UI8: a square Back beside a full-width Continue on the phone.
+      squareBack: AppLayout.isPhone(context),
       finishLabel: context.l10n.register_createAccount,
       onBack: _wizardBack,
       onContinue: _wizardContinue,

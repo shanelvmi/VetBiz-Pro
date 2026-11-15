@@ -25,7 +25,7 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_step_intro.dart';
 
 import 'helpers/register_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _phone = Size(390, 844);
 final _en = registerEn;

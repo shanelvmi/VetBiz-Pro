@@ -22,6 +22,8 @@ import 'legal/terms_of_service_screen.dart';
 import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
 import '../widgets/auth_footer.dart';
+import '../widgets/auth_help_sheet.dart';
+import '../widgets/auth_phone_header.dart';
 import '../widgets/profile/profile_photo_editor.dart';
 import '../services/profile_photo_service.dart';
 import '../widgets/auth_theme_toggle.dart';
@@ -38,6 +40,7 @@ import '../theme/app_text.dart';
 import '../theme/app_dimens.dart';
 import '../theme/theme_context.dart';
 import '../theme/app_breakpoints.dart';
+import '../theme/app_icons.dart';
 import '../theme/app_layout.dart';
 import '../theme/app_motion.dart';
 import '../ui/feedback/app_feedback.dart';
@@ -1439,8 +1442,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     List<String>? reserve,
     int maxLines = 2,
   }) {
+    // UI8: the phone page's fields have the sign-in page's larger corner.
+    final phoneField = !widget.isUpdating && AppLayout.isPhone(context);
     OutlineInputBorder border(Color color, [double width = 1]) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.r14),
+          borderRadius: BorderRadius.circular(phoneField ? AuthPhoneMetrics.fieldRadius : AppRadius.r14),
           borderSide: BorderSide(color: color, width: width),
         );
     // FIN1, the flat phone page: the field sits on the page's own background,

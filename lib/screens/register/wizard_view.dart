@@ -15,17 +15,26 @@ extension _WizardView on _RegisterScreenState {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        WizardStepHeader(current: _step + 1, total: _WizardFlow.stepCount, title: _stepTitle(), centered: flat),
-        const SizedBox(height: WizardMetrics.sectionGap),
-        WizardStepIntro(title: _stepQuestion(), subtitle: _stepHint(), centered: flat),
+        // UI8: on the phone the step count and the bar are in the tinted
+        // strip (_buildPhoneStrip); the step shows its round icon instead.
+        if (!flat) ...[
+          WizardStepHeader(current: _step + 1, total: _WizardFlow.stepCount, title: _stepTitle()),
+          const SizedBox(height: WizardMetrics.sectionGap),
+        ],
+        WizardStepIntro(title: _stepQuestion(), subtitle: _stepHint(), centered: flat, icon: flat ? _stepIcon().outlined : null),
         const SizedBox(height: WizardMetrics.sectionGap),
         ..._stepContent(),
         // RW2b2: the header has no Sign in any more, so when the welcome
-        // panel (with its Sign in) is hidden, step 1 offers it.
-        if (_step == 0 && !layout.isWide) _signInLink(),
+        // panel (with its Sign in) is hidden, step 1 offers it. UI8: the
+        // phone page offers it under every step instead (below).
+        if (_step == 0 && !layout.isWide && !flat) _signInLink(),
         if (inlineBar) ...[
           const SizedBox(height: WizardMetrics.navTopGap),
           _buildWizardNavBar(pinned: false),
+        ],
+        if (flat) ...[
+          const SizedBox(height: WizardMetrics.sectionGap),
+          _signInLink(),
         ],
       ],
     );
@@ -55,86 +64,91 @@ extension _WizardView on _RegisterScreenState {
     );
   }
 
-  // ==================== PHONE: ONE FLAT PAGE (FIN1) ====================
-  // The owner: the treatment LG1 gave the login. No frame, header bar, card
-  // or welcome strip: the compact brand row, then the wizard straight on the
-  // page's background in one centred column (at most 420 wide, 24 px sides),
-  // the footer below. Only the frame changes: the steps, their checks and
-  // every call are the card's (_buildWizardBody, flat).
+  // ==================== PHONE: A TINTED STRIP AND THE STEP (UI8) ====================
+  // FIN1 gave phones the treatment LG1 gave the login: no frame, header bar,
+  // card or welcome strip, the wizard straight on the page's background in
+  // one centred column (at most 420 wide, 24 px sides). UI8 (owner): a slim
+  // tinted strip at the top ("Step n of 5", the five-part bar; EN | SW,
+  // Light/Dark and Help), each step under its round icon, Sign in at the
+  // bottom, and no footer (Help opens its links in a sheet). Only the frame
+  // changes: the steps, their checks and every call are the card's
+  // (_buildWizardBody, flat).
   Widget _buildPhonePage({required bool inlineBar}) {
-    return SafeArea(
-      child: LayoutBuilder(
-        builder: (context, viewport) => SingleChildScrollView(
+    // A phone held sideways is short: there the strip scrolls away with the
+    // step, so the pinned Continue bar and the strip do not leave the step a
+    // sliver between them.
+    final pinStrip = MediaQuery.sizeOf(context).height >= AppBreakpoints.phoneLandscapeHeight;
+    Widget page(double width) => Center(
           child: ConstrainedBox(
-            // At least the screen's height, so the footer reaches the bottom.
-            constraints: BoxConstraints(minHeight: viewport.maxHeight),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: PhoneLoginMetrics.maxWidth),
-                    child: Padding(
-                      key: RegisterScreen.phonePageKey,
-                      padding: const EdgeInsets.fromLTRB(
-                        PhoneLoginMetrics.sidePadding,
-                        PhoneLoginMetrics.topPadding,
-                        PhoneLoginMetrics.sidePadding,
-                        PhoneLoginMetrics.bottomPadding,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildPhoneBrandRow(),
-                          const SizedBox(height: PhoneLoginMetrics.brandGap),
-                          _buildWizardBody(
-                            AuthCardLayout(availableWidth: viewport.maxWidth, isWide: false),
-                            inlineBar: inlineBar,
-                            flat: true,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const AuthFooter(),
-              ],
+            constraints: const BoxConstraints(maxWidth: PhoneLoginMetrics.maxWidth),
+            child: Padding(
+              key: RegisterScreen.phonePageKey,
+              padding: const EdgeInsets.fromLTRB(
+                PhoneLoginMetrics.sidePadding,
+                AuthPhoneMetrics.contentTop,
+                PhoneLoginMetrics.sidePadding,
+                PhoneLoginMetrics.bottomPadding,
+              ),
+              child: _buildWizardBody(
+                AuthCardLayout(availableWidth: width, isWide: false),
+                inlineBar: inlineBar,
+                flat: true,
+              ),
             ),
           ),
+        );
+    if (!pinStrip) {
+      return LayoutBuilder(
+        builder: (context, viewport) => SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [_buildPhoneStrip(), SafeArea(top: false, child: page(viewport.maxWidth))],
+          ),
         ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildPhoneStrip(),
+        Expanded(
+          child: SafeArea(
+            top: false,
+            child: LayoutBuilder(builder: (context, viewport) => SingleChildScrollView(child: page(viewport.maxWidth))),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // The step header in the tinted strip, with the controls at its right.
+  Widget _buildPhoneStrip() {
+    return AuthPhoneTint(
+      key: RegisterScreen.phoneBrandKey,
+      padding: const EdgeInsets.fromLTRB(
+        AuthPhoneMetrics.headerPaddingH,
+        AuthPhoneMetrics.stripPaddingV,
+        AuthPhoneMetrics.headerPaddingH,
+        AuthPhoneMetrics.headerPaddingTop,
+      ),
+      child: WizardStepHeader(
+        current: _step + 1,
+        total: _WizardFlow.stepCount,
+        title: _stepTitle(),
+        strip: true,
+        trailing: AuthPhoneControls(onHelp: () => showAuthHelpSheet(context)),
       ),
     );
   }
 
-  // The login's phone brand row: the VB mark and the app name at the left,
-  // the Light/Dark switch at the right; no bar behind them.
-  Widget _buildPhoneBrandRow() {
-    return Row(
-      key: RegisterScreen.phoneBrandKey,
-      children: [
-        Container(
-          width: PhoneLoginMetrics.mark,
-          height: PhoneLoginMetrics.mark,
-          decoration: BoxDecoration(color: context.colors.brandSurface, shape: BoxShape.circle),
-          alignment: Alignment.center,
-          child: Text(
-            AppInfo.logoMark,
-            style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
-          ),
-        ),
-        const SizedBox(width: PhoneLoginMetrics.markGap),
-        Expanded(
-          child: Text(
-            AppInfo.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: context.colors.textPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
-          ),
-        ),
-        const AuthThemeToggle(onPage: true),
-      ],
-    );
-  }
+  // UI8: the round icon of each step on the phone.
+  AppIcon _stepIcon() => switch (_step) {
+        0 => AppIcons.stepRole,
+        1 => AppIcons.stepAboutYou,
+        2 => _isAssistant ? AppIcons.stepInvite : AppIcons.stepFacility,
+        3 => AppIcons.stepSignIn,
+        _ => AppIcons.stepReview,
+      };
 
   // The short name at the right of "Step n of 5".
   String _stepTitle() => switch (_step) {
