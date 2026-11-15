@@ -209,6 +209,75 @@ class PhoneLoginMetrics {
   static const double buttonHeight = 52;
 }
 
+/// UI8: the phone sign-in and register frame (AppLayout.isPhone only): the
+/// tinted header and its controls, the register step strip, the step icon,
+/// the step 1 cards, the fields and the buttons. Tablets and computers keep
+/// [AuthCardMetrics] and [AuthPanelMetrics].
+class AuthPhoneMetrics {
+  AuthPhoneMetrics._();
+
+  /// The tinted header: inside it, and its rounded bottom corners.
+  static const double headerPaddingH = AppSpacing.s20;
+  static const double headerPaddingTop = AppSpacing.s12;
+  static const double headerPaddingBottom = AppSpacing.s24;
+  static const double headerRadius = AppRadius.r24;
+
+  /// The VB mark's rounded tile, its corner and its text; the gap to the
+  /// name, and between the name and the tagline.
+  static const double markTile = 52;
+  static const double markTileRadius = AppRadius.r16;
+  static const double markGap = AppSpacing.s14;
+  static const double taglineGap = AppSpacing.s4;
+
+  /// The controls row above the brand, and the gap between controls.
+  static const double controlsGap = AppSpacing.s6;
+  static const double controlsToBrand = AppSpacing.s16;
+
+  /// The keyboard is open: the header collapses to one line, a smaller mark.
+  static const double collapsedMark = 32;
+  static const double collapsedMarkRadius = AppRadius.r10;
+  static const double collapsedPaddingV = AppSpacing.s8;
+
+  /// EN | SW: each half a 48 px target around a smaller pill.
+  static const double languageSegmentWidth = 44;
+  static const double languagePillHeight = AppSizes.authHeaderButton;
+  static const double languagePillRadius = AppRadius.pill;
+  static const double languagePillBorder = 1;
+
+  /// The register step strip: inside it, "Step n of 5" to the bar, and the
+  /// bar's five parts (height, gap, corner).
+  static const double stripPaddingV = AppSpacing.s8;
+  static const double stripBarGap = AppSpacing.s8;
+  static const double progressHeight = 6;
+  static const double progressGap = AppSpacing.s4;
+  static const double progressRadius = AppRadius.r4;
+
+  /// The tinted round icon above each step's title, and its glyph.
+  static const double stepIcon = 56;
+  static const double stepIconGlyph = AppIconSize.i24;
+  static const double stepIconGap = AppSpacing.s12;
+
+  /// Step 1's cards: taller, an icon tile at the left.
+  static const double optionMinHeight = 76;
+  static const double optionTile = 44;
+  static const double optionTileRadius = AppRadius.r12;
+  static const double optionRadius = AppRadius.r16;
+
+  /// The page column under the header (the same width rule as LG1).
+  static const double contentTop = AppSpacing.s24;
+
+  /// Fields: filled, a larger corner; labels above them. The hairline stays
+  /// (LG1's 3:1 for the outline: the soft fill alone measures under 3:1 on
+  /// the page).
+  static const double fieldHeight = 52;
+  static const double fieldRadius = AppRadius.r16;
+  static const double fieldHairline = 1;
+
+  /// The primary button, full width; Back is a square of the same height.
+  static const double buttonHeight = 52;
+  static const double buttonRadius = AppRadius.r14;
+}
+
 /// The cards inside the signed-out frame (AN4): the login card and, on wide
 /// windows, the Updates card beside it share every size here, so they read
 /// as one pair and one place restyles both (lib/widgets/auth_panel.dart).
