@@ -2954,6 +2954,8 @@
   "@register_roleAdminSubtitle": {"description":"Register role card, Admin."},
   "register_roleAssistantSubtitle": "I have an invite code",
   "@register_roleAssistantSubtitle": {"description":"Register role card, Assistant."},
+  "register_roleStaffAssistant": "Staff/Assistant",
+  "@register_roleStaffAssistant": {"description":"UI8: the role shown on the assistant card of register step 1 on a phone. Display only: the stored value stays 'Assistant' (the role 'assistant')."},
   "register_roleLocked": "Your role can't be changed here.",
   "@register_roleLocked": {"description":"Edit Profile, under the role cards."},
   "register_yourFacilities": "Your facilities",

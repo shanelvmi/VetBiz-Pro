@@ -5231,6 +5231,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get register_roleAssistantSubtitle => 'Nina msimbo wa mwaliko';
 
   @override
+  String get register_roleStaffAssistant => 'Mfanyakazi/Msaidizi';
+
+  @override
   String get register_roleLocked => 'Nafasi yako haiwezi kubadilishwa hapa.';
 
   @override

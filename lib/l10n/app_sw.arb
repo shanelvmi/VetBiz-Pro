@@ -2954,6 +2954,8 @@
   "@register_roleAdminSubtitle": {"x-review":"draft"},
   "register_roleAssistantSubtitle": "Nina msimbo wa mwaliko",
   "@register_roleAssistantSubtitle": {"x-review":"draft"},
+  "register_roleStaffAssistant": "Mfanyakazi/Msaidizi",
+  "@register_roleStaffAssistant": {"x-review":"draft"},
   "register_roleLocked": "Nafasi yako haiwezi kubadilishwa hapa.",
   "@register_roleLocked": {"x-review":"draft"},
   "register_yourFacilities": "Vituo vyako",

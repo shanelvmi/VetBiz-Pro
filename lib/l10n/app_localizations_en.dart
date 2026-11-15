@@ -5204,6 +5204,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get register_roleAssistantSubtitle => 'I have an invite code';
 
   @override
+  String get register_roleStaffAssistant => 'Staff/Assistant';
+
+  @override
   String get register_roleLocked => 'Your role can\'t be changed here.';
 
   @override

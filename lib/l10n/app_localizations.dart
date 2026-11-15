@@ -8982,6 +8982,12 @@ abstract class AppLocalizations {
   /// **'I have an invite code'**
   String get register_roleAssistantSubtitle;
 
+  /// UI8: the role shown on the assistant card of register step 1 on a phone. Display only: the stored value stays 'Assistant' (the role 'assistant').
+  ///
+  /// In en, this message translates to:
+  /// **'Staff/Assistant'**
+  String get register_roleStaffAssistant;
+
   /// Edit Profile, under the role cards.
   ///
   /// In en, this message translates to:

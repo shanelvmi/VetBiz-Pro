@@ -195,27 +195,34 @@ extension _WizardView on _RegisterScreenState {
   // nothing is chosen at first, each card is a toggle, and Continue with
   // none chosen puts the step's error in a line that is always kept (G5),
   // so nothing moves.
-  List<Widget> _accountTypeStep() => [
-        WizardOptionCard(
-          icon: Icons.storefront_outlined,
-          title: context.l10n.register_roleAdminSubtitle,
-          subtitle: context.l10n.roleLabel(UserRole.admin.key),
-          selected: selectedRole == 'Admin',
-          onTap: () => _selectRole('Admin'),
-        ),
-        const SizedBox(height: WizardMetrics.optionListGap),
-        WizardOptionCard(
-          icon: Icons.groups_outlined,
-          title: context.l10n.register_roleAssistantSubtitle,
-          subtitle: context.l10n.roleLabel(UserRole.assistant.key),
-          selected: selectedRole == 'Assistant',
-          onTap: () => _selectRole('Assistant'),
-        ),
-        const SizedBox(height: AppSpacing.s4),
-        FieldMessageSlot(
-          message: _fieldErrors.containsKey('role') ? context.l10n.register_chooseAccountType(AppInfo.name) : null,
-          reserve: [context.l10n.register_chooseAccountType(AppInfo.name)],
-          style: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12),
-        ),
-      ];
+  // UI8, the phone: the larger cards, and the assistant card SHOWS
+  // register_roleStaffAssistant; the stored value stays 'Assistant'.
+  List<Widget> _accountTypeStep() {
+    final phone = AppLayout.isPhone(context);
+    return [
+      WizardOptionCard(
+        icon: Icons.storefront_outlined,
+        title: context.l10n.register_roleAdminSubtitle,
+        subtitle: context.l10n.roleLabel(UserRole.admin.key),
+        selected: selectedRole == 'Admin',
+        onTap: () => _selectRole('Admin'),
+        large: phone,
+      ),
+      const SizedBox(height: WizardMetrics.optionListGap),
+      WizardOptionCard(
+        icon: Icons.groups_outlined,
+        title: context.l10n.register_roleAssistantSubtitle,
+        subtitle: phone ? context.l10n.register_roleStaffAssistant : context.l10n.roleLabel(UserRole.assistant.key),
+        selected: selectedRole == 'Assistant',
+        onTap: () => _selectRole('Assistant'),
+        large: phone,
+      ),
+      const SizedBox(height: AppSpacing.s4),
+      FieldMessageSlot(
+        message: _fieldErrors.containsKey('role') ? context.l10n.register_chooseAccountType(AppInfo.name) : null,
+        reserve: [context.l10n.register_chooseAccountType(AppInfo.name)],
+        style: TextStyle(color: context.colors.dangerDeep, fontSize: AppFontSize.f12),
+      ),
+    ];
+  }
 }

@@ -18,6 +18,14 @@ class WizardOptionCard extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
+  /// UI8, the phone register page's step 1: taller, a larger corner, the
+  /// icon in a tile at the left (the header's tint, the surface when chosen)
+  /// and the radio at the right. The roles are the same.
+  final bool large;
+
+  /// For tests: the icon's tile ([large]).
+  static const tileKey = ValueKey<String>('wizard-option-tile');
+
   const WizardOptionCard({
     super.key,
     required this.title,
@@ -25,6 +33,7 @@ class WizardOptionCard extends StatelessWidget {
     this.icon,
     required this.selected,
     required this.onTap,
+    this.large = false,
   });
 
   @override
@@ -36,6 +45,11 @@ class WizardOptionCard extends StatelessWidget {
     // Pasture fill in light.
     final subtitleColor = selected ? ink : colors.textMuted;
     final markColor = selected ? ink : colors.textMuted;
+    final radio = Icon(
+      selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+      size: WizardMetrics.optionIcon,
+      color: markColor,
+    );
     return Semantics(
       container: true,
       button: true,
@@ -45,7 +59,7 @@ class WizardOptionCard extends StatelessWidget {
         color: selected ? colors.selectedCardFill : colors.surface,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(WizardMetrics.optionRadius),
+          borderRadius: BorderRadius.circular(large ? AuthPhoneMetrics.optionRadius : WizardMetrics.optionRadius),
           side: BorderSide(
             color: selected ? ink : colors.border,
             width: selected ? WizardMetrics.optionBorderSelected : WizardMetrics.optionBorder,
@@ -54,7 +68,7 @@ class WizardOptionCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: WizardMetrics.optionMinHeight),
+            constraints: BoxConstraints(minHeight: large ? AuthPhoneMetrics.optionMinHeight : WizardMetrics.optionMinHeight),
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: WizardMetrics.optionPaddingH,
@@ -62,15 +76,15 @@ class WizardOptionCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                    size: WizardMetrics.optionIcon,
-                    color: markColor,
-                  ),
-                  const SizedBox(width: WizardMetrics.optionGap),
-                  if (icon != null) ...[
-                    Icon(icon, size: WizardMetrics.optionIcon, color: markColor),
+                  if (large) ...[
+                    if (icon != null) ...[_tile(context), const SizedBox(width: WizardMetrics.optionGap)],
+                  ] else ...[
+                    radio,
                     const SizedBox(width: WizardMetrics.optionGap),
+                    if (icon != null) ...[
+                      Icon(icon, size: WizardMetrics.optionIcon, color: markColor),
+                      const SizedBox(width: WizardMetrics.optionGap),
+                    ],
                   ],
                   Expanded(
                     child: Column(
@@ -95,12 +109,32 @@ class WizardOptionCard extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (large) ...[const SizedBox(width: WizardMetrics.optionGap), radio],
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+extension on WizardOptionCard {
+  // The icon in its tile: the phone header's tint (authFooterFill) with the
+  // signed-out headings' icon role; the surface and the card's ink when chosen.
+  Widget _tile(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      key: WizardOptionCard.tileKey,
+      width: AuthPhoneMetrics.optionTile,
+      height: AuthPhoneMetrics.optionTile,
+      decoration: BoxDecoration(
+        color: selected ? colors.surface : colors.authFooterFill,
+        borderRadius: BorderRadius.circular(AuthPhoneMetrics.optionTileRadius),
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: WizardMetrics.optionIcon, color: selected ? colors.selectableCardInk : colors.authPanelIcon),
     );
   }
 }
