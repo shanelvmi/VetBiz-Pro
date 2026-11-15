@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../theme/app_layout.dart';
 
 import 'subscription_screen.dart' show submissionStatusColor;
+import '../../ui/polish/filter_row.dart';
+import '../../theme/polish_metrics.dart';
 import '../../config/payment_methods.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
@@ -77,10 +79,10 @@ class _Submission {
 /// reached via "View all" on the Subscription screen's own recent-list
 /// section, which only ever shows a handful at a glance.
 ///
-/// Laid out like the Sales and Product Alerts screens: small summary
-/// cards (tap one to filter), one search/filter row, a full-width table,
-/// and the same pagination bar. A rejected submission shows the reason
-/// the platform admin gave, right in the row.
+/// POL1: one filter row (All, Approved, Pending, Rejected, each with its
+/// count; it replaced the summary cards), one search/filter row, a
+/// full-width table, and the same pagination bar. A rejected submission shows the reason the
+/// platform admin gave, right in the row.
 class SubscriptionHistoryScreen extends StatefulWidget {
   final String facilityId;
   final Color primaryColor;
@@ -218,21 +220,21 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.receipt_long_outlined, size: AppIconSize.i64, color: context.colors.textDisabled),
+            // POL1: neutral, no decorative colour: one grey icon and grey text.
+            Icon(Icons.receipt_long_outlined, size: AppIconSize.i64, color: context.colors.textSecondary),
             const SizedBox(height: AppSpacing.s16),
-            Text(context.l10n.subscription_noSubmissionsYet, style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted)),
+            Text(context.l10n.subscription_noSubmissionsYet, style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textSecondary)),
             const SizedBox(height: AppSpacing.s4),
-            Text(context.l10n.subscription_noSubmissionsHint, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
+            Text(context.l10n.subscription_noSubmissionsHint, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSecondary)),
           ],
         ),
       );
     }
 
-    final counts = <String, int>{PaymentSubmissionStatus.approved.key: 0, PaymentSubmissionStatus.pending.key: 0, PaymentSubmissionStatus.rejected.key: 0};
-    num approvedTotal = 0;
+    // The counts for the filter row, from the claims already loaded (no new read).
+    final counts = <String, int>{for (final k in _rowStatuses) k: 0};
     for (final s in all) {
       counts[s.status] = (counts[s.status] ?? 0) + 1;
-      if (s.status == PaymentSubmissionStatus.approved.key) approvedTotal += s.amount;
     }
 
     final plans = <String>{for (final s in all) if (s.planLabel.isNotEmpty) s.planLabel}.toList()..sort();
@@ -265,8 +267,8 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
-          child: _buildCards(all.length, counts, approvedTotal),
+          padding: const EdgeInsets.only(top: PolishMetrics.gapInGroup),
+          child: _buildFilterRow(all.length, counts),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
@@ -280,123 +282,31 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     );
   }
 
-  // ==================== CARDS ====================
+  // ==================== FILTER ROW ====================
 
-  Widget _buildCards(int totalCount, Map<String, int> counts, num approvedTotal) {
-    final cards = <Widget>[
-      _card(
-        label: context.l10n.subscription_totalSubmissions,
-        value: '$totalCount',
-        hint: context.l10n.subscription_allPayments,
-        icon: Icons.receipt_long_outlined,
-        color: _primary,
-        filter: null,
-      ),
-      _card(
-        label: _statusName(PaymentSubmissionStatus.approved.key),
-        value: '${counts[PaymentSubmissionStatus.approved.key] ?? 0}',
-        hint: Money.format(approvedTotal),
-        icon: Icons.check_circle_outline,
-        color: submissionStatusColor(PaymentSubmissionStatus.approved.key, context.colors),
-        filter: PaymentSubmissionStatus.approved.key,
-      ),
-      _card(
-        label: _statusName(PaymentSubmissionStatus.pending.key),
-        value: '${counts[PaymentSubmissionStatus.pending.key] ?? 0}',
-        hint: context.l10n.subscription_awaitingReviewLower,
-        icon: Icons.hourglass_empty,
-        color: submissionStatusColor(PaymentSubmissionStatus.pending.key, context.colors),
-        filter: PaymentSubmissionStatus.pending.key,
-      ),
-      _card(
-        label: _statusName(PaymentSubmissionStatus.rejected.key),
-        value: '${counts[PaymentSubmissionStatus.rejected.key] ?? 0}',
-        hint: context.l10n.subscription_notAccepted,
-        icon: Icons.cancel_outlined,
-        color: submissionStatusColor(PaymentSubmissionStatus.rejected.key, context.colors),
-        filter: PaymentSubmissionStatus.rejected.key,
-      ),
-    ];
+  // POL1 (owner rules 3 and 4): one filter row in place of the four summary
+  // cards. 'all' is no status filter (null); the others are the STORED
+  // status keys, the values the filter compares (s.status != _statusFilter).
+  static const String _rowAll = 'all';
+  static final List<String> _rowStatuses = [
+    PaymentSubmissionStatus.approved.key,
+    PaymentSubmissionStatus.pending.key,
+    PaymentSubmissionStatus.rejected.key,
+  ];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return GridView(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: constraints.maxWidth >= AppBreakpoints.compact ? 4 : 2,
-            mainAxisExtent: 90,
-            crossAxisSpacing: AppSpacing.s12,
-            mainAxisSpacing: AppSpacing.s12,
-          ),
-          children: cards,
-        );
-      },
-    );
-  }
-
-  // Same small card as Sales / Product Alerts. Tapping a status card
-  // filters the table to it (tap again to clear); the Total card clears
-  // the status filter.
-  Widget _card({
-    required String label,
-    required String value,
-    required String hint,
-    required IconData icon,
-    required Color color,
-    required String? filter,
-  }) {
-    final selected = filter != null && _statusFilter == filter;
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadius.r12),
-      side: BorderSide(
-        color: selected ? color.withValues(alpha: AppAlpha.a70) : context.colors.textHint.withValues(alpha: AppAlpha.a15),
-        width: selected ? 1.5 : 1,
-      ),
-    );
-    return Material(
-      color: selected ? color.withValues(alpha: AppAlpha.a05) : context.colors.surface,
-      shape: shape,
-      elevation: AppElevation.e1,
-      shadowColor: context.colors.shadow.withValues(alpha: AppAlpha.a05),
-      child: InkWell(
-        customBorder: shape,
-        onTap: () => setState(() {
-          _statusFilter = (filter == null || selected) ? null : filter;
+  Widget _buildFilterRow(int totalCount, Map<String, int> counts) => FilterRow(
+        keyPrefix: 'subscriptionHistory-filter-',
+        values: [_rowAll, ..._rowStatuses],
+        selected: _statusFilter ?? _rowAll,
+        label: (v) => v == _rowAll ? context.l10n.common_all : _statusName(v),
+        count: (v) => v == _rowAll ? totalCount : (counts[v] ?? 0),
+        // As the cards did: a status filters to it, tapped again (or All)
+        // clears it.
+        onSelected: (v) => setState(() {
+          _statusFilter = (v == _rowAll || v == _statusFilter) ? null : v;
           _page = 1;
         }),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.topLeft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration:
-                          BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
-                      child: Icon(icon, color: color, size: AppIconSize.i14),
-                    ),
-                    const SizedBox(width: AppSpacing.s8),
-                    Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.s4),
-                Text(label, style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textMuted)),
-                Text(hint, style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f10_5, color: context.colors.textDisabled)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+      );
 
   // ==================== FILTERS ====================
 
