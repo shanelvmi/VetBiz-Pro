@@ -622,8 +622,18 @@ class HomeChartMetrics {
   static const double radius = AppRadius.r16;
   static const double padding = AppSpacing.s12;
   static const double pageInset = AppSpacing.s4;
-  static const double title = AppFontSize.f12;
+  static const double title = AppFontSize.f14;
   static const double titleGap = AppSpacing.s8;
+
+  /// UI7: a page's ONE header row (the owner: 24 at most): the [title] at
+  /// the left, the period or the Sales legend at the right, at least
+  /// [headerRow] high (20: a 14 px title's line, so the plot gains the
+  /// removed rows); [headerSpace] between the title and its right-hand
+  /// content (measured: when they do not fit, the content takes a second
+  /// row), [headerGap] under the header.
+  static const double headerRow = AppSpacing.s20;
+  static const double headerSpace = AppSpacing.s8;
+  static const double headerGap = AppSpacing.s4;
 
   /// The dots: [dot] round, the shown page's [dotActive] long, [dotMargin] each side.
   static const double dotsHeight = AppSpacing.s16;
