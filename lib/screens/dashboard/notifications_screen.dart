@@ -35,6 +35,21 @@ import '../../theme/app_breakpoints.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/app_clock.dart';
 
+/// POL1: the unread first, then the read, each in the order given (the
+/// page's "New" and "Earlier" groups). Nothing is filtered or dropped.
+List<NotificationItem> newThenEarlier(List<NotificationItem> items) =>
+    [...items.where((i) => !i.isRead), ...items.where((i) => i.isRead)];
+
+/// POL1, owner decision (c): the types that need the person to act (a
+/// critical stock level, an expiring product, a rejected payment) show the
+/// one danger-coloured word, "Needs Attention". Before POL1 this was only
+/// their danger colour. Pinned by test/pol1_notifications_test.dart.
+bool notificationNeedsAction(NotificationType type) => const {
+      NotificationType.criticalStock,
+      NotificationType.productExpiry,
+      NotificationType.subscriptionRejected,
+    }.contains(type);
+
 /// Everything that needs your attention, facility-wide - subscription
 /// status, urgent announcements, payments, debts, and system messages.
 /// Stock/product alerts have their own dedicated screen now (see
