@@ -34,11 +34,12 @@ class StatusDot extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
+        // A SizedBox and a DecoratedBox: a round dot, never read as a strip.
+        SizedBox(
           key: const ValueKey('statusDot-dot'),
           width: PolishMetrics.dot,
           height: PolishMetrics.dot,
-          decoration: BoxDecoration(color: status.roleIn(colors), shape: BoxShape.circle),
+          child: DecoratedBox(decoration: BoxDecoration(color: status.roleIn(colors), shape: BoxShape.circle)),
         ),
         const SizedBox(width: PolishMetrics.dotGap),
         Flexible(
