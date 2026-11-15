@@ -102,8 +102,10 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // UI8: the phone sign-in and register pages have no footer (Help opens
+  // AuthHelpSheet), so the footer is measured on tablets and computers.
   for (final page in _Page.values) {
-    for (final width in [1200.0, 768.0, 390.0]) {
+    for (final width in [1200.0, 768.0]) {
       testWidgets('${page.name} $width: the footer\'s top edge does not move when the contact arrives', (tester) async {
         await pumpPage(tester, page, await dbWith(sixLinks), width: width);
         final before = footerTop(tester);
@@ -114,7 +116,7 @@ void main() {
     }
   }
 
-  for (final width in [1200.0, 768.0, 390.0]) {
+  for (final width in [1200.0, 768.0]) {
     testWidgets('$width: the bottom row is as tall with zero links as with six', (tester) async {
       await pumpPage(tester, _Page.login, await dbWith(null), width: width);
       await answer(tester, const {});
@@ -149,7 +151,7 @@ void main() {
   testWidgets('a cold start with a persisted copy draws the icons on the first frame', (tester) async {
     SharedPreferences.setMockInitialValues({SupportContactStore.prefsKey: jsonEncode(sixLinks)});
     await tester.runAsync(() => SupportContactStore.instance.restore());
-    await pumpPage(tester, _Page.login, await dbWith(sixLinks), width: 390);
+    await pumpPage(tester, _Page.login, await dbWith(sixLinks), width: 768);
     expect(icons(tester), 6);
     await answer(tester);
     expect(icons(tester), 6);
@@ -179,7 +181,8 @@ void main() {
     // AN6: the Updates card is always drawn (UpdatesLastKnown retired): a
     // skeleton from the first frame when nothing is known, then the slides
     // or the calm panel, in the same height.
-    for (final width in [1200.0, 390.0]) {
+    // UI8: phones show no Updates on the sign-in page.
+    for (final width in [1200.0, 768.0]) {
       testWidgets('$width: kept from the first frame, nothing known yet; the slides arrive without moving the footer', (tester) async {
         await pumpPage(tester, _Page.login, await withUpdate(), width: width);
         expect(find.byKey(UpdatesCarousel.skeletonKey), findsOneWidget);
@@ -192,7 +195,7 @@ void main() {
     }
 
     testWidgets('no updates: the skeleton, then the calm panel, the footer unmoved', (tester) async {
-      await pumpPage(tester, _Page.login, await dbWith(null), width: 390);
+      await pumpPage(tester, _Page.login, await dbWith(null), width: 768);
       expect(find.byKey(UpdatesCarousel.skeletonKey), findsOneWidget);
       final before = footerTop(tester);
       await answer(tester);
@@ -203,9 +206,9 @@ void main() {
 
     testWidgets('the answer is remembered for the next visit: its first frame has the slides', (tester) async {
       final db = await withUpdate();
-      await pumpPage(tester, _Page.login, db, width: 390);
+      await pumpPage(tester, _Page.login, db, width: 768);
       await answer(tester);
-      await pumpPage(tester, _Page.login, db, width: 390);
+      await pumpPage(tester, _Page.login, db, width: 768);
       expect(find.byKey(UpdatesCarousel.skeletonKey), findsNothing);
       expect(find.byType(UpdatesSlides), findsOneWidget);
     }, skip: _skip);

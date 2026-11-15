@@ -40,7 +40,8 @@ const _oldTagline = 'Sales, stock, clients and debts for agrovets and vet clinic
 void main() {
   TextStyle labelStyle(WidgetTester tester, String text) => tester.widget<Text>(find.text(text)).style!;
 
-  for (final (width, size) in [(390.0, AppFontSize.f16), (1200.0, AppFontSize.f18)]) {
+  // UI8: phones show no Updates on the sign-in page; 768 has the narrow card.
+  for (final (width, size) in [(768.0, AppFontSize.f16), (1200.0, AppFontSize.f18)]) {
     testWidgets('$width: the Updates label is $size px (AN5: bold); the chips scaled to match and kept in its row', (tester) async {
       final db = await dbWithUpdates(0);
       await addUpdate(db, 'p', posterData(urgent: true, fresh: true));

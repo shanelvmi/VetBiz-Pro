@@ -69,7 +69,8 @@ void main() {
     expect(gradients, isEmpty, reason: 'the login card keeps the only accent line');
   }, skip: _skip);
 
-  for (final width in [768.0, 390.0]) {
+  // UI8: phones show no Updates on the sign-in page (ui8_phone_login_test).
+  for (final width in [768.0]) {
     // LG1: on phones the Updates are a flat section of the page, no card.
     final updates = width < 600 ? LoginScreen.phoneUpdatesKey : UpdatesCard.surfaceKey;
     testWidgets('$width: no welcome note, the Updates ${width < 600 ? 'section' : 'card'} below the login form', (tester) async {
@@ -82,7 +83,8 @@ void main() {
     }, skip: _skip);
   }
 
-  for (final width in [1200.0, 1024.0, 768.0, 390.0]) {
+  // UI8: phones show no Updates on the sign-in page (ui8_phone_login_test).
+  for (final width in [1200.0, 1024.0, 768.0]) {
     // AN6 (owner): changed from "no Updates card; the login card centred
     // alone": the card is always there, with the calm panel in its frame.
     // LG1: on phones (390) the flat Updates section, no card.
@@ -102,7 +104,8 @@ void main() {
   }
 
 
-  for (final width in [360.0, 390.0, 768.0, 1024.0, 1200.0]) {
+  // UI8: phones show no Updates on the sign-in page.
+  for (final width in [768.0, 1024.0, 1200.0]) {
     testWidgets('$width: the slide frame stays 16:9', (tester) async {
       await pumpLogin(tester, await dbWithUpdates(3), width: width, height: 2400);
       final size = _rect(tester, UpdatesSlides.frameKey).size;

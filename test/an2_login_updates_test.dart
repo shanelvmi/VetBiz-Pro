@@ -89,7 +89,8 @@ void main() {
   testWidgets('with an update: the Updates label, the shared widget; no Announcements title, icon or chevron', (tester) async {
     final db = FakeFirebaseFirestore();
     await add(db, '1', {});
-    for (final width in [390.0, 1200.0]) {
+    // UI8: phones show no Updates on the sign-in page (ui8_phone_login_test).
+    for (final width in [768.0, 1200.0]) {
       await pump(tester, db, width: width);
       expect(find.byType(UpdatesSlides), findsOneWidget, reason: '$width');
       expect(find.text(_en.updates_label), findsOneWidget);
@@ -103,10 +104,11 @@ void main() {
     }
   });
 
-  testWidgets('a phone: the form first, the Updates below it', (tester) async {
+  // UI8: phones show no Updates; the stacked (narrow) card keeps this order.
+  testWidgets('a narrow window: the form first, the Updates below it', (tester) async {
     final db = FakeFirebaseFirestore();
     await add(db, '1', {});
-    await pump(tester, db, width: 390);
+    await pump(tester, db, width: 768);
     expect(tester.getRect(find.byType(UpdatesSlides)).top, greaterThan(tester.getRect(find.byType(TextField).last).bottom));
   });
 

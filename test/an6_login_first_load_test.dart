@@ -40,11 +40,13 @@ double _opacity(WidgetTester tester, int i) => tester
     .value;
 
 void main() {
-  for (final width in [1200.0, 1024.0, 390.0]) {
+  // UI8: phones show no Updates on the sign-in page (ui8_phone_login_test);
+  // 768 has the narrow card, the Updates below the form.
+  for (final width in [1200.0, 1024.0, 768.0]) {
     final wide = width > 1000;
     testWidgets('$width, the first frame with nothing known: both cards, ${wide ? 'the welcome note, ' : ''}the skeleton in the frame', (tester) async {
       await pumpLogin(tester, await dbWithUpdates(3), width: width, height: 2400, settle: false);
-      expect(find.byKey(wide ? UpdatesCard.surfaceKey : LoginScreen.phoneUpdatesKey), findsOneWidget);
+      expect(find.byKey(UpdatesCard.surfaceKey), findsOneWidget);
       expect(find.byKey(LoginScreen.loginCardKey), findsOneWidget);
       expect(find.byKey(UpdatesCard.welcomeKey), wide ? findsOneWidget : findsNothing);
       expect(find.text(_en.updates_label), findsOneWidget);

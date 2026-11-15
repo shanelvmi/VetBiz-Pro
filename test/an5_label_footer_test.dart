@@ -45,7 +45,8 @@ void main() {
     }
   }
 
-  for (final (width, size) in [(390.0, AppFontSize.f16), (1200.0, AppFontSize.f18)]) {
+  // UI8: phones show no Updates on the sign-in page; 768 has the narrow card.
+  for (final (width, size) in [(768.0, AppFontSize.f16), (1200.0, AppFontSize.f18)]) {
     testWidgets('$width: the Updates label is $size px', (tester) async {
       await pumpLogin(tester, await dbWithUpdates(1), width: width, height: 2400);
       expect(tester.widget<Text>(find.text(_en.updates_label)).style!.fontSize, size);

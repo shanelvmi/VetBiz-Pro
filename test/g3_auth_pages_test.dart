@@ -140,7 +140,8 @@ void main() {
           testWidgets('no overflow at $width, ${mode.name}, ${locale.languageCode}', (tester) async {
             await pump(tester, login(), size: Size(width, 900), mode: mode, locale: locale);
             expect(tester.takeException(), isNull);
-            expect(find.byType(AuthFooter), findsOneWidget);
+            // UI8: the phone sign-in page has no footer (ui8_phone_login_test).
+            if (width >= 600) expect(find.byType(AuthFooter), findsOneWidget);
           });
         }
       }
@@ -182,7 +183,8 @@ void main() {
           testWidgets('no overflow at $width, ${mode.name}, ${locale.languageCode}', (tester) async {
             await pump(tester, register(), size: Size(width, 900), mode: mode, locale: locale);
             expect(tester.takeException(), isNull);
-            expect(find.byType(AuthFooter), findsOneWidget);
+            // UI8: the phone register page has no footer (ui8_phone_register_test).
+            if (width >= 600) expect(find.byType(AuthFooter), findsOneWidget);
           });
         }
       }
