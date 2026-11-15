@@ -18,7 +18,7 @@ import 'package:vetbiz_pro/ui/polish/section_label.dart';
 
 import 'helpers/notification_harness.dart';
 
-const _skip = true; // POL1: on with the screen change (Step C)
+const _skip = false;
 
 /// n1, n2, n4, n5 unread; n3, n6 read; n2 needs action (critical stock).
 Future<NotificationFeedController> _feed(WidgetTester tester) async {

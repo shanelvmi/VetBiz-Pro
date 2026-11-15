@@ -18,7 +18,7 @@ import '../../utils/updates_selection.dart';
 import '../../widgets/notification_row.dart';
 import '../../services/notification_feed.dart';
 import '../../widgets/notification_actions.dart';
-import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../ui/polish/filter_row.dart';
 import '../../ui/polish/section_label.dart';
 import '../../theme/polish_metrics.dart';
 import '../../widgets/phone_list/phone_list_skeleton.dart';
@@ -365,8 +365,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // ======================================================================
 
 
-  // The filter cards, in display order - the same categories the old tab
-  // strip offered; "All" is simply no card selected.
+  // The filter row's categories, in display order (POL1: they were the five
+  // category cards, and the phone's chips); "All" is no category selected.
   static const List<NotificationCategory> _cardCategories = [
     NotificationCategory.critical,
     NotificationCategory.stock,
@@ -413,49 +413,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  IconData _categoryIcon(NotificationCategory c) {
-    switch (c) {
-      case NotificationCategory.critical:
-        return Icons.error_outline;
-      case NotificationCategory.stock:
-        return Icons.inventory_2_outlined;
-      case NotificationCategory.payment:
-        return Icons.payments_outlined;
-      case NotificationCategory.debt:
-        return Icons.account_balance_wallet_outlined;
-      case NotificationCategory.system:
-        return Icons.campaign_outlined;
-      case NotificationCategory.other:
-        return Icons.notifications_none;
-    }
-  }
-
-  Color _categoryColor(NotificationCategory c) {
-    switch (c) {
-      case NotificationCategory.critical:
-        return context.colors.danger;
-      case NotificationCategory.stock:
-        return context.colors.warning;
-      case NotificationCategory.payment:
-        return context.colors.success;
-      case NotificationCategory.debt:
-        return const Color(0xFFE59A00);
-      case NotificationCategory.system:
-        return context.colors.info;
-      case NotificationCategory.other:
-        return context.colors.textHint;
-    }
-  }
-
   Widget _buildFullScreenBody() {
     final all = _items;
 
     final counts = <NotificationCategory, int>{for (final c in NotificationCategory.values) c: 0};
-    final unreadCounts = <NotificationCategory, int>{for (final c in NotificationCategory.values) c: 0};
     for (final i in all) {
       final n = i.notification;
       counts[n.category] = (counts[n.category] ?? 0) + 1;
-      if (!i.isRead) unreadCounts[n.category] = (unreadCounts[n.category] ?? 0) + 1;
     }
 
     // POL1: the unread first ("New"), then the read ("Earlier"), each in the
@@ -467,30 +431,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final page = _currentPage > totalPages ? totalPages : _currentPage;
     final pageItems = filtered.skip((page - 1) * _pageSize).take(_pageSize).toList();
 
-    // PH8a-fix (the owner's correction): a phone has no room for the cards;
-    // the same counts give one summary line, and the cards' categories become
-    // chips that filter the same way.
+    // POL1 (owner rules 3 and 4): one filter row on every size in place of
+    // the five category cards (wide) and the summary line and chips (phone):
+    // All, Unread and the categories, each with its count. On a phone it
+    // scrolls sideways, so it stays one row.
     final totalUnread = all.where((i) => !i.isRead).length;
     final header = [
-      if (_phone) ...[
-        if (all.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
-            child: Text(
-              totalUnread > 0 ? context.l10n.notifications_summaryLine(all.length, totalUnread) : context.l10n.notifications_allRead,
-              key: const ValueKey('notifications-summary'),
-              style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary),
-            ),
-          ),
-        Padding(
-          padding: const EdgeInsets.only(top: AppSpacing.s8),
-          child: _buildCategoryChips(unreadCounts, totalUnread),
-        ),
-      ] else
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
-          child: _buildCategoryCards(counts, unreadCounts),
-        ),
+      Padding(
+        padding: const EdgeInsets.only(top: PolishMetrics.gapInGroup),
+        child: _buildFilterRow(counts, totalUnread, all.length),
+      ),
       // UI1 (the owner's correction): a phone has no search and no date or
       // status filter, only the chips; selection mode keeps its Remove
       // selected and Cancel here. Wide screens keep the filters.
@@ -546,24 +496,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (_phone) ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
-                child: SkeletonOf(
-                  key: const ValueKey('notifications-skeleton-summary'),
-                  child: Text(context.l10n.notifications_allRead,
-                      style: TextStyle(fontSize: AppFontSize.f14, color: context.colors.textSecondary)),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.s8),
-                child: SkeletonOf(key: const ValueKey('notifications-skeleton-chips'), child: _buildCategoryChips(none, 0)),
-              ),
-            ] else ...[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
-                child: SkeletonOf(child: _buildCategoryCards(none, none)),
-              ),
+            Padding(
+              padding: const EdgeInsets.only(top: PolishMetrics.gapInGroup),
+              child: SkeletonOf(key: const ValueKey('notifications-skeleton-filters'), child: _buildFilterRow(none, 0, 0)),
+            ),
+            if (!_phone) ...[
               Padding(
                 padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
                 child: SkeletonOf(child: _buildFilters()),
@@ -590,114 +527,47 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: PhoneListSkeleton(),
       );
 
-  // ==================== CARDS ====================
+  // ==================== FILTER ROW ====================
 
-  // PH8a-fix: the phone's cards. All, then the cards' categories in their
-  // order, each with its unread count; a chip sets the same category a card
-  // sets, and tapping the chosen one again goes back to All, as a card does.
-  Widget _buildCategoryChips(Map<NotificationCategory, int> unread, int totalUnread) {
-    const all = 'all';
-    return PhoneQuickChips(
-      keyPrefix: 'notifications-chip-',
-      values: [all, for (final c in _cardCategories) c.name],
-      selected: _selectedCategory?.name ?? all,
-      label: (v) => v == all
-          ? context.l10n.notifications_categoryChip(context.l10n.common_all, totalUnread)
-          : context.l10n.notifications_categoryChip(
-              _categoryName(NotificationCategory.values.byName(v)), unread[NotificationCategory.values.byName(v)] ?? 0),
-      onSelected: (v) {
-        final category = v == all ? null : NotificationCategory.values.byName(v);
-        setState(() {
-          _selectedCategory = category == _selectedCategory ? null : category;
-          _currentPage = 1;
-        });
+  // POL1: the stored values the row holds. 'all' and 'unread' set the
+  // status filter's 'All' and 'Unread'; a category's name sets the category,
+  // as its card and chip did (tapped again, back to All). The filter itself
+  // (_filteredHistory) is unchanged.
+  static const String _rowAll = 'all';
+  static const String _rowUnread = 'unread';
+
+  String get _rowSelected =>
+      _selectedCategory?.name ?? (_statusFilter == 'Unread' ? _rowUnread : _rowAll);
+
+  Widget _buildFilterRow(Map<NotificationCategory, int> counts, int totalUnread, int total) {
+    return FilterRow(
+      keyPrefix: 'notifications-filter-',
+      values: [_rowAll, _rowUnread, for (final c in _cardCategories) c.name],
+      selected: _rowSelected,
+      label: (v) => switch (v) {
+        _rowAll => context.l10n.common_all,
+        _rowUnread => context.l10n.notifications_unread,
+        _ => _categoryName(NotificationCategory.values.byName(v)),
       },
-    );
-  }
-
-  Widget _buildCategoryCards(Map<NotificationCategory, int> counts, Map<NotificationCategory, int> unread) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= AppBreakpoints.fiveColumnCards ? 5 : 3;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            mainAxisExtent: 90,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-          ),
-          itemCount: _cardCategories.length,
-          itemBuilder: (context, index) {
-            final c = _cardCategories[index];
-            return _categoryCard(c, counts[c] ?? 0, unread[c] ?? 0);
-          },
-        );
+      count: (v) => switch (v) {
+        _rowAll => total,
+        _rowUnread => totalUnread,
+        _ => counts[NotificationCategory.values.byName(v)] ?? 0,
       },
-    );
-  }
-
-  // Same small card as Sales / Product Alerts: tapping filters the table
-  // to that category, tapping again clears it.
-  Widget _categoryCard(NotificationCategory category, int count, int unread) {
-    final color = _categoryColor(category);
-    final selected = _selectedCategory == category;
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadius.r12),
-      side: BorderSide(
-        color: selected ? color.withValues(alpha: AppAlpha.a70) : context.colors.textHint.withValues(alpha: AppAlpha.a15),
-        width: selected ? 1.5 : 1,
-      ),
-    );
-    return Material(
-      color: selected ? color.withValues(alpha: AppAlpha.a05) : context.colors.surface,
-      shape: shape,
-      elevation: AppElevation.e1,
-      shadowColor: context.colors.shadow.withValues(alpha: AppAlpha.a05),
-      child: InkWell(
-        customBorder: shape,
-        onTap: () => setState(() {
-          _selectedCategory = selected ? null : category;
-          _currentPage = 1;
-        }),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.topLeft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration:
-                          BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
-                      child: Icon(_categoryIcon(category), color: color, size: AppIconSize.i14),
-                    ),
-                    const SizedBox(width: AppSpacing.s8),
-                    Text('$count', style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.s4),
-                Text(_categoryName(category), style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textMuted)),
-                Text(
-                  unread > 0 ? context.l10n.notifications_unreadCount(unread) : context.l10n.notifications_allRead,
-                  style: TextStyle(
-                    fontSize: _phone ? AppFontSize.f12 : AppFontSize.f10_5,
-                    color: unread > 0 ? color : context.colors.textDisabled,
-                    fontWeight: unread > 0 ? AppFontWeight.semibold : AppFontWeight.regular,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      onSelected: (v) => setState(() {
+        final again = v == _rowSelected && v != _rowAll;
+        if (v == _rowAll || again) {
+          _selectedCategory = null;
+          _statusFilter = 'All';
+        } else if (v == _rowUnread) {
+          _selectedCategory = null;
+          _statusFilter = 'Unread';
+        } else {
+          _selectedCategory = NotificationCategory.values.byName(v);
+          _statusFilter = 'All';
+        }
+        _currentPage = 1;
+      }),
     );
   }
 

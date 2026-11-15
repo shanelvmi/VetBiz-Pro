@@ -2,7 +2,7 @@
 // (phones and wide) and the dropdown, arrive as one piece. Primary = the
 // feed's first page and my state (NotificationFeedController.isLoading);
 // a feed already loaded (the bell's, passed in) shows at once with no
-// skeleton; the summary line and the chips keep their slots; actions
+// skeleton; the filter row keeps its slot (POL1: it replaced the summary line and the chips); actions
 // (Load older, a refresh, a filter) never replay it; reduced motion is
 // instant; no spinner while the first page is late.
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
@@ -192,17 +192,16 @@ void main() {
     expect(feed.starts, 1);
   }, skip: _skip);
 
-  testWidgets('phone: the summary line and the chips keep their slot (same rects as the loaded page)', (tester) async {
+  testWidgets('phone: the filter row keeps its slot (same rect as the loaded page)', (tester) async {
     final held = await _held(tester);
     await _pump(tester, held);
     await tester.pumpAndSettle();
-    final chips = tester.getRect(find.byKey(const ValueKey('notifications-chip-all')));
-    final summary = tester.getRect(find.byKey(const ValueKey('notifications-summary')));
+    final row = tester.getRect(find.byKey(const ValueKey('notifications-filter-all')));
     final feed = _late(tester);
     await _pump(tester, feed);
-    final slot = tester.getRect(find.byKey(const ValueKey('notifications-skeleton-summary')));
-    expect((slot.top, slot.height, slot.left), (summary.top, summary.height, summary.left));
-    expect(tester.getRect(find.byKey(const ValueKey('notifications-skeleton-chips'))).top, chips.top);
+    expect(find.byKey(const ValueKey('notifications-skeleton-filters')), findsOneWidget);
+    final slot = tester.getRect(find.byKey(const ValueKey('notifications-filter-all')));
+    expect((slot.top, slot.height, slot.left), (row.top, row.height, row.left));
   }, skip: _skip);
 
   for (final size in [...ph5PhoneSizes.map((s) => s.size), const Size(768, 1024), const Size(1024, 768), const Size(1200, 800)]) {

@@ -85,8 +85,8 @@ void main() {
         expect(find.byType(DropdownButton<String>), phone ? findsNothing : findsOneWidget, reason: 'the status filter');
         expect(find.byIcon(Icons.calendar_today_outlined), phone ? findsNothing : findsOneWidget, reason: 'the date filter');
         if (phone) {
-          expect(find.byKey(const ValueKey('notifications-summary')), findsOneWidget);
-          expect(find.byKey(const ValueKey('notifications-chip-all')), findsOneWidget);
+          expect(find.byKey(const ValueKey('notifications-summary')), findsNothing, reason: 'POL1: the counts are in the filter row');
+          expect(find.byKey(const ValueKey('notifications-filter-all')), findsOneWidget);
           expect(find.byKey(const ValueKey('notifications-page-more')), findsOneWidget, reason: 'the app bar\'s menu');
         }
       }, skip: _skip);
@@ -111,18 +111,18 @@ void main() {
     expect(leftBars(tester), isEmpty);
   }, skip: _skip);
 
-  testWidgets('on a phone the chips still filter; selection mode keeps its actions', (tester) async {
+  testWidgets('on a phone the filter row still filters (POL1, was the chips); selection mode keeps its actions', (tester) async {
     final c = await _feed(tester);
     await pumpNotifications(tester, c, width: 390, height: 1400);
     expect(_rows(), containsAll(['n1', 'n2']));
-    await tester.ensureVisible(find.byKey(const ValueKey('notifications-chip-payment')));
+    await tester.ensureVisible(find.byKey(const ValueKey('notifications-filter-payment')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('notifications-chip-payment')));
+    await tester.tap(find.byKey(const ValueKey('notifications-filter-payment')));
     await tester.pumpAndSettle();
     expect(_rows(), {'n2'});
-    await tester.ensureVisible(find.byKey(const ValueKey('notifications-chip-all')));
+    await tester.ensureVisible(find.byKey(const ValueKey('notifications-filter-all')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('notifications-chip-all')));
+    await tester.tap(find.byKey(const ValueKey('notifications-filter-all')));
     await tester.pumpAndSettle();
     await tapPageAction(tester, 'Select');
     await tester.pumpAndSettle();

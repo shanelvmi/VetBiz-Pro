@@ -147,12 +147,6 @@
     },
     {
       "rule": "R1",
-      "file": "lib/screens/dashboard/notifications_screen.dart",
-      "lineContains": "Color(0xFFE59A00)",
-      "reason": "KEEP: debt category amber, no role within 24 per channel (one use); docs/design/parked_values.md A18"
-    },
-    {
-      "rule": "R1",
       "file": "lib/screens/login_screen.dart",
       "lineContains": "Colors.greenAccent",
       "reason": "KEEP: System Online dot, no role within 24 per channel (one use); docs/design/parked_values.md A20"
