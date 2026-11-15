@@ -95,6 +95,33 @@ void main() {
     expect(r11.alsoExcludes, contains('lib/ui/feedback/'));
   });
 
+  test('POL1: R13 sees gradients outside lib/ui, R14 every BoxShadow; the shadows that do a job are allowlisted with a reason', () {
+    final r13 = guardRules.firstWhere((r) => r.id == 'R13');
+    final r14 = guardRules.firstWhere((r) => r.id == 'R14');
+    bool hits(GuardRule rule, String line) => rule.patterns.any((p) => p.hasMatch(line));
+    expect(hits(r13, 'gradient: LinearGradient('), isTrue);
+    expect(hits(r13, 'gradient: RadialGradient(colors: c),'), isTrue);
+    expect(hits(r13, 'brandGradientStart: theme.primary,'), isFalse);
+    expect(r13.alsoExcludes, contains('lib/ui/'));
+    expect(hits(r14, 'boxShadow: [BoxShadow(color: c, blurRadius: 6)],'), isTrue);
+    expect(hits(r14, 'shadowColor: context.colors.shadow,'), isFalse);
+
+    final baseline = Baseline.load(Directory.current)!;
+    final allowed = baseline.allowlist.where((a) => a.rule == 'R14').toList();
+    expect(allowed.map((a) => a.file), unorderedEquals([
+      'lib/screens/dashboard/home_action_panel.dart',
+      'lib/screens/dashboard/subscription_banner.dart',
+      'lib/screens/sales/receipt_preview_screen.dart',
+      'lib/screens/services/service_receipt_preview_screen.dart',
+    ]));
+    for (final a in allowed) {
+      expect(a.reason, startsWith('POL1: functional'), reason: a.file);
+    }
+    // The ratchet as POL1 seeded it; it only goes down.
+    expect(totals(baseline.counts)['R13'], lessThanOrEqualTo(11));
+    expect(totals(baseline.counts)['R14'], lessThanOrEqualTo(35));
+  });
+
   test('the scanner sees what it should', () {
     final r4 = guardRules.firstWhere((r) => r.id == 'R4');
     bool hits(GuardRule rule, String line) =>

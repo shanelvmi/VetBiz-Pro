@@ -294,6 +294,30 @@
       "file": "lib/screens/subscription/subscription_screen.dart",
       "lineContains": "materialTapTargetSize: MaterialTapTargetSize.shrinkWrap",
       "reason": "a status Chip with no onPressed: not a tap target; shrinkWrap only keeps its look"
+    },
+    {
+      "rule": "R14",
+      "file": "lib/screens/dashboard/home_action_panel.dart",
+      "lineContains": "BoxShadow(",
+      "reason": "POL1: functional, the phone action panel is a sheet over the Home content; the shadow is its top edge"
+    },
+    {
+      "rule": "R14",
+      "file": "lib/screens/dashboard/subscription_banner.dart",
+      "lineContains": "BoxShadow(",
+      "reason": "POL1: functional, the phone banner floats over the tab content (PH8a-fix overlay)"
+    },
+    {
+      "rule": "R14",
+      "file": "lib/screens/sales/receipt_preview_screen.dart",
+      "lineContains": "BoxShadow(",
+      "reason": "POL1: functional, the receipt preview is a sheet of paper on the page (receipts stay light)"
+    },
+    {
+      "rule": "R14",
+      "file": "lib/screens/services/service_receipt_preview_screen.dart",
+      "lineContains": "BoxShadow(",
+      "reason": "POL1: functional, the service receipt preview is a sheet of paper on the page (receipts stay light)"
     }
   ],
   "counts": {
@@ -308,6 +332,38 @@
     "R9": {},
     "R10": {},
     "R11": {},
-    "R12": {}
+    "R12": {},
+    "R13": {
+      "lib/screens/dashboard/insights_screen.dart": 1,
+      "lib/screens/dashboard/today_card.dart": 1,
+      "lib/screens/login_screen.dart": 4,
+      "lib/screens/platform_admin/promotions_screen.dart": 1,
+      "lib/screens/register_screen.dart": 3,
+      "lib/screens/subscription/subscription_screen.dart": 1
+    },
+    "R14": {
+      "lib/screens/clients/clients_screen.dart": 1,
+      "lib/screens/dashboard/dashboard_screen.dart": 1,
+      "lib/screens/dashboard/insights_screen.dart": 3,
+      "lib/screens/dashboard/notifications_screen.dart": 1,
+      "lib/screens/debtors/debtors_screen.dart": 1,
+      "lib/screens/facilities/facility_screen.dart": 2,
+      "lib/screens/legal/legal_document_screen.dart": 1,
+      "lib/screens/login_screen.dart": 2,
+      "lib/screens/payments/payments_screen.dart": 2,
+      "lib/screens/products/products_screen.dart": 3,
+      "lib/screens/products/stock_alerts_screen.dart": 1,
+      "lib/screens/register_screen.dart": 2,
+      "lib/screens/sales/add_sale_screen.dart": 1,
+      "lib/screens/sales/sales_screen.dart": 1,
+      "lib/screens/services/services_screen.dart": 1,
+      "lib/screens/store/stockstore_screen.dart": 3,
+      "lib/screens/subscription/subscription_screen.dart": 1,
+      "lib/screens/transactions/transactions_screen.dart": 1,
+      "lib/widgets/auth_card.dart": 1,
+      "lib/widgets/auth_panel.dart": 4,
+      "lib/widgets/notification_row.dart": 1,
+      "lib/widgets/summary_card.dart": 1
+    }
   }
 }

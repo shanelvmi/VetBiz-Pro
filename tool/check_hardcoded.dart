@@ -138,6 +138,15 @@ final List<GuardRule> guardRules = [
     accept: _shrinksBelowMinimum,
     onlyIn: ['lib/screens/'],
   ),
+  // POL1 (docs/POLISH_AUDIT.md, owner rule 4): no gradient outside the
+  // shared look in lib/ui. A ratchet: the 11 of the audit are counted in the
+  // baseline and go as their group (POL2 onward) is done.
+  GuardRule('R13', 'gradient', [RegExp(r'\b(?:Linear|Radial|Sweep)Gradient\(')], alsoExcludes: ['lib/ui/']),
+  // POL1: no BoxShadow for decoration (a flat surface and a hairline border
+  // instead). The few that do a job (a sheet's edge, an overlay, receipt
+  // paper) are allowlist entries with their reason; the rest are counted in
+  // the baseline and only go down.
+  GuardRule('R14', 'decorative shadow', [RegExp(r'\bBoxShadow\(')]),
 ];
 
 /// R12: a minWidth or minHeight counts only below 48 (the touch minimum,
