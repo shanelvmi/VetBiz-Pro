@@ -97,7 +97,7 @@ void main() {
         expect(leftBars(tester), isEmpty);
       }, skip: _skip);
 
-      ph5TestWidgets('the payment history at $where: no left bar, the status in a chip', (tester) async {
+      ph5TestWidgets('the payment history at $where: no left bar, the status as a dot and its word (POL1)', (tester) async {
         await pumpPh5(tester, (fs) => SubscriptionHistoryScreen(facilityId: testFacilityId, primaryColor: Colors.teal, firestore: fs),
             size: size, look: look, pushed: true, seed: seedSubscription);
         expect(leftBars(tester), isEmpty);

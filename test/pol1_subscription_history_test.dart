@@ -20,7 +20,7 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'ph8a_subscription_wide_test.dart' show seedSubscription;
 
-const _skip = true; // POL1: on with the screen change (Step D)
+const _skip = false;
 
 /// The three claims of October (approved s1, rejected s2 with a reason,
 /// pending s3) and one approved claim in September.

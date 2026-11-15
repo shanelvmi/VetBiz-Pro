@@ -3,8 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_layout.dart';
 
-import 'subscription_screen.dart' show submissionStatusColor;
+import 'subscription_screen.dart' show submissionAppStatus;
+import '../../ui/polish/app_status.dart';
 import '../../ui/polish/filter_row.dart';
+import '../../ui/polish/section_label.dart';
 import '../../theme/polish_metrics.dart';
 import '../../config/payment_methods.dart';
 import '../../data/collections.dart';
@@ -81,7 +83,8 @@ class _Submission {
 ///
 /// POL1: one filter row (All, Approved, Pending, Rejected, each with its
 /// count; it replaced the summary cards), one search/filter row, a
-/// full-width table, and the same pagination bar. A rejected submission shows the reason the
+/// full-width table grouped by month, and the same pagination bar. The
+/// status is a dot and its word. A rejected submission shows the reason the
 /// platform admin gave, right in the row.
 class SubscriptionHistoryScreen extends StatefulWidget {
   final String facilityId;
@@ -437,15 +440,38 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     );
   }
 
+  // POL1: a month header (SectionLabel) over the first row of each month;
+  // the rows come newest first (the query's order), so a month is one run.
+  String _monthOf(_Submission s) => s.submittedAt == null ? '-' : AppDateFormat.monthYear.format(s.submittedAt!);
+
+  List<Widget> _byMonth(List<_Submission> items, Widget Function(_Submission) row, {Widget? between}) {
+    final out = <Widget>[];
+    for (var k = 0; k < items.length; k++) {
+      final month = _monthOf(items[k]);
+      if (k == 0 || _monthOf(items[k - 1]) != month) {
+        out.add(SectionLabel(month, key: ValueKey('subscriptionHistory-month-$month')));
+      } else if (between != null) {
+        out.add(between);
+      }
+      out.add(row(items[k]));
+    }
+    return out;
+  }
+
   Widget _buildResults(List<_Submission> items) {
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < AppBreakpoints.resultsTable) {
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, AppSpacing.s12),
-            itemCount: items.length,
-            separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.s10),
-            itemBuilder: (context, index) => _buildNarrowCard(items[index]),
+          return ListView(
+            padding: const EdgeInsets.only(bottom: PolishMetrics.gapBetweenGroups),
+            children: _byMonth(
+              items,
+              (s) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: PolishMetrics.pagePadding),
+                child: _buildNarrowCard(s),
+              ),
+              between: const SizedBox(height: PolishMetrics.gapInGroup),
+            ),
           );
         }
         return Column(
@@ -453,7 +479,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
+              decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.divider))),
               child: Row(
                 children: [
                   _headerCell(context.l10n.subscription_colSubmitted, flex: 3),
@@ -467,10 +493,8 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
               ),
             ),
             Expanded(
-              child: ListView.separated(
-                itemCount: items.length,
-                separatorBuilder: (context, index) => Divider(height: 1, color: context.colors.textHint.withValues(alpha: AppAlpha.a10)),
-                itemBuilder: (context, index) => _buildRow(items[index]),
+              child: ListView(
+                children: _byMonth(items, _buildRow, between: Divider(height: 1, color: context.colors.divider)),
               ),
             ),
           ],
@@ -483,23 +507,20 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
     return Expanded(
       flex: flex,
       child: Text(label, style: TextStyle(
-          fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
+          fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textSecondary)),
     );
   }
 
-  Widget _statusChip(String status) {
-    final color = submissionStatusColor(status, context.colors);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
-      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-      child: Text(_statusName(status), style: TextStyle(
-          color: color, fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
-    );
-  }
+  // POL1 (owner rule 3): the status as a dot and its word, not a pill.
+  Widget _statusDot(String status) => StatusDot(status: submissionAppStatus(status), label: _statusName(status));
+
+  // Secondary text, one size (the date, the reviewed time, the reference).
+  TextStyle get _secondary => TextStyle(fontSize: PolishMetrics.statusText, color: context.colors.textSecondary);
 
   // What this row says about the review: for a rejection, the reason
-  // (or an honest "none given"), for an approval when, for a pending
-  // one that it's still waiting.
+  // (or an honest "none given") in muted danger text, for an approval
+  // when it was reviewed, for a pending one that it's still waiting. The
+  // status word itself is in the dot beside it.
   Widget _detailsFor(_Submission s) {
     switch (PaymentSubmissionStatus.fromKey(s.status)) {
       case PaymentSubmissionStatus.rejected:
@@ -508,42 +529,32 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
           children: [
             Text(
               s.hasReason ? context.l10n.subscription_rejectReason(s.reviewNote) : context.l10n.subscription_noReason,
+              key: const ValueKey('subscriptionHistory-reason'),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: AppFontSize.f12_5,
-                color: s.hasReason ? context.colors.dangerStrong : context.colors.textMuted,
+                color: s.hasReason ? context.colors.dangerStrong : context.colors.textSecondary,
                 fontStyle: s.hasReason ? FontStyle.normal : FontStyle.italic,
               ),
             ),
             if (s.reviewedAt != null) ...[
               const SizedBox(height: AppSpacing.s2),
-              Text(context.l10n.subscription_rejectedOn(_dateTimeFormat.format(s.reviewedAt!)),
-                  style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
+              Text(context.l10n.subscription_rejectedOn(_dateTimeFormat.format(s.reviewedAt!)), style: _secondary),
             ],
           ],
         );
       case PaymentSubmissionStatus.approved:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(_statusName(PaymentSubmissionStatus.approved.key), style: TextStyle(
-                    fontSize: AppFontSize.f12_5, color: context.colors.successStrong, fontWeight: AppFontWeight.medium)),
-            if (s.reviewedAt != null) ...[
-              const SizedBox(height: AppSpacing.s2),
-              Text(_dateTimeFormat.format(s.reviewedAt!), style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
-            ],
-          ],
-        );
+        return s.reviewedAt == null ? const SizedBox.shrink() : Text(_dateTimeFormat.format(s.reviewedAt!), style: _secondary);
       default:
-        return Text(context.l10n.subscription_awaitingReviewLower, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted));
+        return Text(context.l10n.subscription_awaitingReviewLower, style: _secondary);
     }
   }
 
   // Wide layout: one table row.
   Widget _buildRow(_Submission s) {
     final submitted = s.submittedAt;
-    // UI1: no coloured bar down the left; the outcome is in its chip.
+    // UI1: no coloured bar down the left; the outcome is in its dot.
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s12),
       child: Row(
@@ -557,8 +568,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(_dateFormat.format(submitted), style: const TextStyle(fontSize: AppFontSize.f13)),
-                      Text(AppDateFormat.time24.format(submitted),
-                          style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
+                      Text(AppDateFormat.time24.format(submitted), style: _secondary),
                     ],
                   ),
           ),
@@ -575,10 +585,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
                 Text(_planName(s).isEmpty ? '-' : _planName(s),
                     maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: AppFontSize.f13)),
                 if (s.promotionLabel != null && s.promotionLabel!.isNotEmpty)
-                  Text(s.promotionLabel!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
+                  Text(s.promotionLabel!, maxLines: 1, overflow: TextOverflow.ellipsis, style: _secondary),
               ],
             ),
           ),
@@ -593,86 +600,69 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
               children: [
                 Text(s.method.isEmpty ? '-' : context.l10n.paymentMethodLabel(s.method),
                     maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: AppFontSize.f13)),
-                if (s.reference.isNotEmpty)
-                  Text(s.reference,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
+                if (s.reference.isNotEmpty) Text(s.reference, maxLines: 1, overflow: TextOverflow.ellipsis, style: _secondary),
               ],
             ),
           ),
-          Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: _statusChip(s.status))),
+          Expanded(flex: 2, child: Align(alignment: Alignment.centerLeft, child: _statusDot(s.status))),
           Expanded(flex: 5, child: _detailsFor(s)),
         ],
       ),
     );
   }
 
-  // Narrow layout (phones): the same information as a card per submission.
+  // Narrow layout (phones): one row per submission. POL1: the amount large,
+  // the status dot beside it; the plan and its offer; the date; the method,
+  // who submitted it and the review in secondary text.
   Widget _buildNarrowCard(_Submission s) {
     final submitted = s.submittedAt;
     final methodLine = [if (s.method.isNotEmpty) context.l10n.paymentMethodLabel(s.method), if (s.reference.isNotEmpty) s.reference].join(' · ');
+    final radius = BorderRadius.circular(PolishMetrics.cardRadius);
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
+        color: context.colors.surface,
+        borderRadius: radius,
+        border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
       ),
-      // Clipped so the fill follows the card's rounded corners (UI1: no
-      // coloured bar down the left; the outcome is in its chip).
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppRadius.r10),
-        child: Container(
-          decoration: BoxDecoration(
-            color: context.colors.surface,
-          ),
-          padding: const EdgeInsets.all(AppSpacing.s12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.all(AppSpacing.s12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(_planName(s).isEmpty ? '-' : _planName(s),
-                        style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.bold)),
-                  ),
-                  const SizedBox(width: AppSpacing.s8),
-                  Text(Money.format(s.amount), style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold)),
-                ],
+              Expanded(
+                child: Text(Money.format(s.amount),
+                    style: TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold, color: context.colors.textPrimary)),
               ),
-              if (s.promotionLabel != null && s.promotionLabel!.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.s2),
-                Text(s.promotionLabel!, style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
-              ],
-              const SizedBox(height: AppSpacing.s6),
-              Row(
-                children: [
-                  _statusChip(s.status),
-                  const SizedBox(width: AppSpacing.s8),
-                  if (submitted != null)
-                    Expanded(
-                      child: Text(_dateTimeFormat.format(submitted),
-                          style: TextStyle(fontSize: _phone ? AppFontSize.f12 : AppFontSize.f11_5, color: context.colors.textHint)),
-                    ),
-                ],
-              ),
-              if (methodLine.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.s6),
-                Text(methodLine, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft)),
-              ],
-              if (s.submittedBy != null) ...[
-                const SizedBox(height: AppSpacing.s4),
-                Text(context.l10n.reports_submittedBy(s.submittedBy!),
-                    style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft)),
-              ],
-              if (s.status != PaymentSubmissionStatus.pending.key) ...[
-                const SizedBox(height: AppSpacing.s8),
-                _detailsFor(s),
-              ],
+              const SizedBox(width: PolishMetrics.gapInGroup),
+              Flexible(child: _statusDot(s.status)),
             ],
           ),
-        ),
+          const SizedBox(height: AppSpacing.s4),
+          Text(
+            [if (_planName(s).isNotEmpty) _planName(s), if (s.promotionLabel != null && s.promotionLabel!.isNotEmpty) s.promotionLabel!]
+                .join(' · '),
+            style: const TextStyle(fontSize: AppFontSize.f14),
+          ),
+          if (submitted != null) ...[
+            const SizedBox(height: AppSpacing.s2),
+            Text(_dateTimeFormat.format(submitted), style: _secondary),
+          ],
+          if (methodLine.isNotEmpty) ...[
+            const SizedBox(height: PolishMetrics.gapInGroup),
+            Text(methodLine, style: _secondary),
+          ],
+          if (s.submittedBy != null) ...[
+            const SizedBox(height: AppSpacing.s4),
+            Text(context.l10n.reports_submittedBy(s.submittedBy!), style: _secondary),
+          ],
+          if (s.status != PaymentSubmissionStatus.pending.key) ...[
+            const SizedBox(height: PolishMetrics.gapInGroup),
+            _detailsFor(s),
+          ],
+        ],
       ),
     );
   }
