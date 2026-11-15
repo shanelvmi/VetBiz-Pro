@@ -15,6 +15,8 @@ import 'package:vetbiz_pro/services/auth_service.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
+import 'real_font.dart';
+
 // AN4: the login page with a fake Firestore, in any theme, brightness,
 // language and width; the Updates added as documents.
 
@@ -43,6 +45,9 @@ class _LongWelcomeDelegate extends LocalizationsDelegate<AppLocalizations> {
   bool shouldReload(_LongWelcomeDelegate old) => false;
 }
 
+/// UI8: text drawn in Roboto, as on a phone (where a line wraps).
+ThemeData _inRoboto(ThemeData t) => t.copyWith(textTheme: t.textTheme.apply(fontFamily: realFontFamily));
+
 /// Builds the login page; [settle] false leaves the Updates' first answer
 /// pending (one frame only).
 Future<void> pumpLogin(
@@ -56,9 +61,16 @@ Future<void> pumpLogin(
   bool longWelcome = false,
   bool settle = true,
   bool reduceMotion = false,
+  // UI8: a stand-in for the account service, the keyboard's height, and
+  // the language following UiSettingsProvider (the phone's EN | SW).
+  AuthService? auth,
+  double keyboard = 0,
+  bool followLanguage = false,
+  bool realFont = false,
 }) async {
   tester.view.physicalSize = Size(width, height);
   tester.view.devicePixelRatio = 1;
+  tester.view.viewInsets = FakeViewPadding(bottom: keyboard);
   addTearDown(tester.view.reset);
   SharedPreferences.setMockInitialValues({});
   final ui = (await tester.runAsync(() async {
@@ -68,17 +80,20 @@ Future<void> pumpLogin(
     }
     return p;
   }))!;
+  // A new route each time, as navigating does (built once: a language change
+  // rebuilds the app, not the page).
+  final home = KeyedSubtree(key: UniqueKey(), child: LoginScreen(authService: auth ?? _NoAuth(), firestore: db));
+  Widget app(Locale shown) => MaterialApp(
+        localizationsDelegates: [if (longWelcome) const _LongWelcomeDelegate(), ...AppLocalizations.localizationsDelegates],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: shown,
+        theme: realFont ? _inRoboto(AppTheme.build(theme, brightness)) : AppTheme.build(theme, brightness),
+        builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion), child: child!),
+        home: home,
+      );
   await tester.pumpWidget(ChangeNotifierProvider.value(
     value: ui,
-    child: MaterialApp(
-      localizationsDelegates: [if (longWelcome) const _LongWelcomeDelegate(), ...AppLocalizations.localizationsDelegates],
-      supportedLocales: AppLocalizations.supportedLocales,
-      locale: locale,
-      theme: AppTheme.build(theme, brightness),
-      builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion), child: child!),
-      // A new route each time, as navigating does.
-      home: KeyedSubtree(key: UniqueKey(), child: LoginScreen(authService: _NoAuth(), firestore: db)),
-    ),
+    child: followLanguage ? Consumer<UiSettingsProvider>(builder: (_, ui, _) => app(ui.locale)) : app(locale),
   ));
   if (!settle) return;
   await tester.pump();
