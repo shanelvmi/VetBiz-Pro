@@ -542,6 +542,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _buildFilterRow(Map<NotificationCategory, int> counts, int totalUnread, int total) {
     return FilterRow(
       keyPrefix: 'notifications-filter-',
+      // On a phone All and Unread stay fixed and in view; only the
+      // categories scroll sideways. Wider windows have room for the whole row.
+      pinned: _phone ? 2 : 0,
       values: [_rowAll, _rowUnread, for (final c in _cardCategories) c.name],
       selected: _rowSelected,
       label: (v) => switch (v) {

@@ -26,6 +26,11 @@ class FilterRow extends StatelessWidget {
   /// Around the segments (the page's side padding by default).
   final EdgeInsetsGeometry padding;
 
+  /// The first [pinned] segments stay fixed at the start and always visible;
+  /// only the rest scroll sideways (POL1 follow-up: a phone keeps All and
+  /// Unread in view). 0, the default, scrolls the whole row.
+  final int pinned;
+
   const FilterRow({
     super.key,
     required this.values,
@@ -35,22 +40,42 @@ class FilterRow extends StatelessWidget {
     this.count,
     this.keyPrefix,
     this.padding = const EdgeInsets.symmetric(horizontal: PolishMetrics.pagePadding),
+    this.pinned = 0,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final fixed = pinned.clamp(0, values.length);
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: colors.divider, width: PolishMetrics.hairline)),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: padding,
-        child: Row(
-          children: [for (final v in values) _segment(context, v)],
-        ),
-      ),
+      child: fixed == 0
+          ? SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: padding,
+              child: Row(
+                children: [for (final v in values) _segment(context, v)],
+              ),
+            )
+          : Padding(
+              padding: padding,
+              child: Row(
+                children: [
+                  for (final v in values.take(fixed)) _segment(context, v),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      key: keyPrefix == null ? null : ValueKey('${keyPrefix}scroll'),
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [for (final v in values.skip(fixed)) _segment(context, v)],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 

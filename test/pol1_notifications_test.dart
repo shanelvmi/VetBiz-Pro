@@ -192,6 +192,35 @@ void main() {
     }, skip: _skip);
   }
 
+  for (final locale in ['en', 'sw']) {
+    testWidgets('phone 360x640 ($locale): All and Unread stay fixed and visible; only the categories scroll', (tester) async {
+      final c = await _feed(tester);
+      await pumpNotifications(tester, c, width: 360, height: 640, locale: locale);
+      expect(tester.takeException(), isNull);
+      final all = find.byKey(const ValueKey('notifications-filter-all'));
+      final unread = find.byKey(const ValueKey('notifications-filter-unread'));
+      final before = (tester.getRect(all), tester.getRect(unread));
+      // Scroll the categories to the last one.
+      await tester.drag(find.byKey(const ValueKey('notifications-filter-scroll')), const Offset(-3000, 0));
+      await tester.pumpAndSettle();
+      final last = find.byKey(const ValueKey('notifications-filter-system'));
+      expect(tester.getRect(last).right, lessThanOrEqualTo(360), reason: 'the last category scrolled into view');
+      expect((tester.getRect(all), tester.getRect(unread)), before, reason: 'All and Unread did not move');
+      for (final pinned in [all, unread]) {
+        final r = tester.getRect(pinned);
+        expect(r.left, greaterThanOrEqualTo(0));
+        expect(r.right, lessThanOrEqualTo(360));
+      }
+      expect(find.descendant(of: find.byKey(const ValueKey('notifications-filter-scroll')), matching: unread), findsNothing,
+          reason: 'Unread is outside the scrolling part');
+      // Still a filter: Unread shows the unread rows.
+      await tester.tap(unread);
+      await tester.pumpAndSettle();
+      expect(tester.widget<Text>(find.byKey(const ValueKey('notifications-filter-unread-count'))).data,
+          '${c.items.where((i) => !i.isRead).length}');
+    }, skip: _skip);
+  }
+
   testWidgets('the status filter still compares its stored values: Read shows only the read rows', (tester) async {
     final c = await _feed(tester);
     await pumpNotifications(tester, c, width: 1200, height: 900);
