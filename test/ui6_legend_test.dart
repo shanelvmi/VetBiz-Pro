@@ -16,7 +16,7 @@ import 'helpers/phone_home_harness.dart';
 import 'helpers/real_font.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _legend = ValueKey('home-chart-legend');
 const _solid = ValueKey('home-chart-legend-solid');

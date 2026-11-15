@@ -643,7 +643,14 @@ class HomeChartMetrics {
   static const double previousLine = 1.5;
   static const List<int> dash = [4, 4];
   static const double areaAlpha = AppAlpha.a15;
-  static const double swatch = AppSpacing.s12;
+
+  /// UI6: the legend's swatches, [legendSwatchWidth] x [legendSwatchHeight];
+  /// the previous period's is [legendDashes] dashes of [legendDash], as its
+  /// dashed line (two of 5 with a 4 gap in 14).
+  static const double legendSwatchWidth = AppSpacing.s14;
+  static const double legendSwatchHeight = AppSpacing.s2;
+  static const double legendDash = 5;
+  static const int legendDashes = 2;
 
   /// Vet services bars: [barFill] of a day's width, at least [barMinWidth].
   static const double barFill = 0.5;

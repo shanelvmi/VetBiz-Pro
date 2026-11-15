@@ -286,14 +286,22 @@ class _Legend extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: HomeChartMetrics.swatch,
-          height: HomeChartMetrics.line,
+          key: ValueKey(dashed ? 'home-chart-legend-dashed' : 'home-chart-legend-solid'),
+          width: HomeChartMetrics.legendSwatchWidth,
+          height: HomeChartMetrics.legendSwatchHeight,
+          // UI6: each dash has its own height; under the Row's loose height
+          // a bare ColoredBox was drawn 0 px high and the dashes vanished.
           child: dashed
               ? Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    for (var i = 0; i < 2; i++)
-                      SizedBox(width: HomeChartMetrics.swatch / 3, child: ColoredBox(color: color)),
+                    for (var i = 0; i < HomeChartMetrics.legendDashes; i++)
+                      SizedBox(
+                        key: ValueKey('home-chart-legend-dash-$i'),
+                        width: HomeChartMetrics.legendDash,
+                        height: HomeChartMetrics.legendSwatchHeight,
+                        child: DecoratedBox(decoration: BoxDecoration(color: color)),
+                      ),
                   ],
                 )
               : ColoredBox(color: color),
