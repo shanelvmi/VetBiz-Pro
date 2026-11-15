@@ -8,10 +8,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/screens/register_screen.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'package:vetbiz_pro/theme/app_icons.dart';
+import 'package:vetbiz_pro/theme/app_motion.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
+import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/theme/color_math.dart';
 import 'package:vetbiz_pro/theme/theme_context.dart';
 import 'package:vetbiz_pro/widgets/auth_footer.dart';
@@ -184,4 +187,20 @@ void main() {
     expect(_rect(tester, find.byKey(RegisterScreen.phoneBrandKey)).top, 0);
     await finishRegister(tester);
   }, skip: _skip);
+
+  for (final reduced in [false, true]) {
+    testWidgets('the strip bar: ${reduced ? 'reduced motion, no animation' : 'slides to the new step'}', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: AppTheme.build(AppColorTheme.pasture, Brightness.light),
+        home: MediaQuery(
+          data: MediaQueryData(disableAnimations: reduced),
+          child: const Scaffold(body: WizardStepHeader(current: 2, total: 5, title: '', strip: true)),
+        ),
+      ));
+      final part = tester.widget<AnimatedContainer>(find.byKey(WizardStepHeader.segmentKey(1)));
+      expect(part.duration, reduced ? Duration.zero : AppMotion.fast);
+    }, skip: _skip);
+  }
 }
