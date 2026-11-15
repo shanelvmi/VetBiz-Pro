@@ -32,6 +32,14 @@ void main() {
               chooseOwner: !assistant,
             );
             await (assistant ? toAssistantStep(tester, step, l10n) : toOwnerStep(tester, step, l10n));
+            // UI8: from the step's top. A step opens scrolled to its first empty
+            // field; a target scrolled half under the pinned strip is counted
+            // small by the guideline, which forgives only the screen's edges.
+            for (final s in find.byType(Scrollable).evaluate()) {
+              final position = ((s as StatefulElement).state as ScrollableState).position;
+              if (position.pixels != 0) position.jumpTo(0);
+            }
+            await tester.pumpAndSettle();
             await checkCase(tester, phone: true, where: 'register $where');
             await finishRegister(tester);
           }, skip: _skip);

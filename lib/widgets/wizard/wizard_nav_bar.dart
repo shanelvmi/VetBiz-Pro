@@ -19,6 +19,14 @@ class WizardNavBar extends StatelessWidget {
   final bool isLast;
   final bool submitting;
   final bool pinned;
+
+  /// UI8, the phone register page: Back is a square icon button (the same
+  /// outline, its name as the tooltip) beside a full-width Continue, both
+  /// AuthPhoneMetrics.buttonHeight high. Back keeps every answer, as before.
+  final bool squareBack;
+
+  /// For tests: the square Back.
+  static const squareBackKey = ValueKey<String>('wizard-square-back');
   final String finishLabel;
   final VoidCallback onBack;
   final VoidCallback onContinue;
@@ -29,6 +37,7 @@ class WizardNavBar extends StatelessWidget {
     required this.isLast,
     this.submitting = false,
     this.pinned = false,
+    this.squareBack = false,
     required this.finishLabel,
     required this.onBack,
     required this.onContinue,
@@ -39,10 +48,27 @@ class WizardNavBar extends StatelessWidget {
     final colors = context.colors;
     const shape = RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(WizardMetrics.buttonRadius)));
     const padding = EdgeInsets.symmetric(horizontal: WizardMetrics.buttonPaddingH);
-    const minimumSize = Size(0, WizardMetrics.buttonHeight);
+    final minimumSize = Size(0, squareBack ? AuthPhoneMetrics.buttonHeight : WizardMetrics.buttonHeight);
     const label = TextStyle(fontSize: WizardFontSize.button, fontWeight: AppFontWeight.semibold);
 
-    final back = OutlinedButton(
+    final back = squareBack
+        ? OutlinedButton(
+            key: squareBackKey,
+            onPressed: submitting ? null : onBack,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: colors.primary,
+              side: BorderSide(color: colors.primary),
+              fixedSize: const Size.square(AuthPhoneMetrics.buttonHeight),
+              minimumSize: const Size.square(AuthPhoneMetrics.buttonHeight),
+              padding: EdgeInsets.zero,
+              shape: shape,
+            ),
+            child: Tooltip(
+              message: context.l10n.wizard_back,
+              child: Icon(Icons.arrow_back, size: AppIconSize.i24, semanticLabel: context.l10n.wizard_back),
+            ),
+          )
+        : OutlinedButton(
       onPressed: submitting ? null : onBack,
       style: OutlinedButton.styleFrom(
         foregroundColor: colors.primary,
@@ -78,7 +104,15 @@ class WizardNavBar extends StatelessWidget {
 
     // Continue stays at the right on the first step too, where Back is
     // missing, so it does not jump when the person moves on.
-    final row = Row(
+    final row = squareBack
+        // UI8: Continue takes the rest of the row (the whole row on step 1).
+        ? Row(
+            children: [
+              if (!isFirst) ...[back, const SizedBox(width: WizardMetrics.navGap)],
+              Expanded(child: next),
+            ],
+          )
+        : Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         if (isFirst) const SizedBox.shrink() else back,

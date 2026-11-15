@@ -17,11 +17,30 @@ class WizardStepHeader extends StatelessWidget {
   final String title;
   final bool centered;
 
-  const WizardStepHeader({super.key, required this.current, required this.total, required this.title, this.centered = false});
+  /// UI8, the phone register page's tinted strip: "Step n of total" at the
+  /// left with [trailing] (the page's controls) at the right, then the bar
+  /// in [total] parts, the done ones filled; no title (the step's own
+  /// heading is under the strip).
+  final bool strip;
+  final Widget? trailing;
+
+  /// For tests: the strip's part [i] of the bar.
+  static ValueKey<String> segmentKey(int i) => ValueKey<String>('wizard-step-segment-$i');
+
+  const WizardStepHeader({
+    super.key,
+    required this.current,
+    required this.total,
+    required this.title,
+    this.centered = false,
+    this.strip = false,
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    if (strip) return _buildStrip(context);
     final count = Text(
       context.l10n.wizard_stepOf(current, total),
       textAlign: centered ? TextAlign.center : null,
@@ -71,6 +90,49 @@ class WizardStepHeader extends StatelessWidget {
             backgroundColor: colors.divider,
             borderRadius: BorderRadius.circular(WizardMetrics.progressRadius),
           ),
+        ),
+      ],
+    );
+  }
+}
+
+extension on WizardStepHeader {
+  Widget _buildStrip(BuildContext context) {
+    final colors = context.colors;
+    final duration = MediaQuery.disableAnimationsOf(context) ? Duration.zero : AppMotion.fast;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                context.l10n.wizard_stepOf(current, total),
+                style: TextStyle(fontSize: WizardFontSize.step, fontWeight: AppFontWeight.semibold, color: colors.textPrimary),
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
+        ),
+        const SizedBox(height: AuthPhoneMetrics.stripBarGap),
+        Row(
+          children: [
+            for (var i = 0; i < total; i++) ...[
+              if (i > 0) const SizedBox(width: AuthPhoneMetrics.progressGap),
+              Expanded(
+                child: AnimatedContainer(
+                  key: WizardStepHeader.segmentKey(i),
+                  duration: duration,
+                  height: AuthPhoneMetrics.progressHeight,
+                  decoration: BoxDecoration(
+                    color: i < current ? colors.primary : colors.divider,
+                    borderRadius: BorderRadius.circular(AuthPhoneMetrics.progressRadius),
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ],
     );

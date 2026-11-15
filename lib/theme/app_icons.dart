@@ -50,6 +50,16 @@ abstract final class AppIcons {
   static const currency = AppIcon(Icons.toll_outlined, Icons.toll);
   static const price = AppIcon(Icons.sell_outlined, Icons.sell);
 
+  /// UI8: the round icon above each step of the register wizard on a phone:
+  /// the account type (a compass), about you, the facility (a building) or
+  /// the invite (a key), signing in (a lock), and the review (a check).
+  static const stepRole = AppIcon(Icons.explore_outlined, Icons.explore);
+  static const stepAboutYou = AppIcon(Icons.person_outline, Icons.person);
+  static const stepFacility = AppIcon(Icons.apartment_outlined, Icons.apartment);
+  static const stepInvite = AppIcon(Icons.vpn_key_outlined, Icons.vpn_key);
+  static const stepSignIn = AppIcon(Icons.lock_outline, Icons.lock);
+  static const stepReview = AppIcon(Icons.check_circle_outline, Icons.check_circle);
+
   /// The Products and Stock Store sort dropdowns: not a concept, but its own
   /// glyph so it never looks like Transactions.
   static const sort = Icons.sort;
@@ -81,5 +91,11 @@ abstract final class AppIcons {
     'activityLog': activityLog,
     'currency': currency,
     'price': price,
+    'stepRole': stepRole,
+    'stepAboutYou': stepAboutYou,
+    'stepFacility': stepFacility,
+    'stepInvite': stepInvite,
+    'stepSignIn': stepSignIn,
+    'stepReview': stepReview,
   };
 }
