@@ -16,6 +16,8 @@ import '../widgets/auth_background.dart';
 import '../widgets/auth_card.dart';
 import '../widgets/auth_panel.dart';
 import '../widgets/auth_footer.dart';
+import '../widgets/auth_help_sheet.dart';
+import '../widgets/auth_phone_header.dart';
 import '../widgets/auth_theme_toggle.dart';
 import '../utils/navigator_key.dart';
 import '../config/app_timeouts.dart';
@@ -504,7 +506,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             ? context.colors.dangerAccent.withValues(alpha: AppAlpha.a70)
             : (flat ? context.colors.textMuted : context.colors.border);
     final focusColor = hasError ? context.colors.dangerAccent : context.colors.primary;
-    final radius = flat ? PhoneLoginMetrics.fieldRadius : AppRadius.r16;
+    final radius = flat ? AuthPhoneMetrics.fieldRadius : AppRadius.r16;
     return InputDecoration(
       hintText: hint,
       hintStyle: TextStyle(color: flat ? context.colors.textSecondary : context.colors.textDisabled),
@@ -517,7 +519,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       filled: true,
       fillColor: context.colors.surfaceMuted,
       isDense: true,
-      constraints: flat ? const BoxConstraints.tightFor(height: PhoneLoginMetrics.fieldHeight) : null,
+      constraints: flat ? const BoxConstraints.tightFor(height: AuthPhoneMetrics.fieldHeight) : null,
       contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s16),
       border: _fieldBorder(restColor, radius: radius),
       enabledBorder: _fieldBorder(restColor, radius: radius),
@@ -686,6 +688,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         Text(context.l10n.common_email, style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),
                         const SizedBox(height: AppSpacing.s6),
                         TextField(
+                          key: flat ? _emailBox : null,
                           controller: emailController,
                           style: TextStyle(color: context.colors.textPrimary),
                           autofocus: true,
@@ -693,6 +696,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           textInputAction: TextInputAction.next,
                           onChanged: (_) => _onCredentialsEdited(),
                           onSubmitted: (_) => passwordFocusNode.requestFocus(),
+                          scrollPadding: flat ? _phoneScrollPadding(_emailBox) : _defaultScrollPadding,
                           decoration: _loginInputDecoration(
                             hint: context.l10n.login_emailHint,
                             icon: Icons.mail_outline,
@@ -704,6 +708,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         Text(context.l10n.common_password, style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.textPrimary)),
                         const SizedBox(height: AppSpacing.s6),
                         TextField(
+                          key: flat ? _passwordBox : null,
                           controller: passwordController,
                           focusNode: passwordFocusNode,
                           obscureText: _password.obscured,
@@ -714,6 +719,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           textInputAction: TextInputAction.done,
                           onChanged: (_) => _onCredentialsEdited(),
                           onSubmitted: (_) => _login(),
+                          scrollPadding: flat ? _phoneScrollPadding(_passwordBox) : _defaultScrollPadding,
                           decoration: _loginInputDecoration(
                             hint: context.l10n.login_passwordHint,
                             icon: Icons.lock_outline,
@@ -770,13 +776,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           ),
                         ),
                         const SizedBox(height: AppSpacing.s20),
-                        _AnimatedLoginButton(
-                          key: LoginScreen.signInButtonKey,
-                          height: flat ? PhoneLoginMetrics.buttonHeight : kMinInteractiveDimension,
-                          isLoading: isLoggingIn,
-                          onPressed: isLoggingIn ? null : _login,
-                          primaryColor: context.colors.brandSurface,
-                          accentColor: context.colors.brandTealOnBrand,
+                        _phoneSignInBox(
+                          flat,
+                          _AnimatedLoginButton(
+                            key: LoginScreen.signInButtonKey,
+                            height: flat ? AuthPhoneMetrics.buttonHeight : kMinInteractiveDimension,
+                            isLoading: isLoggingIn,
+                            onPressed: isLoggingIn ? null : _login,
+                            primaryColor: context.colors.brandSurface,
+                            accentColor: context.colors.brandTealOnBrand,
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.s20),
                         // "Don't have an account? " stays plain; only Register is the link.
@@ -828,6 +837,28 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   // The form keeps its state (focus, typing, the button's animation) when
   // the Updates arrive and the layout around it changes.
   final GlobalKey _loginFormKey = GlobalKey();
+
+  // UI8, the phone page: when the keyboard brings a field into view it
+  // brings Sign in with it, so the button stays on a small phone. Flutter
+  // reveals the caret plus the field's scrollPadding; below it, the padding
+  // reaches the button's bottom, measured on the last layout (the button's
+  // distance from the field does not change when the keyboard opens). The
+  // card keeps Flutter's default.
+  static const _defaultScrollPadding = EdgeInsets.all(AppSpacing.s20);
+  final GlobalKey _emailBox = GlobalKey();
+  final GlobalKey _passwordBox = GlobalKey();
+  final GlobalKey _signInBox = GlobalKey();
+
+  Widget _phoneSignInBox(bool flat, Widget button) => flat ? KeyedSubtree(key: _signInBox, child: button) : button;
+
+  EdgeInsets _phoneScrollPadding(GlobalKey field) {
+    final box = field.currentContext?.findRenderObject();
+    final button = _signInBox.currentContext?.findRenderObject();
+    if (box is! RenderBox || button is! RenderBox || !box.attached || !button.attached) return _defaultScrollPadding;
+    // From the field's middle (the caret's line) to the button's bottom.
+    final below = button.localToGlobal(Offset(0, button.size.height)).dy - box.localToGlobal(Offset(0, box.size.height / 2)).dy;
+    return _defaultScrollPadding.copyWith(top: AppSpacing.s8, bottom: below + AppSpacing.s8);
+  }
   Widget _loginForm({bool flat = false}) => KeyedSubtree(key: _loginFormKey, child: _buildLoginForm(flat: flat));
 
   // AN4 (owner): two cards, no grey panel behind the login card (it used
@@ -871,88 +902,60 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
-  // ==================== PHONE: ONE FLAT PAGE (LG1) ====================
-  // The owner: the first screen a customer sees, calm and modern - no frame,
-  // no header bar, no cards. A compact brand row, the form and the Updates
-  // straight on the page's background in one centred column, the footer
-  // below. The form is the same widget as in the card (flat), so every
-  // behaviour is the card's. The whole page enters as one, once (AN6's
-  // rule: never on a rebuild, a resize, a theme or language change).
-  Widget _buildPhonePage(Widget updates) {
-    return SafeArea(
-      child: LayoutBuilder(
-        builder: (context, viewport) => SingleChildScrollView(
-          child: ConstrainedBox(
-            // At least the screen's height, so the footer reaches the bottom.
-            constraints: BoxConstraints(minHeight: viewport.maxHeight),
-            child: AuthEntrance(
-              animation: _entrance,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: PhoneLoginMetrics.maxWidth),
-                      child: Padding(
-                        key: LoginScreen.phonePageKey,
-                        padding: const EdgeInsets.fromLTRB(
-                          PhoneLoginMetrics.sidePadding,
-                          PhoneLoginMetrics.topPadding,
-                          PhoneLoginMetrics.sidePadding,
-                          PhoneLoginMetrics.bottomPadding,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            _buildPhoneBrandRow(),
-                            const SizedBox(height: PhoneLoginMetrics.brandGap),
-                            _loginForm(flat: true),
-                            const SizedBox(height: PhoneLoginMetrics.updatesGap),
-                            // The Updates as they are in the card (the same
-                            // reserved 16:9 frame, so their answer moves
-                            // nothing above), without the card.
-                            KeyedSubtree(key: LoginScreen.phoneUpdatesKey, child: updates),
-                          ],
-                        ),
-                      ),
+  // ==================== PHONE: A TINTED HEADER AND THE FORM (UI8) ====================
+  // LG1 gave phones one flat page: no frame, no header bar, no cards, the
+  // form the card's own widget (flat), so every behaviour is the card's.
+  // UI8 (owner): a tinted header at the top (the mark, the name, the
+  // tagline; EN | SW, Light/Dark and Help), the form below it, and no
+  // Updates and no footer: Help opens the footer's links in a sheet, and
+  // the UpdatesCarousel is not mounted on a phone at all, so this page
+  // reads no Updates (UI9 is to show them on Home). While the keyboard is
+  // open the header is one line and the focused field comes into view with
+  // Sign in below it, so the button stays on a small phone. The header, then
+  // the form, enter once (AN6's rule: never on a rebuild, a resize, a theme
+  // or language change).
+  Widget _buildPhonePage() {
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AuthEntrance(
+          animation: _entrance,
+          child: AuthPhoneHeader(
+            key: LoginScreen.phoneBrandKey,
+            tagline: context.l10n.login_phoneTagline,
+            collapsed: keyboardOpen,
+            onHelp: () => showAuthHelpSheet(context),
+          ),
+        ),
+        Expanded(
+          child: SafeArea(
+            top: false,
+            // The keyboard brings the focused field and Sign in into view
+            // together (_phoneScrollPadding).
+            child: SingleChildScrollView(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: PhoneLoginMetrics.maxWidth),
+                  child: Padding(
+                    key: LoginScreen.phonePageKey,
+                    padding: const EdgeInsets.fromLTRB(
+                      PhoneLoginMetrics.sidePadding,
+                      AuthPhoneMetrics.contentTop,
+                      PhoneLoginMetrics.sidePadding,
+                      PhoneLoginMetrics.bottomPadding,
+                    ),
+                    child: AuthEntrance(
+                      animation: _entrance,
+                      delay: AppMotion.authEntranceStagger,
+                      child: _loginForm(flat: true),
                     ),
                   ),
-                  const AuthFooter(),
-                ],
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  // The VB mark and the app name at the left, the Light/Dark switch at the
-  // right; no bar behind them.
-  Widget _buildPhoneBrandRow() {
-    return Row(
-      key: LoginScreen.phoneBrandKey,
-      children: [
-        Container(
-          width: PhoneLoginMetrics.mark,
-          height: PhoneLoginMetrics.mark,
-          decoration: BoxDecoration(color: context.colors.brandSurface, shape: BoxShape.circle),
-          alignment: Alignment.center,
-          child: Text(
-            AppInfo.logoMark,
-            style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14),
-          ),
-        ),
-        const SizedBox(width: PhoneLoginMetrics.markGap),
-        Expanded(
-          child: Text(
-            AppInfo.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: context.colors.textPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
-          ),
-        ),
-        const AuthThemeToggle(onPage: true),
       ],
     );
   }
@@ -975,19 +978,20 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           // (G3).
           // The Updates (AN2) come from the app's one store (AN6) and always
           // fill the left card: slides, a skeleton or a calm panel.
-          // LG1: phones get one flat page instead (_buildPhonePage).
-          UpdatesCarousel(
-            firestore: _db,
-            builder:
-                (context, updates) =>
-                    AppLayout.isPhone(context)
-                        ? _buildPhonePage(updates)
-                        : AuthCard(
-                          header: AuthEntrance(animation: _entrance, child: _buildHeader()),
-                          below: const AuthFooter(),
-                          bodyBuilder: (context, layout) => _buildBody(layout, updates),
-                        ),
-          ),
+          // LG1: phones get their own page instead (_buildPhonePage); UI8:
+          // without the Updates, so the carousel is mounted on wide only.
+          if (AppLayout.isPhone(context))
+            _buildPhonePage()
+          else
+            UpdatesCarousel(
+              firestore: _db,
+              builder:
+                  (context, updates) => AuthCard(
+                    header: AuthEntrance(animation: _entrance, child: _buildHeader()),
+                    below: const AuthFooter(),
+                    bodyBuilder: (context, layout) => _buildBody(layout, updates),
+                  ),
+            ),
         ],
       ),
     );

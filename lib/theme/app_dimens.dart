@@ -236,7 +236,7 @@ class AuthPhoneMetrics {
   /// The keyboard is open: the header collapses to one line, a smaller mark.
   static const double collapsedMark = 32;
   static const double collapsedMarkRadius = AppRadius.r10;
-  static const double collapsedPaddingV = AppSpacing.s8;
+  static const double collapsedPaddingV = AppSpacing.s4;
 
   /// EN | SW: each half a 48 px target around a smaller pill.
   static const double languageSegmentWidth = 44;

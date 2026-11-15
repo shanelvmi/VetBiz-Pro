@@ -2790,6 +2790,8 @@
   "@login_rememberMe": {"x-review":"draft"},
   "login_forgotPassword": "Umesahau Nenosiri?",
   "@login_forgotPassword": {"x-review":"draft"},
+  "login_phoneTagline": "Endesha agrovet au kituo chako cha mifugo mahali pamoja",
+  "@login_phoneTagline": {"x-review":"draft"},
   "login_noAccount": "Huna akaunti? ",
   "@login_noAccount": {"x-review":"draft"},
   "login_register": "Jisajili",

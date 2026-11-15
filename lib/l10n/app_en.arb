@@ -2790,6 +2790,8 @@
   "@login_rememberMe": {"description":"Login checkbox: keep the email for next time (only the email; AUTH-1)."},
   "login_forgotPassword": "Forgot Password?",
   "@login_forgotPassword": {"description":"Login link that sends a password reset email."},
+  "login_phoneTagline": "Run your agrovet or vet centre in one place",
+  "@login_phoneTagline": {"description":"UI8: the line under the app name in the sign-in page's header on a phone."},
   "login_noAccount": "Don't have an account? ",
   "@login_noAccount": {"description":"Login, before the Register link (ends with a space)."},
   "login_register": "Register",

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:vetbiz_pro/config/app_info.dart';
-import 'package:vetbiz_pro/config/app_limits.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/screens/login_screen.dart';
 import 'package:vetbiz_pro/theme/app_dimens.dart';
@@ -13,10 +12,10 @@ import 'package:vetbiz_pro/theme/theme_context.dart';
 import 'package:vetbiz_pro/widgets/auth_background.dart';
 import 'package:vetbiz_pro/widgets/auth_card.dart';
 import 'package:vetbiz_pro/widgets/auth_entrance.dart';
+import 'package:vetbiz_pro/widgets/auth_language_switch.dart';
 import 'package:vetbiz_pro/widgets/auth_theme_toggle.dart';
 import 'package:vetbiz_pro/widgets/updates_card.dart';
 import 'package:vetbiz_pro/widgets/updates_carousel.dart';
-import 'package:vetbiz_pro/widgets/updates_parts.dart';
 
 import 'helpers/login_harness.dart';
 
@@ -27,11 +26,13 @@ import 'helpers/login_harness.dart';
 // button, then the Updates as a flat section (no card) and the footer. The
 // form fits without scrolling on common phones; the page enters once, as one.
 // Tablets and wide windows: test/lg1_wide_login_unchanged_test.dart.
+// UI8 (owner) changed three things, so these checks follow: the brand row is
+// now a tinted header (AuthPhoneHeader; test/ui8_phone_login_test.dart),
+// the page has no Updates and no footer, and the fields' radius is 16.
 const _skip = false;
 
 const _page = ValueKey<String>('login-phone-page');
 const _brand = ValueKey<String>('login-phone-brand');
-const _updates = ValueKey<String>('login-phone-updates');
 const _button = ValueKey<String>('login-sign-in-button');
 
 final _en = lookupAppLocalizations(const Locale('en'));
@@ -86,10 +87,9 @@ void main() {
     expect(find.byKey(UpdatesCard.welcomeKey), findsNothing);
     final form = find.byKey(LoginScreen.loginCardKey);
     expect(_upToPage(tester, form).where(_decorated), isEmpty, reason: 'nothing drawn around the form');
-    final updates = find.byKey(_updates);
-    expect(_upToPage(tester, updates).where(_decorated), isEmpty, reason: 'nothing drawn around the Updates');
-    expect(find.descendant(of: updates, matching: find.text(_en.updates_label)), findsOneWidget);
-    expect(find.descendant(of: updates, matching: find.byType(UpdatesDots)), findsOneWidget);
+    // UI8: no Updates on a phone.
+    expect(find.byType(UpdatesCarousel), findsNothing);
+    expect(find.text(_en.updates_label), findsNothing);
     // The only gradient left is the Sign in button's own.
     final gradients = find.byWidgetPredicate((w) {
       final d = w is Container ? w.decoration : (w is DecoratedBox ? w.decoration : null);
@@ -98,7 +98,8 @@ void main() {
     for (final e in gradients.evaluate()) {
       expect(_inside(e, (w) => w.key == _button), isTrue, reason: 'a gradient outside the button: ${e.widget}');
     }
-    // The brand row: the mark, the name and the toggle, at the page's top.
+    // The brand (UI8: the tinted header): the mark, the name and the toggle,
+    // at the page's top.
     final brand = find.byKey(_brand);
     expect(find.descendant(of: brand, matching: find.text(AppInfo.logoMark)), findsOneWidget);
     expect(find.descendant(of: brand, matching: find.text(AppInfo.name)), findsOneWidget);
@@ -108,7 +109,6 @@ void main() {
     // The column: at most 420 wide, 24 px in from the sides.
     expect(_rect(tester, form).left, 24);
     expect(_rect(tester, form).width, 390 - 48);
-    expect(_rect(tester, updates).top, greaterThan(_rect(tester, find.byKey(_button)).bottom));
   }, skip: _skip);
 
   testWidgets('560 wide (still a phone): the column keeps 420 at most', (tester) async {
@@ -117,7 +117,7 @@ void main() {
     expect(_rect(tester, find.byKey(LoginScreen.loginCardKey)).width, lessThanOrEqualTo(420 - 48));
   }, skip: _skip);
 
-  testWidgets('the fields: filled, 52 high, a 1 px border, 14 px radius, leading icons; the button 52 high', (tester) async {
+  testWidgets('the fields: filled, 52 high, a 1 px border, 16 px radius (UI8; was 14), leading icons; the button 52 high', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1), width: 390, height: 844);
     await _settle(tester);
     final colors = tester.element(find.byType(LoginScreen)).colors;
@@ -130,7 +130,7 @@ void main() {
       expect(d.fillColor, colors.surfaceMuted);
       final border = d.enabledBorder! as OutlineInputBorder;
       expect(border.borderSide.width, 1);
-      expect(border.borderRadius, BorderRadius.circular(14));
+      expect(border.borderRadius, BorderRadius.circular(16));
       expect(d.prefixIcon, isNotNull);
     }
     expect(tester.widget<TextField>(fields.at(1)).decoration!.suffixIcon, isNotNull, reason: 'the eye');
@@ -170,11 +170,15 @@ void main() {
         expect(ColorMath.contrast(border, colors.background), greaterThanOrEqualTo(3), reason: '$where field border');
         final areas = [find.byKey(_brand), find.byKey(LoginScreen.loginCardKey)];
         for (final area in areas) {
+          // UI8: the brand is on the header's tint (authFooterFill).
+          final page = area == areas.first ? colors.authFooterFill : colors.background;
           for (final e in find.descendant(of: area, matching: find.byType(RichText)).evaluate()) {
             if (_inside(e, (w) => w.key == _button || w is Icon)) continue;
+            // EN | SW on their pill: test/ui8_header_test.dart.
+            if (_inside(e, (w) => w is AuthLanguageSwitch)) continue;
             final color = (e.widget as RichText).text.style?.color;
             if (color == null) continue;
-            final behind = _inside(e, (w) => w is TextField) ? colors.surfaceMuted : colors.background;
+            final behind = _inside(e, (w) => w is TextField) ? colors.surfaceMuted : page;
             final text = (e.widget as RichText).text.toPlainText();
             if (text == AppInfo.logoMark) continue; // on its own mark, checked below
             expect(ColorMath.contrast(color, behind), greaterThanOrEqualTo(4.5), reason: '$where "$text"');
@@ -182,7 +186,7 @@ void main() {
           for (final e in find.descendant(of: area, matching: find.byType(Icon)).evaluate()) {
             if (_inside(e, (w) => w.key == _button)) continue;
             final color = IconTheme.of(e).color ?? (e.widget as Icon).color;
-            final behind = _inside(e, (w) => w is TextField || w is IconButton) ? colors.surfaceMuted : colors.background;
+            final behind = _inside(e, (w) => w is TextField || w is IconButton) ? colors.surfaceMuted : page;
             expect(ColorMath.contrast(color!, behind), greaterThanOrEqualTo(3), reason: '$where icon ${(e.widget as Icon).icon}');
           }
         }
@@ -190,38 +194,32 @@ void main() {
     }
   }, skip: _skip);
 
-  testWidgets('the Updates: none, one, several and loading keep the same card-less frame, and nothing above moves', (tester) async {
-    final rects = <String, (Rect, Rect)>{};
-    Future<void> measure(String name) async {
-      final frame = find.descendant(of: find.byKey(_updates), matching: find.byType(AspectRatio));
-      rects[name] = (_rect(tester, frame), _rect(tester, find.byKey(_button)));
-      final size = _rect(tester, frame).size;
-      expect(size.width / size.height, closeTo(AppLimits.posterAspectRatio, 0.01), reason: name);
-      expect(size.width, 390 - 48, reason: '$name: the full column, no card inset');
-    }
-
+  // UI8: no Updates on a phone, so what the store holds never moves the page.
+  testWidgets('none, one, several and loading Updates: no Updates frame, and the page does not move', (tester) async {
+    final buttons = <String, Rect>{};
     await pumpLogin(tester, await dbWithUpdates(3), width: 390, height: 844, settle: false, reduceMotion: true);
-    expect(find.byKey(UpdatesCarousel.skeletonKey), findsOneWidget);
-    await measure('loading');
+    buttons['loading'] = _rect(tester, find.byKey(_button));
     await tester.pump();
     await tester.pump();
-    await measure('several, after the answer');
+    buttons['several, after the answer'] = _rect(tester, find.byKey(_button));
     for (final n in [0, 1, 3]) {
       await pumpLogin(tester, n == 0 ? FakeFirebaseFirestore() : await dbWithUpdates(n), width: 390, height: 844, reduceMotion: true);
-      await measure('$n');
+      expect(find.byType(UpdatesCarousel), findsNothing, reason: '$n');
+      buttons['$n'] = _rect(tester, find.byKey(_button));
     }
-    final first = rects.values.first;
-    for (final MapEntry(:key, :value) in rects.entries) {
-      expect(value.$1, first.$1, reason: '$key: the frame');
-      expect(value.$2, first.$2, reason: '$key: the button above');
+    for (final MapEntry(:key, :value) in buttons.entries) {
+      expect(value, buttons.values.first, reason: key);
     }
   }, skip: _skip);
 
-  testWidgets('the entrance: one, for the whole page, once', (tester) async {
+  testWidgets('the entrance: the header, then the form, once', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1), width: 390, height: 844);
-    expect(find.descendant(of: find.byType(LoginScreen), matching: find.byType(AuthEntrance)), findsOneWidget);
-    expect(find.descendant(of: find.byType(AuthEntrance), matching: find.byKey(_page)), findsOneWidget);
-    double opacity() => tester.widget<FadeTransition>(find.descendant(of: find.byType(AuthEntrance), matching: find.byType(FadeTransition)).first).opacity.value;
+    // UI8: two entrances (the header, then the form, staggered); the page
+    // column itself stays put.
+    final entrances = find.descendant(of: find.byType(LoginScreen), matching: find.byType(AuthEntrance));
+    expect(entrances, findsNWidgets(2));
+    expect(find.descendant(of: entrances.last, matching: find.byKey(LoginScreen.loginCardKey)), findsOneWidget);
+    double opacity() => tester.widget<FadeTransition>(find.descendant(of: entrances.first, matching: find.byType(FadeTransition)).first).opacity.value;
     expect(opacity(), lessThan(1));
     await _settle(tester);
     expect(opacity(), 1);

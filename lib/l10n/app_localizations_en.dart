@@ -4918,6 +4918,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login_forgotPassword => 'Forgot Password?';
 
   @override
+  String get login_phoneTagline =>
+      'Run your agrovet or vet centre in one place';
+
+  @override
   String get login_noAccount => 'Don\'t have an account? ';
 
   @override

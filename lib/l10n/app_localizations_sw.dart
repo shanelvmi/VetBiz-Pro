@@ -4946,6 +4946,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get login_forgotPassword => 'Umesahau Nenosiri?';
 
   @override
+  String get login_phoneTagline =>
+      'Endesha agrovet au kituo chako cha mifugo mahali pamoja';
+
+  @override
   String get login_noAccount => 'Huna akaunti? ';
 
   @override

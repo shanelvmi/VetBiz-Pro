@@ -18,7 +18,7 @@ import 'package:vetbiz_pro/widgets/auth_phone_header.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/login_harness.dart';
 
-const _skip = true;
+const _skip = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));

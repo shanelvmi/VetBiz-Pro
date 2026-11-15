@@ -27,7 +27,7 @@ import 'package:vetbiz_pro/widgets/updates_carousel.dart';
 import 'helpers/login_harness.dart';
 import 'helpers/real_font.dart';
 
-const _skip = true;
+const _skip = false;
 
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));

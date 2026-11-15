@@ -8490,6 +8490,12 @@ abstract class AppLocalizations {
   /// **'Forgot Password?'**
   String get login_forgotPassword;
 
+  /// UI8: the line under the app name in the sign-in page's header on a phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Run your agrovet or vet centre in one place'**
+  String get login_phoneTagline;
+
   /// Login, before the Register link (ends with a space).
   ///
   /// In en, this message translates to:
