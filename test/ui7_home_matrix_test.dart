@@ -21,7 +21,7 @@ import 'helpers/phone_home_harness.dart';
 import 'helpers/real_font.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _sizes = [
   MatrixSize('360x740', Size(360, 740), phone: true),

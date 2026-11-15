@@ -30,7 +30,7 @@ import 'helpers/phone_home_harness.dart';
 import 'helpers/real_font.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = true;
+const _skip = false;
 
 const _header = ValueKey('home-chart-header');
 const _title = ValueKey('home-chart-title');

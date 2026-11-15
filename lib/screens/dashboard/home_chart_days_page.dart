@@ -94,33 +94,23 @@ class _HomeChartSalesPageState extends State<HomeChartSalesPage> {
     final summary = widget.hidden || days == null || empty
         ? l10n.home_chartSalesSummaryHidden(span)
         : l10n.home_chartSalesSummary(span, Money.format(total), AppDateFormat.dateShort.format(days.currentDays[best]));
-    final body = LayoutBuilder(
-      builder: (context, box) {
-        final legend = box.maxHeight - HomeChartMetrics.legendRow - HomeChartMetrics.dayLabels >= HomeChartMetrics.plotMin;
-        return LateSlot(
-          ready: _answered,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (legend && !empty) _Legend(span: span),
-              Expanded(
-                child: empty
-                    ? HomeChartEmpty(
-                        message: l10n.home_chartNoSales(span),
-                        action: widget.onRecordSale == null ? null : l10n.home_chartRecordSale,
-                        onAction: widget.onRecordSale,
-                        behind: ExcludeSemantics(child: _chart(context, null, values, span)),
-                      )
-                    : ExcludeSemantics(child: _touchable(context, days!, values, span)),
-              ),
-            ],
-          ),
-        );
-      },
+    final body = LateSlot(
+      ready: _answered,
+      child: empty
+          ? HomeChartEmpty(
+              message: l10n.home_chartNoSales(span),
+              action: widget.onRecordSale == null ? null : l10n.home_chartRecordSale,
+              onAction: widget.onRecordSale,
+              behind: ExcludeSemantics(child: _chart(context, null, values, span)),
+            )
+          : ExcludeSemantics(child: _touchable(context, days!, values, span)),
     );
+    // UI7: the legend sits in the header and names the period there.
     return HomeChartPage(
       title: l10n.dashboard_sales,
       period: span == HomeChartRange.month.days ? l10n.services_last30 : l10n.services_last7,
+      previous: l10n.home_chartPreviousDays(span),
+      legend: !empty,
       summary: summary,
       body: body,
     );
@@ -193,7 +183,7 @@ class _HomeChartSalesPageState extends State<HomeChartSalesPage> {
     ];
     final shown = _shown;
     return Padding(
-      // Room for the top guide's label, so it never reaches the period line.
+      // Room for the top guide's label, so it never reaches the header.
       padding: const EdgeInsets.only(top: HomeChartMetrics.titleGap),
       child: LineChart(
         LineChartData(
@@ -267,71 +257,6 @@ class _HomeChartSalesPageState extends State<HomeChartSalesPage> {
           ),
         ),
         duration: Duration.zero,
-      ),
-    );
-  }
-}
-
-/// "Last 7 days" (a solid swatch) and "Previous 7 days" (dashed, muted).
-class _Legend extends StatelessWidget {
-  final int span;
-
-  const _Legend({required this.span});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final l10n = context.l10n;
-    Widget item(Color color, String label, {required bool dashed}) => Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          key: ValueKey(dashed ? 'home-chart-legend-dashed' : 'home-chart-legend-solid'),
-          width: HomeChartMetrics.legendSwatchWidth,
-          height: HomeChartMetrics.legendSwatchHeight,
-          // UI6: each dash has its own height; under the Row's loose height
-          // a bare ColoredBox was drawn 0 px high and the dashes vanished.
-          child: dashed
-              ? Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    for (var i = 0; i < HomeChartMetrics.legendDashes; i++)
-                      SizedBox(
-                        key: ValueKey('home-chart-legend-dash-$i'),
-                        width: HomeChartMetrics.legendDash,
-                        height: HomeChartMetrics.legendSwatchHeight,
-                        child: DecoratedBox(decoration: BoxDecoration(color: color)),
-                      ),
-                  ],
-                )
-              : ColoredBox(color: color),
-        ),
-        const SizedBox(width: AppSpacing.s4),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: HomeChartMetrics.axisLabel, color: colors.textMuted),
-          ),
-        ),
-      ],
-    );
-    return ExcludeSemantics(
-      child: SizedBox(
-        key: const ValueKey('home-chart-legend'),
-        height: HomeChartMetrics.legendRow,
-        child: Row(
-          children: [
-            Flexible(
-              child: item(colors.primary,
-                  span == HomeChartRange.month.days ? l10n.services_last30 : l10n.services_last7,
-                  dashed: false),
-            ),
-            const SizedBox(width: AppSpacing.s12),
-            Flexible(child: item(colors.textMuted, l10n.home_chartPreviousDays(span), dashed: true)),
-          ],
-        ),
       ),
     );
   }

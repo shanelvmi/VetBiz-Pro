@@ -269,7 +269,7 @@ void main() {
     testWidgets('the legend and the day initials (7d); every 5th date (30d)', (tester) async {
       final log = await _pump(tester);
       expect(find.byKey(const ValueKey('home-chart-legend')), findsOneWidget);
-      expect(find.text('Last 7 days'), findsNWidgets(2), reason: 'the period line and the legend');
+      expect(find.text('Last 7 days'), findsOneWidget, reason: 'UI7: the legend alone names the period');
       expect(find.text('Previous 7 days'), findsOneWidget);
       expect(find.text('W'), findsWidgets, reason: 'Wed 11 Nov, today');
       log.setRange(HomeChartRange.month);

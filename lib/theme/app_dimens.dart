@@ -701,8 +701,8 @@ class HomeChartMetrics {
 
   /// HUB4 Sales line: the faint dotted guides (0, half, top), a marker of
   /// [marker] radius on each day with a value, the least smoothing that
-  /// still reads as a curve, the day labels' row; under [plotMin] the
-  /// legend gives its room to the plot.
+  /// still reads as a curve, the day labels' row, the legend's row (UI7:
+  /// in the page's header).
   static const double guideLine = 1;
   static const List<int> guideDash = [2, 3];
   static const double marker = 3;
@@ -711,7 +711,6 @@ class HomeChartMetrics {
   static const double legendRow = AppSpacing.s16;
   static const int weekDays = 7;
   static const int dayLabelEvery = 5;
-  static const double plotMin = 40;
 
   /// HUB4 Product movement: rows [movementRow] high with a square image of
   /// [movementImage], a rank column of [rankWidth].
