@@ -7607,52 +7607,6 @@ class AppLocalizationsSw extends AppLocalizations {
   String get home_periodYearShort => 'Mwaka';
 
   @override
-  String get home_liveVisit => 'Ziara';
-
-  @override
-  String home_liveLine(String kind, String client, String time) {
-    return '$kind · $client · $time';
-  }
-
-  @override
-  String home_liveLineAmount(
-    String kind,
-    String client,
-    String amount,
-    String time,
-  ) {
-    return '$kind · $client · $amount · $time';
-  }
-
-  @override
-  String home_liveTypeTime(String kind, String time) {
-    return '$kind · $time';
-  }
-
-  @override
-  String home_liveTypeClient(String kind, String client) {
-    return '$kind · $client';
-  }
-
-  @override
-  String home_liveTypeClientAmount(String kind, String client, String amount) {
-    return '$kind · $client · $amount';
-  }
-
-  @override
-  String home_liveYesterday(String time) {
-    return 'Jana $time';
-  }
-
-  @override
-  String get home_liveOffline => 'Nje ya mtandao';
-
-  @override
-  String home_liveOfflineLead(String line) {
-    return 'Nje ya mtandao · $line';
-  }
-
-  @override
   String home_deltaUp(int percent) {
     return 'juu $percent% kuliko jana';
   }
