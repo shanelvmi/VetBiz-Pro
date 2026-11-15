@@ -1,28 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/app_info.dart';
 import '../data/support_contact_fields.dart';
 import '../l10n/l10n.dart';
-import '../screens/info/about_screen.dart';
-import '../screens/info/faq_screen.dart';
-import '../screens/info/how_to_use_screen.dart';
-import '../screens/legal/privacy_policy_screen.dart';
-import '../screens/legal/terms_of_service_screen.dart';
 import '../services/support_contact_store.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
-import '../ui/feedback/app_feedback.dart';
-import '../utils/social_link.dart';
+import 'auth_links.dart';
 import 'hover_link.dart';
-import 'support_contact_dialog.dart';
 
-/// Opens an outside link; [launchUrl] in the app, a fake in tests.
-typedef AuthFooterLauncher = Future<bool> Function(Uri url, {LaunchMode mode});
+/// Opens an outside link; [launchUrl] in the app, a fake in tests (UI8:
+/// the same type as the phone help sheet's).
+typedef AuthFooterLauncher = AuthLinkLauncher;
 
 /// The calm footer under the Login and Register cards (G3, v2 in G4): on a
 /// full-width soft band (authFooterFill) with a hairline on top, the brand
@@ -53,31 +46,6 @@ class AuthFooter extends StatelessWidget {
 
   /// For tests: the brand column (the mark, the app name and, AN5, the description line).
   static const brandKey = ValueKey<String>('auth-footer-brand');
-
-  static const Map<SocialNetwork, FaIconData> _icons = {
-    SocialNetwork.facebook: FontAwesomeIcons.facebook,
-    SocialNetwork.instagram: FontAwesomeIcons.instagram,
-    SocialNetwork.x: FontAwesomeIcons.xTwitter,
-    SocialNetwork.linkedin: FontAwesomeIcons.linkedin,
-    SocialNetwork.youtube: FontAwesomeIcons.youtube,
-    SocialNetwork.tiktok: FontAwesomeIcons.tiktok,
-  };
-
-  static String _networkName(AppLocalizations l10n, SocialNetwork network) => switch (network) {
-        SocialNetwork.facebook => l10n.social_facebook,
-        SocialNetwork.instagram => l10n.social_instagram,
-        SocialNetwork.x => l10n.social_x,
-        SocialNetwork.linkedin => l10n.social_linkedin,
-        SocialNetwork.youtube => l10n.social_youtube,
-        SocialNetwork.tiktok => l10n.social_tiktok,
-      };
-
-  Future<void> _open(Uri uri) async {
-    // Checked again here: only http and https ever leave the app.
-    if (!SocialLink.isLaunchable(uri)) return;
-    final opened = await launcher(uri, mode: LaunchMode.externalApplication);
-    if (!opened) AppFeedback.info(L10n.current.common_linkFailed);
-  }
 
 
   @override
@@ -203,32 +171,29 @@ class AuthFooter extends StatelessWidget {
   Widget _heading(BuildContext context, String text) => Text(text,
       style: TextStyle(color: context.colors.textPrimary, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13));
 
-  void _push(BuildContext context, Widget screen) => Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
-
   Widget _column(BuildContext context, String heading, List<Widget> links) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [_heading(context, heading), ...links],
       );
 
+  // UI8: each link's text and target come from AuthLink, which the phone
+  // help sheet reads too.
+  Widget _link(BuildContext context, AuthLink link, bool isWide) =>
+      _FooterLink(compact: isWide, label: link.label(context.l10n), button: link.button, onTap: () => link.open(context, _store));
+
   Widget _platformColumn(BuildContext context, bool isWide) => _column(context, context.l10n.authFooter_platform, [
-        _FooterLink(compact: isWide, label: context.l10n.authFooter_about(AppInfo.name), onTap: () => _push(context, AboutScreen(store: _store))),
-        _FooterLink(compact: isWide, label: context.l10n.authFooter_howToUse, onTap: () => _push(context, const HowToUseScreen())),
+        _link(context, AuthLink.about, isWide),
+        _link(context, AuthLink.howToUse, isWide),
       ]);
 
   Widget _supportColumn(BuildContext context, bool isWide) => _column(context, context.l10n.authFooter_support, [
-        _FooterLink(
-          compact: isWide,
-          label: context.l10n.authFooter_helpContact,
-          button: true,
-          // The dashboard's Help dialog, from the same copy as the icons.
-          onTap: () => showSupportContactDialog(context, store: _store),
-        ),
-        _FooterLink(compact: isWide, label: context.l10n.authFooter_faq, onTap: () => _push(context, const FaqScreen())),
+        _link(context, AuthLink.helpContact, isWide),
+        _link(context, AuthLink.faq, isWide),
       ]);
 
   Widget _legalColumn(BuildContext context, bool isWide) => _column(context, context.l10n.authFooter_legal, [
-        _FooterLink(compact: isWide, label: context.l10n.common_privacyPolicy, onTap: () => _push(context, const PrivacyPolicyScreen())),
-        _FooterLink(compact: isWide, label: context.l10n.common_termsOfService, onTap: () => _push(context, const TermsOfServiceScreen())),
+        _link(context, AuthLink.privacy, isWide),
+        _link(context, AuthLink.terms, isWide),
       ]);
 
   /// Copyright and version, and the social icons. G6: its height never
@@ -304,15 +269,9 @@ class AuthFooter extends StatelessWidget {
     );
   }
 
-  Widget _socialButton(BuildContext context, SocialNetwork network, Uri uri) {
-    final name = _networkName(context.l10n, network);
-    return HoverLink.icon(
-      tooltip: name,
-      color: context.colors.authFooterMutedText,
-      onTap: () => _open(uri),
-      icon: (color) => FaIcon(_icons[network], size: AuthFooterMetrics.socialIconSize, color: color, semanticLabel: name),
-    );
-  }
+  // UI8: the help sheet shows the same icons (AuthSocial).
+  Widget _socialButton(BuildContext context, SocialNetwork network, Uri uri) =>
+      AuthSocial.button(context, network, uri, color: context.colors.authFooterMutedText, launcher: launcher);
 }
 
 /// A text link in the footer: the shared HoverLink (G4) in the footer's
