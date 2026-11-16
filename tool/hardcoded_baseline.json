@@ -332,8 +332,7 @@
       "lib/screens/dashboard/today_card.dart": 1,
       "lib/screens/login_screen.dart": 4,
       "lib/screens/platform_admin/promotions_screen.dart": 1,
-      "lib/screens/register_screen.dart": 3,
-      "lib/screens/subscription/subscription_screen.dart": 1
+      "lib/screens/register_screen.dart": 3
     },
     "R14": {
       "lib/screens/clients/clients_screen.dart": 1,
@@ -351,7 +350,6 @@
       "lib/screens/sales/sales_screen.dart": 1,
       "lib/screens/services/services_screen.dart": 1,
       "lib/screens/store/stockstore_screen.dart": 3,
-      "lib/screens/subscription/subscription_screen.dart": 1,
       "lib/screens/transactions/transactions_screen.dart": 1,
       "lib/widgets/auth_card.dart": 1,
       "lib/widgets/auth_panel.dart": 4,

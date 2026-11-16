@@ -28,6 +28,7 @@ import '../../config/app_timeouts.dart';
 import '../../config/app_date_format.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/polish/app_status.dart';
+import '../../theme/polish_metrics.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/submission_people.dart';
 import '../../config/app_info.dart';
@@ -365,20 +366,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(AppSpacing.s16),
+                  // POL2: the active-promotion banner is a flat surface with a
+                  // hairline border (owner rule 4: no gradient, no glow); the
+                  // offer's icon in primary, the one accent ("new").
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [colors.accent, colors.accent.withValues(alpha: AppAlpha.a70)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(AppRadius.r14),
-                    boxShadow: [
-                      BoxShadow(color: colors.accent.withValues(alpha: AppAlpha.a40), blurRadius: 14, offset: const Offset(0, 6)),
-                    ],
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(PolishMetrics.cardRadius),
+                    // Drawn outside the edge, so the banner keeps its size and place.
+                    border: Border.all(color: colors.border, width: PolishMetrics.hairline, strokeAlign: BorderSide.strokeAlignOutside),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.local_offer, color: colors.onPrimary, size: AppIconSize.i24),
+                      Icon(Icons.local_offer, color: colors.primary, size: AppIconSize.i24),
                       const SizedBox(width: AppSpacing.s12),
                       Expanded(
                         child: Column(
@@ -386,7 +385,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                           children: [
                             Text(
                               _activePromotion!.label,
-                              style: TextStyle(color: colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
+                              style: TextStyle(color: colors.textPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
                             ),
                             Text(
                               // The percent is formatted here, as before; the sentence comes from the language file.
@@ -395,7 +394,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                       .toStringAsFixed(_activePromotion!.discountPercent % 1 == 0 ? 0 : 1))
                                   : context.l10n.subscription_promoSomePlans(_activePromotion!.discountPercent
                                       .toStringAsFixed(_activePromotion!.discountPercent % 1 == 0 ? 0 : 1)),
-                              style: TextStyle(color: colors.onPrimary, fontSize: AppFontSize.f12_5),
+                              style: TextStyle(color: colors.textSecondary, fontSize: AppFontSize.f12_5),
                             ),
                           ],
                         ),
@@ -425,8 +424,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         activeColor: colors.primary,
                         // Shown from the plan id; the English plan.label is what is saved.
                         title: Text(context.l10n.subscriptionPlanLabel(plan.id)),
+                        // POL2: a Wrap, so the old and the new price go on two
+                        // lines on a narrow phone (the Row overflowed there).
                         subtitle: hasDiscount
-                            ? Row(
+                            ? Wrap(
+                                spacing: AppSpacing.s6,
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
                                   Text(
                                     Money.format(plan.priceTsh),
@@ -436,7 +439,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                                       fontSize: AppFontSize.f12_5,
                                     ),
                                   ),
-                                  const SizedBox(width: AppSpacing.s6),
                                   Text(
                                     Money.format(effectivePrice),
                                     style: TextStyle(
