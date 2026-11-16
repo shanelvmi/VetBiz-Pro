@@ -2,7 +2,8 @@
 // size, word weight and dot gap as StatusDot, the pill padding and radius
 // from PolishMetrics, the state's role at low opacity behind it; the word is
 // always shown; an icon may take the dot's place. Light and Dark, text scale
-// 1.3, no gradient and no shadow.
+// 1.3, no gradient and no shadow. POL2b: its onBrand variant (the same
+// widget) for the phone Today card's deep tone.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/theme/app_colors.dart';
@@ -69,5 +70,32 @@ void main() {
         scale: 1.3);
     expect(tester.takeException(), isNull);
     expect(tester.widget<Text>(find.textContaining('down')).overflow, TextOverflow.ellipsis);
+  });
+
+  // POL2b: the on-brand variant is the same StatusPill (one style), for the
+  // phone Today card's deep tone.
+  testWidgets('onBrand: the same widget, size, padding and gap; a soft white fill; word and arrow in onBrandSurface', (tester) async {
+    final c = await _pump(tester, const StatusPill.onBrand(status: AppStatus.success, label: 'up 12%', icon: Icons.arrow_upward));
+    final pill = tester.widget<StatusPill>(find.byType(StatusPill));
+    expect(pill.onBrand, isTrue);
+    final box = tester.widget<Container>(find.descendant(of: find.byType(StatusPill), matching: find.byType(Container)).first);
+    final d = box.decoration! as BoxDecoration;
+    expect(d.color, c.onBrandSurface.withValues(alpha: PolishMetrics.onBrandPillAlpha));
+    expect(d.borderRadius, BorderRadius.circular(PolishMetrics.pillRadius));
+    expect(box.padding, const EdgeInsets.symmetric(horizontal: PolishMetrics.pillPaddingH, vertical: PolishMetrics.pillPaddingV));
+    expect(tester.widget<Icon>(find.byKey(const ValueKey('statusPill-icon'))).color, c.onBrandSurface);
+    final word = tester.widget<Text>(find.text('up 12%'));
+    expect(word.style!.color, c.onBrandSurface);
+    expect(word.style!.fontSize, PolishMetrics.statusText);
+    final gap = tester.getTopLeft(find.text('up 12%')).dx - tester.getTopRight(find.byKey(const ValueKey('statusPill-icon'))).dx;
+    expect(gap, PolishMetrics.dotGap);
+  });
+
+  testWidgets('onBrand without an icon: the dot is in onBrandSurface, the same size', (tester) async {
+    final c = await _pump(tester, const StatusPill.onBrand(status: AppStatus.neutral, label: 'Same as yesterday'));
+    final dot = tester.widget<DecoratedBox>(
+        find.descendant(of: find.byKey(const ValueKey('statusPill-dot')), matching: find.byType(DecoratedBox)));
+    expect((dot.decoration as BoxDecoration).color, c.onBrandSurface);
+    expect(tester.getSize(find.byKey(const ValueKey('statusPill-dot'))), const Size.square(PolishMetrics.dot));
   });
 }

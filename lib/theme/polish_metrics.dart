@@ -28,6 +28,10 @@ class PolishMetrics {
   static const double pillPaddingV = AppSpacing.s2;
   static const double pillRadius = AppRadius.r10;
 
+  /// POL2b: the same pill on a brand-coloured surface (the phone Today card):
+  /// a soft white fill, the old change chip's (PhoneHomeMetrics.circleAlpha).
+  static const double onBrandPillAlpha = PhoneHomeMetrics.circleAlpha;
+
   // Owner rule 4: the flat stat card.
   static const double cardPadding = AppSpacing.s16;
   static const double cardRadius = AppRadius.r12;

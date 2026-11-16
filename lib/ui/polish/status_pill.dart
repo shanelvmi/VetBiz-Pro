@@ -12,21 +12,35 @@ import 'app_status.dart';
 /// takes the dot's place in the role's colour (an arrow saying up or down);
 /// the word is always there, so the state never rests on colour alone. No
 /// other pill style exists.
+///
+/// POL2b: [StatusPill.onBrand] is the same pill on a brand-coloured surface
+/// (the phone Today card's deep tone): a soft white fill, and the word, the
+/// arrow and the dot in onBrandSurface. Not a second style: the same widget,
+/// size, padding and gap. There the direction is carried by the arrow and the
+/// word, never by green or red, which do not reach 3:1 on the deep tone.
 class StatusPill extends StatelessWidget {
   final AppStatus status;
   final String label;
   final IconData? icon;
 
-  const StatusPill({super.key, required this.status, required this.label, this.icon});
+  /// On a brand-coloured surface (see [StatusPill.onBrand]).
+  final bool onBrand;
+
+  const StatusPill({super.key, required this.status, required this.label, this.icon}) : onBrand = false;
+
+  const StatusPill.onBrand({super.key, required this.status, required this.label, this.icon}) : onBrand = true;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final role = status.roleIn(colors);
+    final role = onBrand ? colors.onBrandSurface : status.roleIn(colors);
+    final fill = onBrand
+        ? colors.onBrandSurface.withValues(alpha: PolishMetrics.onBrandPillAlpha)
+        : role.withValues(alpha: PolishMetrics.pillAlpha);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: PolishMetrics.pillPaddingH, vertical: PolishMetrics.pillPaddingV),
       decoration: BoxDecoration(
-        color: role.withValues(alpha: PolishMetrics.pillAlpha),
+        color: fill,
         borderRadius: BorderRadius.circular(PolishMetrics.pillRadius),
       ),
       child: Row(
@@ -50,7 +64,7 @@ class StatusPill extends StatelessWidget {
               style: TextStyle(
                 fontSize: PolishMetrics.statusText,
                 fontWeight: AppFontWeight.medium,
-                color: colors.textPrimary,
+                color: onBrand ? colors.onBrandSurface : colors.textPrimary,
               ),
             ),
           ),
