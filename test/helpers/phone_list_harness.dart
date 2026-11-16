@@ -249,9 +249,15 @@ Future<void> ph5Settle(WidgetTester tester) async {
 /// a fixed budget of real time is too short on a loaded machine. FIN1: the
 /// subscription claim (two awaited fake Firestore calls) was once read in a
 /// full run before it had been written.
-Future<void> ph5SettleUntil(WidgetTester tester, bool Function() done, {int maxRounds = 100}) async {
+///
+/// STAB1: when [done] is still false after [maxRounds], the test fails here,
+/// naming [what]. It used to return quietly, so a wait that never finished
+/// showed up later as a wrong value (the claim test read no claim at all).
+Future<void> ph5SettleUntil(WidgetTester tester, bool Function() done,
+    {String what = 'the condition', int maxRounds = 100}) async {
   await ph5Settle(tester);
-  for (var i = 0; i < maxRounds && !done(); i++) {
+  for (var i = 0; !done(); i++) {
+    if (i == maxRounds) fail('ph5SettleUntil: $what was still not true after $maxRounds rounds');
     await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 5)));
     await tester.pump(const Duration(milliseconds: 100));
   }

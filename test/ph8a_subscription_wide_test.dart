@@ -7,6 +7,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vetbiz_pro/config/money.dart';
 import 'package:vetbiz_pro/data/collections.dart';
 import 'package:vetbiz_pro/screens/subscription/subscription_history_screen.dart';
 import 'package:vetbiz_pro/screens/subscription/subscription_screen.dart';
@@ -98,10 +99,19 @@ void main() {
       // FIN1 (the flake at 390): the prices arrive, and the claim is written
       // (the screen clears the reference only after the add succeeded), in
       // real time; wait for each instead of a fixed budget of it.
-      await ph5SettleUntil(tester, () => submit.evaluate().isNotEmpty);
+      // STAB1, the cause of that flake: the button was there before the
+      // seeded prices; when they came after ensureVisible the plans' lines
+      // moved the button, the tap missed (a warning only) and no claim was
+      // written. Wait for the seeded prices (the defaults are 0), then put
+      // the button in view, then tap.
+      await ph5SettleUntil(tester, () => find.text(Money.format(300000)).evaluate().isNotEmpty,
+          what: 'the seeded yearly price');
+      await ph5SettleUntil(tester, () => submit.evaluate().isNotEmpty, what: 'the Submit button');
       await tester.ensureVisible(submit.last);
+      await tester.pump();
       await tester.tap(submit.last);
-      await ph5SettleUntil(tester, () => tester.widget<TextField>(reference).controller!.text.isEmpty);
+      await ph5SettleUntil(tester, () => tester.widget<TextField>(reference).controller!.text.isEmpty,
+          what: 'the claim saved (the reference cleared)');
       while (tester.takeException() != null) {}
       expectSameSaved('subscription', await savedClaims(tester, app.fs));
     }, skip: skip);
