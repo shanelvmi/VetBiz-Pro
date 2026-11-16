@@ -13,8 +13,6 @@ import 'helpers/ph6_forms.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 Finder _rowOf(String name) => find.ancestor(of: find.text(name).last, matching: find.byType(Row)).first;
 
 Future<void> _tap(WidgetTester tester, Finder f) async {
@@ -49,7 +47,7 @@ void main() {
     await ph5Settle(tester);
     expect(find.text('Ivermectin 1%'), findsNothing);
     expect(find.text('Vitamin B12'), findsWidgets);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Browse Products is still today\'s dialog on a computer', (tester) async {
     final app = await pumpPh6(tester, 'add-sale', size: const Size(1200, 800));
@@ -59,7 +57,7 @@ void main() {
     while (tester.takeException() != null) {}
     expect(find.byType(BottomSheet), findsNothing);
     expect(find.text('Filter by name, batch no or category...'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   for (final size in const [Size(360, 740), Size(390, 844)]) {
     ph5TestWidgets('${size.width.toInt()}: item rows fit a long name and an 8-digit price; 48 px steppers', (tester) async {
@@ -77,7 +75,7 @@ void main() {
       await _tap(tester, plus);
       expect(find.descendant(of: find.byKey(const ValueKey('saleItem-0')), matching: find.text('3')), findsOneWidget);
       await checkCase(tester, phone: true, where: 'add-sale items $size');
-    }, skip: _skip);
+    });
   }
 
   ph5TestWidgets('the items and the total are pinned above the action bar', (tester) async {
@@ -90,7 +88,7 @@ void main() {
     await tester.binding.handlePopRoute();
     await ph5Settle(tester);
     expect(find.descendant(of: ph5Key('formActionBar'), matching: find.text('4 items, ${Money.format(42500)}')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the client is chosen in a sheet: search, a row, the sale is theirs', (tester) async {
     await pumpPh6(tester, 'add-sale');
@@ -106,5 +104,5 @@ void main() {
     await ph5Settle(tester);
     expect(sheet, findsNothing);
     expect(find.text('Amina Juma'), findsWidgets);
-  }, skip: _skip);
+  });
 }

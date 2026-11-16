@@ -10,8 +10,6 @@ import 'helpers/ph6_forms.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 void main() {
   for (final (name, title, primary) in const [
     ('move-expired', 'Move to Stock', 'Move to Stock'),
@@ -29,20 +27,20 @@ void main() {
           expect((field.renderObject! as RenderBox).size.height, greaterThanOrEqualTo(48));
         }
         expect(find.descendant(of: find.byType(BottomSheet), matching: find.text(title)), findsWidgets);
-      }, skip: _skip);
+      });
 
       ph5TestWidgets('Cancel closes it', (tester) async {
         await pumpPh6(tester, name);
         await tester.tap(find.descendant(of: find.byType(BottomSheet), matching: find.text('Cancel')));
         await ph5Settle(tester);
         expect(find.byType(BottomSheet), findsNothing);
-      }, skip: _skip);
+      });
 
       ph5TestWidgets('still today\'s dialog on a computer', (tester) async {
         await pumpPh6(tester, name, size: const Size(1200, 800));
         expect(find.byType(AlertDialog), findsOneWidget);
         expect(find.byType(BottomSheet), findsNothing);
-      }, skip: _skip);
+      });
 
       for (final size in ph5PhoneSizes) {
         for (final look in MatrixLook.values) {
@@ -50,7 +48,7 @@ void main() {
           ph5TestWidgets(where, (tester) async {
             await pumpPh6(tester, name, size: size.size, look: look);
             await checkCase(tester, phone: true, where: where);
-          }, skip: _skip);
+          });
         }
       }
     });
@@ -64,5 +62,5 @@ void main() {
     await ph5Settle(tester);
     expect(find.text('Enter a quantity up to 12'), findsOneWidget);
     expect(find.byType(BottomSheet), findsOneWidget);
-  }, skip: _skip);
+  });
 }

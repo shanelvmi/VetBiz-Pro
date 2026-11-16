@@ -21,8 +21,6 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 // A computer window wide enough that the toolbar's type dropdown is on screen
 // with the test font (each glyph a full em); the same layout as 1200.
 const _wide = Size(1600, 900);
@@ -59,7 +57,7 @@ void main() {
     await tester.tap(find.text('Date Range'));
     await ph5Settle(tester);
     expect(find.byType(DateRangeDialog), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Record Transaction floats, hides with the keyboard, opens the form', (tester) async {
     await _open(tester);
@@ -72,7 +70,7 @@ void main() {
     await _open(tester);
     await ph5OpenKeyboard(tester);
     expect(ph5Key('phoneList-fab'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the chips give the toolbar\'s type filter results', (tester) async {
     await _open(tester, size: _wide);
@@ -92,7 +90,7 @@ void main() {
     await tester.tap(_chip('Expense'));
     await ph5Settle(tester);
     expect(ph5RowIds(tester), toolbar);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the summary line and a Summary sheet with the four figures, as on the tablet', (tester) async {
     await _open(tester, size: _wide);
@@ -107,7 +105,7 @@ void main() {
     expect(ph5SheetValue(tester, 'Expenses'), Money.format(180000));
     expect(ph5SheetValue(tester, 'Other Income vs Expenses'), Money.format(-110000));
     expect(ph5SheetValue(tester, 'Transactions'), '4');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('grouped by day with the day\'s net; rows: icon, description and signed amount, category and time, type', (tester) async {
     await _open(tester);
@@ -119,7 +117,7 @@ void main() {
     }
     expect(find.descendant(of: t1, matching: find.byIcon(Icons.arrow_upward)), findsOneWidget);
     expect(find.descendant(of: ph5Key('phoneList-row-t2'), matching: find.text('+${Money.format(50000)}')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the details page: the panel\'s content (method, recorded by), Print, Edit and Delete for an admin; Undo offered', (tester) async {
     await _open(tester, size: _wide);
@@ -145,7 +143,7 @@ void main() {
     // Undo is offered (today's restore, TrashService on the app's own
     // Firestore, cannot run on the fake: the owner checks it on the phone).
     expect(find.text('Undo'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an assistant: no Edit and no Delete on the page (E4d-2)', (tester) async {
     await _open(tester, admin: false);
@@ -154,7 +152,7 @@ void main() {
     expect(find.descendant(of: ph5Page, matching: find.text('Print')), findsOneWidget);
     expect(find.descendant(of: ph5Page, matching: find.byTooltip('Edit')), findsNothing);
     expect(find.descendant(of: ph5Page, matching: find.byTooltip('Delete')), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('pull to refresh reloads the cards\' totals', (tester) async {
     final app = await _open(tester);
@@ -162,7 +160,7 @@ void main() {
     await ph5Pull(tester);
     expect(ph5RowIds(tester), contains('t5'));
     expect(find.textContaining('expenses ${Money.format(185000)}'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('paging: older transactions load near the end', (tester) async {
     await _open(tester, txs: _many);
@@ -172,7 +170,7 @@ void main() {
     }
     // The last of 30 (page size 25) is at the end once the older page came.
     expect(ph5Key('phoneList-row-m29'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('states: six skeleton rows until the first answer; empty with Record Transaction', (tester) async {
     final held = CountingFirestore()..holdListens = Completer<void>();
@@ -187,5 +185,5 @@ void main() {
     final empty = ph5Key('phoneList-empty');
     expect(find.descendant(of: empty, matching: find.text('No transactions.')), findsOneWidget);
     expect(find.descendant(of: empty, matching: find.text('Record Transaction')), findsOneWidget);
-  }, skip: _skip);
+  });
 }

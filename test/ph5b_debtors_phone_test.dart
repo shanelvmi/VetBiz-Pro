@@ -18,8 +18,6 @@ import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = false;
-
 const _wide = Size(1200, 800);
 
 // Overdue after 30 days (the facility's default); the ranges count the days
@@ -68,7 +66,7 @@ void main() {
     await tester.tap(find.byTooltip('Show menu'));
     await ph5Settle(tester);
     expect(find.text('Export'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Record Payment floats, hides with the keyboard, and asks for the debtor first', (tester) async {
     await _debtors(tester);
@@ -84,7 +82,7 @@ void main() {
     await _debtors(tester);
     await ph5OpenKeyboard(tester);
     expect(ph5Key('phoneList-fab'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the chips and the Filter sheet give the toolbar\'s results', (tester) async {
     await _debtors(tester, size: _wide);
@@ -125,7 +123,7 @@ void main() {
     await ph5Settle(tester);
     expect(_rowOrder(tester).toSet(), range);
     expect(find.descendant(of: ph5Key('phoneList-appliedChips'), matching: find.text('Overdue: 31-60 days overdue')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('"3 debtors, Tsh 137,500 owed" and a Summary sheet with the four cards, as the tablet shows them', (tester) async {
     final cards = {
@@ -149,7 +147,7 @@ void main() {
     for (final sub in ['With outstanding balance', 'Outstanding balance', 'Over 30 days', 'From debt payments']) {
       expect(find.descendant(of: find.byType(BottomSheet), matching: find.textContaining(sub)), findsOneWidget, reason: sub);
     }
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('rows: initials, the debtor and the amount owed, the oldest debt date and days, the status as text', (tester) async {
     await _debtors(tester);
@@ -164,7 +162,7 @@ void main() {
     }
     expect(find.descendant(of: ph5Key('phoneList-row-c2'), matching: find.text('Current')), findsOneWidget);
     expect(ph5HasDayHeaders(tester), isFalse);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the details page: the panel\'s debts, notes and actions', (tester) async {
     await _debtors(tester, size: _wide);
@@ -185,7 +183,7 @@ void main() {
     final form = tester.widget<AddPaymentScreen>(find.byType(AddPaymentScreen));
     expect((form.preselectedClient?.id, form.debtDocId), ('c1', 'd1'));
     while (tester.takeException() != null) {}
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('pull to refresh starts the list over and reloads the cards', (tester) async {
     final app = await _debtors(tester);
@@ -194,7 +192,7 @@ void main() {
     await ph5Pull(tester);
     expect(ph5RowIds(tester), contains('c5'));
     expect(find.text('4 debtors, ${Money.format(236500)} owed'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('states: empty with Record Payment (as the wide button); error with Retry', (tester) async {
     await _debtors(tester, empty: true);
@@ -210,5 +208,5 @@ void main() {
     await tester.tap(find.text('Retry'));
     await ph5Settle(tester);
     expect(ph5RowIds(tester), {'c1', 'c2', 'c3'});
-  }, skip: _skip);
+  });
 }

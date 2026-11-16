@@ -19,8 +19,6 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 const _wide = Size(1200, 800);
 
 final _payments = [
@@ -74,7 +72,7 @@ void main() {
     await tester.tap(find.text('Date Range'));
     await ph5Settle(tester);
     expect(find.byType(DateRangeDialog), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Today, Yesterday and All set the days as the date range did', (tester) async {
     await _open(tester);
@@ -84,7 +82,7 @@ void main() {
     expect(ph5RowIds(tester), {'p3'});
     await _tapChip(tester, 'All');
     expect(ph5RowIds(tester), {'p1', 'p2', 'p3', 'p4'});
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the Filter sheet (type, method) gives the toolbar\'s results', (tester) async {
     await _open(tester, size: _wide);
@@ -113,7 +111,7 @@ void main() {
     await ph5Settle(tester);
     expect(ph5RowIds(tester), {'p1'});
     expect(find.descendant(of: ph5Key('phoneList-appliedChips'), matching: find.text('Method: M-Pesa')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the summary line and a Summary sheet with the four cards and the total, as on the tablet', (tester) async {
     await _open(tester, size: _wide);
@@ -134,7 +132,7 @@ void main() {
     }
     expect(find.descendant(of: sheet, matching: find.textContaining('+80.0%')), findsOneWidget);
     expect(ph5SheetValue(tester, 'Total'), Money.format(27000));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('grouped by day with day totals; rows: initials, client and amount, method and time, the source', (tester) async {
     await _open(tester);
@@ -147,7 +145,7 @@ void main() {
     for (final t in ['AJ', 'Amina Juma', Money.format(20000), 'M-Pesa', DateFormat('HH:mm').format(_payments.first.when), 'Sale payment']) {
       expect(find.descendant(of: row, matching: find.text(t)), findsOneWidget, reason: t);
     }
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the details page: the panel\'s content (recorded by), Call and Print Receipt', (tester) async {
     await _open(tester, size: _wide);
@@ -163,7 +161,7 @@ void main() {
     expect(ph5Texts(ph5Page), panel);
     expect(find.descendant(of: ph5Page, matching: find.text('Print Receipt')), findsOneWidget);
     expect(find.descendant(of: ph5Page, matching: find.byTooltip('Call')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('for one client: "Payments - Amina Juma", no Filter, All chosen, that client\'s payments', (tester) async {
     await _open(tester, forClient: true);
@@ -172,7 +170,7 @@ void main() {
     expect(tester.widget<ChoiceChip>(find.ancestor(of: _chip('All'), matching: find.byType(ChoiceChip))).selected, isTrue);
     expect(ph5RowIds(tester), {'p1', 'p4'});
     expect(find.text('2 payments, ${Money.format(24000)}'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('pull to refresh starts the list over and reloads the cards', (tester) async {
     final app = await _open(tester);
@@ -181,7 +179,7 @@ void main() {
     await ph5Pull(tester);
     expect(ph5RowIds(tester), contains('p5'));
     expect(find.text('3 payments, ${Money.format(28000)}'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('states: six skeleton rows; empty (no button); error with Retry', (tester) async {
     final held = CountingFirestore()..holdGets = Completer<void>();
@@ -205,5 +203,5 @@ void main() {
     await tester.tap(find.text('Retry'));
     await ph5Settle(tester);
     expect(ph5RowIds(tester), {'p1', 'p2'});
-  }, skip: _skip);
+  });
 }

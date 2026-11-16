@@ -19,8 +19,6 @@ import 'package:vetbiz_pro/services/dashboard_summary_service.dart';
 
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _totals = DashboardPeriodTotals(
   totalSales: 12500,
   totalCollected: 9700,
@@ -72,7 +70,7 @@ void main() {
         DashboardFigure.clients,
         DashboardFigure.services,
       ]);
-    }, skip: _skip);
+    });
 
     test('the tablet and computer grid: an assistant\'s Total Expenses card is not drawn; an admin\'s is', () {
       // The grid's card is drawn behind dashboardShowsFigure (dashboard_screen.dart).
@@ -82,7 +80,7 @@ void main() {
         expect(dashboardShowsFigure(f, isAdmin: false), isTrue, reason: f.name);
         expect(dashboardShowsFigure(f, isAdmin: true), isTrue, reason: f.name);
       }
-    }, skip: _skip);
+    });
 
     testWidgets('the phone\'s All details: an assistant has no Total Expenses row', (tester) async {
       await pumpAtSize(tester, screen: _details(isAdmin: false), size: const Size(390, 844));
@@ -91,14 +89,14 @@ void main() {
       // Net Profit stays a masked row, as before.
       expect(find.text('Net Profit (Today)'), findsOneWidget);
       expect(find.text('*****'), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('the phone\'s All details: an admin still has Total Expenses with its figure', (tester) async {
       await pumpAtSize(tester, screen: _details(isAdmin: true), size: const Size(390, 844));
       await tester.scrollUntilVisible(find.text(_expenses), 100, scrollable: find.byType(Scrollable).first);
       expect(find.text(_expenses), findsOneWidget);
       expect(find.text(Money.format(1500)), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 
   group('each All details row opens its list', () {
@@ -119,7 +117,7 @@ void main() {
         }
         expect(opened, [for (final e in shown) e.key]);
         if (!isAdmin) expect(find.text(_expenses), findsNothing);
-      }, skip: _skip);
+      });
 
       // HUB1: the places are the action panel's now (no bar, no More).
       test('$role: every row\'s list is one the role can open from the action panel', () {
@@ -127,7 +125,7 @@ void main() {
         for (final e in shown) {
           expect(panel, contains(detailsTargetPlace(e.key)), reason: e.value);
         }
-      }, skip: _skip);
+      });
     }
 
     test('the rows lead where their figures come from', () {
@@ -141,6 +139,6 @@ void main() {
         DetailsTarget.clients: HubTile.clients,
         DetailsTarget.services: HubTile.services,
       });
-    }, skip: _skip);
+    });
   });
 }

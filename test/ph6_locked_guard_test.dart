@@ -17,8 +17,6 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 const _phone = Size(390, 844);
 const _wide = Size(1200, 800);
 
@@ -96,7 +94,7 @@ void main() {
       await open(tester);
       while (tester.takeException() != null) {}
       _expectLocked(tester);
-    }, skip: _skip);
+    });
   }
 
   ph5TestWidgets('not locked: the phone\'s floating Add Client opens the form', (tester) async {
@@ -105,7 +103,7 @@ void main() {
     while (tester.takeException() != null) {}
     expect(find.byType(AddClientScreen), findsOneWidget);
     expect(find.text('Subscription Expired'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('locked: editing a client is not a new record and still opens', (tester) async {
     await pumpPh5(tester, (fs) => ClientsScreen(firestore: fs), pushed: true, locked: true, seed: _seed);
@@ -113,5 +111,5 @@ void main() {
     await _tapAndSettle(tester, find.byTooltip('Edit'));
     while (tester.takeException() != null) {}
     expect(find.byType(AddClientScreen), findsOneWidget);
-  }, skip: _skip);
+  });
 }

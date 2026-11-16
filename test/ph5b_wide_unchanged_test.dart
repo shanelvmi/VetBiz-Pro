@@ -16,8 +16,6 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'helpers/tree_fingerprint.dart';
 
-const _skip = false;
-
 // Every date the cards count stays inside today's month and week, so the
 // figures (and so the widths) do not move with the calendar.
 final _clients = [
@@ -80,7 +78,7 @@ void main() {
         await tester.tap(find.text(rowText).last);
         await ph5Settle(tester);
         expectSameFingerprint('$where-details', '${_errors(tester)}${treeFingerprint(tester, find.byType(type))}');
-      }, skip: _skip);
+      });
     }
   }
 }

@@ -37,8 +37,6 @@ import 'package:vetbiz_pro/utils/navigator_key.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/fake_firestore.dart';
 
-const _skip = false;
-
 const _phone = Size(390, 844);
 const _tablet = Size(1024, 768);
 const _otherFacility = 'facility2';
@@ -169,7 +167,7 @@ void main() {
       expect(db.listeners, 1);
       expect(db.gets, 0);
       expect(db.reads, 3, reason: 'one read per product, as the one-time get');
-    }, skip: _skip);
+    });
 
     testWidgets('a tablet or a computer: today\'s one get, no listener', (tester) async {
       final (db, products) = await _app(tester, _tablet);
@@ -178,7 +176,7 @@ void main() {
       expect(db.listeners, 0);
       expect(db.gets, 1);
       expect(db.reads, 3);
-    }, skip: _skip);
+    });
 
     testWidgets('a phone: a stock change after the first load updates the strip, Products never opened',
         (tester) async {
@@ -189,7 +187,7 @@ void main() {
       await _sellAmoxicillinDown(tester, db);
       expect(_stockCount(tester), 2);
       expect(db.reads, 1, reason: 'only the changed product is read');
-    }, skip: _skip);
+    });
 
     testWidgets('a tablet: unchanged, the strip\'s products are today\'s one get', (tester) async {
       final (db, _) = await _app(tester, _tablet);
@@ -197,7 +195,7 @@ void main() {
       expect(_stockCount(tester), 1);
       await _sellAmoxicillinDown(tester, db);
       expect(_stockCount(tester), 1);
-    }, skip: _skip);
+    });
 
     testWidgets('a phone: signing out cancels the listener', (tester) async {
       final (db, products) = await _app(tester, _phone);
@@ -211,7 +209,7 @@ void main() {
       expect(db.listeners, 0);
       await _sellAmoxicillinDown(tester, db);
       expect(products.products, isEmpty);
-    }, skip: _skip);
+    });
 
     testWidgets('a phone: opening another facility cancels the first listener and listens to the new one',
         (tester) async {
@@ -223,6 +221,6 @@ void main() {
       expect(_stockCount(tester), 1, reason: 'the first facility\'s change is not heard');
       await _sellAmoxicillinDown(tester, db, _otherFacility);
       expect(_stockCount(tester), 2);
-    }, skip: _skip);
+    });
   });
 }

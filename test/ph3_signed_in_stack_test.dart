@@ -39,8 +39,6 @@ import 'package:vetbiz_pro/widgets/signed_in_home_host.dart';
 
 import 'helpers/fake_firestore.dart';
 
-const _skip = false;
-
 const _dashboard = 'DASHBOARD (stand-in)';
 const _login = 'LOGIN (stand-in)';
 const _deciding = 'DECIDING (stand-in)';
@@ -175,7 +173,7 @@ void main() {
     await _signIn(tester);
     expect(find.text(_dashboard), findsOneWidget);
     expect(stack.routes, hasLength(1));
-  }, skip: _skip);
+  });
 
   testWidgets('opening another facility from a deep screen leaves one route', (tester) async {
     final (stack, _) = await _app(tester);
@@ -187,7 +185,7 @@ void main() {
     expect(find.text(_dashboard), findsOneWidget);
     expect(find.text('a deep screen'), findsNothing);
     expect(stack.routes, hasLength(1));
-  }, skip: _skip);
+  });
 
   testWidgets('signing out (every path goes through forceLogoutAndShowLogin) leaves only the login', (tester) async {
     final (stack, auth) = await _app(tester);
@@ -200,7 +198,7 @@ void main() {
     expect(find.text(_login), findsOneWidget);
     expect(find.text(_dashboard), findsNothing);
     expect(stack.routes, hasLength(1));
-  }, skip: _skip);
+  });
 
   testWidgets('signing in again after signing out shows the dashboard, one route', (tester) async {
     final (stack, _) = await _app(tester);
@@ -213,7 +211,7 @@ void main() {
     await _signIn(tester);
     expect(find.text(_dashboard), findsOneWidget);
     expect(stack.routes, hasLength(1));
-  }, skip: _skip);
+  });
 
   testWidgets('back to the front door (returnToAccountDecision) drops the home, one route', (tester) async {
     final (stack, _) = await _app(tester);
@@ -225,7 +223,7 @@ void main() {
     expect(find.text(_deciding), findsOneWidget);
     expect(find.text(_dashboard), findsNothing);
     expect(stack.routes, hasLength(1));
-  }, skip: _skip);
+  });
 
   testWidgets('Back on Home leaves the app as the platform does (nothing left to pop)', (tester) async {
     final (stack, _) = await _app(tester);
@@ -241,7 +239,7 @@ void main() {
     expect(calls, contains('SystemNavigator.pop'), reason: 'the platform closes the app, or the browser leaves the page');
     expect(find.text(_deciding), findsNothing, reason: 'never the sign-in decision screen while signed in');
     expect(stack.routes, hasLength(1));
-  }, skip: _skip);
+  });
 
   test('no sign-in or sign-out path replaces the front door with a route of its own', () {
     String read(String path) => File(path).readAsStringSync();
@@ -252,5 +250,5 @@ void main() {
     expect(read('lib/screens/register_screen.dart'), isNot(contains("'/dashboard'")),
         reason: 'saving Edit Profile closes it instead of pushing a second dashboard');
     expect(read('lib/main.dart'), contains('SignedInHomeHost('));
-  }, skip: _skip);
+  });
 }

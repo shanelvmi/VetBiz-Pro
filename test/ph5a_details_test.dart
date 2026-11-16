@@ -13,8 +13,6 @@ import 'package:vetbiz_pro/screens/services/services_screen.dart';
 import 'helpers/fake_firestore.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 const _phone = Size(390, 844);
 const _wide = Size(1200, 800);
 
@@ -63,7 +61,7 @@ void main() {
       for (final action in ['Print', 'Delete']) {
         expect(find.descendant(of: page, matching: find.text(action)), findsOneWidget, reason: action);
       }
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('${e.key}: an assistant\'s page has no Delete (nor Edit)', (tester) async {
       await pumpPh5(tester, (fs) => build(fs), admin: false, pushed: true, seed: _seed);
@@ -73,7 +71,7 @@ void main() {
       expect(find.descendant(of: page, matching: find.text('Print')), findsOneWidget);
       expect(find.descendant(of: page, matching: find.text('Delete')), findsNothing);
       expect(find.descendant(of: page, matching: find.text('Edit')), findsNothing);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('${e.key}: delete asks first, closes the page, and Undo brings the record back', (tester) async {
       await pumpPh5(tester, (fs) => build(fs), pushed: true, seed: _seed);
@@ -90,7 +88,7 @@ void main() {
       await ph5Settle(tester);
       await ph5Settle(tester);
       expect(_key('phoneList-row-$id'), findsOneWidget);
-    }, skip: _skip);
+    });
   }
 
   ph5TestWidgets('Back returns to the same place in the list', (tester) async {
@@ -106,7 +104,7 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await ph5Settle(tester);
     expect(tester.state<ScrollableState>(_list).position.pixels, before);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('a row reads "client, amount, status, date and time"', (tester) async {
     final semantics = tester.ensureSemantics();
@@ -114,5 +112,5 @@ void main() {
     final when = DateFormat('d MMM HH:mm').format(_sale.when);
     expect(find.bySemanticsLabel('Amina Juma, ${Money.format(45000)}, Partial, $when'), findsOneWidget);
     semantics.dispose();
-  }, skip: _skip);
+  });
 }

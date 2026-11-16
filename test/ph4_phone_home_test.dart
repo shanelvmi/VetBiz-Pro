@@ -13,8 +13,6 @@ import 'package:vetbiz_pro/services/dashboard_summary_service.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 void main() {
   group('the phone home at phone sizes', () {
     for (final s in ph4PhoneSizes) {
@@ -28,14 +26,14 @@ void main() {
             await tester.drag(find.byType(ListView).first, const Offset(0, -2000));
             await tester.pumpAndSettle();
             await checkCase(tester, phone: true, where: '$where, scrolled');
-          }, skip: _skip);
+          });
         }
       }
     }
     testWidgets(matrixTextScaleCase, (tester) async {
       await pumpAtSize(tester, screen: phoneHomeHarness(), size: ph4PhoneSizes.first.size, textScale: matrixLargeTextScale);
       await checkCase(tester, phone: true, where: matrixTextScaleCase);
-    }, skip: _skip);
+    });
   });
 
   group('the Today card', () {
@@ -103,7 +101,7 @@ void main() {
         }
         expect(find.text(Money.format(today.totalSales)), findsNothing);
       }
-    }, skip: _skip);
+    });
 
     testWidgets('an assistant sees Sales, Collected and Owed only: no Net profit, two columns', (tester) async {
       const figures = PhoneHomeFigures(sales: 100, collected: 200, owed: 300, netProfit: 987654);
@@ -118,14 +116,14 @@ void main() {
       final collected = tester.getSize(find.ancestor(of: find.text('Collected'), matching: find.byType(Expanded)).first);
       // UI5: the chevron takes the row's end; three columns would be about 100.
       expect(collected.width, greaterThan(140), reason: 'two columns');
-    }, skip: _skip);
+    });
 
     testWidgets('an admin sees Net profit in a third column', (tester) async {
       const figures = PhoneHomeFigures(sales: 100, collected: 200, owed: 300, netProfit: 987654);
       await pumpPhoneHome(tester, phoneHomeHarness(figures: figures));
       expect(find.text('Net profit'), findsOneWidget);
       expect(find.text(Money.format(987654)), findsOneWidget);
-    }, skip: _skip);
+    });
 
     // UI5: the whole card is the button (no "All details" line).
     testWidgets('All details opens from the card', (tester) async {
@@ -133,7 +131,7 @@ void main() {
       await pumpPhoneHome(tester, phoneHomeHarness(onAllDetails: () => opened++));
       await tester.tap(find.text('Collected'));
       expect(opened, 1);
-    }, skip: _skip);
+    });
   });
 
 
@@ -146,11 +144,11 @@ void main() {
     expect(name.dy, lessThan(greeting.dy));
     expect(tester.widget<Text>(find.text(ph4Greeting)).style!.fontSize, 12);
     expect(tester.widget<Text>(find.text('Kilimo Agrovet')).style!.fontSize, 16);
-  }, skip: _skip);
+  });
 
   test('the period chip offers the dashboard\'s four periods, stored in English', () {
     expect(dashboardPeriods, ['Today', 'This Week', 'This Month', 'This Year']);
     final l = lookupAppLocalizations(const Locale('sw'));
     expect(dashboardPeriodLabel(l, 'Today'), l.common_today);
-  }, skip: _skip);
+  });
 }

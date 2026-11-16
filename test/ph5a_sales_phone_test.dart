@@ -10,8 +10,6 @@ import 'package:vetbiz_pro/screens/sales/sales_screen.dart';
 
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 const _phone = Size(390, 844);
 const _wide = Size(1200, 800);
 
@@ -70,7 +68,7 @@ void main() {
       await tester.tap(find.byTooltip('Show menu'));
       await ph5Settle(tester);
       expect(find.text('Archive'), findsOneWidget);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('the cards, the toolbar, the table header and the page bar are gone', (tester) async {
       await _sales(tester);
@@ -78,7 +76,7 @@ void main() {
       expect(find.text('Date: Last 30 days'), findsNothing);
       expect(find.text('Invoice No.'), findsNothing);
       expect(find.text('Page 1'), findsNothing);
-    }, skip: _skip);
+    });
   });
 
   group('search and filters (R3)', () {
@@ -95,7 +93,7 @@ void main() {
       await ph5Settle(tester);
       expect(_invoices(tester), hasLength(6));
       expect(_key('phoneList-filterDot'), findsNothing);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('the filter sheet gives the tablet toolbar\'s results for the same data', (tester) async {
       await _sales(tester, size: _wide);
@@ -131,7 +129,7 @@ void main() {
       await tester.tap(_inSheet('Apply'));
       await ph5Settle(tester);
       expect(_invoices(tester), toolbarPaid);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('applied filters show as removable chips; Reset in the sheet puts the defaults back', (tester) async {
       await _sales(tester);
@@ -155,7 +153,7 @@ void main() {
       await ph5Settle(tester);
       expect(applied, findsNothing);
       expect(_invoices(tester), hasLength(6));
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('search expands in place; results are not grouped; Close clears it', (tester) async {
       await _sales(tester);
@@ -170,7 +168,7 @@ void main() {
       await tester.tap(find.byTooltip('Close'));
       await ph5Settle(tester);
       expect(_invoices(tester), hasLength(6));
-    }, skip: _skip);
+    });
   });
 
   group('the summary (R4)', () {
@@ -187,7 +185,7 @@ void main() {
       for (final l in labels) {
         expect(_valuesBeside(tester, _inSheet(l), Row), cards[l], reason: l);
       }
-    }, skip: _skip);
+    });
   });
 
   group('grouped by day (R5) with rows (R6)', () {
@@ -204,7 +202,7 @@ void main() {
       }
       expect(find.descendant(of: _key('phoneList-row-s2'), matching: find.text('Walk-in')), findsOneWidget);
       expect(tester.getSize(row).height, greaterThanOrEqualTo(64));
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('a day cut by the page end shows no total until it is fully loaded', (tester) async {
       // 20 today and 10 yesterday: the first page (25) ends inside yesterday.
@@ -228,7 +226,7 @@ void main() {
       await tester.scrollUntilVisible(_key('phoneList-row-y9'), -200, scrollable: _list);
       expect(find.descendant(of: _key('phoneList-day-$yesterday'), matching: find.text(Money.format(10000))), findsOneWidget);
       expect(_key('phoneList-loadMore'), findsNothing);
-    }, skip: _skip);
+    });
   });
 
   group('refresh (R8)', () {
@@ -241,6 +239,6 @@ void main() {
       await ph5Settle(tester);
       expect(_invoices(tester), contains('SL-000007'));
       expect(find.text('Last 30 days: 7 sales, ${Money.format(100000)}'), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 }

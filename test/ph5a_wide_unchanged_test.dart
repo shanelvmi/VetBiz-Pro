@@ -13,8 +13,6 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'helpers/tree_fingerprint.dart';
 
-const _skip = false;
-
 final _sales = [
   Ph5Sale('s1', ph5When(0, minutes: 5), client: matrixLongClientName, amount: matrixBigAmount, paid: 0, receipt: 1),
   Ph5Sale('s2', ph5When(0, minutes: 30), client: 'Amina Juma', amount: 45000, paid: 20000, receipt: 2),
@@ -64,7 +62,7 @@ void main() {
         await tester.tap(find.text(rowText).first);
         await ph5Settle(tester);
         expectSameFingerprint('$where-details', '${_errors(tester)}${treeFingerprint(tester, find.byType(type))}');
-      }, skip: _skip);
+      });
     }
   }
 }

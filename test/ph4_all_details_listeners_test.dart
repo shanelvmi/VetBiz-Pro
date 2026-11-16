@@ -20,8 +20,6 @@ import 'helpers/counting_firestore.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = false;
-
 const _totals = DashboardPeriodTotals(
   totalSales: 12500,
   totalCollected: 9700,
@@ -88,7 +86,7 @@ void main() {
       expect(find.textContaining('Pending'), findsOneWidget);
       await tester.scrollUntilVisible(find.text('FEED'), 200, scrollable: find.byType(Scrollable).first);
       expect(tester.getTopLeft(find.text('CHART')).dy, lessThan(tester.getTopLeft(find.text('FEED')).dy));
-    }, skip: _skip);
+    });
 
     testWidgets('each row opens the list its figure comes from', (tester) async {
       final opened = <DetailsTarget>[];
@@ -107,7 +105,7 @@ void main() {
         DetailsTarget.clients,
         DetailsTarget.services,
       ]);
-    }, skip: _skip);
+    });
 
     testWidgets('an assistant: Net Profit masked as on today\'s card, no Earned or Pending', (tester) async {
       await pumpAtSize(tester, screen: _details(isAdmin: false), size: const Size(390, 844));
@@ -118,7 +116,7 @@ void main() {
       // PH4b (the owner's decision): no Total Expenses for assistants either
       // (ph4b_expenses_rows_test.dart).
       expect(find.text('Total Expenses (Today)'), findsNothing);
-    }, skip: _skip);
+    });
 
     group('sizes and looks: no overflow, 48 px targets, no truncated title', () {
       for (final size in const [Size(360, 740), Size(390, 844), Size(740, 360)]) {
@@ -132,7 +130,7 @@ void main() {
                 final p = e.renderObject! as RenderParagraph;
                 expect(p.didExceedMaxLines, isFalse, reason: '$where: "${p.text.toPlainText()}" is cut');
               }
-            }, skip: _skip);
+            });
           }
         }
       }
@@ -150,7 +148,7 @@ void main() {
         ));
         expect(find.text('TODAY'), findsOneWidget);
         expect(find.text('PHONE HOME'), findsNothing);
-      }, skip: _skip);
+      });
     }
 
     test('their loads are unchanged: all five on every open, period change and return', () {
@@ -164,7 +162,7 @@ void main() {
       expect(dashboardLoadsFor(DashboardMoment.coldOpen, phone: false), {...five, DashboardLoad.recentActivity});
       expect(dashboardLoadsFor(DashboardMoment.periodChanged, phone: false), five);
       expect(dashboardLoadsFor(DashboardMoment.returnToHome, phone: false), five);
-    }, skip: _skip);
+    });
   });
 
   group('listeners and reads on a phone, counted on the fake Firestore', () {
@@ -276,13 +274,13 @@ void main() {
         expect(aReturn, 0);
         expect(aListenAfterReturn, 4);
         expect(bReturn, greaterThan(0));
-      }, skip: _skip);
+      });
     }
 
     test('opening All details: the chart\'s gets and Recent Activity, nothing else', () async {
       expect(dashboardLoadsFor(DashboardMoment.allDetailsOpened, phone: true),
           {DashboardLoad.chart, DashboardLoad.recentActivity});
       expect(dashboardLoadsFor(DashboardMoment.periodChanged, phone: true), {DashboardLoad.periodTotals});
-    }, skip: _skip);
+    });
   });
 }

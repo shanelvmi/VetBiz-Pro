@@ -9,8 +9,6 @@ import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 
 import 'helpers/phone_home_harness.dart';
 
-const _skip = false;
-
 void main() {
   group('Needs attention', () {
     test('counts from memory: overdue debtors by the facility\'s setting (attentionCountsFor)', () {
@@ -43,12 +41,12 @@ void main() {
         AttentionItem(AttentionKind.expiringSoon, 2),
         AttentionItem(AttentionKind.lowStock, 2),
       ]);
-    }, skip: _skip);
+    });
 
     testWidgets('absent when nothing needs attention', (tester) async {
       await pumpPhoneHome(tester, phoneHomeHarness(attention: const []));
       expect(find.byType(AttentionStrip), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('one strip under the card with the first item and +N; its tap opens the sheet', (tester) async {
       var taps = 0;
@@ -60,6 +58,6 @@ void main() {
           greaterThan(tester.getBottomLeft(find.byType(TodayCard)).dy));
       await tester.tap(find.byType(AttentionStrip));
       expect(taps, 1);
-    }, skip: _skip);
+    });
   });
 }

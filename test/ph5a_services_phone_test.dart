@@ -15,8 +15,6 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 const _phone = Size(390, 844);
 const _wide = Size(1200, 800);
 
@@ -68,7 +66,7 @@ void main() {
       await tester.tap(find.byTooltip('Show menu'));
       await ph5Settle(tester);
       expect(find.text('Archive'), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 
   group('Record Visit (R2)', () {
@@ -84,7 +82,7 @@ void main() {
       await tester.drag(_list, const Offset(0, 150));
       await ph5Settle(tester);
       expect(_extended(tester), isTrue);
-    }, skip: _skip);
+    });
 
     testWidgets('the last row is never under the button', (tester) async {
       await _services(tester, services: _many);
@@ -94,7 +92,7 @@ void main() {
       }
       final lastRow = tester.getRect(_key('phoneList-row-m23'));
       expect(lastRow.bottom, lessThanOrEqualTo(tester.getRect(_key('phoneList-fab')).top));
-    }, skip: _skip);
+    });
 
     testWidgets('hidden while the keyboard is open', (tester) async {
       await _services(tester);
@@ -105,14 +103,14 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       await tester.pump();
       expect(_key('phoneList-fab'), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('locked: the guard holds and no form opens', (tester) async {
       await _services(tester, locked: true);
       await tester.tap(_key('phoneList-fab'));
       await ph5Settle(tester);
       expect(find.byType(AddEditServiceScreen), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('unlocked: the form opens', (tester) async {
       await _services(tester);
@@ -121,7 +119,7 @@ void main() {
       expect(find.byType(AddEditServiceScreen), findsOneWidget);
       // The form's own phone layout is PH6 (it overflows at 390 today).
       while (tester.takeException() != null) {}
-    }, skip: _skip);
+    });
   });
 
   group('filters (R3) and the summary (R4)', () {
@@ -146,7 +144,7 @@ void main() {
       await tester.tap(_inSheet('Apply'));
       await ph5Settle(tester);
       expect(_rowIds(tester), {'v2', 'v4'});
-    }, skip: _skip);
+    });
 
     testWidgets('the summary line and sheet are the cards\' figures', (tester) async {
       await _services(tester);
@@ -162,7 +160,7 @@ void main() {
         final row = find.ancestor(of: _inSheet(label), matching: find.byType(Row)).first;
         expect(find.descendant(of: row, matching: find.text(value)), findsOneWidget, reason: label);
       }
-    }, skip: _skip);
+    });
 
     testWidgets('a row: the category icon, client and amount, category and time, status as text', (tester) async {
       await _services(tester);
@@ -171,7 +169,7 @@ void main() {
         expect(find.descendant(of: row, matching: find.text(t)), findsOneWidget, reason: t);
       }
       expect(find.descendant(of: row, matching: find.byType(Icon)), findsWidgets);
-    }, skip: _skip);
+    });
   });
 
   group('states (R9)', () {
@@ -197,7 +195,7 @@ void main() {
         await ph5Settle(tester);
         expect(skeleton, findsNothing);
       }
-    }, skip: _skip);
+    });
 
     testWidgets('empty: an icon, one plain line and Record Visit as a button (through the guard)', (tester) async {
       await _services(tester, services: const [], locked: true);
@@ -207,7 +205,7 @@ void main() {
       await tester.tap(find.descendant(of: empty, matching: find.text('Record Visit')));
       await ph5Settle(tester);
       expect(find.byType(AddEditServiceScreen), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('error: the message and Retry, which loads the list again', (tester) async {
       final db = CountingFirestore();
@@ -220,6 +218,6 @@ void main() {
       await ph5Settle(tester);
       expect(_key('phoneList-error'), findsNothing);
       expect(_rowIds(tester), {'v1', 'v2', 'v3', 'v4'});
-    }, skip: _skip);
+    });
   });
 }

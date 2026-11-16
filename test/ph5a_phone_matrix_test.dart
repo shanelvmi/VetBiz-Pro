@@ -13,8 +13,6 @@ import 'helpers/counting_firestore.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 Finder _key(String k) => find.byKey(ValueKey(k));
 
 Future<void> _seed(dynamic fs) async {
@@ -47,7 +45,7 @@ void main() {
             await tester.tap(_key('phoneList-row-$id'));
             await ph5Settle(tester);
             await checkCase(tester, phone: true, where: '$where details');
-          }, skip: _skip);
+          });
         }
       }
     });
@@ -77,7 +75,7 @@ void main() {
         // ignore: avoid_print
         print('PH5a ${e.key} cold open (listeners, gets, reads): computer ${counts['1200']}, phone ${counts['390']}');
         expect(counts['390'], counts['1200']);
-      }, skip: _skip);
+      });
     }
   });
 }

@@ -19,8 +19,6 @@ import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = false;
-
 const _wide = Size(1200, 800);
 
 final _three = [
@@ -54,7 +52,7 @@ void main() {
     expect(find.byTooltip('Search'), findsOneWidget);
     expect(find.byTooltip('Show menu'), findsNothing);
     expect(find.text('Add Client'), findsOneWidget, reason: 'only the floating button');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Add Client floats, shrinks scrolling down, grows back, hides with the keyboard, opens the form', (tester) async {
     await _clients(tester, clients: _many);
@@ -69,13 +67,13 @@ void main() {
     await ph5Settle(tester);
     expect(find.byType(AddClientScreen), findsOneWidget);
     while (tester.takeException() != null) {}
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('hidden while the keyboard is open', (tester) async {
     await _clients(tester);
     await ph5OpenKeyboard(tester);
     expect(ph5Key('phoneList-fab'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('status chips and the Filter sheet give the toolbar\'s results', (tester) async {
     await _clients(tester, size: _wide);
@@ -115,7 +113,7 @@ void main() {
     await ph5Settle(tester);
     expect(_rowNames(tester), vets);
     expect(find.descendant(of: ph5Key('phoneList-appliedChips'), matching: find.text('Type: Vet')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('"3 clients" and a Summary sheet with the four cards\' figures, as the tablet shows them', (tester) async {
     final cards = {'Total Clients': '3', 'New This Month': '3', 'Most Active Type': 'Farmer', 'Last Added': 'Amina Juma'};
@@ -134,7 +132,7 @@ void main() {
     }
     expect(find.descendant(of: find.byType(BottomSheet), matching: find.textContaining('67% of clients')), findsOneWidget);
     expect(find.descendant(of: find.byType(BottomSheet), matching: find.textContaining('All time')), findsWidgets);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('rows: initials, the name, phone and joined date, the first type and how many more as a chip; no amount; no day headers', (tester) async {
     await _clients(tester);
@@ -145,7 +143,7 @@ void main() {
     expect(find.descendant(of: row, matching: find.textContaining('Tsh')), findsNothing);
     expect(ph5HasDayHeaders(tester), isFalse);
     expect(ph5RowIds(tester), {'c1', 'c2', 'c3'});
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the details page: the panel\'s content, Call and Save / Share, Edit; Delete asks, closes, offers Undo', (tester) async {
     await _clients(tester, size: _wide);
@@ -172,7 +170,7 @@ void main() {
     // Undo is offered (today's restore, TrashService on the app's own
     // Firestore, cannot run on the fake: the owner checks it on the phone).
     expect(find.text('Undo'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an assistant\'s page: Edit, no Delete (today\'s row menu)', (tester) async {
     await _clients(tester, admin: false);
@@ -180,7 +178,7 @@ void main() {
     await ph5Settle(tester);
     expect(find.descendant(of: ph5Page, matching: find.byTooltip('Edit')), findsOneWidget);
     expect(find.descendant(of: ph5Page, matching: find.byTooltip('Delete')), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('pull to refresh starts the list over (a client added since shows)', (tester) async {
     final app = await _clients(tester);
@@ -188,7 +186,7 @@ void main() {
     expect(ph5RowIds(tester), isNot(contains('c4')));
     await ph5Pull(tester);
     expect(ph5RowIds(tester), contains('c4'));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('paging: the next page loads near the end; Load more is the fallback', (tester) async {
     await _clients(tester, clients: _many);
@@ -199,7 +197,7 @@ void main() {
     // The last of 30 (page size 25) is at the end once the second page came.
     expect(ph5Key('phoneList-row-m29'), findsOneWidget);
     expect(ph5Key('phoneList-loadMore'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('states: six skeleton rows, then the rows; empty with Add Client; error with Retry', (tester) async {
     final held = CountingFirestore()..holdGets = Completer<void>();
@@ -223,5 +221,5 @@ void main() {
     await tester.tap(find.text('Retry'));
     await ph5Settle(tester);
     expect(ph5RowIds(tester), hasLength(3));
-  }, skip: _skip);
+  });
 }
