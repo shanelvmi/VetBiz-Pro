@@ -27,8 +27,6 @@ import 'package:vetbiz_pro/widgets/updates_carousel.dart';
 import 'helpers/login_harness.dart';
 import 'helpers/real_font.dart';
 
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));
 
@@ -86,7 +84,7 @@ void main() {
     expect(_rect(tester, find.byKey(LoginScreen.loginCardKey)).left, 24);
     expect(_rect(tester, find.byKey(_button)).width, 390 - 48);
     expect(_rect(tester, find.byKey(_button)).height, AuthPhoneMetrics.buttonHeight);
-  }, skip: _skip);
+  });
 
   // In Roboto, as on a phone: the square test font is about twice as wide.
   for (final (width, l10n) in [(360.0, _en), (390.0, _en), (412.0, _en), (390.0, _sw), (412.0, _sw)]) {
@@ -98,7 +96,7 @@ void main() {
       expect(forgot.center.dy, closeTo(remember.center.dy, 2));
       expect(forgot.left, greaterThan(remember.right));
       expect(forgot.right, closeTo(width - 24, 1), reason: 'at the right edge of the column');
-    }, skip: _skip);
+    });
   }
 
   // LG1's sizes without a keyboard: the form on screen without scrolling.
@@ -111,7 +109,7 @@ void main() {
       expect(find.byKey(AuthPhoneHeader.taglineKey), findsOneWidget);
       expect(_rect(tester, find.byKey(_button)).bottom, lessThanOrEqualTo(size.height));
       expect(_rect(tester, find.text(_en.login_noAccount)).bottom, lessThanOrEqualTo(size.height));
-    }, skip: _skip);
+    });
   }
 
   // The keyboard opens on the page (as on a phone), with either field focused.
@@ -139,7 +137,7 @@ void main() {
         tester.view.viewInsets = FakeViewPadding.zero;
         await tester.pumpAndSettle();
         expect(find.byKey(AuthPhoneHeader.taglineKey), findsOneWidget);
-      }, skip: _skip);
+      });
     }
   }
 
@@ -168,7 +166,7 @@ void main() {
         expect(ColorMath.contrast(colors.authFooterMutedText, tint), greaterThanOrEqualTo(4.5), reason: '$where tagline');
       }
     }
-  }, skip: _skip);
+  });
 
   testWidgets('the entrance: the header then the form, once; not again on a resize', (tester) async {
     await pumpLogin(tester, FakeFirebaseFirestore(), width: 390, height: 844);
@@ -186,7 +184,7 @@ void main() {
     await tester.pump();
     expect(opacity(0), 1);
     expect(opacity(1), 1);
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: no entrance at all', (tester) async {
     await pumpLogin(tester, FakeFirebaseFirestore(), width: 390, height: 844, reduceMotion: true);
@@ -196,7 +194,7 @@ void main() {
         expect((f.widget as FadeTransition).opacity.value, 1);
       }
     }
-  }, skip: _skip);
+  });
 
   for (final size in const [Size(360, 640), Size(390, 844), Size(412, 915), Size(560, 900)]) {
     for (final brightness in Brightness.values) {
@@ -207,7 +205,7 @@ void main() {
           await _settle(tester);
           expect(tester.takeException(), isNull);
           expect(find.byType(AuthPhoneHeader), findsOneWidget);
-        }, skip: _skip);
+        });
       }
     }
   }

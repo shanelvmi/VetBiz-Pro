@@ -16,8 +16,6 @@ import 'helpers/phone_home_harness.dart';
 import 'helpers/real_font.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _legend = ValueKey('home-chart-legend');
 const _solid = ValueKey('home-chart-legend-solid');
 const _dashed = ValueKey('home-chart-legend-dashed');
@@ -76,7 +74,7 @@ void main() {
         expect((box.decoration as BoxDecoration).color, colors.textMuted);
       }
       expect(ColorMath.contrast(colors.textMuted, colors.surface), greaterThanOrEqualTo(3));
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the muted role reaches 3:1 on the page in Dark too', (tester) async {
@@ -86,7 +84,7 @@ void main() {
     final colors = tester.element(find.byKey(_legend)).colors;
     expect(find.descendant(of: find.byKey(_dashed), matching: _dash), findsAtLeastNWidgets(2));
     expect(ColorMath.contrast(colors.textMuted, colors.surface), greaterThanOrEqualTo(3));
-  }, skip: _skip);
+  });
 
   for (final width in [360.0, 390.0, 412.0]) {
     for (final look in [MatrixLook.light, MatrixLook.kiswahili]) {
@@ -104,7 +102,7 @@ void main() {
           }
           final dashed = tester.getRect(find.byKey(_dashed));
           expect(dashed.left, greaterThan(tester.getRect(texts.first).right), reason: 'both entries on the one line');
-        }, skip: _skip);
+        });
       }
     }
   }

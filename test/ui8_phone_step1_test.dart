@@ -20,8 +20,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_option_card.dart';
 
 import 'helpers/register_harness.dart';
 
-const _skip = false;
-
 const _phone = Size(390, 844);
 final _en = registerEn;
 
@@ -45,20 +43,20 @@ void main() {
     final staff = _card(_en.register_roleAssistantSubtitle);
     expect(find.descendant(of: staff, matching: find.text(_en.register_roleStaffAssistant)), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Kiswahili: the draft label', (tester) async {
     await pumpRegister(tester, size: _phone, chooseOwner: false, locale: const Locale('sw'));
     expect(find.text(registerSw.register_roleStaffAssistant), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('wide: the card still shows "Assistant"', (tester) async {
     await pumpRegister(tester, size: const Size(1200, 800), chooseOwner: false);
     expect(find.text(_en.roleLabel('assistant')), findsOneWidget);
     expect(find.text(_en.register_roleStaffAssistant), findsNothing);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('THE STORED VALUE: "Staff/Assistant" is still the assistant flow and the assistant call', (tester) async {
     final auth = FakeRegisterAuth();
@@ -73,7 +71,7 @@ void main() {
     expect(auth.ownerCalls, isEmpty);
     expect(auth.assistantCalls, hasLength(1));
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   test('the role is still stored and compared as \'Assistant\'; the new text is display only', () {
     final sources = [
@@ -89,7 +87,7 @@ void main() {
       if (!text.contains('register_roleStaffAssistant')) continue;
       expect(f.path.replaceAll('\\', '/'), endsWith('lib/screens/register/wizard_view.dart'), reason: 'shown on step 1 only');
     }
-  }, skip: _skip);
+  });
 
   testWidgets('the cards: taller, an icon tile, the larger corner', (tester) async {
     await pumpRegister(tester, size: _phone, chooseOwner: false);
@@ -101,7 +99,7 @@ void main() {
       expect((_shape(tester, card) as RoundedRectangleBorder).borderRadius, BorderRadius.circular(AuthPhoneMetrics.optionRadius));
     }
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('chosen: tinted, the primary border; contrast in all four themes, Light and Dark', (tester) async {
     for (final theme in AppColorTheme.all) {
@@ -129,5 +127,5 @@ void main() {
         await finishRegister(tester);
       }
     }
-  }, skip: _skip);
+  });
 }

@@ -30,8 +30,6 @@ import 'helpers/phone_home_harness.dart';
 import 'helpers/real_font.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _header = ValueKey('home-chart-header');
 const _title = ValueKey('home-chart-title');
 const _period = ValueKey('home-chart-period');
@@ -130,7 +128,7 @@ void main() {
         if (i < _pages.length - 1) await _swipe(tester);
       }
       expect(tops.toSet(), hasLength(1), reason: 'the same top on every page');
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the right-hand content: the Sales legend (both swatches); the muted period on the others',
@@ -149,7 +147,7 @@ void main() {
       expect(text.style!.color, c.textMuted, reason: '$page: the muted role');
       expect(find.descendant(of: _in(page, find.byKey(_header)), matching: find.byKey(_period)), findsOneWidget);
     }
-  }, skip: _skip);
+  });
 
   testWidgets('empty Sales: the muted period in the legend\'s place, the empty line and button under the header',
       (tester) async {
@@ -163,7 +161,7 @@ void main() {
     for (final key in ['home-chart-empty', 'home-chart-empty-action']) {
       expect(_rect(tester, HomeChartSalesPage, find.byKey(ValueKey(key))).top, greaterThan(header.bottom), reason: key);
     }
-  }, skip: _skip);
+  });
 
   for (final width in [360.0, 390.0, 412.0]) {
     for (final look in [MatrixLook.light, MatrixLook.kiswahili]) {
@@ -208,7 +206,7 @@ void main() {
               expect(dashed.top, greaterThan(solid.bottom), reason: 'stacked, nothing cut');
             }
             expect(tester.takeException(), isNull, reason: where);
-          }, skip: _skip);
+          });
         }
       }
     }
@@ -225,7 +223,7 @@ void main() {
     expect(tester.getSize(find.byKey(const ValueKey('home-top-0'))).height, 48);
     await _swipe(tester);
     expect(card(HomeChartVisitsPage), sales, reason: 'Visit activity');
-  }, skip: _skip);
+  });
 
   testWidgets('the skeleton on each page has the rect its content then takes, under the one header row',
       (tester) async {
@@ -258,5 +256,5 @@ void main() {
         () => movement.complete(HomeMovement(top: [TopSeller('Dewormer', 8, ph4Product('d'))], slow: const [])));
     await next();
     await check(HomeChartVisitsPage, () => visits.complete(const [ServiceSlice('Vaccination', 3, 30000)]));
-  }, skip: _skip);
+  });
 }

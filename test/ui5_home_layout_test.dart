@@ -18,8 +18,6 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 /// The phone sizes that must not scroll (HUB1: no bottom bar any more; the
 /// harness is the hub, Home under the action panel).
 const _noScroll = [
@@ -66,7 +64,7 @@ void main() {
                 expect(strip.top, greaterThanOrEqualTo(card.bottom));
                 expect(strip.bottom, lessThanOrEqualTo(panelTop), reason: '$where: the panel covers the strip');
               }
-            }, skip: _skip);
+            });
           }
         }
       }
@@ -82,13 +80,13 @@ void main() {
       expect(tester.getTopLeft(name).dy, lessThan(tester.getTopLeft(find.text(ph4Greeting)).dy));
       expect(find.byTooltip('Help'), findsNothing);
       expect(tester.takeException(), isNull);
-    }, skip: _skip);
+    });
 
     testWidgets('the facility name is drawn once, not inside the card', (tester) async {
       await pumpPhoneHome(tester, phoneHomeHarness(facilityName: 'Kilimo Agrovet'));
       expect(find.text('Kilimo Agrovet'), findsOneWidget);
       expect(find.descendant(of: find.byType(TodayCard), matching: find.text('Kilimo Agrovet')), findsNothing);
-    }, skip: _skip);
+    });
   });
 
   group('the Today card', () {
@@ -99,7 +97,7 @@ void main() {
       expect(find.text('3–9 Nov'), findsOneWidget);
       expect(find.descendant(of: find.byType(TodayCard), matching: find.text('All details')), findsNothing);
       expect(find.descendant(of: find.byType(TodayCard), matching: find.byIcon(Icons.chevron_right)), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('the eye is at the right end of the amount\'s row', (tester) async {
       await pumpPhoneHome(tester, phoneHomeHarness());
@@ -109,7 +107,7 @@ void main() {
       expect(eye.right, closeTo(card.right - 4, 1), reason: 'at the card\'s right end');
       expect(eye.center.dy, inInclusiveRange(amount.top - 12, amount.bottom + 12), reason: 'on the amount\'s row');
       expect(eye.top, greaterThanOrEqualTo(tester.getRect(find.byTooltip('Change period')).bottom - 1));
-    }, skip: _skip);
+    });
 
     testWidgets('one tap target: the card opens All details; the chip and the eye do not', (tester) async {
       var details = 0, toggles = 0;
@@ -126,7 +124,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(details, 1);
       expect(find.text('This Month'), findsOneWidget, reason: 'the period menu opened');
-    }, skip: _skip);
+    });
 
     testWidgets('one card size with and without sales, hidden, shown, every period (HUB3: no "No sales yet")',
         (tester) async {
@@ -148,14 +146,14 @@ void main() {
       for (final (p, l) in [('This Week', '28 Dec 2026–1 Jan 2027'), ('This Month', 'Nov 2026'), ('This Year', '2026')]) {
         expect(await size(ph4BigFigures, period: p, label: l), shown, reason: p);
       }
-    }, skip: _skip);
+    });
 
     testWidgets('an assistant sees two figures, no Net profit', (tester) async {
       await pumpPhoneHome(tester, phoneHomeHarness(isAdmin: false));
       expect(find.text('Collected'), findsOneWidget);
       expect(find.text('Owed'), findsOneWidget);
       expect(find.text('Net profit'), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('the card is a button named All details for a screen reader', (tester) async {
       final handle = tester.ensureSemantics();
@@ -173,7 +171,7 @@ void main() {
       card.visitChildren(collect);
       expect(inside, containsAll(['Change period', 'Hide amounts']));
       handle.dispose();
-    }, skip: _skip);
+    });
   });
 
   group('the reveal skeleton (RV1) has the loaded layout', () {
@@ -202,7 +200,7 @@ void main() {
           expect(find.byType(SkeletonPulse), findsNothing);
           expect(rects(), before);
           expect(tester.takeException(), isNull);
-        }, skip: _skip);
+        });
       }
     }
 
@@ -213,6 +211,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(_card(tester), card);
       expect(tester.getSize(find.byType(AttentionStrip)).height, PhoneHomeMetrics.attentionStripHeight);
-    }, skip: _skip);
+    });
   });
 }

@@ -21,8 +21,6 @@ import 'helpers/phone_home_harness.dart';
 import 'helpers/real_font.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _sizes = [
   MatrixSize('360x740', Size(360, 740), phone: true),
   MatrixSize('390x844', Size(390, 844), phone: true),
@@ -84,7 +82,7 @@ void main() {
         await pumpAtSize(tester, screen: _home(), size: s.size, look: look);
         await tester.pumpAndSettle();
         await _check(tester, s, look, matrixCase(s, look));
-      }, skip: _skip);
+      });
     }
     for (final theme in AppColorTheme.all.where((t) => t != AppColorTheme.pasture)) {
       for (final look in [MatrixLook.light, MatrixLook.dark]) {
@@ -92,7 +90,7 @@ void main() {
           await pumpAtSize(tester, screen: _home(), size: s.size, look: look, colorTheme: theme);
           await tester.pumpAndSettle();
           await _check(tester, s, look, '${matrixCase(s, look)} ${theme.id}');
-        }, skip: _skip);
+        });
       }
     }
     testWidgets('${s.label}: the skeleton has the content\'s card and chart rects', (tester) async {
@@ -107,6 +105,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.getRect(find.byType(TodayCard)), card);
       if (chart != null) expect(tester.getRect(charts), chart);
-    }, skip: _skip);
+    });
   }
 }

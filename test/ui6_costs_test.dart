@@ -17,8 +17,6 @@ import 'package:vetbiz_pro/services/home_chart_data.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = false;
-
 String _read(String path) => File(path).readAsStringSync().replaceAll('\r\n', '\n');
 
 Future<void> _settle() => Future<void>.delayed(const Duration(milliseconds: 50));
@@ -38,7 +36,7 @@ void main() {
         expect(source.contains(banned), isFalse, reason: '$path still takes a live line ($banned)');
       }
     }
-  }, skip: _skip);
+  });
 
   test('phone Home opens no recent-activity listener; the wide and All details feeds keep theirs', () {
     final dashboard = _read('lib/screens/dashboard/dashboard_screen.dart');
@@ -56,7 +54,7 @@ void main() {
     for (final path in ['lib/screens/dashboard/dashboard_panels.dart', 'lib/utils/merged_query_stream.dart']) {
       expect(_read(path).contains('onFromCache'), isFalse, reason: path);
     }
-  }, skip: _skip);
+  });
 
   test('phone Home cold open: admin 6 -> 5 listeners, assistant 7 -> 5; reads -5; a return reads nothing', () async {
     final db = CountingFirestore();
@@ -102,5 +100,5 @@ void main() {
         'assistant $assistantBefore -> ${after.listeners}; cold open reads -5 (the line\'s limit 5); return +0');
     await totals.cancel();
     debts.clear();
-  }, skip: _skip);
+  });
 }

@@ -15,8 +15,6 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 // Before UI6 at 390x844 (HUB4b, the harness with charts): the card was 187
 // high and the chart region 255, its line under the amount 17 (the 12 px
 // label in the test font).
@@ -67,7 +65,7 @@ void main() {
         expect(find.textContaining('Offline'), findsNothing);
         expect(find.textContaining('Nje ya mtandao'), findsNothing);
       }
-    }, skip: _skip);
+    });
   });
 
   group('one line shorter', () {
@@ -79,7 +77,7 @@ void main() {
       expect(chart, closeTo(_chartBefore + _lineBefore, 0.5));
       // ignore: avoid_print
       print('UI6 390x844: card $_cardBefore -> $card, chart region $_chartBefore -> $chart');
-    }, skip: _skip);
+    });
 
     testWidgets('the amount row is followed directly by the three figures', (tester) async {
       await _pump(tester);
@@ -88,7 +86,7 @@ void main() {
       expect(stats.top - amount.bottom, PhoneHomeMetrics.cardRowGap);
       // The amount's own line sets the row's height now, not the eye.
       expect(amount.height, lessThan(PhoneHomeMetrics.linkHeight));
-    }, skip: _skip);
+    });
 
     testWidgets('the same height hidden or shown, Sales or Visits, with or without the delta', (tester) async {
       await _pump(tester);
@@ -99,7 +97,7 @@ void main() {
       expect(tester.getSize(find.byKey(_card)), base);
       await _pump(tester, delta: const HomeDelta.fresh());
       expect(tester.getSize(find.byKey(_card)), base);
-    }, skip: _skip);
+    });
   });
 
   group('kept as they were', () {
@@ -114,7 +112,7 @@ void main() {
       expect(find.descendant(of: find.byKey(_delta), matching: find.text('New')), findsOneWidget);
       await _pump(tester, hidden: true);
       expect(find.byKey(_delta), findsNothing, reason: 'the eye hides it, as before');
-    }, skip: _skip);
+    });
 
     testWidgets('the eye: 48 x 48, centred on the amount\'s line at the row\'s end, tappable to its edges', (tester) async {
       final toggles = await _pump(tester);
@@ -130,7 +128,7 @@ void main() {
         await tester.pump();
       }
       expect(toggles(), 3);
-    }, skip: _skip);
+    });
 
     testWidgets('the switch, the chip and the period label are unchanged', (tester) async {
       await _pump(tester);
@@ -142,7 +140,7 @@ void main() {
       final range = tester.getRect(find.byKey(const ValueKey('home-card-range')));
       expect(range.top - tester.getRect(find.byKey(_card)).top, 4 + PhoneHomeMetrics.linkHeight,
           reason: 'under the 48 px switch row, as before');
-    }, skip: _skip);
+    });
   });
 
   testWidgets('the reveal: the skeleton\'s card and chart rects are the content\'s', (tester) async {
@@ -161,5 +159,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getRect(find.byType(TodayCard)), card);
     expect(tester.getRect(find.byKey(_charts)), chart);
-  }, skip: _skip);
+  });
 }

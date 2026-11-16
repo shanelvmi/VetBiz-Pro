@@ -24,8 +24,6 @@ import 'package:vetbiz_pro/theme/color_math.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _figures = PhoneHomeFigures(sales: 1250000, collected: 980000, owed: 310000, netProfit: 145000);
 final _amounts = [_figures.sales, _figures.collected, _figures.owed, _figures.netProfit].map(Money.format).toList();
 const _facility = 'Mwanzo Agrovet';
@@ -128,7 +126,7 @@ void main() {
         expect(_sigma(tester.widget<ImageFiltered>(_placeholders.at(i)).imageFilter), inInclusiveRange(1.4, 2.6));
       }
       expect(_cardTexts(tester).where((t) => t.trim() == 'Tsh').length, 4);
-    }, skip: _skip);
+    });
 
     testWidgets('always four dots, whatever the amount (0, small, 8 digits, loading)', (tester) async {
       for (final figures in const [
@@ -143,7 +141,7 @@ void main() {
           expect(_dots(_placeholders.at(i)), findsNWidgets(4));
         }
       }
-    }, skip: _skip);
+    });
 
     testWidgets('the dots scale with the text: about 0.3 of the font size', (tester) async {
       await _card(tester, hidden: true);
@@ -152,7 +150,7 @@ void main() {
       for (final i in [1, 2, 3]) {
         expect(dot(i), closeTo(PhoneHomeMetrics.statValue * 0.3, 0.6));
       }
-    }, skip: _skip);
+    });
 
     testWidgets('the real digits are never built: no text and no semantics label holds a digit', (tester) async {
       final semantics = tester.ensureSemantics();
@@ -168,7 +166,7 @@ void main() {
       expect(find.bySemanticsLabel(RegExp(r'^(?!Mon 9 Nov\b)[^\n]*\d')), findsNothing);
       expect(find.bySemanticsLabel(RegExp('Amount hidden')), findsNWidgets(4));
       semantics.dispose();
-    }, skip: _skip);
+    });
 
     testWidgets('the eye masks the four amounts and nothing else; the labels stay', (tester) async {
       await _card(tester);
@@ -183,7 +181,7 @@ void main() {
       for (final amount in _amounts) {
         expect(find.text(amount), findsOneWidget);
       }
-    }, skip: _skip);
+    });
 
     testWidgets('an assistant: three placeholders, never Net profit', (tester) async {
       await _card(tester, isAdmin: false, hidden: true);
@@ -191,7 +189,7 @@ void main() {
       expect(find.text('Net profit'), findsNothing);
       await _tapEye(tester);
       expect(find.text(_amounts[3]), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('a short cross-fade (AppMotion) between the amounts and the dots', (tester) async {
       await _card(tester);
@@ -202,7 +200,7 @@ void main() {
       expect(find.descendant(of: find.byType(TodayCard), matching: find.byType(FadeTransition)), findsWidgets);
       await tester.pumpAndSettle();
       expect(find.text(_amounts[0]), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('reduced motion: the dots replace the amounts in one frame', (tester) async {
       await _card(tester, reduceMotion: true);
@@ -210,7 +208,7 @@ void main() {
       await tester.pump();
       expect(find.text(_amounts[0]), findsNothing);
       expect(_placeholders, findsNWidgets(4));
-    }, skip: _skip);
+    });
 
     group('the dots against the deep tone: at least 3:1 at their blurred centre', () {
       for (final theme in AppColorTheme.all) {
@@ -235,7 +233,7 @@ void main() {
                 expect(ColorMath.contrast(drawn, end), greaterThanOrEqualTo(3.0), reason: 'placeholder $i on $end');
               }
             }
-          }, skip: _skip);
+          });
         }
       }
     });
@@ -250,7 +248,7 @@ void main() {
       await facilities.setFacility(id: 'f2', name: 'Kliniki ya Mifugo Arusha', type: 'Vet Clinic');
       await tester.pump();
       expect(find.text('Kliniki ya Mifugo Arusha'), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('the skeleton has the same height as the card (no shift when the content arrives)', (tester) async {
       Future<double> height({required bool skeleton}) async {
@@ -274,14 +272,14 @@ void main() {
       }
 
       expect(await height(skeleton: true), await height(skeleton: false));
-    }, skip: _skip);
+    });
 
     // UI5: the provider's current name goes to Home's top bar instead.
     test('the dashboard passes the provider\'s current name to Home\'s top bar', () {
       final source = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync();
       expect(source, contains('FacilityDisplay.name(Provider.of<FacilityProvider>(context).selectedFacilityName)'));
       expect(source, contains('facilityName: facilityName,'));
-    }, skip: _skip);
+    });
   });
 
   group('size matrix with a very long facility name', () {
@@ -298,7 +296,7 @@ void main() {
             expect(tester.getRect(find.byType(TodayCard)), shown, reason: 'the card keeps its size hidden');
             await _tapEye(tester);
             expect(tester.getRect(find.byType(TodayCard)), shown);
-          }, skip: _skip);
+          });
         }
       }
     }
@@ -307,6 +305,6 @@ void main() {
       final shown = tester.getRect(find.byType(TodayCard));
       await _tapEye(tester);
       expect(tester.getRect(find.byType(TodayCard)), shown);
-    }, skip: _skip);
+    });
   });
 }

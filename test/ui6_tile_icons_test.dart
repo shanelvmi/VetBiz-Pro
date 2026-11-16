@@ -19,8 +19,6 @@ import 'package:vetbiz_pro/widgets/press_scale.dart';
 import 'helpers/hub1_hub.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 void _expectTile(WidgetTester tester, HubTile t, AppColors c, String where) {
   final tile = hubTile(t);
   final icon = tester.widget<Icon>(find.descendant(of: tile, matching: find.byType(Icon)));
@@ -61,7 +59,7 @@ void main() {
             _expectTile(tester, t, c, '$where ${g.group.name}');
           }
         }
-      }, skip: _skip);
+      });
     }
   }
 
@@ -74,7 +72,7 @@ void main() {
     await tester.tap(hubTile(HubTile.sales));
     await tester.pumpAndSettle();
     expect(tapped, [HubTile.recordSale, HubTile.sales]);
-  }, skip: _skip);
+  });
 
   test('only the action panel uses the two roles', () {
     final users = <String>[];
@@ -86,5 +84,5 @@ void main() {
       }
     }
     expect(users..sort(), ['lib/screens/dashboard/hub_tiles.dart', 'lib/theme/app_colors.dart']);
-  }, skip: _skip);
+  });
 }

@@ -14,8 +14,6 @@ import 'package:vetbiz_pro/theme/color_math.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _all = [
   AttentionItem(AttentionKind.expired, 1),
   AttentionItem(AttentionKind.outOfStock, 2),
@@ -61,19 +59,19 @@ void main() {
         AttentionItem(AttentionKind.lowStock, 1),
         AttentionItem(AttentionKind.pendingApprovals, 2),
       ]);
-    }, skip: _skip);
+    });
 
     test('overdue follows the facility\'s setting', () {
       final items = attentionItemsFor(products: const [], debts: debts, overdueDays: 36, isAdmin: true, now: ph4Now);
       expect(items, const [AttentionItem(AttentionKind.overdueDebts, 1)]);
-    }, skip: _skip);
+    });
 
     test('pending approvals are for admins only; nothing at all is an empty list', () {
       expect(
         attentionItemsFor(products: const [], debts: const [], overdueDays: 30, isAdmin: false, pendingApprovals: 3),
         isEmpty,
       );
-    }, skip: _skip);
+    });
 
     test('each item leads to its screen and chip', () {
       expect(attentionItemTarget(AttentionKind.overdueDebts), AttentionTarget.debtors);
@@ -85,7 +83,7 @@ void main() {
       for (final k in [AttentionKind.expired, AttentionKind.outOfStock, AttentionKind.lowStock]) {
         expect(attentionItemTarget(k), AttentionTarget.stockAlerts);
       }
-    }, skip: _skip);
+    });
   });
 
   group('the strip', () {
@@ -97,7 +95,7 @@ void main() {
             findsOneWidget);
         expect(find.text('+5'), findsOneWidget);
         expect(tester.takeException(), isNull);
-      }, skip: _skip);
+      });
     }
 
     testWidgets('one item: no badge, the same height', (tester) async {
@@ -105,14 +103,14 @@ void main() {
       expect(find.text('Out of stock: 1 product'), findsOneWidget);
       expect(find.byType(AttentionCountBadge), findsNothing);
       expect(tester.getSize(find.byType(AttentionStrip)).height, PhoneHomeMetrics.attentionStripHeight);
-    }, skip: _skip);
+    });
 
     testWidgets('one button for a screen reader, saying how many more', (tester) async {
       final handle = tester.ensureSemantics();
       await pumpAtSize(tester, screen: _strip(_all.take(3).toList()), size: const Size(390, 844));
       expect(find.bySemanticsLabel('Expired stock: 1 product. 2 more need attention'), findsOneWidget);
       handle.dispose();
-    }, skip: _skip);
+    });
 
     testWidgets('a tap opens the sheet of every item; a row closes it and opens its screen', (tester) async {
       AttentionItem? opened;
@@ -144,7 +142,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(opened, const AttentionItem(AttentionKind.overdueDebts, 4));
       expect(find.text('Needs attention'), findsNothing);
-    }, skip: _skip);
+    });
   });
 
   // No amber role reaches 4.5:1 on the amber fill in Light (warningDeep 3.5),
@@ -159,5 +157,5 @@ void main() {
         expect(ColorMath.contrast(c.warningDeep, c.warningBannerFill), greaterThanOrEqualTo(3), reason: '$where icon');
       }
     }
-  }, skip: _skip);
+  });
 }

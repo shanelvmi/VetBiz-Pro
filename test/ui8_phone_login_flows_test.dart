@@ -18,8 +18,6 @@ import 'package:vetbiz_pro/widgets/auth_phone_header.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/login_harness.dart';
 
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));
 
@@ -63,7 +61,7 @@ void main() {
     await pumpLogin(tester, wide, width: 1200, height: 800);
     await _settle(tester);
     expect(wide.listens, greaterThan(0), reason: 'the wide page keeps its Updates');
-  }, skip: _skip);
+  });
 
   testWidgets('Sign in sends the typed email and password', (tester) async {
     final auth = _RecordingAuth();
@@ -74,7 +72,7 @@ void main() {
     await tester.tap(find.byKey(_button));
     await _settle(tester);
     expect(auth.logins, [('amina@example.com', 'Secret123')]);
-  }, skip: _skip);
+  });
 
   testWidgets('Remember my email stores the email only; unticked, it is removed', (tester) async {
     final auth = _RecordingAuth();
@@ -96,7 +94,7 @@ void main() {
     await tester.tap(find.byKey(_button));
     await _settle(tester);
     expect(prefs.getString('remembered_email'), isNull);
-  }, skip: _skip);
+  });
 
   testWidgets('Forgot Password? asks for the email, then sends the reset', (tester) async {
     final auth = _RecordingAuth();
@@ -110,7 +108,7 @@ void main() {
     await tester.tap(find.text(_en.login_forgotPassword));
     await _settle(tester);
     expect(auth.resets, ['amina@example.com']);
-  }, skip: _skip);
+  });
 
   testWidgets('Help opens the help sheet', (tester) async {
     await pumpLogin(tester, FakeFirebaseFirestore(), width: 390, height: 844);
@@ -119,7 +117,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AuthHelpSheet), findsOneWidget);
     expect(find.byType(BottomSheet), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('EN | SW switches the page to Kiswahili and back', (tester) async {
     await pumpLogin(tester, FakeFirebaseFirestore(), width: 390, height: 844, followLanguage: true);
@@ -130,6 +128,6 @@ void main() {
     await tester.tap(find.byKey(AuthLanguageSwitch.segmentKey('en')));
     await tester.pumpAndSettle();
     expect(find.text(_en.login_signInTitle), findsOneWidget);
-  }, skip: _skip);
+  });
 
 }

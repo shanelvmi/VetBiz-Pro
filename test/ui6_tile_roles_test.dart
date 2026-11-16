@@ -11,8 +11,6 @@ import 'package:vetbiz_pro/theme/color_math.dart';
 import 'package:vetbiz_pro/theme/dark_derivation.dart';
 import 'package:vetbiz_pro/theme/theme_derivation.dart';
 
-const _skip = false;
-
 // Contrast on the tile, for the record: record / place.
 // Light: Pasture 7.34 / 10.39, Clinic 8.86 / 9.65, Harvest 11.60 / 15.54,
 // Ledger 14.63 / 17.64. Dark: Pasture 5.22 / 3.50, Clinic 5.07 / 3.52,
@@ -42,7 +40,7 @@ void main() {
           expect(ColorMath.contrast(icon, c.surface), greaterThanOrEqualTo(3), reason: where);
         }
         expect(c.homeTileIconPlace, isNot(c.homeTileIconRecord), reason: 'two tones');
-      }, skip: _skip);
+      });
     }
   }
 
@@ -60,5 +58,5 @@ void main() {
           reason: '${theme.id}: softer in Dark');
       expect(ColorMath.contrast(dark.homeTileIconPlace, dark.surface), greaterThanOrEqualTo(3.5));
     }
-  }, skip: _skip);
+  });
 }

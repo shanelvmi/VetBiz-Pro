@@ -28,8 +28,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_step_intro.dart';
 
 import 'helpers/register_harness.dart';
 
-const _skip = false;
-
 const _phone = Size(390, 844);
 final _en = registerEn;
 
@@ -93,7 +91,7 @@ void main() {
         expect(find.text(_en.common_logIn), findsOneWidget);
         expect(find.byType(AuthFooter), findsNothing);
         await finishRegister(tester);
-      }, skip: _skip);
+      });
     }
   }
 
@@ -113,7 +111,7 @@ void main() {
     expect(find.text(_en.wizard_stepOf(1, 5)), findsOneWidget);
     expect(find.byKey(WizardNavBar.squareBackKey), findsNothing);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('step 5: Create still needs the consent box', (tester) async {
     final auth = FakeRegisterAuth();
@@ -126,7 +124,7 @@ void main() {
     await tapText(tester, _en.register_createAccount);
     expect(auth.ownerCalls, hasLength(1));
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Sign in under a later step opens the sign-in page', (tester) async {
     await pumpRegister(tester, size: _phone);
@@ -134,7 +132,7 @@ void main() {
     await tapText(tester, _en.common_logIn);
     expect(find.byKey(loginStandInKey), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Help opens the help sheet', (tester) async {
     await pumpRegister(tester, size: _phone);
@@ -142,7 +140,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(AuthHelpSheet), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the strip and the step icon: contrast in all four themes, Light and Dark', (tester) async {
     for (final theme in AppColorTheme.all) {
@@ -158,7 +156,7 @@ void main() {
         await finishRegister(tester);
       }
     }
-  }, skip: _skip);
+  });
 
   for (final size in const [Size(360, 640), Size(390, 844), Size(412, 915), Size(740, 360)]) {
     for (final brightness in Brightness.values) {
@@ -172,7 +170,7 @@ void main() {
             expect(tester.takeException(), isNull, reason: 'step $step');
             await finishRegister(tester);
           }
-        }, skip: _skip);
+        });
       }
     }
   }
@@ -186,7 +184,7 @@ void main() {
     expect(_rect(tester, find.byKey(WizardNavBar.squareBackKey)).bottom, lessThanOrEqualTo(640 - 300));
     expect(_rect(tester, find.byKey(RegisterScreen.phoneBrandKey)).top, 0);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   for (final reduced in [false, true]) {
     testWidgets('the strip bar: ${reduced ? 'reduced motion, no animation' : 'slides to the new step'}', (tester) async {
@@ -201,6 +199,6 @@ void main() {
       ));
       final part = tester.widget<AnimatedContainer>(find.byKey(WizardStepHeader.segmentKey(1)));
       expect(part.duration, reduced ? Duration.zero : AppMotion.fast);
-    }, skip: _skip);
+    });
   }
 }
