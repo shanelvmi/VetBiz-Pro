@@ -35,8 +35,6 @@ import 'package:vetbiz_pro/widgets/signed_in_home_host.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/fake_firestore.dart';
 
-const _skip = false;
-
 const _dashboard = 'DASHBOARD (stand-in)';
 const _picker = 'PICKER (stand-in)';
 const _login = 'LOGIN (stand-in)';
@@ -206,7 +204,7 @@ void main() {
     expect(_pickerBuilds, 0);
     expect(stack.routes, hasLength(1));
     expect(store.values[ActiveFacilityMemory.facilityKey], 'fac-b');
-  }, skip: _skip);
+  });
 
   testWidgets('a reload whose remembered facility was removed or deactivated: the picker, the memory forgotten',
       (tester) async {
@@ -215,19 +213,19 @@ void main() {
     expect(find.text(_picker), findsOneWidget);
     expect(find.text(_dashboard), findsNothing);
     expect(store.values, isEmpty);
-  }, skip: _skip);
+  });
 
   testWidgets('two facilities and nothing remembered: the picker, as today', (tester) async {
     await _start(tester, sameSession: true, facilities: _two);
     expect(find.text(_picker), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('a fresh sign-in keeps today\'s rules: the default facility is still picked from the picker',
       (tester) async {
     await _start(tester, sameSession: false, facilities: _two, stored: {ActiveFacilityMemory.facilityKey: 'fac-b'});
     expect(find.text(_picker), findsOneWidget);
     expect(_pickerBuilds, greaterThan(0));
-  }, skip: _skip);
+  });
 
   testWidgets('a fresh sign-in with a single facility goes straight in, and remembers it', (tester) async {
     final (stack, _, store) = await _start(tester, sameSession: false, facilities: [_facility('fac-a')]);
@@ -235,7 +233,7 @@ void main() {
     expect(_open(tester), 'fac-a');
     expect(stack.routes, hasLength(1));
     expect(store.values, {ActiveFacilityMemory.facilityKey: 'fac-a'});
-  }, skip: _skip);
+  });
 
   testWidgets('switching facility updates the memory', (tester) async {
     final (_, _, store) = await _start(tester, sameSession: false, facilities: [_facility('fac-a')]);
@@ -243,7 +241,7 @@ void main() {
     await _wait(tester);
     expect(_open(tester), 'fac-b');
     expect(store.values, {ActiveFacilityMemory.facilityKey: 'fac-b'});
-  }, skip: _skip);
+  });
 
   testWidgets('every sign-out (forceLogoutAndShowLogin, with or without a reason) and the account decision clear it',
       (tester) async {
@@ -257,7 +255,7 @@ void main() {
     returnToAccountDecision();
     await _wait(tester);
     expect(store.values, isEmpty, reason: 'the last facility deleted: nothing is open');
-  }, skip: _skip);
+  });
 
   testWidgets('the reload costs no new listener or read: the same as opening that facility today', (tester) async {
     final (_, today, _) = await _start(tester, sameSession: false, facilities: [_facility('fac-b')]);
@@ -265,7 +263,7 @@ void main() {
     final (_, reload, _) =
         await _start(tester, sameSession: true, facilities: _two, stored: {ActiveFacilityMemory.facilityKey: 'fac-b'});
     expect([reload.listeners, reload.reads, reload.gets], todayCounts, reason: 'listeners, reads, gets');
-  }, skip: _skip);
+  });
 
   test('AppEntryPoint resumes after every account check and before one-facility-or-picker; sign-outs forget', () {
     final main = File('lib/main.dart').readAsStringSync();
@@ -278,5 +276,5 @@ void main() {
     expect(File('lib/utils/force_logout.dart').readAsStringSync(), contains('ActiveFacilityMemory.forget()'));
     final policy = File('lib/services/session_policy.dart').readAsStringSync();
     expect(policy, contains('ActiveFacilityMemory.sessionStarted'));
-  }, skip: _skip);
+  });
 }

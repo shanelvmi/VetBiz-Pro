@@ -9,8 +9,6 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'helpers/rv2_list_host.dart';
 
-const _skip = false;
-
 void main() {
   testWidgets('the first page answers late: the skeleton at once, the reveal at 1200 ms, then the summary fills its slot',
       (tester) async {
@@ -47,7 +45,7 @@ void main() {
     expect(tester.getRect(find.text('row a')), firstRow, reason: 'the summary filled its slot: nothing moved');
     expect(listFrame(tester), frame);
     expect(chipsRect(tester), chips);
-  }, skip: _skip);
+  });
 
   testWidgets('data already held: the list at once, no skeleton and no rise', (tester) async {
     final data = ListData()
@@ -58,7 +56,7 @@ void main() {
     expect(revealSkeletonShown(), isFalse);
     expect(find.text('row a'), findsOneWidget);
     expect(revealRise(tester), 0);
-  }, skip: _skip);
+  });
 
   testWidgets('a provider that already knows (firstPageAnswered) and holds an empty list: the empty state at once',
       (tester) async {
@@ -68,7 +66,7 @@ void main() {
     await pumpList(tester, data);
     expect(revealSkeletonShown(), isFalse);
     expect(find.text('No sales yet'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   for (final outcome in ['empty', 'error']) {
     testWidgets('an $outcome result answers: it shows inside the revealed list, before 1200 ms', (tester) async {
@@ -82,7 +80,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(revealSkeletonShown(), isFalse);
       expect(find.byKey(ValueKey('phoneList-$outcome')), findsOneWidget);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('Load more, pull to refresh, a filter change and a search never play the reveal again', (tester) async {
@@ -128,7 +126,7 @@ void main() {
     expect(revealSkeletonShown(), isFalse, reason: 'a search');
     expect(revealRise(tester), 0);
     await tester.pump(const Duration(seconds: 2));
-  }, skip: _skip);
+  });
 
   testWidgets('the reveal plays once: not again on a rebuild, a resize, a theme or a language change', (tester) async {
     final data = ListData();
@@ -149,7 +147,7 @@ void main() {
     await tester.pump();
     expect(revealSkeletonShown(), isFalse, reason: 'language');
     expect(revealRise(tester), 0);
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: the list replaces the skeleton instantly, no rise', (tester) async {
     await pumpList(tester, ListData(), still: true);
@@ -161,5 +159,5 @@ void main() {
     await tester.pump();
     expect(revealSkeletonShown(), isFalse);
     expect(revealRise(tester), 0);
-  }, skip: _skip);
+  });
 }

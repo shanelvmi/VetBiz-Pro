@@ -15,8 +15,6 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
-const _skip = false;
-
 class _FakeTimer implements Timer {
   bool cancelled = false;
   @override
@@ -121,7 +119,7 @@ void main() {
     expect(_rects(tester), before);
     // The initials stay under the image.
     expect(find.byKey(const ValueKey('initials')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('the image fades in over the slot when its first frame is decoded', (tester) async {
     await tester.pumpWidget(_app(_slot('a')));
@@ -136,7 +134,7 @@ void main() {
     expect(
         tester.widget<AnimatedOpacity>(find.ancestor(of: find.byKey(const ValueKey('initials')), matching: find.byType(AnimatedOpacity)).first).duration,
         greaterThan(Duration.zero));
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: the image shows at once, with no fade', (tester) async {
     await tester.pumpWidget(_app(_slot('a'), still: true));
@@ -148,7 +146,7 @@ void main() {
     expect(tester.widget<AnimatedOpacity>(find.ancestor(of: find.byKey(const ValueKey('initials')), matching: find.byType(AnimatedOpacity)).first).duration,
         Duration.zero);
     expect(find.byKey(const ValueKey('revealImage-image')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('a failed image keeps the initials and the slot', (tester) async {
     await tester.pumpWidget(_app(_slot('a')));
@@ -160,13 +158,13 @@ void main() {
     expect(find.byKey(const ValueKey('initials')), findsOneWidget);
     expect(find.byKey(const ValueKey('revealImage-image')), findsNothing);
     expect(_rects(tester), before);
-  }, skip: _skip);
+  });
 
   testWidgets('no URL: the initials only, no image', (tester) async {
     await tester.pumpWidget(_app(const RevealImage(url: null, width: 40, height: 40, placeholder: _initials)));
     expect(find.byKey(const ValueKey('initials')), findsOneWidget);
     expect(find.byType(Image), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('no placeholder: a soft skeleton, still under reduced motion', (tester) async {
     await tester.pumpWidget(_app(const RevealImage(url: 'a', width: 40, height: 40), still: true));
@@ -174,7 +172,7 @@ void main() {
     final pulse = tester.widget<FadeTransition>(
         find.descendant(of: find.byType(SkeletonPulse), matching: find.byType(FadeTransition)).first);
     expect(pulse.opacity.value, 1);
-  }, skip: _skip);
+  });
 
   testWidgets('decoded at twice the slot size', (tester) async {
     await tester.pumpWidget(_app(_slot('a')));
@@ -184,7 +182,7 @@ void main() {
     expect((resize.width, resize.height), (80, 80));
     expect(resize.policy, ResizeImagePolicy.fit);
     expect(resize.imageProvider, same(_images['a']));
-  }, skip: _skip);
+  });
 
   group('the grace of the first screenful', () {
     late _FakeClock clock;
@@ -233,7 +231,7 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(gate.state, RevealState.revealed);
-    }, skip: _skip);
+    });
 
     testWidgets('an image that never decodes holds it only for the grace', (tester) async {
       await tester.pumpWidget(list(3));
@@ -246,7 +244,7 @@ void main() {
       clock.fire(AppTimeouts.revealImageGrace);
       await tester.pump();
       expect(gate.state, RevealState.revealed);
-    }, skip: _skip);
+    });
 
     testWidgets('never past the gate: the 1200 ms timeout opens it while images wait', (tester) async {
       await tester.pumpWidget(list(3));
@@ -254,7 +252,7 @@ void main() {
       clock.fire(AppTimeouts.revealGate);
       await tester.pump();
       expect(gate.state, RevealState.timedOut);
-    }, skip: _skip);
+    });
 
     testWidgets('a failing image answers at once', (tester) async {
       await tester.pumpWidget(list(1));
@@ -266,7 +264,7 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(gate.state, RevealState.revealed);
-    }, skip: _skip);
+    });
 
     testWidgets('only the first eight, and never one below the screen', (tester) async {
       tester.view.physicalSize = const Size(400, 300);
@@ -285,7 +283,7 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(gate.state, RevealState.revealed, reason: 'rows 7 and on are below the screen');
-    }, skip: _skip);
+    });
 
     test('at most eight images hold it', () {
       final g = RevealGate(primary: [ListenableRevealSource<bool>(ValueNotifier(false), (v) => v)], clock: _FakeClock(),
@@ -294,7 +292,7 @@ void main() {
       expect(held.where((h) => h).length, AppTimeouts.revealImageGraceSlots);
       expect(AppTimeouts.revealImageGraceSlots, 8);
       g.dispose();
-    }, skip: _skip);
+    });
 
     test('a gate open before the first frame, or one with no grace, takes no image', () {
       final open = RevealGate(primary: [ListenableRevealSource<bool>(ValueNotifier(true), (v) => v)], clock: _FakeClock(),
@@ -304,7 +302,7 @@ void main() {
       expect(none.holdForImage(_Src()), isFalse);
       open.dispose();
       none.dispose();
-    }, skip: _skip);
+    });
   });
 }
 

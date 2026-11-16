@@ -10,13 +10,6 @@ import 'package:vetbiz_pro/services/membership_service.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
-// RW2a (docs/design/register_wizard.md section 5): RegisterScreen takes an
-// optional AuthService and MembershipService, as LoginScreen does, so the
-// wizard tests of RW2b and RW2c can drive it without Firebase. With none
-// given the real services are used, exactly as before.
-// Written before the seams, skipped until they exist.
-const _skip = false;
-
 class _FakeAuth implements AuthService {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -78,7 +71,7 @@ void main() {
     await typeInviteCode(tester, 'ABC123');
     expect(membership.checked, ['ABC123']);
     expect(find.text('Joining: Mwanga Agrovet'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('none given: the real services, unchanged', (tester) async {
     final state = await pump(tester, RegisterScreen(firestore: FakeFirebaseFirestore()));
@@ -91,5 +84,5 @@ void main() {
     // So the invite check runs the real service and fails the usual way.
     await typeInviteCode(tester, 'ABC123');
     expect(find.text("Couldn't check this code - try again"), findsOneWidget);
-  }, skip: _skip);
+  });
 }

@@ -7,8 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/app_timeouts.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
-const _skip = false;
-
 class _FakeTimer implements Timer {
   bool cancelled = false;
   @override
@@ -56,7 +54,7 @@ void main() {
     gate.firstFrame();
     expect(clock.timers, isEmpty);
     gate.dispose();
-  }, skip: _skip);
+  });
 
   test('two primary sources, one late: the gate opens at 1200 ms, the late one answers after', () {
     final clock = _FakeClock();
@@ -79,7 +77,7 @@ void main() {
     expect(gate.state, RevealState.timedOut, reason: 'it never changes once open');
     expect(notified, 1);
     gate.dispose();
-  }, skip: _skip);
+  });
 
   test('all answered after the first frame: revealed, and the timer is cancelled', () {
     final clock = _FakeClock();
@@ -92,7 +90,7 @@ void main() {
     gate.firstFrame();
     expect(clock.timers, hasLength(1), reason: 'the wait starts once');
     gate.dispose();
-  }, skip: _skip);
+  });
 
   test('an error counts as answered (stream and future)', () async {
     final controller = StreamController<int>();
@@ -110,7 +108,7 @@ void main() {
     expect(gate.state, RevealState.revealed);
     gate.dispose();
     await controller.close();
-  }, skip: _skip);
+  });
 
   test('an empty result counts as answered (stream and future)', () async {
     final controller = StreamController<List<int>>();
@@ -124,7 +122,7 @@ void main() {
     expect(gate.state, RevealState.revealed);
     gate.dispose();
     await controller.close();
-  }, skip: _skip);
+  });
 
   test('the stream adapter passes events through on the one subscription', () async {
     final controller = StreamController<int>();
@@ -139,7 +137,7 @@ void main() {
     expect(source.answered, isTrue);
     expect(() => controller.stream.listen((_) {}), throwsStateError, reason: 'no second subscription was made');
     await controller.close();
-  }, skip: _skip);
+  });
 
   test('a spinner never answers: only the loaded flag does', () {
     final p = _Provider();
@@ -151,13 +149,13 @@ void main() {
     p.set(loaded: true);
     expect(gate.isOpen, isTrue);
     gate.dispose();
-  }, skip: _skip);
+  });
 
   test('no primary source at all: open at once (a screen with nothing to wait for)', () {
     final gate = RevealGate(primary: const [], clock: _FakeClock());
     expect(gate.isOpen, isTrue);
     gate.dispose();
-  }, skip: _skip);
+  });
 
   test('dispose cancels the wait and stops listening', () {
     final clock = _FakeClock();
@@ -168,5 +166,5 @@ void main() {
     expect(clock.timers.single.$3.cancelled, isTrue);
     a.value = true;
     expect(gate.isOpen, isFalse);
-  }, skip: _skip);
+  });
 }

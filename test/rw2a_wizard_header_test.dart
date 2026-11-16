@@ -9,10 +9,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_step_intro.dart';
 
 import 'helpers/wizard_harness.dart';
 
-// RW2a (docs/design/register_wizard.md section 3): the wizard's header and
-// step intro. Written before the widgets, skipped until they exist.
-const _skip = false;
-
 void main() {
   Color textColor(WidgetTester tester, String text) =>
       tester.widget<RichText>(find.descendant(of: find.text(text), matching: find.byType(RichText))).text.style!.color!;
@@ -34,7 +30,7 @@ void main() {
         expect(textColor(tester, 'Step 2 of 5'), c.textMuted);
         expect(textColor(tester, 'About you'), c.textPrimary);
       }
-    }, skip: _skip);
+    });
 
     testWidgets('the title wraps under the step text when narrow', (tester) async {
       const long = 'A very long step title that cannot share the line with the step count';
@@ -43,7 +39,7 @@ void main() {
       final title = tester.getRect(find.text(long));
       expect(title.top, greaterThanOrEqualTo(step.bottom));
       expect(tester.takeException(), isNull);
-    }, skip: _skip);
+    });
 
     testWidgets('a 4 px bar, primary on divider, at current over total, animated with AppMotion.fast',
         (tester) async {
@@ -66,14 +62,14 @@ void main() {
       expect(mid, lessThan(3 / 5));
       await tester.pumpAndSettle();
       expect(tester.widget<LinearProgressIndicator>(find.byType(LinearProgressIndicator)).value, 3 / 5);
-    }, skip: _skip);
+    });
 
     testWidgets('Kiswahili at 360: "Hatua n kati ya total", no overflow', (tester) async {
       await pumpWizard(tester, const WizardStepHeader(current: 4, total: 5, title: 'Taarifa za kuingia'),
           size: const Size(360, 800), locale: const Locale('sw'));
       expect(find.text('Hatua 4 kati ya 5'), findsOneWidget);
       expect(tester.takeException(), isNull);
-    }, skip: _skip);
+    });
   });
 
   group('WizardStepIntro', () {
@@ -93,7 +89,7 @@ void main() {
         expect(fontSize(tester, 'Tell us who you are.'), 14);
         expect(textColor(tester, 'Tell us who you are.'), c.textMuted);
       }
-    }, skip: _skip);
+    });
 
     testWidgets('no subtitle: only the title; long text wraps (no maxLines)', (tester) async {
       const long = 'A title long enough to need three lines on a phone held upright in the hand';
@@ -102,6 +98,6 @@ void main() {
       expect(tester.widget<Text>(find.text(long)).maxLines, isNull);
       expect(tester.getSize(find.text(long)).height, greaterThan(2 * 22));
       expect(tester.takeException(), isNull);
-    }, skip: _skip);
+    });
   });
 }

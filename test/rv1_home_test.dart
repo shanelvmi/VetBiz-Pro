@@ -25,10 +25,6 @@ import 'helpers/screen_size_matrix.dart';
 import 'helpers/tree_fingerprint.dart';
 import 'helpers/wide_dashboard_group.dart';
 
-// The phone Home and the wide group are adopted in separate commits.
-const _skipPhone = false;
-const _skipWide = false;
-
 const _wideSizes = [
   MatrixSize('768x1024', Size(768, 1024)),
   MatrixSize('1024x768', Size(1024, 768)),
@@ -73,7 +69,7 @@ void main() {
           expect(find.byType(SkeletonPulse), findsNothing);
           expect(_rects(tester, slots), skeleton, reason: where);
           await checkCase(tester, phone: true, where: '$where content');
-        }, skip: _skipPhone);
+        });
       }
     }
 
@@ -83,7 +79,7 @@ void main() {
       await pumpAtSize(tester, screen: phoneHomeHarness(gate: gate), size: const Size(390, 844));
       expect(find.byType(SkeletonPulse), findsNothing);
       expect(find.byType(TodayCard), findsOneWidget);
-    }, skip: _skipPhone);
+    });
 
     // UI5: the strip sits under the card, its slot reserved at the strip's
     // height, so nothing moves when it fills (HUB1: the panel is docked
@@ -103,7 +99,7 @@ void main() {
       expect(find.byType(AttentionStrip), findsOneWidget);
       expect(tester.getRect(find.byType(LateSlot)).top, slot.top);
       expect(_rects(tester, above), before);
-    }, skip: _skipPhone);
+    });
 
     testWidgets('Needs attention answered with nothing: not drawn', (tester) async {
       final gate = RevealGate(primary: const []);
@@ -115,7 +111,7 @@ void main() {
       );
       expect(find.byType(LateSlot), findsNothing);
       expect(find.byType(AttentionStrip), findsNothing);
-    }, skip: _skipPhone);
+    });
 
     testWidgets('the loaded Home lays out exactly as before RV1', (tester) async {
       final gate = RevealGate(primary: const []);
@@ -124,7 +120,7 @@ void main() {
       final revealed = treeFingerprint(tester, find.byType(Scaffold), stripReveal: true);
       await pumpAtSize(tester, screen: phoneHomeHarness(), size: const Size(390, 844));
       expect(treeFingerprint(tester, find.byType(Scaffold), stripReveal: true), revealed);
-    }, skip: _skipPhone);
+    });
   });
 
   group('the wide dashboard group', () {
@@ -152,7 +148,7 @@ void main() {
           expect(find.byType(SkeletonOf), findsNothing);
           expect(_rects(tester, slots), skeleton, reason: where);
           await checkCase(tester, phone: false, where: '$where content');
-        }, skip: _skipWide);
+        });
       }
     }
 
@@ -167,7 +163,7 @@ void main() {
       expect(listens, 1, reason: 'the content\'s own feed, built offstage, and nothing else');
       // The gate's wait and the feed's first-answer wait run out.
       await tester.pump(const Duration(seconds: 16));
-    }, skip: _skipWide);
+    });
 
     for (final s in _wideSizes) {
       testWidgets('${s.label}: the loaded group lays out exactly as without the reveal', (tester) async {
@@ -183,7 +179,7 @@ void main() {
           size: s.size,
         );
         expect(treeFingerprint(tester, find.byType(SingleChildScrollView), stripReveal: true), revealed);
-      }, skip: _skipWide);
+      });
     }
   });
 }

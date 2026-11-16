@@ -13,13 +13,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_step_intro.dart';
 
 import 'helpers/wizard_harness.dart';
 
-// RW2a: the owner's required terms checkbox (RW1 answer 1), every wizard
-// widget together at the four widths of the design, and a source check that
-// the new files take every colour from a role and every size from a named
-// constant (so the phone-app style can restyle them in one place).
-// Written before the widgets, skipped until they exist.
-const _skip = false;
-
 void main() {
   const consent = 'I agree to the Terms of Service and the Privacy Policy.';
 
@@ -50,7 +43,7 @@ void main() {
       expect(box.height, greaterThanOrEqualTo(48));
       await tester.tap(find.byType(Checkbox));
       expect(got, isTrue);
-    }, skip: _skip);
+    });
 
     testWidgets('the two names are links that open their own page', (tester) async {
       var terms = 0, privacy = 0;
@@ -58,7 +51,7 @@ void main() {
       await tester.tapOnText(find.textRange.ofSubstring('Terms of Service'));
       await tester.tapOnText(find.textRange.ofSubstring('Privacy Policy'));
       expect((terms, privacy), (1, 1));
-    }, skip: _skip);
+    });
 
     testWidgets('an error line in the danger role when Create was pressed unchecked', (tester) async {
       await pumpWizard(tester, row());
@@ -70,7 +63,7 @@ void main() {
           .text
           .style!;
       expect(style.color, c.danger);
-    }, skip: _skip);
+    });
   });
 
   group('every wizard widget together', () {
@@ -93,7 +86,7 @@ void main() {
           testWidgets('${width.toInt()} ${locale.languageCode} ${b.name}: no overflow', (tester) async {
             await pumpWizard(tester, gallery(), size: Size(width, 900), locale: locale, brightness: b);
             expect(tester.takeException(), isNull);
-          }, skip: _skip);
+          });
         }
       }
     }
@@ -120,5 +113,5 @@ void main() {
       expect(rawNumber.allMatches(code).map((m) => m.group(0)).toList(), isEmpty, reason: f.path);
       expect(code, contains('context.colors'), reason: f.path);
     }
-  }, skip: _skip);
+  });
 }

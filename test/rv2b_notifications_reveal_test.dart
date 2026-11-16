@@ -22,8 +22,6 @@ import 'helpers/notification_harness.dart';
 import 'helpers/phone_list_harness.dart' show ph5PhoneSizes;
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _skeleton = ValueKey('notifications-revealSkeleton');
 
 /// A feed whose first answer the test gives: loading until [answer].
@@ -111,14 +109,14 @@ void main() {
       feed.answer();
       await tester.pumpAndSettle();
       expect(find.byKey(_skeleton), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('$label: a feed already loaded shows at once, no skeleton, no rise', (tester) async {
       final feed = await _held(tester);
       await _pump(tester, feed, size: size, dropdown: dropdown);
       expect(find.byKey(_skeleton), findsNothing);
       expect(find.byType(SkeletonPulse), findsNothing);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the first page answers: one fade and rise, then the rows', (tester) async {
@@ -131,7 +129,7 @@ void main() {
     expect(find.byKey(_skeleton), findsOneWidget, reason: 'the skeleton fades out');
     await tester.pumpAndSettle();
     expect(find.byKey(_skeleton), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('an error answers it (the error shows in the revealed page)', (tester) async {
     final feed = _late(tester);
@@ -140,7 +138,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(_skeleton), findsNothing);
     expect(find.textContaining('boom'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('an empty feed answers it', (tester) async {
     final feed = _late(tester);
@@ -148,7 +146,7 @@ void main() {
     feed.answer();
     await tester.pumpAndSettle();
     expect(find.byKey(_skeleton), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('loading again later (a refresh, Load older) never replays the reveal', (tester) async {
     final feed = _late(tester);
@@ -163,7 +161,7 @@ void main() {
     feed.answer();
     await tester.pumpAndSettle();
     expect(find.byKey(_skeleton), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('a rebuild, a resize and a theme change never replay it', (tester) async {
     final feed = _late(tester);
@@ -173,7 +171,7 @@ void main() {
     tester.view.physicalSize = const Size(400, 900);
     await tester.pump();
     expect(find.byKey(_skeleton), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: the swap is instant', (tester) async {
     final feed = _late(tester);
@@ -182,7 +180,7 @@ void main() {
     await tester.pump();
     await tester.pump();
     expect(find.byKey(_skeleton), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('the feed is started once; the reveal adds no listener of its own', (tester) async {
     final feed = _late(tester);
@@ -190,7 +188,7 @@ void main() {
     feed.answer();
     await tester.pumpAndSettle();
     expect(feed.starts, 1);
-  }, skip: _skip);
+  });
 
   testWidgets('phone: the filter row keeps its slot (same rect as the loaded page)', (tester) async {
     final held = await _held(tester);
@@ -202,7 +200,7 @@ void main() {
     expect(find.byKey(const ValueKey('notifications-skeleton-filters')), findsOneWidget);
     final slot = tester.getRect(find.byKey(const ValueKey('notifications-filter-all')));
     expect((slot.top, slot.height, slot.left), (row.top, row.height, row.left));
-  }, skip: _skip);
+  });
 
   for (final size in [...ph5PhoneSizes.map((s) => s.size), const Size(768, 1024), const Size(1024, 768), const Size(1200, 800)]) {
     for (final look in MatrixLook.values) {
@@ -215,7 +213,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         if (size.width < 600) await checkCase(tester, phone: true, where: 'notifications ${size.width}x${size.height} ${look.name}');
-      }, skip: _skip);
+      });
     }
   }
 }

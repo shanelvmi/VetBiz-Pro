@@ -13,8 +13,6 @@ import 'package:vetbiz_pro/services/daily_report_service.dart';
 
 import '../helpers/fake_firestore.dart';
 
-const String? _skip = null;
-
 // moveToSellable takes a BuildContext it does not use.
 class _NoContext extends Fake implements BuildContext {}
 
@@ -46,14 +44,14 @@ void main() {
   test('addProduct: the starting stock entry names its author', () async {
     await products.addProduct(_dewormer());
     expect((await _additions(fs)).map((a) => a['userId']), [testUserId]);
-  }, skip: _skip);
+  });
 
   test('addBatch: the delivery entry names its author', () async {
     await seedProduct(fs, id: 'p1', batchQty: {'b1': 2});
     await products.addBatch(facilityId: testFacilityId, productId: 'p1', batchNo: 'B9', expiry: DateTime(2031, 1, 1),
         buyPrice: 1100, stockQty: 5);
     expect((await _additions(fs)).map((a) => a['userId']), [testUserId]);
-  }, skip: _skip);
+  });
 
   test('moveToSellable: the release entry names its author', () async {
     await products.addProduct(_dewormer());
@@ -62,7 +60,7 @@ void main() {
     final additions = await _additions(fs);
     expect(additions.map((a) => [a['sellableDelta'], a['userId']]), containsAll([[4, testUserId]]));
     expect(additions.every((a) => a['userId'] == testUserId), isTrue);
-  }, skip: _skip);
+  });
 
   test('the daily report sums the entries as before: the author is ignored', () async {
     await products.addProduct(_dewormer());

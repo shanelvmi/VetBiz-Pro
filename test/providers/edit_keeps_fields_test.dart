@@ -14,8 +14,6 @@ import 'package:vetbiz_pro/providers/transaction_provider.dart';
 import '../helpers/fake_firestore.dart';
 import '../helpers/test_clock.dart';
 
-const String? _skip = null;
-
 // The writes are done; only the activity entry is left, which asks
 // Firebase for the app (ActivityLogger.logActivity): none in a unit test.
 Future<void> _ignoringActivityLog(Future<void> call) async {
@@ -87,7 +85,7 @@ void main() {
       await _ignoringActivityLog(services.updateService(_asEditScreenBuilds(await _storedService(fs, 'v1'))));
       await settle();
       expect(_withoutEditTimes(storedData(fs)), before);
-    }, skip: _skip);
+    });
 
     test('...also for a service outside the cached pages: no second stock take, no second debt on the balance', () async {
       final fs = newFakeFirestore();
@@ -105,7 +103,7 @@ void main() {
       await settle();
       expect(_withoutEditTimes(storedData(fs)), before);
       expect(await sellableQty(fs, 'p1'), 4);
-    }, skip: _skip);
+    });
 
     test('an edit that changes the amount keeps the receipt number', () async {
       final fs = newFakeFirestore();
@@ -115,7 +113,7 @@ void main() {
       await settle();
       final stored = await _storedService(fs, 'v1');
       expect([stored.totalAmount, stored.receiptNumber], [12000, 1]);
-    }, skip: _skip);
+    });
   });
 
   group('Edit Transaction keeps what the screen does not own', () {
@@ -137,7 +135,7 @@ void main() {
       expect(before['receiptNumber'], 1);
       await _ignoringActivityLog(_transactions(fs).updateTransaction(_asEditTransactionBuilds(before, id), testFacilityId));
       expect(await stored(fs, id), before);
-    }, skip: _skip);
+    });
 
     test('...and a service expense keeps its serviceId', () async {
       final fs = newFakeFirestore();
@@ -150,7 +148,7 @@ void main() {
       // addService writes no search field on its expense; the edit adds it.
       expect(await stored(fs, 'service_v3'),
           {...before, 'descriptionLower': (before['description'] as String).toLowerCase()});
-    }, skip: _skip);
+    });
 
     test('an edit that changes the amount keeps the receipt number', () async {
       final fs = newFakeFirestore();
@@ -159,7 +157,7 @@ void main() {
           _transactions(fs).updateTransaction(_asEditTransactionBuilds(await stored(fs, id), id, amount: 3500), testFacilityId));
       final after = await stored(fs, id);
       expect([after['amount'], after['receiptNumber']], [3500, 1]);
-    }, skip: _skip);
+    });
 
     test('clearing the note removes it (the screen owns the note)', () async {
       final fs = newFakeFirestore();

@@ -13,8 +13,6 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = false;
-
 void main() {
   test('the loads are PH4\'s: phone cold open the period totals only, a return to Home nothing', () {
     expect(dashboardLoadsFor(DashboardMoment.coldOpen, phone: true), {DashboardLoad.periodTotals});
@@ -27,7 +25,7 @@ void main() {
       DashboardLoad.chart,
       DashboardLoad.recentActivity,
     });
-  }, skip: _skip);
+  });
 
   test('the phone gate adds no listener and no read: 4 period listeners and the debts\' 1, before and after',
       () async {
@@ -64,7 +62,7 @@ void main() {
     await sub.cancel();
     debts.clear();
     expect(db.listeners, 0);
-  }, skip: _skip);
+  });
 
   test('the stream adapter passes the one subscription through: no second listener', () async {
     final db = CountingFirestore();
@@ -77,7 +75,7 @@ void main() {
     expect(source.answered, isTrue);
     await sub.cancel();
     expect(db.listeners, 0);
-  }, skip: _skip);
+  });
 
   test('DebtProvider.loaded: false until the first answer, false again after clear', () async {
     final db = CountingFirestore();
@@ -89,5 +87,5 @@ void main() {
     expect(debts.loaded, isTrue, reason: 'an empty result answers');
     debts.clear();
     expect(debts.loaded, isFalse);
-  }, skip: _skip);
+  });
 }

@@ -11,8 +11,6 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 import 'helpers/tree_fingerprint.dart';
 
-const _skip = false;
-
 const _skeletonKey = ValueKey('skeleton');
 const _contentKey = ValueKey('content');
 
@@ -69,7 +67,7 @@ void main() {
     expect(AppMotion.authEntranceRise, AppMotion.revealRise);
     expect(AppMotion.revealCurve, Curves.easeOutCubic);
     expect(AppMotion.authEntranceStagger, const Duration(milliseconds: 40));
-  }, skip: _skip);
+  });
 
   testWidgets('every primary source answered at the first frame: content at once, no skeleton, no rise',
       (tester) async {
@@ -81,7 +79,7 @@ void main() {
     expect(_opacity(tester), 1);
     expect(_rise(tester), 0);
     expect(tester.hasRunningAnimations, isFalse);
-  }, skip: _skip);
+  });
 
   testWidgets('the skeleton at once, then ONE fade and 12 px rise of the whole content', (tester) async {
     final answered = ValueNotifier(false);
@@ -105,7 +103,7 @@ void main() {
     expect(_skeletonShown(tester), isFalse);
     expect(_opacity(tester), 1);
     expect(_rise(tester), 0);
-  }, skip: _skip);
+  });
 
   testWidgets('one primary source late: the reveal starts at 1200 ms', (tester) async {
     final gate = RevealGate(primary: [
@@ -121,7 +119,7 @@ void main() {
     expect(_contentShown(tester), isTrue);
     await tester.pumpAndSettle();
     expect(_skeletonShown(tester), isFalse);
-  }, skip: _skip);
+  });
 
   testWidgets('the reveal plays once: not on a rebuild, a resize, a theme or a language change', (tester) async {
     final answered = ValueNotifier(false);
@@ -151,7 +149,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pumpWidget(_app(_reveal(gate), brightness: Brightness.dark, locale: const Locale('sw')));
     await expectStill('language', themeAnimates: true);
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: the skeleton is swapped for the content instantly', (tester) async {
     final answered = ValueNotifier(false);
@@ -166,7 +164,7 @@ void main() {
     expect(_opacity(tester), 1);
     expect(_rise(tester), 0);
     expect(tester.hasRunningAnimations, isFalse);
-  }, skip: _skip);
+  });
 
   testWidgets('the skeleton and the content have the same outer size', (tester) async {
     final answered = ValueNotifier(false);
@@ -179,7 +177,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getRect(find.byType(ScreenReveal)), before);
     expect(tester.getRect(find.byKey(_contentKey)), skeleton);
-  }, skip: _skip);
+  });
 
   testWidgets('a revealed screen lays out exactly as it would without the reveal', (tester) async {
     final gate = RevealGate(primary: const []);
@@ -188,7 +186,7 @@ void main() {
     final wrapped = treeFingerprint(tester, find.byType(Scaffold), stripReveal: true);
     await tester.pumpWidget(_app(tester.widget<ScreenReveal>(find.byType(ScreenReveal)).child));
     expect(treeFingerprint(tester, find.byType(Scaffold)), wrapped);
-  }, skip: _skip);
+  });
 
   group('LateSlot', () {
     Widget slotted(bool ready, {bool still = false}) => _app(
@@ -219,20 +217,20 @@ void main() {
       await tester.pumpAndSettle();
       expect(rects(tester), before, reason: 'after the fade');
       expect(find.byType(SkeletonBox), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('ready from the start: no skeleton, no fade', (tester) async {
       await tester.pumpWidget(slotted(true));
       expect(find.byType(SkeletonBox), findsNothing);
       expect(tester.hasRunningAnimations, isFalse);
-    }, skip: _skip);
+    });
 
     testWidgets('reduced motion: an instant swap', (tester) async {
       await tester.pumpWidget(slotted(false, still: true));
       await tester.pumpWidget(slotted(true, still: true));
       expect(find.byType(SkeletonBox), findsNothing);
       expect(tester.hasRunningAnimations, isFalse);
-    }, skip: _skip);
+    });
 
     testWidgets('a secondary source never delays the reveal', (tester) async {
       final gate = RevealGate(primary: [ListenableRevealSource<bool>(ValueNotifier(true), (v) => v)]);
@@ -241,7 +239,7 @@ void main() {
       expect(_contentShown(tester), isTrue);
       expect(_skeletonShown(tester), isFalse);
       expect(find.byType(SkeletonBox), findsOneWidget, reason: 'only the late slot waits');
-    }, skip: _skip);
+    });
   });
 
   testWidgets('semantics: the skeleton is hidden from screen readers, the content is announced', (tester) async {
@@ -260,5 +258,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('Hello content'), findsOneWidget);
     semantics.dispose();
-  }, skip: _skip);
+  });
 }

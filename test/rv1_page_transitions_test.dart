@@ -10,8 +10,6 @@ import 'package:vetbiz_pro/theme/app_page_transitions.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
-const _skip = false;
-
 final _theme = AppTheme.build(AppColorTheme.pasture, Brightness.light);
 const _home = ValueKey('home page');
 const _next = ValueKey('next page');
@@ -64,7 +62,7 @@ void main() {
     expect(const AppPageTransitionsBuilder().transitionDuration, AppMotion.pageSlide);
     expect(AppMotion.pageSlide, const Duration(milliseconds: 280));
     expect(AppMotion.pageSlideOffset, 0.06);
-  }, skip: _skip);
+  });
 
   for (final progress in [0.0, 0.5, 1.0]) {
     testWidgets('the slide at progress $progress: offset and opacity', (tester) async {
@@ -84,7 +82,7 @@ void main() {
       expect(slides[0].position.value, Offset.zero, reason: 'nothing above it');
       final fade = tester.widget<FadeTransition>(find.ancestor(of: find.byKey(_next), matching: find.byType(FadeTransition)).first);
       expect(fade.opacity.value, closeTo(_ease(progress), 1e-9));
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the page underneath moves a little less, to the left', (tester) async {
@@ -102,7 +100,7 @@ void main() {
         .value;
     expect(outgoing.dx, -AppMotion.pageSlideOutgoingOffset);
     expect(AppMotion.pageSlideOutgoingOffset, lessThan(AppMotion.pageSlideOffset));
-  }, skip: _skip);
+  });
 
   testWidgets('a pushed MaterialPageRoute slides in from the right, and back out on pop', (tester) async {
     await tester.pumpWidget(_app());
@@ -124,7 +122,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(_next), findsNothing);
     expect(tester.getTopLeft(find.byKey(_home)).dx, 0);
-  }, skip: _skip);
+  });
 
   testWidgets('dialogs and bottom sheets do not slide', (tester) async {
     await tester.pumpWidget(_app());
@@ -138,7 +136,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.ancestor(of: find.text('SHEET'), matching: find.byType(AppPageSlide)), findsNothing);
     expect(tester.getTopLeft(find.byKey(_home)).dx, 0);
-  }, skip: _skip);
+  });
 
   testWidgets("the '/login' route keeps Flutter's previous transition", (tester) async {
     await tester.pumpWidget(_app());
@@ -149,7 +147,7 @@ void main() {
     expect(AppPageTransitionsBuilder.previousDefault(TargetPlatform.android), isA<ZoomPageTransitionsBuilder>());
     await tester.pumpAndSettle();
     expect(find.text('LOGIN'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: the page is there at once, no slide', (tester) async {
     await tester.pumpWidget(_app(still: true));
@@ -159,7 +157,7 @@ void main() {
     expect(tester.getTopLeft(find.byKey(_next)).dx, 0);
     expect(find.byType(AppPageSlide), findsNothing);
     await tester.pumpAndSettle();
-  }, skip: _skip);
+  });
 
   testWidgets('on iOS the back swipe still works', (tester) async {
     debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
@@ -177,5 +175,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(_next), findsNothing);
     debugDefaultTargetPlatformOverride = null;
-  }, skip: _skip);
+  });
 }
