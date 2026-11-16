@@ -6,6 +6,7 @@ import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
+import '../theme/polish_metrics.dart';
 import '../theme/theme_context.dart';
 
 /// The result of comparing a KPI's current-period value against the
@@ -65,8 +66,12 @@ class SummaryCard extends StatefulWidget {
   final String title;
   final String value;
   final IconData icon;
+  /// Until POL2 the icon circle's and the glow's colour; no longer drawn
+  /// (owner rule 2: a figure's kind is never coloured). Kept so callers
+  /// need not change.
   final Color color;
-  final bool shadow; // new parameter
+  /// Until POL2 a higher elevation; the card is flat now (owner rule 4).
+  final bool shadow;
   final String? subtitle; // optional small caption, e.g. a period label
   // or "as of now" - lets a card clarify what the figure means without
   // needing a second widget.
@@ -108,69 +113,21 @@ class SummaryCard extends StatefulWidget {
   State<SummaryCard> createState() => _SummaryCardState();
 }
 
-class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStateMixin {
-  late final AnimationController _pulseController;
-  late final Animation<double> _glowAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(vsync: this, duration: AppMotion.emphasis);
-    // Ramps up quickly (15% of the duration) then fades slowly (the
-    // remaining 85%) - reads as a brief flash rather than a slow
-    // build-up, keeping this short and unobtrusive.
-    _glowAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: Curves.easeOut)), weight: 15),
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0).chain(CurveTween(curve: Curves.easeIn)), weight: 85),
-    ]).animate(_pulseController);
-  }
-
-  @override
-  void didUpdateWidget(SummaryCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // Only pulses on a genuine change between two already-loaded
-    // states - this naturally excludes the initial "loading -> first
-    // real value" transition (oldWidget.isLoading would be true
-    // there), while still catching a real live update after a new
-    // transaction/sale/product/client/debt is recorded elsewhere in
-    // the app and this card's underlying value changes as a result.
-    if (!oldWidget.isLoading && !widget.isLoading && oldWidget.value != widget.value) {
-      _pulseController.forward(from: 0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
+class _SummaryCardState extends State<SummaryCard> {
+  // POL2 (owner rule 4): no glow. The card used to flash a glow in its
+  // colour when a loaded value changed; the new figure is the signal now.
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _glowAnimation,
-      builder: (context, child) {
-        final glow = _glowAnimation.value;
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.r12),
-            boxShadow: glow > 0
-                ? [
-                    BoxShadow(
-                      color: widget.color.withValues(alpha: AppAlpha.a50 * glow),
-                      blurRadius: 14 * glow,
-                      spreadRadius: 1.5 * glow,
-                    ),
-                  ]
-                : null,
-          ),
-          child: child,
-        );
-      },
-      child: Card(
-        elevation: widget.shadow ? AppElevation.e6 : AppElevation.e2, // uses shadow parameter
+    final colors = context.colors;
+    return Card(
+        // POL2: flat, the surface with a hairline border (no elevation, so
+        // no shadow); [SummaryCard.shadow] no longer changes the drawing.
+        elevation: AppElevation.e0,
+        color: colors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.r12),
+          side: BorderSide(color: colors.border, width: PolishMetrics.hairline),
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -192,10 +149,11 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      CircleAvatar(
-                        radius: avatarRadius,
-                        backgroundColor: widget.color.withValues(alpha: AppAlpha.a20),
-                        child: Icon(widget.icon, color: widget.color, size: avatarRadius),
+                      // POL2 (owner rule 2): the icon is neutral, in the
+                      // avatar's slot, with no coloured circle.
+                      SizedBox.square(
+                        dimension: avatarRadius * 2,
+                        child: Icon(widget.icon, color: colors.textSecondary, size: avatarRadius),
                       ),
                       SizedBox(width: isCompact ? AppSpacing.s8 : AppSpacing.s12),
                       Expanded(
@@ -232,10 +190,8 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
                               SizedBox(
                                 height: valueSize + 4,
                                 width: valueSize + 4,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: widget.color,
-                                ),
+                                // POL2: the theme's own (primary), not the card's colour.
+                                child: const CircularProgressIndicator(strokeWidth: 2),
                               )
                             else
                               // FittedBox instead of ellipsis for the value: a
@@ -289,7 +245,6 @@ class _SummaryCardState extends State<SummaryCard> with SingleTickerProviderStat
             );
           },
         ),
-      ),
     );
   }
 }
