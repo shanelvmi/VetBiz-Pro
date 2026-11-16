@@ -4,10 +4,11 @@ import '../config/app_timeouts.dart';
 import '../l10n/l10n.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
-import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/polish_metrics.dart';
 import '../theme/theme_context.dart';
+import '../ui/polish/app_status.dart';
+import '../ui/polish/status_pill.dart';
 
 /// The result of comparing a KPI's current-period value against the
 /// immediately preceding equivalent period, plus the business-meaning
@@ -181,7 +182,7 @@ class _SummaryCardState extends State<SummaryCard> {
                                     !widget.trend!.isLoading &&
                                     !widget.trend!.hasNoChange) ...[
                                   const SizedBox(width: AppSpacing.s6),
-                                  _TrendPill(trend: widget.trend!, compact: isCompact),
+                                  Flexible(child: _TrendPill(trend: widget.trend!)),
                                 ],
                               ],
                             ),
@@ -229,7 +230,7 @@ class _SummaryCardState extends State<SummaryCard> {
                                 !widget.trend!.isLoading &&
                                 !widget.trend!.hasNoChange) ...[
                               SizedBox(height: isCompact ? AppSpacing.s3 : AppSpacing.s4),
-                              _TrendPill(trend: widget.trend!, compact: isCompact),
+                              _TrendPill(trend: widget.trend!),
                             ],
                           ],
                         ),
@@ -249,49 +250,25 @@ class _SummaryCardState extends State<SummaryCard> {
   }
 }
 
-/// The compact, tinted pill showing a KPI's trend at a glance - just
-/// the direction and percentage, with the comparison period and exact
-/// absolute change available via tooltip rather than always taking up
-/// card space every card would otherwise need for it.
-class _TrendPill extends StatefulWidget {
+/// The KPI's trend at a glance: the direction and percentage, with the
+/// comparison period and exact absolute change in the tooltip. POL2: the one
+/// StatusPill (owner rule 3) in the four states only: a good change success,
+/// a bad one danger (by [KpiTrend.higherIsBetter], as before), new activity
+/// neutral; the arrow and the figure carry the direction. The arrow no
+/// longer floats (a decoration, and never still under reduced motion).
+class _TrendPill extends StatelessWidget {
   final KpiTrend trend;
-  final bool compact;
-  const _TrendPill({required this.trend, required this.compact});
-
-  @override
-  State<_TrendPill> createState() => _TrendPillState();
-}
-
-class _TrendPillState extends State<_TrendPill> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    // A slow, gentle, continuous float - subtle enough not to be
-    // distracting with several of these animating on screen at once,
-    // but enough to read as "live" rather than a static icon.
-    _controller = AnimationController(vsync: this, duration: AppMotion.float)
-      ..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  const _TrendPill({required this.trend});
 
   @override
   Widget build(BuildContext context) {
-    final trend = widget.trend;
-    final isPositive = trend.isNewActivity ? true : trend.isPositive;
-    final tintColor = isPositive ? context.colors.trendUp : context.colors.trendDown;
+    final status = trend.isNewActivity
+        ? AppStatus.neutral
+        : (trend.isPositive ? AppStatus.success : AppStatus.danger);
     final arrowIcon = trend.isNewActivity
         ? Icons.fiber_new_rounded
         : (trend.absoluteChange >= 0 ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded);
     final label = trend.isNewActivity ? context.l10n.summary_trendNew : '${trend.percent.abs().toStringAsFixed(1)}%';
-    final fontSize = widget.compact ? AppFontSize.f10 : AppFontSize.f10_5;
-    final iconSize = AppIconSize.i12;
 
     final changeText = trend.absoluteChange >= 0
         ? '+${trend.formatChange(trend.absoluteChange)}'
@@ -300,45 +277,7 @@ class _TrendPillState extends State<_TrendPill> with SingleTickerProviderStateMi
     return Tooltip(
       message: '${trend.comparisonLabel}: $changeText',
       waitDuration: AppTimeouts.tooltipDelay,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-            horizontal: widget.compact ? AppSpacing.s6 : AppSpacing.s8,
-            vertical: widget.compact ? AppSpacing.s2 : AppSpacing.s3),
-        decoration: BoxDecoration(
-          color: tintColor.withValues(alpha: AppAlpha.a10),
-          borderRadius: BorderRadius.circular(AppRadius.r20),
-          border: Border.all(color: tintColor.withValues(alpha: AppAlpha.a30), width: 1),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (trend.isNewActivity)
-              Icon(arrowIcon, color: tintColor, size: iconSize)
-            else
-              AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  // Floats toward the direction the arrow already
-                  // points - an up arrow drifts gently upward and
-                  // back, a down arrow drifts gently downward and
-                  // back.
-                  final direction = trend.absoluteChange >= 0 ? -1.0 : 1.0;
-                  final offset = Tween<double>(begin: 0, end: 2.2 * direction).transform(_controller.value);
-                  return Transform.translate(
-                    offset: Offset(0, offset),
-                    child: child,
-                  );
-                },
-                child: Icon(arrowIcon, color: tintColor, size: iconSize),
-              ),
-            SizedBox(width: widget.compact ? AppSpacing.s2 : AppSpacing.s3),
-            Text(
-              label,
-              style: TextStyle(color: tintColor, fontWeight: AppFontWeight.bold, fontSize: fontSize),
-            ),
-          ],
-        ),
-      ),
+      child: StatusPill(status: status, label: label, icon: arrowIcon),
     );
   }
 }
