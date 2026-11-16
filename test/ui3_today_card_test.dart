@@ -212,9 +212,7 @@ void main() {
       expect(_placeholders, findsNWidgets(4));
     }, skip: _skip);
 
-    // POL2: the card is now the flat surface (no gradient) and the amounts are
-    // in textPrimary; the same 3:1 check at the dots' blurred centre.
-    group('the dots against the card: at least 3:1 at their blurred centre', () {
+    group('the dots against the deep tone: at least 3:1 at their blurred centre', () {
       for (final theme in AppColorTheme.all) {
         for (final brightness in Brightness.values) {
           testWidgets('${theme.id} ${brightness.name}', (tester) async {
@@ -224,14 +222,15 @@ void main() {
               final placeholder = _placeholders.at(i);
               final dot = _dots(placeholder).first;
               final fill = (tester.widget<DecoratedBox>(dot).decoration as BoxDecoration).color!;
-              expect(fill.a, closeTo(0.7, 0.05), reason: 'about 70 percent of the amounts\' ink');
-              expect(fill.withValues(alpha: colors.textPrimary.a), colors.textPrimary, reason: 'the amounts\' ink');
+              expect(fill.a, closeTo(0.7, 0.05), reason: 'about 70 percent of the on-brand ink');
+              expect(fill.withValues(alpha: 1), colors.onBrandSurface);
               final r = tester.getSize(dot).width / 2;
               final sigma = _sigma(tester.widget<ImageFiltered>(placeholder).imageFilter);
               // A disc of radius r under a Gaussian blur keeps this share of
               // its ink at its centre.
               final peak = 1 - math.exp(-r * r / (2 * sigma * sigma));
-              for (final end in [colors.surface]) {
+              // POL2b: the card is one solid deep tone (brandGradientEnd), the same 3:1.
+              for (final end in [colors.brandGradientEnd]) {
                 final drawn = Color.alphaBlend(fill.withValues(alpha: fill.a * peak), end);
                 expect(ColorMath.contrast(drawn, end), greaterThanOrEqualTo(3.0), reason: 'placeholder $i on $end');
               }

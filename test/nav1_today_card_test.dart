@@ -68,7 +68,7 @@ Future<UiSettingsProvider> _card(
   return provider;
 }
 
-/// UI5: the card's gradient is a DecoratedBox under its PressScale.
+/// UI5: the card's fill is a DecoratedBox under its PressScale (POL2b: solid).
 BoxDecoration _decoration(WidgetTester tester) => tester
     .widget<DecoratedBox>(find.descendant(of: find.byType(TodayCard), matching: find.byType(DecoratedBox)).first)
     .decoration as BoxDecoration;
@@ -84,23 +84,31 @@ Future<void> _tapEye(WidgetTester tester, {bool settle = true}) async {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  // POL2 (owner rule 4) replaced the brand gradient with a flat surface and a
-  // hairline border; the same inks-at-4.5 check, on the surface.
-  group('the flat surface, every theme, Light and Dark', () {
+  // POL2b (owner, option 2): one solid deep tone in place of the gradient; the
+  // same inks-at-4.5 check on it. In Dark a hairline in the border role keeps
+  // the card distinct from the page (the deep tone is 1.06:1 to 1.93:1 there).
+  group('the solid deep tone, every theme, Light and Dark', () {
     for (final theme in AppColorTheme.all) {
       for (final brightness in Brightness.values) {
-        testWidgets('${theme.id} ${brightness.name}: the surface with a hairline border, the inks at 4.5',
+        testWidgets('${theme.id} ${brightness.name}: brandGradientEnd, no gradient, the inks at 4.5',
             (tester) async {
           await _card(tester, theme: theme, brightness: brightness);
           final colors = AppColors.fromTheme(theme, brightness: brightness);
-          expect(_decoration(tester).gradient, isNull);
-          expect(_decoration(tester).color, colors.surface);
-          expect((_decoration(tester).border! as Border).top.color, colors.border);
+          final d = _decoration(tester);
+          expect(d.gradient, isNull);
+          expect(d.color, colors.brandGradientEnd);
+          if (brightness == Brightness.dark) {
+            expect((d.border! as Border).top.color, colors.border, reason: 'the hairline in Dark');
+          } else {
+            expect(d.border, isNull, reason: 'no hairline in Light');
+          }
           final sales = tester.widget<Text>(find.text(_amounts[0]));
           final label = tester.widget<Text>(find.textContaining('Sales'));
-          expect(ColorMath.contrast(sales.style!.color!, colors.surface), greaterThanOrEqualTo(4.5));
-          // HUB3's strong chosen option: POL2, on its primary pill, in onPrimary.
-          expect(ColorMath.contrast(label.style!.color!, colors.primary), greaterThanOrEqualTo(4.5));
+          final muted = tester.widget<Text>(find.text('Collected'));
+          expect(ColorMath.contrast(sales.style!.color!, d.color!), greaterThanOrEqualTo(4.5));
+          expect(ColorMath.contrast(muted.style!.color!, d.color!), greaterThanOrEqualTo(4.5));
+          // HUB3: the chosen option's label sits on its white pill, in the deep ink.
+          expect(ColorMath.contrast(label.style!.color!, colors.onBrandSurface), greaterThanOrEqualTo(4.5));
         }, skip: _skip);
       }
     }

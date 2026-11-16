@@ -88,15 +88,13 @@ void main() {
 
     for (final look in [MatrixLook.light, MatrixLook.dark]) {
       for (final theme in AppColorTheme.all) {
-        // POL2 (owner rule 1: primary means selected): on the flat card the
-        // chosen option is a primary pill, its ink still at 4.5.
-        testWidgets('the chosen option is a primary pill with onPrimary ink (${look.name}, ${theme.id})', (tester) async {
+        testWidgets('the chosen option is a white pill with deep ink (${look.name}, ${theme.id})', (tester) async {
           for (final mode in HomeCardMode.values) {
             await _pump(tester, mode: mode, look: look, theme: theme);
             final pill = tester.widget<AnimatedContainer>(_pill(mode));
             final fill = (pill.decoration! as BoxDecoration).color!;
             expect(fill.a, 1, reason: 'opaque');
-            expect(fill, tester.element(_pill(mode)).colors.primary, reason: 'primary');
+            expect(ColorMath.luminance(fill), greaterThan(0.95), reason: 'white');
             final label = mode == HomeCardMode.sales ? 'Sales' : 'Visits';
             final ink = tester.widget<Text>(find.descendant(of: _pill(mode), matching: find.text(label))).style!.color!;
             expect(ColorMath.contrast(ink, fill), greaterThanOrEqualTo(4.5), reason: '$label on the pill');
@@ -145,8 +143,7 @@ void main() {
       final style = tester.widget<Text>(range).style!;
       expect(style.fontSize, 12);
       final context = tester.element(range);
-      // POL2: the card's muted ink is textSecondary on the flat card.
-      expect(style.color, context.colors.textSecondary);
+      expect(style.color, context.colors.onBrandSurfaceMuted);
     }, skip: _skip);
   });
 

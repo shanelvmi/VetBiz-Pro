@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:vetbiz_pro/theme/polish_metrics.dart';
 import 'package:vetbiz_pro/theme/theme_context.dart';
 import 'package:vetbiz_pro/widgets/printable_theme.dart';
 import 'package:vetbiz_pro/widgets/vetbiz_loading_indicator.dart';
@@ -211,9 +212,16 @@ void expectNoBadSurfaces(
 }) {
   // The app's roles, above every page (a test page may have no Scaffold).
   final colors = tester.element(find.byType(Navigator).first).colors;
-  final brandFills = [colors.brandSurface, colors.sidebarHover, colors.sidebarPress];
+  // POL2b: the phone Today card's solid deep tone (brandGradientEnd) is a brand fill.
+  final brandFills = [colors.brandSurface, colors.sidebarHover, colors.sidebarPress, colors.brandGradientEnd];
   final brand = {
     for (final c in dark ? [colors.accent] : [colors.primary, ...brandFills]) c.toARGB32(),
+    // POL2b: the Today card's soft white chips (the period chip, the
+    // StatusPill.onBrand) over its solid deep tone; on the old gradient the
+    // scan never saw them as filled boxes.
+    if (!dark)
+      for (final c in brandFills)
+        Color.alphaBlend(colors.onBrandSurface.withValues(alpha: PolishMetrics.onBrandPillAlpha), c).toARGB32(),
   };
   final badges = {
     colors.onBrandSurface.toARGB32(): {for (final c in brandFills) c.toARGB32()},
