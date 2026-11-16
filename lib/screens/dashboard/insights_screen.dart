@@ -17,6 +17,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
+import '../../theme/polish_metrics.dart';
 import '../../ui/feedback/friendly_error.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
@@ -49,6 +50,11 @@ class _InsightsScreenState extends State<InsightsScreen> {
         context.colors.chartService3, // muted terracotta
         context.colors.chartService4, // muted lavender - reserved for the "Other" slice
       ];
+
+  /// POL2: the cards' hairline border, drawn outside the edge so each card
+  /// keeps its size and place (it replaced a shadow).
+  Border get _hairline =>
+      Border.all(color: context.colors.border, width: PolishMetrics.hairline, strokeAlign: BorderSide.strokeAlignOutside);
 
   bool _isLoading = true;
   Object? _error;
@@ -356,7 +362,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
               decoration: BoxDecoration(
                 color: context.colors.surface,
                 borderRadius: BorderRadius.circular(AppRadius.r16),
-                boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 4))],
+                border: _hairline,
               ),
               child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
             )
@@ -371,23 +377,22 @@ class _InsightsScreenState extends State<InsightsScreen> {
     return Container(
       key: const ValueKey('pulse-content'),
       padding: const EdgeInsets.all(AppSpacing.s20),
+      // POL2 (owner rule 4): a flat surface with a hairline border, no
+      // gradient or glow. The pulse shows no live state: its read is the
+      // headline's words, so no dot is added.
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r16),
-        boxShadow: [BoxShadow(color: context.colors.brandSurface.withValues(alpha: AppAlpha.a30), blurRadius: 16, offset: const Offset(0, 6))],
+        border: _hairline,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          // The icon's slot as before, without its tinted tile (neutral).
+          SizedBox(
             width: 44,
             height: 44,
-            decoration: BoxDecoration(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a15), borderRadius: BorderRadius.circular(AppRadius.r12)),
-            child: Icon(Icons.monitor_heart_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i22),
+            child: Icon(Icons.monitor_heart_outlined, color: context.colors.textSecondary, size: AppIconSize.i22),
           ),
           const SizedBox(width: AppSpacing.s14),
           Expanded(
@@ -395,13 +400,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(context.l10n.insights_businessPulse,
-                    style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
+                    style: TextStyle(color: context.colors.textSecondary, fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
                 const SizedBox(height: AppSpacing.s4),
                 Text(_pulseHeadline(),
-                    style: TextStyle(color: context.colors.onBrandSurface, fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
+                    key: const ValueKey('pulse-headline'),
+                    style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
                 const SizedBox(height: AppSpacing.s6),
                 Text(_pulseSentence(),
-                    style: TextStyle(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a85), fontSize: AppFontSize.f13, height: 1.4)),
+                    style: TextStyle(color: context.colors.textSecondary, fontSize: AppFontSize.f13, height: 1.4)),
               ],
             ),
           ),
@@ -482,13 +488,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r16),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.shadow.withValues(alpha: AppAlpha.a05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        // POL2: a hairline border in place of the shadow (owner rule 4).
+        border: _hairline,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -496,7 +497,9 @@ class _InsightsScreenState extends State<InsightsScreen> {
           Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
           if (summary != null) ...[
             const SizedBox(height: AppSpacing.s4),
-            Text(summary, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
+            // POL2 (owner rule 1): the summary is a read, not something
+            // chosen or new, so secondary text, not the accent.
+            Text(summary, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSecondary, fontWeight: AppFontWeight.semibold)),
           ],
           const SizedBox(height: AppSpacing.s16),
           SizedBox(height: chartHeight, child: chart),
