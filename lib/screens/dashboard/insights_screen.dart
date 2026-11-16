@@ -27,7 +27,11 @@ import '../../utils/app_clock.dart';
 /// clear, genuinely useful charts rather than a dozen shallow ones.
 class InsightsScreen extends StatefulWidget {
   final bool isModal;
-  const InsightsScreen({super.key, this.isModal = false});
+
+  /// Tests only (POL2's fingerprints): a fake Firestore in place of the
+  /// app's own. The same reads either way.
+  final FirebaseFirestore? firestore;
+  const InsightsScreen({super.key, this.isModal = false, this.firestore});
 
   @override
   State<InsightsScreen> createState() => _InsightsScreenState();
@@ -98,8 +102,12 @@ class _InsightsScreenState extends State<InsightsScreen> {
       // HUB2: the same two reads, through the loader Home's Product movement
       // page shares: kept for the session, so a second visit (or Home
       // first) costs nothing.
+      Future<List<List<Map<String, dynamic>>>> read(InsightsDataLoader loader) =>
+          Future.wait([loader.sales(facilityId, now: now), loader.services(facilityId, now: now)]);
       final loader = InsightsDataLoader.shared;
-      final results = await Future.wait([loader.sales(facilityId, now: now), loader.services(facilityId, now: now)]);
+      // POL2: a test's fake Firestore gets its own loader; the app always
+      // reads through the shared one.
+      final results = await read(widget.firestore == null ? loader : InsightsDataLoader(firestore: widget.firestore));
       final salesDocs = results[0];
       final servicesDocs = results[1];
 
@@ -183,7 +191,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final lastWeekComparableEnd = startOfLastWeek.add(Duration(days: today.weekday - 1));
 
     try {
-      final summaryService = DashboardSummaryService();
+      final summaryService = DashboardSummaryService(firestore: widget.firestore);
       final results = await Future.wait([
         summaryService.getDashboardTotals(facilityId: facilityId, start: today, end: now),
         summaryService.getDashboardTotals(facilityId: facilityId, start: yesterday, end: yesterday),
@@ -198,7 +206,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
       final thisWeekTotals = results[3];
       final lastWeekComparableTotals = results[4];
 
-      final yesterdaySnapshotDoc = await FirebaseFirestore.instance
+      final yesterdaySnapshotDoc = await (widget.firestore ?? FirebaseFirestore.instance)
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.dailySnapshots)

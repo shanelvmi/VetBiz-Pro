@@ -43,7 +43,7 @@ radii, ST status shown as a coloured pill (to become StatusDot).
 | register_screen.dart:971 | Register, brand panel | W | brand gradient | flat `brandSurface` | 7 |
 | register_screen.dart:1020 | Register, step badge | W | gradient circle | flat `primary` | 7 |
 | register_screen.dart:1080 | Register, step badge (done) | W | gradient circle | flat `primary` | 7 |
-| subscription/subscription_screen.dart:368 | Subscription, current plan | All | gradient card with accent glow (SH :375) | FlatStatCard, plan name in primary | 7 |
+| subscription/subscription_screen.dart:369 | Subscription, active-promotion banner (not the current plan; POL2 correction) | All | gradient card with accent glow (SH :376) | flat surface, hairline border | 7 |
 | platform_admin/promotions_screen.dart:128 | Promotions card header | W | gradient strip | flat surface | 8 |
 
 ## 2. BoxShadow for decoration (SH): 39 calls in 25 files
@@ -72,7 +72,7 @@ radii, ST status shown as a coloured pill (to become StatusDot).
 | legal/legal_document_screen.dart:134 | legal page card | All | card shadow | hairline | 7 |
 | login_screen.dart:559, 1147 | error box glow (dangerAccent), button glow | W | coloured glow | remove | 7 |
 | register_screen.dart:880, 1505 | error box glow, card shadow | W | coloured glow, shadow | remove / hairline | 7 |
-| subscription/subscription_screen.dart:375 | current plan accent glow | All | coloured glow | remove | 7 |
+| subscription/subscription_screen.dart:376 | active-promotion banner accent glow | All | coloured glow | remove | 7 |
 | widgets/auth_card.dart:66, auth_panel.dart:20, 25, 68, 69 | sign-in and register cards, icon circle glow | W | shadow and glow | hairline; glow removed | 7 |
 | widgets/summary_card.dart:159 | `SummaryCard` (Home, Add client, Record visit) | W | shadow (`shadow:` parameter) | FlatStatCard | 2 |
 
@@ -179,7 +179,7 @@ radius (`r12`); screens adopt them group by group.
 
 Rainbow badges: notifications categories (6 hues), team roles (3), facility
 types (3), platform roles. Glow: sign-in error box and button, register error
-box, auth icon circle, subscription current plan, Insights pulse. Decorative
+box, auth icon circle, subscription active-promotion banner, Insights pulse. Decorative
 icons in coloured circles: every summary card and notification row.
 Emoji-style empty states: none found (all empty states use a grey outline
 icon); but subscription history's and notifications' empty icons are 64 px.
