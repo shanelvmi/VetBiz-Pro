@@ -7,11 +7,6 @@ import 'package:vetbiz_pro/constants/person_titles.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/services/membership_service.dart';
 
-// RW2b2 (docs/design/register_wizard.md, the owner's change to answer 6):
-// the titles, the facility type's label and the Other facility's own words
-// (typeDetail). Written before the change, skipped until it exists.
-const _skip = false;
-
 void main() {
   final en = lookupAppLocalizations(const Locale('en'));
   final sw = lookupAppLocalizations(const Locale('sw'));
@@ -20,7 +15,7 @@ void main() {
     test('one list, in the owner\'s order', () {
       expect(kPersonTitles, ['Mr.', 'Mrs.', 'Ms.', 'Miss', 'Dr.', 'Prof.']);
       expect(kPersonTitles, contains(kDefaultPersonTitle));
-    }, skip: _skip);
+    });
 
     test('every title round-trips through a stored fullName (Edit Profile)', () {
       for (final t in kPersonTitles) {
@@ -28,7 +23,7 @@ void main() {
         expect(split.title, t, reason: t);
         expect(split.name, 'Asha Mwita', reason: t);
       }
-    }, skip: _skip);
+    });
 
     test('names saved before RW2b2 still split as before; no title, no guess', () {
       expect(splitPersonTitle('Mrs. Neema Juma'), (title: 'Mrs.', name: 'Neema Juma'));
@@ -37,7 +32,7 @@ void main() {
       // A name that only starts with the letters of a title is not one.
       expect(splitPersonTitle('Missana Juma'), (title: null, name: 'Missana Juma'));
       expect(splitPersonTitle('Asha Mwita'), (title: null, name: 'Asha Mwita'));
-    }, skip: _skip);
+    });
   });
 
   group('the facility type as shown', () {
@@ -54,7 +49,7 @@ void main() {
       expect(en.facilityTypeDisplay('Other'), en.facilityType_other);
       expect(en.facilityTypeDisplay('Other', ''), en.facilityType_other);
       expect(en.facilityTypeDisplay('Other', '   '), en.facilityType_other);
-    }, skip: _skip);
+    });
 
     test('any other type ignores a detail; unknown and empty come back unchanged', () {
       expect(en.facilityTypeDisplay('Agrovet', 'Pet shop'), 'Agrovet');
@@ -83,7 +78,7 @@ void main() {
       for (final bad in ['Pet/shop', '<b>x</b>', 'Shop!', 'x\ny', 'Pets 100%']) {
         expect(typeDetailIssue(bad), TypeDetailIssue.characters, reason: bad);
       }
-    }, skip: _skip);
+    });
   });
 
   group('what the server receives and returns', () {
@@ -93,7 +88,7 @@ void main() {
       expect(MembershipService.facilityPayload({'name': 'Ukuli', 'type': 'Agrovet', 'typeDetail': 'Pet shop'}),
           {'name': 'Ukuli', 'type': 'Agrovet'});
       expect(MembershipService.facilityPayload({'name': 'Ukuli', 'type': 'Other'}), {'name': 'Ukuli', 'type': 'Other'});
-    }, skip: _skip);
+    });
 
     test('an invite\'s detail is read when there is one', () {
       final withDetail = InviteCheck.fromResult({'valid': true, 'facilityName': 'Ukuli', 'facilityType': 'Other', 'facilityTypeDetail': 'Pet shop'});
@@ -101,6 +96,6 @@ void main() {
       final old = InviteCheck.fromResult({'valid': true, 'facilityName': 'Ukuli', 'facilityType': 'Ambulatory Vet'});
       expect(old.facilityType, 'Ambulatory Vet');
       expect(old.facilityTypeDetail, isNull);
-    }, skip: _skip);
+    });
   });
 }

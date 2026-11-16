@@ -10,10 +10,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_nav_bar.dart';
 
 import 'helpers/register_harness.dart';
 
-// RW2c (register_wizard.md section 3, owner answers 2 and 10): the
-// assistant's steps at phone and desktop widths. Skipped until they exist.
-const _skip = false;
-
 const _longName = 'Mwanaisha Wanjiru Kilimanjaro-Mwakyembe Nyamwezi';
 const _longFacility = InviteCheck(
     facilityName: 'Kituo cha Mifugo na Kilimo cha Wilaya ya Kilimanjaro Magharibi',
@@ -63,7 +59,7 @@ void main() {
           await assistantTo(tester, 5, l10n: t, each: (step) => expect(tester.takeException(), isNull, reason: 'step $step'));
           expect(find.text(t.wizard_stepOf(5, 5)), findsOneWidget);
           await finishRegister(tester);
-        }, skip: _skip);
+        });
       }
     }
   }
@@ -85,7 +81,7 @@ void main() {
       expect(tester.getSize(find.byWidget(change.widget)).height, greaterThanOrEqualTo(48));
     }
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('assistant: every step has the footer below the card; the welcome panel beside it', (tester) async {
     await pumpRegister(tester, size: const Size(1200, 900), membership: long());
@@ -95,7 +91,7 @@ void main() {
       expect(find.text(en.register_benefitTrial), findsOneWidget, reason: 'panel, step $step');
     });
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('assistant, phone: the bar is pinned above a keyboard of 300 on the invite step', (tester) async {
     await pumpRegister(tester, size: const Size(360, 800), keyboard: 300, membership: long());
@@ -104,5 +100,5 @@ void main() {
     expect(next.bottom, lessThanOrEqualTo(800 - 300));
     expect(find.descendant(of: find.byKey(AuthCard.surfaceKey), matching: find.text(en.products_continue)), findsNothing);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 }

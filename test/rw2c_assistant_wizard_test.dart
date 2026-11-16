@@ -13,11 +13,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_step_header.dart';
 
 import 'helpers/register_harness.dart';
 
-// RW2c (docs/design/register_wizard.md section 2, the RW2c batch): the
-// assistant's five steps in the wizard, replacing the one-page form. Written
-// before the change, skipped until it exists.
-const _skip = false;
-
 const _pets = InviteCheck(facilityName: 'Mwanza Pets', facilityType: 'Other', facilityTypeDetail: 'Pet shop');
 
 void main() {
@@ -87,7 +82,7 @@ void main() {
     expect(errorOf(tester, 'name'), en.register_enterFullName);
     expect(errorOf(tester, 'phone'), en.register_enterPhone);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('step 3: the invite code, checked as typed; Continue waits for a good one', (tester) async {
     final membership = FakeRegisterMembership(codes: validOnly);
@@ -110,7 +105,7 @@ void main() {
     await tapContinue(tester);
     expect(find.text(step(4)), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('an Other facility shows its name only, not its own words (FN1)', (tester) async {
     await pumpRegister(tester, membership: FakeRegisterMembership(codes: validOnly));
@@ -120,7 +115,7 @@ void main() {
     expect(find.text(en.register_joining('Mwanza Pets')), findsOneWidget);
     expect(find.textContaining('Pet shop'), findsNothing);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('a wrong (or expired) code: the existing message, counted, Continue refused', (tester) async {
     final membership = FakeRegisterMembership(codes: validOnly, limit: 5);
@@ -134,7 +129,7 @@ void main() {
     expect(find.text(step(3)), findsOneWidget);
     expect(errorOf(tester, 'invite'), en.register_inviteInvalid);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('five wrong codes, then the sixth check shows the limit message', (tester) async {
     final membership = FakeRegisterMembership(codes: validOnly, limit: 5);
@@ -152,7 +147,7 @@ void main() {
     expect(errorOf(tester, 'invite'), limit);
     expect(find.text(step(3)), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Back after a good code, then a new code: the old result is dropped and checked again', (tester) async {
     final membership = FakeRegisterMembership(codes: validOnly);
@@ -172,7 +167,7 @@ void main() {
     expect(membership.checked, [AssistantInputs.code.trim(), 'PETS22']);
     expect(find.text(en.register_joining('Mwanza Pets')), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('step 4: no eyes, both hidden, the minimum and the match tick', (tester) async {
     await pumpRegister(tester);
@@ -188,7 +183,7 @@ void main() {
     expect(find.descendant(of: registerField('confirm'), matching: find.byIcon(Icons.check_circle)), findsOneWidget);
     expect(obscured(tester, 'password'), isTrue);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the review sums up; Create needs the box; then exactly the old form\'s call, once', (tester) async {
     final auth = FakeRegisterAuth();
@@ -208,7 +203,7 @@ void main() {
     // Waiting for approval: Sign in, as the old form did.
     expect(find.byKey(loginStandInKey), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the code expired or was used before Create: step 3 with the server\'s message', (tester) async {
     final auth = FakeRegisterAuth(
@@ -220,7 +215,7 @@ void main() {
     expect(errorOf(tester, 'invite'), 'Invalid, expired, or already-used invite code');
     expect(find.text(en.register_joining('Mwanga Agrovet')), findsNothing);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('email already in use: step 4, the message, both passwords empty', (tester) async {
     final auth = FakeRegisterAuth(assistantFailWith: FirebaseAuthException(code: 'email-already-in-use'));
@@ -232,7 +227,7 @@ void main() {
     expect(textOf(tester, 'password'), isEmpty);
     expect(textOf(tester, 'confirm'), isEmpty);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('any other failure: step 4, the passwords emptied', (tester) async {
     final auth = FakeRegisterAuth(assistantFailWith: FirebaseAuthException(code: 'network-request-failed'));
@@ -243,7 +238,7 @@ void main() {
     expect(textOf(tester, 'password'), isEmpty);
     expect(obscured(tester, 'password'), isTrue);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('account made, sign-in failed: Sign in with the email filled in', (tester) async {
     final auth = FakeRegisterAuth(assistantFailWith: AccountCreatedException(en.register_accountCreatedSignIn));
@@ -253,7 +248,7 @@ void main() {
     expect(tester.widget<Text>(find.byKey(loginStandInKey)).data,
         'email=neema@example.com message=${en.register_accountCreatedSignIn}');
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Back keeps every answer (passwords hidden); the back gesture goes one step back', (tester) async {
     await pumpRegister(tester);
@@ -268,7 +263,7 @@ void main() {
     expect(find.text(step(2)), findsOneWidget);
     expect(textOf(tester, 'name'), AssistantInputs.name);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   test('the old one-page register form is gone', () {
     final src = File('lib/screens/register_screen.dart').readAsStringSync();
@@ -276,5 +271,5 @@ void main() {
       expect(src.contains(gone), isFalse, reason: gone);
     }
     expect(src.split('\n').length, lessThan(2050)); // 2270 lines before RW2c
-  }, skip: _skip);
+  });
 }

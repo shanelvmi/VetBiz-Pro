@@ -21,8 +21,6 @@ import 'helpers/screen_size_matrix.dart';
 import 'ph8a_seams_test.dart' show Ph8Auth;
 import 'ph8a_subscription_wide_test.dart' show seedSubscription;
 
-const _skip = false;
-
 const _sizes = [Size(360, 740), Size(390, 844), Size(740, 360), Size(768, 1024), Size(1200, 800)];
 
 bool _leftOnly(Decoration? d) {
@@ -89,19 +87,19 @@ void main() {
           expect(find.byKey(const ValueKey('notifications-filter-all')), findsOneWidget);
           expect(find.byKey(const ValueKey('notifications-page-more')), findsOneWidget, reason: 'the app bar\'s menu');
         }
-      }, skip: _skip);
+      });
 
       ph5TestWidgets('Subscription at $where (a payment pending): no left bar', (tester) async {
         await pumpPh5(tester, (fs) => SubscriptionScreen(firestore: fs, auth: Ph8Auth()),
             size: size, look: look, pushed: true, seed: (fs) => seedSubscription(fs, pending: true));
         expect(leftBars(tester), isEmpty);
-      }, skip: _skip);
+      });
 
       ph5TestWidgets('the payment history at $where: no left bar, the status as a dot and its word (POL1)', (tester) async {
         await pumpPh5(tester, (fs) => SubscriptionHistoryScreen(facilityId: testFacilityId, primaryColor: Colors.teal, firestore: fs),
             size: size, look: look, pushed: true, seed: seedSubscription);
         expect(leftBars(tester), isEmpty);
-      }, skip: _skip);
+      });
     }
   }
 
@@ -109,7 +107,7 @@ void main() {
     final c = await _feed(tester);
     await pumpNotifications(tester, c, width: 1200, height: 800, dropdown: true);
     expect(leftBars(tester), isEmpty);
-  }, skip: _skip);
+  });
 
   testWidgets('on a phone the filter row still filters (POL1, was the chips); selection mode keeps its actions', (tester) async {
     final c = await _feed(tester);
@@ -127,5 +125,5 @@ void main() {
     await tapPageAction(tester, 'Select');
     await tester.pumpAndSettle();
     expect(find.text('Cancel'), findsOneWidget);
-  }, skip: _skip);
+  });
 }

@@ -11,15 +11,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_step_header.dart';
 
 import 'helpers/register_harness.dart';
 
-// RW2b (docs/design/register_wizard.md sections 2, 4 and 5, with the
-// owner's answers): the owner flow as five steps. Written before the
-// wizard, skipped until it exists; unskipped on the old one-page form they
-// fail (no "Step 1 of 5", every field on one page).
-const _skip = false;
-// RW2b-fix: the passwords are kept in memory on Back and Continue (design
-// section 5, test 3), hidden again; skipped until the fix.
-const _skipFix = false;
-
 // The call the OLD one-page form made for OwnerInputs, recorded by typing
 // them into it (title Dr., the facility added, Create account) before the
 // wizard was written. The facility code is random (generateUniqueFacilityCode),
@@ -53,7 +44,7 @@ void main() {
     expect(find.text(en.wizard_back), findsNothing);
     expect(find.byType(TextField), findsNothing);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Continue shows only its own step\'s errors, stays, focuses the first', (tester) async {
     await pumpRegister(tester);
@@ -87,7 +78,7 @@ void main() {
     expect(errorOf(tester, 'password'), en.register_createPassword);
     expect(errorOf(tester, 'confirm'), en.register_reenterToConfirm);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('step 4: an invalid email, a short password, a mismatch', (tester) async {
     await pumpRegister(tester);
@@ -102,7 +93,7 @@ void main() {
     expect(errorOf(tester, 'password'), en.register_pwMin8);
     expect(errorOf(tester, 'confirm'), en.common_passwordsDoNotMatch);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Back and forward keep every typed value, the passwords hidden', (tester) async {
     await pumpRegister(tester);
@@ -131,7 +122,7 @@ void main() {
     expect(obscured(tester, 'password'), isTrue);
     expect(obscured(tester, 'confirm'), isTrue);
     await finishRegister(tester);
-  }, skip: _skipFix);
+  });
 
   testWidgets('kept passwords: a failed Create still empties and hides both', (tester) async {
     final auth = FakeRegisterAuth(failWith: FirebaseAuthException(code: 'network-request-failed'));
@@ -147,7 +138,7 @@ void main() {
     expect(textOf(tester, 'confirm'), isEmpty);
     expect(obscured(tester, 'password'), isTrue);
     await finishRegister(tester);
-  }, skip: _skipFix);
+  });
 
   testWidgets('kept passwords: leaving the screen empties both', (tester) async {
     await pumpRegister(tester);
@@ -159,7 +150,7 @@ void main() {
     await finishRegister(tester);
     expect(password.text, isEmpty);
     expect(confirm.text, isEmpty);
-  }, skip: _skipFix);
+  });
 
   // RW2b2 (owner): six titles, and the type as a dropdown again.
   testWidgets('step 2 has the title as chips; step 3 the type as a dropdown', (tester) async {
@@ -172,7 +163,7 @@ void main() {
     expect(find.byType(WizardOptionCard), findsNothing);
     expect(find.byType(DropdownButtonFormField<String>), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the review step sums up each step; Change opens it', (tester) async {
     await pumpRegister(tester);
@@ -185,7 +176,7 @@ void main() {
     await tapText(tester, en.common_change);
     expect(find.text(step(4)), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Create sends exactly the old form\'s call, once, only at the end', (tester) async {
     final auth = FakeRegisterAuth();
@@ -206,7 +197,7 @@ void main() {
     expect(membership.checked, isEmpty);
     expect(auth.assistantCalls, isEmpty);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the consent box blocks Create and says why', (tester) async {
     final auth = FakeRegisterAuth();
@@ -217,7 +208,7 @@ void main() {
     expect(find.text(en.register_consentRequired), findsOneWidget);
     expect(find.text(step(5)), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('email already in use: back to step 4, the message under the email', (tester) async {
     final auth = FakeRegisterAuth(failWith: FirebaseAuthException(code: 'email-already-in-use'));
@@ -230,7 +221,7 @@ void main() {
     expect(textOf(tester, 'password'), isEmpty);
     expect(textOf(tester, 'confirm'), isEmpty);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('any other failure: step 4, the passwords emptied', (tester) async {
     final auth = FakeRegisterAuth(failWith: FirebaseAuthException(code: 'network-request-failed'));
@@ -242,7 +233,7 @@ void main() {
     expect(textOf(tester, 'password'), isEmpty);
     expect(textOf(tester, 'email'), OwnerInputs.email);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('account made, sign-in failed: the Sign in page with the email filled in', (tester) async {
     final auth = FakeRegisterAuth(failWith: AccountCreatedException(en.register_accountCreatedSignIn));
@@ -253,7 +244,7 @@ void main() {
     expect(tester.widget<Text>(find.byKey(loginStandInKey)).data,
         'email=amina@example.com message=${en.register_accountCreatedSignIn}');
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Enter on a step\'s last field continues', (tester) async {
     await pumpRegister(tester);
@@ -265,7 +256,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(step(3)), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the back gesture goes one step back; on step 1 it leaves', (tester) async {
     await pumpRegister(tester, overHome: true);
@@ -284,7 +275,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('home'), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   // RW2c: the one-page assistant form is gone; the choice opens the
   // wizard's step 2 (rw2c_assistant_wizard_test.dart covers the flow).
@@ -298,7 +289,7 @@ void main() {
     expect(find.text(en.register_enterInviteCode), findsNothing);
     expect(membership.checked, isEmpty);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   test('nothing is kept after a reload: no device or browser storage', () {
     final files = [
@@ -311,5 +302,5 @@ void main() {
         expect(src.contains(banned), isFalse, reason: '${file.path} uses $banned');
       }
     }
-  }, skip: _skip);
+  });
 }

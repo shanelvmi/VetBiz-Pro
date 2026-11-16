@@ -18,8 +18,6 @@ import 'package:vetbiz_pro/widgets/profile/profile_drawer.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'ui3_profile_drawer_wide_test.dart' show ui3DrawerPage;
 
-const _skip = false;
-
 /// The drawer as the dashboard builds it: the facility from the provider.
 Widget _wired({required bool admin}) => Consumer<FacilityProvider>(
       builder: (context, f, _) => ProfileDrawerContent(
@@ -79,7 +77,7 @@ void main() {
         final text = tester.widget<Text>(name);
         expect(text.maxLines, 1);
         expect(text.overflow, TextOverflow.ellipsis);
-      }, skip: _skip);
+      });
 
       testWidgets('updates at once after a facility switch', (tester) async {
         final facilities = await _pump(tester, size: size);
@@ -88,7 +86,7 @@ void main() {
         expect(find.text('Kliniki ya Mifugo Arusha'), findsOneWidget);
         expect(find.text('Mwanzo Agrovet'), findsNothing);
         expect(find.descendant(of: find.byType(FacilityTypeTag), matching: find.text('Vet Clinic')), findsOneWidget);
-      }, skip: _skip);
+      });
 
       testWidgets('a label, as before: no tap target on the row', (tester) async {
         await _pump(tester, size: size);
@@ -103,14 +101,14 @@ void main() {
         await tester.tap(find.text('Mwanzo Agrovet'));
         await tester.pumpAndSettle();
         expect(find.byType(ProfileDrawerContent), findsOneWidget, reason: 'nothing opened, the drawer stays');
-      }, skip: _skip);
+      });
 
       testWidgets('an assistant sees the same row', (tester) async {
         await _pump(tester, size: size, admin: false);
         expect(find.text('Current facility'), findsOneWidget);
         expect(find.text('Mwanzo Agrovet'), findsOneWidget);
         expect(find.byType(FacilityTypeTag), findsOneWidget);
-      }, skip: _skip);
+      });
     });
   }
 
@@ -122,7 +120,7 @@ void main() {
           expect(tester.takeException(), isNull);
           final drawer = tester.getRect(find.byType(Drawer));
           expect(tester.getRect(find.text(matrixLongFacilityName)).right, lessThanOrEqualTo(drawer.right));
-        }, skip: _skip);
+        });
       }
     }
   });
@@ -132,5 +130,5 @@ void main() {
     expect(source, contains('facility: FacilityDisplay.name(facilities.selectedFacilityName)'));
     expect(source, contains('facilityType: facilities.selectedFacilityType'));
     expect(source, contains('facilityTypeDetail: facilities.selectedFacilityTypeDetail'));
-  }, skip: _skip);
+  });
 }

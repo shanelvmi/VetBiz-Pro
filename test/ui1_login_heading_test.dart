@@ -12,8 +12,6 @@ import 'package:vetbiz_pro/screens/login_screen.dart';
 
 import 'helpers/login_harness.dart';
 
-const _skip = false;
-
 /// Where the text is drawn (its glyphs, not its box; a space left at a line
 /// break is not drawn, so only the words count).
 Rect _ink(WidgetTester tester, Finder text) {
@@ -46,7 +44,7 @@ void main() {
       }
       expect(find.descendant(of: heading, matching: find.byType(Icon)), findsNothing, reason: 'no lock circle on the phone');
       expect(tester.takeException(), isNull);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('1200: the card heading stays left with its lock circle', (tester) async {
@@ -55,5 +53,5 @@ void main() {
     expect(find.descendant(of: heading, matching: find.byIcon(Icons.lock_outline)), findsOneWidget);
     final title = _ink(tester, find.descendant(of: heading, matching: find.text('Sign in to your account')));
     expect(title.left, greaterThan(tester.getRect(find.descendant(of: heading, matching: find.byType(Icon))).right));
-  }, skip: _skip);
+  });
 }

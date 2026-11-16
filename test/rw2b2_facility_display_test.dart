@@ -8,11 +8,6 @@ import 'package:vetbiz_pro/screens/facilities/facility_picker_screen.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
-// RW2b2: an Other facility's own words (typeDetail) and the Ambulatory
-// services label where facilities are listed, and the one shared type field
-// behind every place that offers a type. Skipped until it exists.
-const _skip = false;
-
 void main() {
   final en = lookupAppLocalizations(const Locale('en'));
 
@@ -42,7 +37,7 @@ void main() {
       expect(find.text('Ambulatory Vet'), findsNothing);
       // The bare Other (no words) still shows Other.
       expect(find.text(en.facilityType_other), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 
   test('every place that offers a facility type uses the one shared field', () {
@@ -58,5 +53,5 @@ void main() {
     }
     listing.sort();
     expect(listing, ['lib/screens/facilities/facility_picker_screen.dart', 'lib/widgets/facility_type_field.dart']);
-  }, skip: _skip);
+  });
 }

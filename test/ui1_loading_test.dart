@@ -15,8 +15,6 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/widgets/vetbiz_loading_indicator.dart';
 
-const _skip = false;
-
 const _sizes = [Size(360, 740), Size(390, 844), Size(740, 360), Size(768, 1024), Size(1200, 800)];
 
 Future<void> _pump(WidgetTester tester, Size size, Brightness brightness, {bool reduceMotion = false, String? title}) async {
@@ -63,7 +61,7 @@ void main() {
         final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
         expect(scaffold.backgroundColor, AppColors.fromTheme(AppColorTheme.pasture, brightness: brightness).background);
         expect(_ring(tester).value, isNull, reason: 'it turns');
-      }, skip: _skip);
+      });
     }
   }
 
@@ -72,13 +70,13 @@ void main() {
     final mark = tester.getRect(find.byKey(VetBizLoadingIndicator.markKey));
     expect(mark.center.dx, closeTo(195, 1));
     expect(mark.center.dy, closeTo(422, 1));
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: a still ring', (tester) async {
     await _pump(tester, const Size(390, 844), Brightness.dark, reduceMotion: true);
     expect(_ring(tester).value, isNotNull);
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 
   test('the missing illustration is referred to nowhere (lib, pubspec)', () {
     expect(File('assets/vetbiz_loading_illustration.png').existsSync(), isFalse, reason: 'the file is really missing');
@@ -86,7 +84,7 @@ void main() {
       expect(f.readAsStringSync().contains('vetbiz_loading_illustration.png'), isFalse, reason: f.path);
     }
     expect(_read('pubspec.yaml').contains('vetbiz_loading_illustration.png'), isFalse);
-  }, skip: _skip);
+  });
 
   test('the logo\'s path is written once, in AppAssets.logo', () {
     expect(AppAssets.logo, 'assets/vetbiz_pro_logo.png');
@@ -95,7 +93,7 @@ void main() {
         if (f.readAsStringSync().contains("'assets/vetbiz_pro_logo.png'")) f.path.replaceAll('\\', '/'),
     ];
     expect(writers, ['lib/config/app_assets.dart']);
-  }, skip: _skip);
+  });
 
   test('one look: the compact style is gone; every wait after signing in is the loading page', () {
     for (final f in _dartFiles('lib')) {
@@ -106,5 +104,5 @@ void main() {
     expect(main.contains('VetBizLoadingPage'), isTrue);
     expect(_read('lib/utils/facility_activation.dart').contains('VetBizLoadingPage('), isTrue, reason: 'setting up the facility');
     expect(_read('lib/screens/facilities/facility_picker_screen.dart').contains('VetBizLoadingPage('), isTrue);
-  }, skip: _skip);
+  });
 }

@@ -7,13 +7,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_option_card.dart';
 
 import 'helpers/register_harness.dart';
 
-// RW2b2 (docs/design/register_wizard.md, the owner's change to answer 6):
-// no Sign in in the header (one link on phones), six titles, the facility
-// type as an empty required dropdown with Other and its own words, no eye
-// on the register passwords. Written before the change, skipped until it
-// exists.
-const _skip = false;
-
 const _detail = 'Duka la mifugo na chakula cha kuku bora'; // 39 characters
 const _longFacility = 'Kituo cha Mifugo na Kilimo cha Wilaya ya Kilimanjaro Magharibi';
 
@@ -56,7 +49,7 @@ void main() {
         await tapText(tester, en.common_logIn);
         expect(find.byKey(loginStandInKey), findsOneWidget);
         await finishRegister(tester);
-      }, skip: _skip);
+      });
     }
   });
 
@@ -77,7 +70,7 @@ void main() {
     await tapText(tester, en.register_createAccount);
     expect(auth.ownerCalls.single['fullName'], 'Prof. Amina Juma');
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('titles wrap on a phone', (tester) async {
     await pumpRegister(tester, size: const Size(360, 800));
@@ -86,7 +79,7 @@ void main() {
     expect(tops.length, greaterThan(1), reason: 'six chips need two rows at 360');
     expect(tester.takeException(), isNull);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('step 3: the type starts empty with its hint; Continue refuses until one is chosen', (tester) async {
     await pumpRegister(tester);
@@ -108,7 +101,7 @@ void main() {
     await tapContinue(tester);
     expect(find.text(step(4)), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the options are the stored types with their labels: Ambulatory services', (tester) async {
     await pumpRegister(tester);
@@ -122,7 +115,7 @@ void main() {
     await tester.tap(find.text('Ambulatory services').last);
     await tester.pumpAndSettle();
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Other: its field appears, is required and checked, and the words are shown', (tester) async {
     await pumpRegister(tester);
@@ -155,7 +148,7 @@ void main() {
     // FN1: the review shows the name only, never with its type.
     expect(find.text('Mwanza Pets'), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the call carries typeDetail only for Other', (tester) async {
     final auth = FakeRegisterAuth();
@@ -174,7 +167,7 @@ void main() {
     expect((sent[1] as Map).containsKey('typeDetail'), isFalse);
     expect(sent.length, 2);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('another type after typing Other\'s words: they are dropped', (tester) async {
     final auth = FakeRegisterAuth();
@@ -193,7 +186,7 @@ void main() {
     final sent = (auth.ownerCalls.single['facilities'] as List).single as Map;
     expect(sent.containsKey('typeDetail'), isFalse);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('passwords: no eye, both hidden; the minimum shown; the match tick kept', (tester) async {
     await pumpRegister(tester);
@@ -214,7 +207,7 @@ void main() {
       expect(tester.widget<EditableText>(find.descendant(of: registerField(field), matching: find.byType(EditableText))).obscureText, isTrue);
     }
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   for (final width in [360.0, 390.0, 768.0, 1200.0]) {
     for (final brightness in Brightness.values) {
@@ -235,7 +228,7 @@ void main() {
           expect(find.text(t.wizard_stepOf(5, 5)), findsOneWidget);
           expect(tester.takeException(), isNull, reason: 'the review');
           await finishRegister(tester);
-        }, skip: _skip);
+        });
       }
     }
   }

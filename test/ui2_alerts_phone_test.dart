@@ -18,8 +18,6 @@ import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 // Until the strips go (UI2 (1), the strip commit).
 const _stripSkip = false;
 
@@ -89,7 +87,7 @@ void main() {
         await ph5Settle(tester);
         expect(_rows(tester).length, _all(tester).length);
       }
-    }, skip: _skip);
+    });
   }
 
   ph5TestWidgets('the chips show their counts as text and the chosen one a check mark', (tester) async {
@@ -104,7 +102,7 @@ void main() {
     final chip = tester.widget<ChoiceChip>(ph5Key('ui2-alertChip-lowStock'));
     expect(chip.selected, isTrue);
     expect(chip.showCheckmark ?? true, isTrue);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('one summary line: the number of alerts, and no subtitle in the bar', (tester) async {
     await pumpPh5(tester, _alerts, pushed: true, seed: _seed);
@@ -115,7 +113,7 @@ void main() {
     expect(find.byType(DropdownButton<String>), findsNothing);
     expect(find.byIcon(Icons.search), findsOneWidget);
     expect(find.textContaining('Showing 1 to'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('a row: photo, name and quantity, category and the alert in text, no buttons', (tester) async {
     await pumpPh5(tester, _alerts, pushed: true, seed: _seed);
@@ -127,7 +125,7 @@ void main() {
     expect(find.descendant(of: row, matching: find.text('Out of Stock')), findsOneWidget);
     expect(find.descendant(of: row, matching: find.bySubtype<ButtonStyleButton>()), findsNothing);
     expect(find.descendant(of: row, matching: find.byType(IconButton)), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Restock on the details page opens Add Batch for that product, as the old button', (tester) async {
     await pumpPh5(tester, _alerts, pushed: true, seed: _seed);
@@ -139,14 +137,14 @@ void main() {
     await tester.tap(find.text('Restock'));
     await ph5Settle(tester);
     expect(tester.widget<AddBatchScreen>(find.byType(AddBatchScreen)).product.id, 'p7');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the tablet Restock button still opens Add Batch for its product', (tester) async {
     await pumpPh5(tester, _alerts, size: const Size(1024, 1400), pushed: true, seed: _seed);
     await tester.tap(find.descendant(of: ph5Key('lowStock-p7'), matching: find.text('Restock')));
     await ph5Settle(tester);
     expect(tester.widget<AddBatchScreen>(find.byType(AddBatchScreen)).product.id, 'p7');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an assistant cannot move stock to the shelf from the page either', (tester) async {
     await pumpPh5(tester, _alerts, pushed: true, seed: _seed, admin: false);
@@ -154,14 +152,14 @@ void main() {
     await ph5Settle(tester);
     final button = find.ancestor(of: find.text('Move to shelf'), matching: find.bySubtype<FilledButton>());
     expect(tester.widget<FilledButton>(button.first).onPressed, isNull);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('no alerts: one plain line, no cheerful text', (tester) async {
     await pumpPh5(tester, _alerts, pushed: true, seed: (fs) => ph7SeedProducts(fs, [ph7Products.first]));
     expect(ph5Key('phoneList-empty'), findsOneWidget);
     expect(find.text('No alerts'), findsOneWidget);
     expect(find.textContaining('caught up'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('more alerts than a page: scrolling with Load more, ten at a time', (tester) async {
     await pumpPh5(tester, _alerts, size: const Size(390, 1400), pushed: true, seed: (fs) => ph7SeedProducts(fs, [
@@ -172,7 +170,7 @@ void main() {
     await tester.tap(ph5Key('phoneList-loadMore'));
     await ph5Settle(tester);
     expect(_rows(tester).length, 12);
-  }, skip: _skip);
+  });
 
   for (final size in [const Size(390, 844), ...ph5WideSizes]) {
     ph5TestWidgets('no coloured left strip at ${size.width.toInt()} wide', (tester) async {
@@ -191,7 +189,7 @@ void main() {
           await tester.tap(ph5Key('phoneList-row-lowStock-p7'));
           await ph5Settle(tester);
           await checkCase(tester, phone: true, where: '$where details');
-        }, skip: _skip);
+        });
       }
     }
   });

@@ -17,9 +17,6 @@ import 'package:vetbiz_pro/screens/facilities/facility_picker_screen.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-const _skipKeys = false;
-
 // Not UI1: at 768 in Kiswahili a card's staff-and-status row (the cards
 // stay as built) overflows by 37 px; this case waits for a cards batch.
 const _known = {'768x1024 kiswahili': 'a card row overflows in Kiswahili at 768 (cards not in UI1)'};
@@ -79,7 +76,7 @@ void main() {
         }
         expect(find.textContaining('Reliable'), findsNothing);
         expect(find.textContaining('Inaaminika'), findsNothing);
-      }, skip: _skip || _known.containsKey(where));
+      }, skip: _known.containsKey(where));
     }
   }
 
@@ -99,5 +96,5 @@ void main() {
         expect(text.contains(g), isFalse, reason: '${f.path}: $g');
       }
     }
-  }, skip: _skipKeys);
+  });
 }

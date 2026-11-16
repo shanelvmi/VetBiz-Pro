@@ -9,10 +9,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_option_card.dart';
 
 import 'helpers/wizard_harness.dart';
 
-// RW2a (docs/design/register_wizard.md section 3): the option card and the
-// Back/Continue bar. Written before the widgets, skipped until they exist.
-const _skip = false;
-
 void main() {
   Color textColor(WidgetTester tester, String text) =>
       tester.widget<RichText>(find.descendant(of: find.text(text), matching: find.byType(RichText))).text.style!.color!;
@@ -35,7 +31,7 @@ void main() {
       await tester.tapAt(rect.centerLeft + const Offset(3, 0));
       await tester.tapAt(rect.centerRight - const Offset(3, 0));
       expect(taps, 2);
-    }, skip: _skip);
+    });
 
     testWidgets('Semantics: selected follows the choice', (tester) async {
       final handle = tester.ensureSemantics();
@@ -47,7 +43,7 @@ void main() {
         );
       }
       handle.dispose();
-    }, skip: _skip);
+    });
 
     for (final theme in AppColorTheme.all) {
       for (final b in Brightness.values) {
@@ -76,7 +72,7 @@ void main() {
           for (final text in ['I own or manage a facility', 'Sales, stock and your team']) {
             expect(ColorMath.contrast(textColor(tester, text), c.surface), greaterThanOrEqualTo(4.5), reason: text);
           }
-        }, skip: _skip);
+        });
       }
     }
   });
@@ -111,20 +107,20 @@ void main() {
       await tester.tap(find.text('Back'));
       await tester.tap(find.text('Continue'));
       expect((back, next), (1, 1));
-    }, skip: _skip);
+    });
 
     testWidgets('first step: no Back, Continue stays at the right', (tester) async {
       await pumpWizard(tester, bar(first: true));
       expect(find.text('Back'), findsNothing);
       expect(tester.getRect(find.byType(FilledButton)).right,
           closeTo(tester.getRect(find.byType(WizardNavBar)).right, 24));
-    }, skip: _skip);
+    });
 
     testWidgets('last step: Continue becomes the finish label', (tester) async {
       await pumpWizard(tester, bar(last: true));
       expect(find.text('Continue'), findsNothing);
       expect(find.widgetWithText(FilledButton, 'Create account'), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('submitting: both disabled, Continue shows a spinner', (tester) async {
       await pumpWizard(tester, bar(last: true, submitting: true));
@@ -133,7 +129,7 @@ void main() {
       expect(find.descendant(of: find.byType(FilledButton), matching: find.byType(CircularProgressIndicator)),
           findsOneWidget);
       expect(tester.getSize(find.byType(FilledButton)).height, 48);
-    }, skip: _skip);
+    });
 
     testWidgets('pinned: above a 300 px keyboard at the bottom of the screen', (tester) async {
       const size = Size(360, 740);
@@ -143,7 +139,7 @@ void main() {
       expect(n.bottom, greaterThan(size.height - 300 - 80), reason: 'right above the keyboard');
       await pumpWizard(tester, bar(pinned: true), size: size, scaffoldBar: true);
       expect(tester.getRect(find.byType(FilledButton)).bottom, greaterThan(size.height - 80));
-    }, skip: _skip);
+    });
 
     testWidgets('inline: the bottom row of its card, the keyboard does not move it', (tester) async {
       const cardKey = ValueKey('card');
@@ -158,13 +154,13 @@ void main() {
       expect(before.bottom, cardRect.bottom - 18);
       await pumpWizard(tester, inCard, size: const Size(360, 740), keyboard: 300);
       expect(tester.getRect(find.byType(WizardNavBar)), before);
-    }, skip: _skip);
+    });
 
     testWidgets('Kiswahili at 360: Rudi and Endelea, no overflow', (tester) async {
       await pumpWizard(tester, bar(), size: const Size(360, 740), locale: const Locale('sw'));
       expect(find.text('Rudi'), findsOneWidget);
       expect(find.text('Endelea'), findsOneWidget);
       expect(tester.takeException(), isNull);
-    }, skip: _skip);
+    });
   });
 }

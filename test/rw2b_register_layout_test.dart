@@ -9,11 +9,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_nav_bar.dart';
 
 import 'helpers/register_harness.dart';
 
-// RW2b (docs/design/register_wizard.md section 3, owner answers 2 and 10):
-// the wizard's layout at phone and desktop widths. Written before the
-// wizard, skipped until it exists.
-const _skip = false;
-
 const _longName = 'Mwanaisha Wanjiru Kilimanjaro-Mwakyembe Nyamwezi';
 const _longFacility = 'Kituo cha Mifugo na Kilimo cha Wilaya ya Kilimanjaro Magharibi';
 
@@ -41,7 +36,7 @@ void main() {
     // It is the Scaffold's bar, not the card's bottom row.
     expect(find.descendant(of: find.byKey(AuthCard.surfaceKey), matching: find.text(en.products_continue)), findsNothing);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   for (final width in [768.0, 1200.0]) {
     testWidgets('$width: Back and Continue are the card\'s bottom row', (tester) async {
@@ -51,7 +46,7 @@ void main() {
       expect(find.descendant(of: card, matching: find.text(en.products_continue)), findsOneWidget);
       expect(find.descendant(of: card, matching: find.text(en.wizard_back)), findsOneWidget);
       await finishRegister(tester);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('wide: the welcome panel stays beside every step', (tester) async {
@@ -63,7 +58,7 @@ void main() {
     final stepTitle = tester.getRect(find.text(en.wizard_stepOf(3, 5)));
     expect(panel.right, lessThan(stepTitle.left));
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   // FIN1: a narrow card (a tablet) keeps the strip; phones are one flat
   // page without it (fin1_flat_register_test.dart).
@@ -73,7 +68,7 @@ void main() {
     await continueTo(tester, 2);
     expect(find.text(en.register_setUpCentre), findsNothing);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('phones: no welcome strip on any step', (tester) async {
     await pumpRegister(tester, size: const Size(390, 844));
@@ -81,7 +76,7 @@ void main() {
     await continueTo(tester, 2);
     expect(find.text(en.register_setUpCentre), findsNothing);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('every step: the footer below the card', (tester) async {
     await pumpRegister(tester, size: const Size(1200, 900));
@@ -108,7 +103,7 @@ void main() {
       }
     }
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('48 px targets on phones', (tester) async {
     await pumpRegister(tester, size: const Size(360, 800));
@@ -132,7 +127,7 @@ void main() {
     expect(tester.getSize(find.byType(Checkbox)).height, greaterThanOrEqualTo(48));
     tall(find.widgetWithText(TextButton, en.common_change), 'Change');
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   for (final width in [360.0, 390.0, 768.0, 1200.0]) {
     for (final brightness in Brightness.values) {
@@ -145,7 +140,7 @@ void main() {
           expect(find.text(t.wizard_stepOf(5, 5)), findsOneWidget);
           expect(tester.takeException(), isNull, reason: 'steps 2 to 5');
           await finishRegister(tester);
-        }, skip: _skip);
+        });
       }
     }
   }
