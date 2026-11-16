@@ -34,7 +34,7 @@ radii, ST status shown as a coloured pill (to become StatusDot).
 
 | File:line | Screen | Size | What it shows | Proposed fix | G |
 |---|---|---|---|---|---|
-| dashboard/today_card.dart:129 | Today card | P | brand gradient behind the day's amounts | flat `primary` fill, onPrimary text | 2 |
+| dashboard/today_card.dart:129 | Today card | P | brand gradient behind the day's amounts | POL2 made it flat white; POL2b (owner, option 2): one solid deep tone (`brandGradientEnd`), on-brand inks | 2 |
 | dashboard/insights_screen.dart:367 | Insights, Business pulse | W | brand gradient card with glow (SH :373) | FlatStatCard | 2 |
 | login_screen.dart:367 | Sign-in, brand panel | W | full-height brand gradient | flat `brandSurface` | 7 |
 | login_screen.dart:662 | Sign-in card | W | gradient accent line along the top edge | remove (hairline border) | 7 |
