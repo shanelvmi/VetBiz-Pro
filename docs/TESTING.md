@@ -8,6 +8,26 @@ Use `tool/run_tests.ps1` (PowerShell), from the repository root:
 | `powershell -File tool/run_tests.ps1 -Changed` | Only the test files changed since the last commit (tracked or new). Quick, but the gate is the whole suite. |
 | `powershell -File tool/run_tests.ps1 -Record <one test file> -Define PH5A_RECORD` | Records that ONE file's fixtures (defines: PH5A, PH6, PH7A, PH7B, PH8A, PH8B `_RECORD`, `WRITE_SHAPES`). |
 
+It prints the free memory at start and refuses a concurrency above the
+core count when under 6 GB are free.
+
+**No orphan processes.** It records the run in `build/run_tests.lock` (its
+pid, the start time, every process already running) and stops everything
+the run started (`tool/run_tests_cleanup.ps1`: dart, dartvm,
+dartaotruntime, flutter_tester and their cmd) on a normal end, an error or
+Ctrl+C, and through a hidden watcher when the script itself is killed (the
+memory guard once stopped only the shell, and the test processes ran on for
+days). What it stopped is in `build/run_tests_tree.txt`.
+
+Manual check (STAB1, done on 2026-11-16): start the full suite with a
+sleeping PowerShell standing in for run_tests.ps1, its lock and the
+watcher; after 40 s six flutter processes were running (three
+flutter_tester); kill the stand-in; 10 s later none were left, the lock was
+gone and the tree file listed seven processes stopped. To repeat it, run
+`powershell -File tool/run_tests.ps1`, then stop that PowerShell from
+another window (`Stop-Process -Id <its pid>`): no flutter_tester may remain
+(`Get-Process flutter_tester`).
+
 Rules it enforces:
 
 - **One flutter command at a time.** It refuses to start, in one line, while
