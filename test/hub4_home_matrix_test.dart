@@ -16,8 +16,6 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _sizes = [
   MatrixSize('360x740', Size(360, 740), phone: true),
   MatrixSize('390x844', Size(390, 844), phone: true),
@@ -61,7 +59,7 @@ void main() {
           );
           await tester.pumpAndSettle();
           await _everyPage(tester, s, '${matrixCase(s, look)} ${range.key}');
-        }, skip: _skip);
+        });
       }
     }
     for (final theme in AppColorTheme.all) {
@@ -76,7 +74,7 @@ void main() {
           );
           await tester.pumpAndSettle();
           await _everyPage(tester, s, '${matrixCase(s, look)} ${theme.id}');
-        }, skip: _skip);
+        });
       }
     }
   }
@@ -94,5 +92,5 @@ void main() {
     answered.value = true;
     await tester.pumpAndSettle();
     expect(tester.getRect(find.byKey(const ValueKey('phone-home-charts'))), skeleton);
-  }, skip: _skip);
+  });
 }

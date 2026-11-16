@@ -14,8 +14,6 @@ import 'package:vetbiz_pro/services/insights_data_loader.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = false;
-
 void main() {
   test('cold open, return to Home, Product movement, then Insights', () async {
     final db = CountingFirestore();
@@ -71,5 +69,5 @@ void main() {
         '(reads +${cold.reads - before.reads}); return to Home +0; Product movement +1 get; Insights then +1');
     await sub.cancel();
     debts.clear();
-  }, skip: _skip);
+  });
 }

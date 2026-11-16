@@ -11,8 +11,6 @@ import 'package:vetbiz_pro/services/insights_data_loader.dart';
 
 import 'helpers/counting_firestore.dart';
 
-const _skip = false;
-
 final _now = DateTime(2026, 11, 10, 15, 30);
 final _today = DateTime(2026, 11, 10);
 
@@ -55,7 +53,7 @@ void main() {
       expect(days.servicesThisWeek, [0.0, 0.0, 0.0, 700.0, 0.0, 0.0, 500.0]);
       expect(days.services[3], 900.0, reason: '10 days back is in last week');
       expect(days.thisWeekDays.last, _today);
-    }, skip: _skip);
+    });
 
     test('today comes from the live totals when given; the read\'s otherwise', () async {
       final db = await _seedDays();
@@ -65,7 +63,7 @@ void main() {
       expect(live.servicesThisWeek.last, 99.0);
       expect(live.salesThisWeek.first, days.salesThisWeek.first);
       expect(days.withToday().sales, days.sales);
-    }, skip: _skip);
+    });
 
     test('one range get of each summary, once: a second call and the other page read nothing', () async {
       final db = await _seedDays();
@@ -81,7 +79,7 @@ void main() {
       // A new day reads the new 14 days.
       await loader.days('f1', now: _now.add(const Duration(days: 1)));
       expect(db.gets, gets + 2);
-    }, skip: _skip);
+    });
 
     test('no documents: zeros; a failed read is not kept', () async {
       final db = CountingFirestore();
@@ -92,7 +90,7 @@ void main() {
       final days = await loader.days('f1', now: _now);
       expect(days.sales, List.filled(14, 0.0));
       expect(days.services, List.filled(14, 0.0));
-    }, skip: _skip);
+    });
   });
 
   group('topProductsByQuantity', () {
@@ -113,14 +111,14 @@ void main() {
         ProductMovement('Syringe', 4),
         ProductMovement('Vitamins', 3),
       ]);
-    }, skip: _skip);
+    });
 
     test('fewer than 5 sold: only those; none: empty', () {
       expect(topProductsByQuantity([_sale(1, [('Dewormer', 2)]), _sale(1, [(null, 1)])], since: since),
           const [ProductMovement('Dewormer', 2), ProductMovement('Unknown', 1)]);
       expect(topProductsByQuantity([_sale(9, [('Dewormer', 2)])], since: since), isEmpty);
       expect(topProductsByQuantity(const [], since: since), isEmpty);
-    }, skip: _skip);
+    });
   });
 
   group('InsightsDataLoader', () {
@@ -143,10 +141,10 @@ void main() {
       await loader.services('f1', now: _now);
       expect(db.gets, 2);
       expect(db.listeners, 0);
-    }, skip: _skip);
+    });
 
     test('the window starts 13 days before today, as Insights\' trend', () {
       expect(InsightsDataLoader.windowStart(now: _now), DateTime(2026, 10, 28));
-    }, skip: _skip);
+    });
   });
 }

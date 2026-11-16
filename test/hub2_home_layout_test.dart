@@ -20,8 +20,6 @@ import 'helpers/hub1_hub.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _region = ValueKey('phone-home-charts');
 
 Future<void> _pump(WidgetTester tester, Size size,
@@ -48,7 +46,7 @@ void main() {
         expect(region.top, closeTo(tester.getRect(find.byType(AttentionStrip)).bottom + HomeChartMetrics.gap, 0.5));
         expect(_maxScroll(tester), 0);
         expect(tester.takeException(), isNull);
-      }, skip: _skip);
+      });
     }
 
     testWidgets('without the strip it starts under the card; taller than the maximum it stops there',
@@ -61,7 +59,7 @@ void main() {
       region = tester.getRect(find.byType(HomeChartCarousel));
       expect(region.height, HomeChartMetrics.maxHeight);
       expect(_maxScroll(tester), 0);
-    }, skip: _skip);
+    });
 
     testWidgets('360x640: no room for the minimum, so no carousel; the card and the strip intact', (tester) async {
       await _pump(tester, const Size(360, 640));
@@ -72,7 +70,7 @@ void main() {
       final card = tester.getSize(find.byType(TodayCard));
       await _pump(tester, const Size(360, 640));
       expect(tester.getSize(find.byType(TodayCard)).height, card.height, reason: 'the card never shrinks');
-    }, skip: _skip);
+    });
   });
 
   group('the minimum and maximum rule', () {
@@ -103,7 +101,7 @@ void main() {
       expect(await region(tester, above + HomeChartMetrics.minHeight), HomeChartMetrics.minHeight);
       expect(await region(tester, above + 200), 200);
       expect(await region(tester, above + HomeChartMetrics.maxHeight + 100), HomeChartMetrics.maxHeight);
-    }, skip: _skip);
+    });
   });
 
   testWidgets('the reveal skeleton has the content\'s rects (card, strip, chart region)', (tester) async {
@@ -122,7 +120,7 @@ void main() {
       expect(rects(), skeleton, reason: '$s');
       gate.dispose();
     }
-  }, skip: _skip);
+  });
 
   group('size matrix', () {
     for (final s in const [Size(360, 740), Size(390, 844), Size(412, 915), Size(360, 640)]) {
@@ -134,7 +132,7 @@ void main() {
                 screen: phoneHomeHarness(charts: HarnessCharts().build()), size: s, look: look, colorTheme: theme);
             await tester.pumpAndSettle();
             await checkCase(tester, phone: true, where: where);
-          }, skip: _skip);
+          });
         }
       }
     }
@@ -145,7 +143,7 @@ void main() {
         await tester.pumpAndSettle();
       }
       await checkCase(tester, phone: true, where: '360x740 kiswahili');
-    }, skip: _skip);
+    });
     testWidgets(matrixTextScaleCase, (tester) async {
       await pumpAtSize(tester,
           screen: phoneHomeHarness(charts: HarnessCharts().build()),
@@ -153,6 +151,6 @@ void main() {
           textScale: matrixLargeTextScale);
       await tester.pumpAndSettle();
       await checkCase(tester, phone: true, where: matrixTextScaleCase);
-    }, skip: _skip);
+    });
   });
 }

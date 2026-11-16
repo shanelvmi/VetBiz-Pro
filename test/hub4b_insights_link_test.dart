@@ -14,8 +14,6 @@ import 'package:vetbiz_pro/theme/app_dimens.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _link = ValueKey('home-chart-insights');
 const _switch = ValueKey('home-chart-range');
 
@@ -47,7 +45,7 @@ void main() {
 
         await tester.tap(find.byKey(_link));
         expect(charts.insights, 1);
-      }, skip: _skip);
+      });
     }
   }
 
@@ -55,13 +53,13 @@ void main() {
     final dash = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync().replaceAll('\r\n', '\n');
     test('the link opens Insights the panel tile\'s way', () {
       expect(dash, contains('onInsights: () => runHubTile(homeContext, HubTile.insights, onDone: _returnToHome),'));
-    }, skip: _skip);
+    });
 
     test('the donut reads its services through the shared loader, as Insights does (no second read)', () {
       expect(dash, contains('InsightsDataLoader.shared\n          .services(facilityId, days: r.days)'));
       final insights = File('lib/screens/dashboard/insights_screen.dart').readAsStringSync();
       expect(insights, contains('loader.services(facilityId, now: now)'));
       expect(insights, contains('final loader = InsightsDataLoader.shared;'));
-    }, skip: _skip);
+    });
   });
 }

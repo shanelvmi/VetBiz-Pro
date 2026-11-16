@@ -18,8 +18,6 @@ import 'helpers/hub1_hub.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _panel = ValueKey('hub-panel');
 
 RevealGate _gate(ValueNotifier<bool> answered) => RevealGate(primary: [ListenableRevealSource<bool>(answered, (v) => v)]);
@@ -42,7 +40,7 @@ void main() {
     expect(list, findsWidgets);
     answered.value = true;
     await tester.pumpAndSettle();
-  }, skip: _skip);
+  });
 
   testWidgets('it rises and fades in together with the content, then sits where it always does', (tester) async {
     await _pump(tester, phoneHomeHarness());
@@ -65,7 +63,7 @@ void main() {
     expect(cardFade.map((f) => f.opacity.value), contains(fades.map((f) => f.opacity.value).firstWhere((o) => o > 0 && o < 1)));
     await tester.pumpAndSettle();
     expect(hubPanelTop(tester), settled);
-  }, skip: _skip);
+  });
 
   testWidgets('it can be used as soon as it shows', (tester) async {
     final tapped = <HubTile>[];
@@ -78,13 +76,13 @@ void main() {
     await tester.pump();
     expect(tapped, isNotEmpty);
     await tester.pumpAndSettle();
-  }, skip: _skip);
+  });
 
   testWidgets('held (a return to Home): there at the first frame, no animation', (tester) async {
     await _pump(tester, phoneHomeHarness(gate: _gate(ValueNotifier(true))));
     expect(find.byKey(_panel), findsOneWidget);
     expect(tester.hasRunningAnimations, isFalse);
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: instant', (tester) async {
     final answered = ValueNotifier(false);
@@ -93,7 +91,7 @@ void main() {
     await tester.pump();
     expect(find.byKey(_panel), findsOneWidget);
     expect(tester.hasRunningAnimations, isFalse);
-  }, skip: _skip);
+  });
 
   group('(6) the room under the second row', () {
     testWidgets('with a bottom inset: more padding than without; Home still fits', (tester) async {
@@ -114,6 +112,6 @@ void main() {
       final scroll = tester.state<ScrollableState>(
           find.descendant(of: find.byKey(const ValueKey('phone-home-list')), matching: find.byType(Scrollable)).first);
       expect(scroll.position.maxScrollExtent, 0);
-    }, skip: _skip);
+    });
   });
 }

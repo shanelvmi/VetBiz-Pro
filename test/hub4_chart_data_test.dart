@@ -20,8 +20,6 @@ import 'package:vetbiz_pro/services/service_breakdown.dart';
 
 import 'helpers/counting_firestore.dart';
 
-const _skip = false;
-
 final _now = DateTime(2026, 11, 10, 15, 30);
 final _today = DateTime(2026, 11, 10);
 
@@ -76,7 +74,7 @@ void main() {
       expect(HomeChartRange.values.map((r) => r.days), [7, 30]);
       expect(HomeChartRange.fromKey(null), HomeChartRange.week);
       expect(HomeChartRange.fromKey('90d'), HomeChartRange.week);
-    }, skip: _skip);
+    });
 
     testWidgets('7d by default; a choice is saved and read back', (tester) async {
       SharedPreferences.setMockInitialValues({});
@@ -89,7 +87,7 @@ void main() {
       final again = UiSettingsProvider();
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       expect(again.homeChartRange, HomeChartRange.month);
-    }, skip: _skip);
+    });
   });
 
   group('the 30-day read', () {
@@ -117,7 +115,7 @@ void main() {
       expect(days.currentDays.first, _today.subtract(const Duration(days: 29)));
       expect(days.currentDays.last, _today);
       expect(days.services[14], 900.0, reason: '45 days back is in the previous 30');
-    }, skip: _skip);
+    });
 
     test('kept for the session per range; 7d stays its own 14-day read', () async {
       final db = await seed();
@@ -130,14 +128,14 @@ void main() {
       expect(week.span, 7);
       expect(week.currentSales, week.salesThisWeek);
       expect(week.previousSales, week.salesLastWeek);
-    }, skip: _skip);
+    });
 
     test('today from the live totals keeps the span', () {
       final d = HomeChartDays.empty(_today, span: 30).withToday(sales: 500);
       expect(d.sales.length, 60);
       expect(d.currentSales.last, 500);
       expect(d.span, 30);
-    }, skip: _skip);
+    });
 
     test('the shared sales window: 7d reads Insights\' own, 30d its own window', () async {
       final db = CountingFirestore();
@@ -148,7 +146,7 @@ void main() {
       await loader.sales('f1', now: _now, days: 30);
       expect(db.gets, 2);
       expect(InsightsDataLoader.windowStart(now: _now, days: 30), _today.subtract(const Duration(days: 29)));
-    }, skip: _skip);
+    });
   });
 
   group('the scale', () {
@@ -160,7 +158,7 @@ void main() {
       expect(homeChartNiceMax(50000), 50000);
       expect(homeChartNiceMax(51000), 100000);
       expect(homeChartNiceMax(12345678), 20000000);
-    }, skip: _skip);
+    });
   });
 
   group('product movement', () {
@@ -179,13 +177,13 @@ void main() {
       expect(m.top.first.product?.id, 'p1');
       expect(m.top[2].product?.id, 'p9', reason: 'no productId: matched by name');
       expect(m.top[1].product, isNull, reason: 'gone from the products held');
-    }, skip: _skip);
+    });
 
     test('fewer than five sold: only those', () {
       final m = homeMovement([_sale(0, [('Vaccine', 2, 'p1')])], const [], since: since);
       expect(m.top.length, 1);
       expect(m.soldNothing, isFalse);
-    }, skip: _skip);
+    });
 
     test('slow movers: stock greater than zero and nothing sold; most stock first, at most three', () {
       final sales = [_sale(0, [('Vaccine', 2, 'p1')]), _sale(1, [('Renamed', 1, 'p2')])];
@@ -201,13 +199,13 @@ void main() {
       final m = homeMovement(sales, products, since: since);
       expect([for (final p in m.slow) p.id], ['p5', 'p6', 'p4'],
           reason: 'p1 and p2 sold (p2 by id), p3 has none, a tie by name, Zinc is the fourth');
-    }, skip: _skip);
+    });
 
     test('nothing sold: no top sellers, the slow movers still', () {
       final m = homeMovement([_sale(10, [('Vaccine', 2, 'p1')])], [_product('p1', shelf: 3, name: 'Vaccine')], since: since);
       expect(m.soldNothing, isTrue);
       expect([for (final p in m.slow) p.id], ['p1']);
-    }, skip: _skip);
+    });
   });
 
   group('the services breakdown', () {
@@ -231,7 +229,7 @@ void main() {
       ];
       final before = _insightsBefore(fixtures);
       expect([for (final e in shared) '${e.key}=${e.value}'], [for (final e in before) '${e.key}=${e.value}']);
-    }, skip: _skip);
+    });
 
     test('counts and revenue per type; top five, then the rest as one tail', () {
       final slices = serviceBreakdownOf(fixtures, since: _today.subtract(const Duration(days: 6)));
@@ -244,10 +242,10 @@ void main() {
         ServiceSlice('Other', 3, 3000, tail: true),
       ]);
       expect(slices.fold<int>(0, (n, s) => n + s.count), 11, reason: 'every visit of the 7 days counted');
-    }, skip: _skip);
+    });
 
     test('nothing in the period: no slices', () {
       expect(serviceBreakdownOf(fixtures, since: _today.add(const Duration(days: 1))), isEmpty);
-    }, skip: _skip);
+    });
   });
 }

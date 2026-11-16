@@ -19,8 +19,6 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/theme/color_math.dart';
 import 'package:vetbiz_pro/theme/theme_context.dart';
 
-const _skip = false;
-
 const _banner = ValueKey('phone-subscription-banner');
 const _fill = ValueKey('phone-subscription-banner-fill');
 const _action = ValueKey('phone-subscription-banner-action');
@@ -57,7 +55,7 @@ void main() {
     expect(PhoneBannerMetrics.tintAlpha, inInclusiveRange(0.14, 0.18));
     expect(PhoneBannerMetrics.borderAlpha, closeTo(0.40, 0.05));
     expect(PhoneBannerMetrics.overlayAlpha, 0.92, reason: 'the see-through alpha is kept, applied to the tint');
-  }, skip: _skip);
+  });
 
   testWidgets('a soft tint of the role over the surface, a 1 px role border, no solid fill', (tester) async {
     for (final state in _states) {
@@ -71,7 +69,7 @@ void main() {
       expect(border.top.width, 1);
       expect(border.top.color, role.withValues(alpha: PhoneBannerMetrics.borderAlpha));
     }
-  }, skip: _skip);
+  });
 
   for (final theme in AppColorTheme.all) {
     for (final dark in [false, true]) {
@@ -120,7 +118,7 @@ void main() {
             }
           }
         }
-      }, skip: _skip);
+      });
     }
   }
 
@@ -131,5 +129,5 @@ void main() {
     expect(tester.getSize(close).height, greaterThanOrEqualTo(48));
     expect(find.descendant(of: find.byKey(_action), matching: find.text('Renew')), findsOneWidget);
     expect(tester.getSize(find.byKey(const ValueKey('phone-subscription-banner-pill'))).height, lessThanOrEqualTo(32));
-  }, skip: _skip);
+  });
 }

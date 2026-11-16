@@ -32,8 +32,6 @@ import 'package:vetbiz_pro/utils/navigator_key.dart';
 
 import 'helpers/fake_firestore.dart';
 
-const _skip = false;
-
 const _profile = 'PROFILE PAGE (stand-in)';
 
 Future<void> _wait(WidgetTester tester) async {
@@ -126,5 +124,5 @@ void main() {
     expect(find.text(_profile), findsNothing, reason: 'back on Home, the page closed');
     expect(store.values[ActiveFacilityMemory.facilityKey], 'facility2', reason: 'RELOAD1 remembers it');
     expect(find.text('Switched to Kliniki Arusha'), findsOneWidget);
-  }, skip: _skip);
+  });
 }

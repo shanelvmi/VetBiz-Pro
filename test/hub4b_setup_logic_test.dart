@@ -9,8 +9,6 @@ import 'package:vetbiz_pro/screens/dashboard/home_setup.dart';
 import 'package:vetbiz_pro/screens/dashboard/hub_destinations.dart';
 
 
-const _skip = false;
-
 Future<void> _loaded(UiSettingsProvider ui) async {
   for (var i = 0; !ui.loaded && i < 500; i++) {
     await Future<void>.delayed(const Duration(milliseconds: 1));
@@ -47,12 +45,12 @@ void main() {
       expect(HomeSetupState.fromKey('nonsense'), isNull);
       expect(HomeSetupState.fromKey(null), isNull);
       expect(UiSettingsProvider.homeSetupKeyPrefix, 'ui_home_setup_');
-    }, skip: _skip);
+    });
 
     test('the steps, their order and the panel tiles they run (no Invite your team: nothing held says it)', () {
       expect(HomeSetupStep.values, [_product, _client, _sale]);
       expect(HomeSetupStep.values.map((s) => s.tile), [HubTile.addProduct, HubTile.addClient, HubTile.recordSale]);
-    }, skip: _skip);
+    });
   });
 
   group('the decision', () {
@@ -64,18 +62,18 @@ void main() {
         HomeSetupItem(_sale, done: false),
       ]);
       expect(d.save, HomeSetupState.started);
-    }, skip: _skip);
+    });
 
     test('not new (products or sales held) and never started: no card, nothing saved', () {
       expect(_for(products: true).shows, isFalse);
       expect(_for(sales: true).shows, isFalse);
       expect(_for(products: true).save, isNull);
-    }, skip: _skip);
+    });
 
     test('nothing decided until products and sales are both held', () {
       expect(_for(products: null), _nothing);
       expect(_for(sales: null), _nothing);
-    }, skip: _skip);
+    });
 
     test('partly done: steps to do first, then the done ones; nothing new saved', () {
       final d = _for(saved: HomeSetupState.started, products: true, clients: true);
@@ -85,39 +83,39 @@ void main() {
         HomeSetupItem(_client, done: true),
       ]);
       expect(d.save, isNull);
-    }, skip: _skip);
+    });
 
     test('all done: no card, remembered as done', () {
       final d = _for(saved: HomeSetupState.started, products: true, clients: true, sales: true);
       expect(d.shows, isFalse);
       expect(d.save, HomeSetupState.done);
-    }, skip: _skip);
+    });
 
     test('hidden or done: never again, whatever the data', () {
       for (final s in [HomeSetupState.hidden, HomeSetupState.done]) {
         expect(_for(saved: s).shows, isFalse);
         expect(_for(saved: s).save, isNull);
       }
-    }, skip: _skip);
+    });
 
     test('the strip wins: no card while it shows, the start still remembered', () {
       final d = _for(attention: true);
       expect(d.shows, isFalse);
       expect(d.save, HomeSetupState.started);
       expect(_for(saved: HomeSetupState.started, attention: true).save, isNull);
-    }, skip: _skip);
+    });
 
     test('an assistant: only the steps they may perform (no Add product)', () {
       final d = _for(isAdmin: false);
       expect(d.items.map((i) => i.step), [_client, _sale]);
       expect(_for(isAdmin: false, saved: HomeSetupState.started, products: true, clients: true, sales: true).save,
           HomeSetupState.done);
-    }, skip: _skip);
+    });
 
     test('a step without held data is left out', () {
       final d = _for(saved: HomeSetupState.started, clients: null);
       expect(d.items.map((i) => i.step), [_product, _sale]);
-    }, skip: _skip);
+    });
   });
 
   group('the device memory', () {
@@ -136,7 +134,7 @@ void main() {
       expect(again.homeSetupState('f1'), HomeSetupState.hidden);
       expect(again.homeSetupState('f2'), HomeSetupState.started);
       expect(again.homeSetupState('f3'), isNull);
-    }, skip: _skip);
+    });
 
     test('Hide tells the listeners; a save while Home builds does not', () async {
       SharedPreferences.setMockInitialValues({});
@@ -148,7 +146,7 @@ void main() {
       expect(told, 0);
       await ui.setHomeSetupState('f1', HomeSetupState.hidden, notify: true);
       expect(told, 1);
-    }, skip: _skip);
+    });
   });
 }
 

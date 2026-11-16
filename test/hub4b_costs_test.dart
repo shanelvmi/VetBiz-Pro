@@ -9,8 +9,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/screens/dashboard/phone_home.dart';
 
-const _skip = false;
-
 String _read(String path) => File(path).readAsStringSync().replaceAll('\r\n', '\n');
 
 /// The body of the member starting at [start], to the next member at two
@@ -33,7 +31,7 @@ void main() {
     for (final held in ['_homeDays', '_periodTotals.totalSales', 'products.products', 'clients.clients']) {
       expect(body, contains(held));
     }
-  }, skip: _skip);
+  });
 
   test('the checklist, the card, the page and its sheet have no Firestore of their own', () {
     for (final path in [
@@ -49,10 +47,10 @@ void main() {
         expect(source.contains(banned), isFalse, reason: '$path has $banned');
       }
     }
-  }, skip: _skip);
+  });
 
   test('Home\'s loads are unchanged: cold open the period totals only, a return nothing', () {
     expect(dashboardLoadsFor(DashboardMoment.coldOpen, phone: true), {DashboardLoad.periodTotals});
     expect(dashboardLoadsFor(DashboardMoment.returnToHome, phone: true), isEmpty);
-  }, skip: _skip);
+  });
 }

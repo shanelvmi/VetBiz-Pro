@@ -12,8 +12,6 @@ import 'package:vetbiz_pro/screens/dashboard/dashboard_panels.dart';
 import 'helpers/counting_firestore.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = false;
-
 Future<void> _settle() => Future<void>.delayed(const Duration(milliseconds: 50));
 
 Future<CountingFirestore> _seed() async {
@@ -51,7 +49,7 @@ void main() {
     await sub.cancel();
     await _settle();
     expect(db.listeners, 0, reason: 'a facility switch or sign-out cancels it');
-  }, skip: _skip);
+  });
 
   test('assistant: only what they did or what is about them (the rules\' pair, merged)', () async {
     final db = await _seed();
@@ -68,5 +66,5 @@ void main() {
     await _settle();
     expect(none, [<String>[]], reason: 'no entry of theirs: nothing, never someone else\'s');
     await sub2.cancel();
-  }, skip: _skip);
+  });
 }

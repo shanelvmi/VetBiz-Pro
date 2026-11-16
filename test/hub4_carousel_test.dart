@@ -28,8 +28,6 @@ import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = false;
-
 DateTime get _today => DateTime(testNow.year, testNow.month, testNow.day);
 
 /// Sales on some days only (0 on the others), and a previous period.
@@ -176,7 +174,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(_page(tester), 0);
       expect(log.modes, isEmpty, reason: 'a followed scroll reports nothing back (no loop)');
-    }, skip: _skip);
+    });
 
     testWidgets('a swipe sets the card: page 3 Visits, pages 1 and 2 Sales; once each', (tester) async {
       final log = await _pump(tester);
@@ -190,7 +188,7 @@ void main() {
       await _swipe(tester, back: true);
       expect(log.modes.length, 2);
       expect(_page(tester), 0);
-    }, skip: _skip);
+    });
 
     testWidgets('Sales while on Product movement stays there; every page reachable', (tester) async {
       final log = await _pump(tester);
@@ -203,7 +201,7 @@ void main() {
       await _swipe(tester, back: true);
       await _swipe(tester, back: true);
       expect(_page(tester), 0);
-    }, skip: _skip);
+    });
 
     testWidgets('reduced motion: the page changes at once', (tester) async {
       final log = await _pump(tester, still: true);
@@ -212,7 +210,7 @@ void main() {
       await tester.pump();
       expect(_page(tester), 2);
       expect(log.modes, isEmpty);
-    }, skip: _skip);
+    });
   });
 
   group('the range', () {
@@ -231,7 +229,7 @@ void main() {
       await _swipe(tester, back: true);
       await _swipe(tester, back: true);
       expect(log.asked, ['days 7d', 'days 30d', 'movement 30d', 'visits 30d', 'visits 7d', 'movement 7d']);
-    }, skip: _skip);
+    });
 
     testWidgets('the switch: 32 drawn, 48 to touch, the chosen one selected', (tester) async {
       await _pump(tester);
@@ -245,7 +243,7 @@ void main() {
         tester.getSemantics(find.byKey(const ValueKey('home-chart-range-7d'))),
         matchesSemantics(isButton: true, hasSelectedState: true, isSelected: true, label: '7d'),
       );
-    }, skip: _skip);
+    });
   });
 
   group('Sales line', () {
@@ -264,7 +262,7 @@ void main() {
       expect(dots, [for (final s in current.spots) s.y > 0]);
       expect(dots.where((d) => !d), isNotEmpty, reason: 'some days have no sales');
       expect(data.lineBarsData.first.dashArray, isNotNull, reason: 'the previous period dashed');
-    }, skip: _skip);
+    });
 
     testWidgets('the legend and the day initials (7d); every 5th date (30d)', (tester) async {
       final log = await _pump(tester);
@@ -277,7 +275,7 @@ void main() {
       expect(find.text('11'), findsOneWidget, reason: 'today');
       expect(find.text('6'), findsOneWidget);
       expect(find.text('10'), findsNothing, reason: 'not a 5th day back');
-    }, skip: _skip);
+    });
 
     testWidgets('a tap shows the day\'s tooltip, a second tap hides it; none while hidden', (tester) async {
       await _pump(tester);
@@ -293,7 +291,7 @@ void main() {
       expect(_line(tester).showingTooltipIndicators, isEmpty);
       expect(find.text('20k'), findsNothing, reason: 'the shape and the guides, no labels');
       expect(_line(tester).extraLinesData.horizontalLines.length, 3);
-    }, skip: _skip);
+    });
 
     testWidgets('empty: the guides and days, one line and Record a sale', (tester) async {
       final log = await _pump(tester, days: _days(empty: true));
@@ -302,7 +300,7 @@ void main() {
       expect(find.text('W'), findsWidgets);
       await tester.tap(find.text('Record a sale'));
       expect(log.actions, 1);
-    }, skip: _skip);
+    });
 
     testWidgets('Semantics: the summary with the total and best day; without amounts when hidden', (tester) async {
       final handle = tester.ensureSemantics();
@@ -316,7 +314,7 @@ void main() {
       await _pump(tester, hidden: true);
       expect(find.bySemanticsLabel('Sales over the last 7 days'), findsOneWidget);
       handle.dispose();
-    }, skip: _skip);
+    });
   });
 
   group('Product movement', () {
@@ -331,14 +329,14 @@ void main() {
       await tester.tap(find.text('Gone'));
       await tester.tap(find.text('Bolus'));
       expect(log.opened, ['Vaccine', 'Bolus']);
-    }, skip: _skip);
+    });
 
     testWidgets('nothing sold: the line in place of the top sellers, the slow movers still', (tester) async {
       await _pump(tester, movement: HomeMovement(top: const [], slow: [ph4Product('Bolus', qty: 40)]));
       await _swipe(tester);
       expect(find.byKey(const ValueKey('home-chart-nothing-sold')), findsOneWidget);
       expect(find.text('40 in stock'), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('no products: one line and Add a product; nothing asked', (tester) async {
       final log = await _pump(tester, noProducts: true);
@@ -347,7 +345,7 @@ void main() {
       await tester.tap(find.text('Add a product'));
       expect(log.actions, 1);
       expect(log.asked.where((a) => a.startsWith('movement')), isEmpty);
-    }, skip: _skip);
+    });
   });
 
   group('Visit activity', () {
@@ -367,7 +365,7 @@ void main() {
       expect(tester.widget<Text>(find.byKey(const ValueKey('home-chart-donut-count'))).data, '1');
       final pie = tester.widget<PieChart>(find.byType(PieChart)).data;
       expect([for (final s in pie.sections) s.value], [3, 1], reason: 'sized by visits');
-    }, skip: _skip);
+    });
 
     testWidgets('hidden amounts: the visits without revenue', (tester) async {
       await _pump(tester, hidden: true);
@@ -376,7 +374,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('home-chart-slice-0')));
       await tester.pump();
       expect(find.text('Vaccination: 3 visits'), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('empty: a faint ring, one line and Record a visit; the summary says so', (tester) async {
       final handle = tester.ensureSemantics();
@@ -389,7 +387,7 @@ void main() {
       await tester.tap(find.text('Record a visit'));
       expect(log.actions, 1);
       handle.dispose();
-    }, skip: _skip);
+    });
   });
 
   test('reads: the 7d pages 2 + 1 + 1 gets, 30d 2 + 1 + 1 more; no listener; again nothing', () async {
@@ -413,7 +411,7 @@ void main() {
     expect((db.gets, db.listeners), (8, 0));
     await open(HomeChartRange.month);
     expect(db.gets, 8);
-  }, skip: _skip);
+  });
 
   testWidgets('Kiswahili and Dark at the smallest region: no overflow on any page', (tester) async {
     for (final look in [MatrixLook.kiswahili, MatrixLook.dark]) {
@@ -430,5 +428,5 @@ void main() {
       expect(tester.takeException(), isNull, reason: look.name);
     }
     expect(Product, isNotNull);
-  }, skip: _skip);
+  });
 }

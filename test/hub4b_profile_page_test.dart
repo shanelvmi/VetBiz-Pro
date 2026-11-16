@@ -16,8 +16,6 @@ import 'package:vetbiz_pro/widgets/profile/profile_page.dart';
 
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 
 /// The old phone drawer's rows (before HUB4b), in order, per role.
@@ -117,7 +115,7 @@ void main() {
         if (!admin) {
           expect(find.byKey(const ValueKey('profile-group-business')), findsNothing, reason: 'no empty Business group');
         }
-      }, skip: _skip);
+      });
     }
 
     test('the groups: Account, Business, App; Sign out is the button, not a row', () {
@@ -128,14 +126,14 @@ void main() {
         [ProfileItem.team, ProfileItem.facilities, ProfileItem.activityLog],
         [ProfileItem.settings, ProfileItem.help],
       ]);
-    }, skip: _skip);
+    });
 
     test('an action with no known place is kept, at the end of App', () {
       const extra = ProfileDrawerAction(icon: Icons.star, label: 'Extra', onTap: _noop);
       final sections = profilePageSections([extra]);
       expect(sections.single.group, ProfileGroup.app);
       expect(sections.single.actions, [extra]);
-    }, skip: _skip);
+    });
 
     testWidgets('Sign out is a red text button at the bottom, through the drawer\'s own sign-out', (tester) async {
       final tapped = <String>[];
@@ -145,7 +143,7 @@ void main() {
       expect(find.descendant(of: button, matching: find.text(_en.common_logout)), findsOneWidget);
       await tester.tap(button);
       expect(tapped, ['signOut']);
-    }, skip: _skip);
+    });
   });
 
   group('the Current facility card and Switch facility', () {
@@ -156,7 +154,7 @@ void main() {
       expect(find.descendant(of: card, matching: find.text(matrixLongFacilityName)), findsOneWidget);
       expect(find.descendant(of: card, matching: find.byIcon(Icons.chevron_right)), findsNothing);
       expect(tester.widget<InkWell>(find.descendant(of: card, matching: find.byType(InkWell))).onTap, isNull);
-    }, skip: _skip);
+    });
 
     testWidgets('two facilities: the card opens the sheet; a check on the current one; a tap on the other picks it',
         (tester) async {
@@ -192,7 +190,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(picked, ['fb']);
       expect(find.text(_en.profile_switchFacility), findsNothing, reason: 'the sheet closed');
-    }, skip: _skip);
+    });
   });
 
   testWidgets('Back returns to the same Home, its state kept', (tester) async {
@@ -206,7 +204,7 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
     expect(find.text('home 1'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   group('the size matrix (very long names; 48 px targets; no overflow)', () {
     for (final s in _matrix) {
@@ -232,7 +230,7 @@ void main() {
             await tester.tap(card);
             await tester.pumpAndSettle();
             await checkCase(tester, phone: true, where: '${matrixCase(s, look)} sheet');
-          }, skip: _skip);
+          });
         }
       }
     }
@@ -246,7 +244,7 @@ void main() {
       expect(phone.contains('endDrawer'), isFalse);
       final wide = dash.substring(dash.indexOf('wide: (_) => Scaffold('));
       expect(wide, contains('endDrawer: endDrawer,'));
-    }, skip: _skip);
+    });
 
     test('the drawer and the page take the same list; the switch is the picker\'s activation', () {
       expect(RegExp(r'profileActionsFor\(').allMatches(dash).length, 2);
@@ -255,7 +253,7 @@ void main() {
       final activation = File('lib/utils/facility_activation.dart').readAsStringSync();
       final switcher = activation.substring(activation.indexOf('Future<void> switchFacilityFromProfile('));
       expect(switcher, contains('activateFacilityAndGoToDashboard(context: context, facility: facility.toMap(), role: role)'));
-    }, skip: _skip);
+    });
 
     test('the page adds no listener or read: the top bar\'s stream, seeded with what it holds', () {
       final open = dash.substring(dash.indexOf('void _openProfilePage()'));
@@ -265,7 +263,7 @@ void main() {
       for (final banned in ['.get(', '.snapshots(', 'collection(']) {
         expect(body.contains(banned), isFalse, reason: 'the page builder has $banned');
       }
-    }, skip: _skip);
+    });
   });
 }
 

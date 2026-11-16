@@ -14,8 +14,6 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _sizes = [
   MatrixSize('360x740', Size(360, 740), phone: true),
   MatrixSize('390x844', Size(390, 844), phone: true),
@@ -46,7 +44,7 @@ void main() {
         await tester.pumpAndSettle();
         await checkCase(tester, phone: true, where: matrixCase(s, look));
         if (s.size.height > s.size.width) expect(_maxScroll(tester), 0, reason: 'Home fits without scrolling');
-      }, skip: _skip);
+      });
     }
   }
 
@@ -60,5 +58,5 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.getRect(find.byType(TodayCard)), skeleton);
     expect(_maxScroll(tester), 0);
-  }, skip: _skip);
+  });
 }

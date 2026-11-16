@@ -16,8 +16,6 @@ import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 
 const _card = ValueKey('phone-home-setup');
@@ -55,25 +53,25 @@ void main() {
     expect(find.text(_en.home_setupMore(1)), findsOneWidget);
     expect(tester.getSize(find.byKey(_card)).height, PhoneHomeMetrics.setupHeader + 3 * PhoneHomeMetrics.setupRow);
     expect(find.byKey(const ValueKey('phone-home-attention')), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('the strip wins: never both', (tester) async {
     await pumpPhoneHome(tester, phoneHomeHarness(attention: ph4SomeAttention, setup: _partly));
     expect(find.byKey(const ValueKey('phone-home-attention')), findsOneWidget);
     expect(find.byKey(_card), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('no steps: no card', (tester) async {
     await pumpPhoneHome(tester, phoneHomeHarness(attention: const []));
     expect(find.byKey(_card), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('an assistant: their two steps, no "more" line, no Add product', (tester) async {
     await pumpPhoneHome(tester, phoneHomeHarness(attention: const [], setup: _assistant, isAdmin: false));
     expect(find.byKey(const ValueKey('phone-home-setup-more')), findsNothing);
     expect(find.text(_en.home_setupAddProduct), findsNothing);
     expect(tester.getSize(find.byKey(_card)).height, PhoneHomeMetrics.setupHeader + 2 * PhoneHomeMetrics.setupRow);
-  }, skip: _skip);
+  });
 
   testWidgets('a step runs its own tile; the sheet lists every step; Hide', (tester) async {
     final steps = <HomeSetupStep>[];
@@ -101,7 +99,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('phone-home-setup-hide')));
     expect(hidden, 1);
-  }, skip: _skip);
+  });
 
   testWidgets('a short screen (360x640): the strip\'s shape; it opens the sheet, which has Hide', (tester) async {
     var hidden = 0;
@@ -118,14 +116,14 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('phone-home-setup-sheet-hide')));
     await tester.pumpAndSettle();
     expect(hidden, 1);
-  }, skip: _skip);
+  });
 
   testWidgets('screen readers hear done or to do for each step', (tester) async {
     final semantics = tester.ensureSemantics();
     await pumpPhoneHome(tester, phoneHomeHarness(attention: const [], setup: _assistant));
     expect(find.bySemanticsLabel(_en.home_setupStepToDo(_en.home_setupAddClient)), findsOneWidget);
     semantics.dispose();
-  }, skip: _skip);
+  });
 
   group('the reveal: the skeleton keeps every rect', () {
     for (final (name, setup) in [('with the card', _partly), ('without it', const <HomeSetupItem>[])]) {
@@ -145,7 +143,7 @@ void main() {
         expect(tester.getRect(find.byKey(const ValueKey('phone-home-charts'))), charts);
         expect(cardRect(), card);
         expect(find.byKey(_card), setup.isEmpty ? findsNothing : findsOneWidget);
-      }, skip: _skip);
+      });
     }
   });
 
@@ -174,7 +172,7 @@ void main() {
             await tester.pumpAndSettle();
             await checkCase(tester, phone: true, where: matrixCase(s, look));
             expect(_maxScroll(tester), 0, reason: '${matrixCase(s, look)}: Home fits without scrolling');
-          }, skip: _skip);
+          });
         }
       }
     }

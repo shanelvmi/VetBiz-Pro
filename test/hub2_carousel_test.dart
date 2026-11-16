@@ -21,8 +21,6 @@ import 'package:vetbiz_pro/theme/color_math.dart';
 
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 final _today = DateTime(2026, 11, 10);
 
 HomeChartDays _days({bool empty = false}) => HomeChartDays(
@@ -108,7 +106,7 @@ void main() {
     expect(find.text('Visit activity'), findsOneWidget);
     expect(find.byKey(const ValueKey('home-chart-donut-count')), findsOneWidget);
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 
   testWidgets('lazy: each page asks once, when first shown', (tester) async {
     final calls = await _pump(tester);
@@ -120,7 +118,7 @@ void main() {
     await tester.fling(find.byKey(const ValueKey('home-chart-pages')), const Offset(600, 0), 1000);
     await tester.pumpAndSettle();
     expect((calls.days, calls.products, calls.visits), (1, 1, 1));
-  }, skip: _skip);
+  });
 
   testWidgets('the products: names (a long one ends in an ellipsis), quantities, Unknown shown in words',
       (tester) async {
@@ -131,7 +129,7 @@ void main() {
     expect(find.text('Unknown'), findsOneWidget);
     expect(find.text('12'), findsOneWidget);
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 
   testWidgets('nothing in the period: one muted line on each page', (tester) async {
     await _pump(tester, days: _days(empty: true), top: const HomeMovement(top: [], slow: []), visits: const []);
@@ -140,7 +138,7 @@ void main() {
     expect(find.text('Nothing sold in the last 7 days'), findsWidgets);
     await _next(tester);
     expect(find.text('No visits in the last 7 days'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('hidden amounts: no guide labels; quantities and visit counts stay', (tester) async {
     await _pump(tester);
@@ -152,7 +150,7 @@ void main() {
     expect(find.text('12'), findsOneWidget);
     await _next(tester);
     expect(find.text('3'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('the smallest region in Kiswahili and Dark: no overflow', (tester) async {
     for (final look in [MatrixLook.kiswahili, MatrixLook.dark]) {
@@ -161,7 +159,7 @@ void main() {
       await _next(tester);
       expect(tester.takeException(), isNull, reason: look.name);
     }
-  }, skip: _skip);
+  });
 
   test('guide labels: short, no currency', () {
     expect(Money.axis(800), '800');
@@ -173,7 +171,7 @@ void main() {
     expect(homeChartNiceMax(140000), 200000);
     expect(homeChartNiceMax(22000), 50000, reason: 'HUB4: 1, 2 or 5 times a power of ten');
     expect(homeChartNiceMax(0), 1);
-  }, skip: _skip);
+  });
 
   test('colours: the lines 3:1 and the texts 4.5:1 on the page, four themes, Light and Dark', () {
     for (final theme in AppColorTheme.all) {
@@ -186,5 +184,5 @@ void main() {
         expect(ColorMath.contrast(c.textPrimary, c.surface), greaterThanOrEqualTo(4.5), reason: '$where titles');
       }
     }
-  }, skip: _skip);
+  });
 }

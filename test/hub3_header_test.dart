@@ -20,8 +20,6 @@ import 'package:vetbiz_pro/theme/theme_context.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _card = ValueKey('phone-home-today-card');
 const _track = ValueKey('home-card-mode-track');
 const _chip = ValueKey('home-period-chip');
@@ -84,7 +82,7 @@ void main() {
       // Sized to its content: the two pills and the 3 px insets, not stretched.
       expect(track.width, closeTo(options.width + 2 * 3, 1));
       expect(track.right, lessThan(tester.getRect(find.byKey(_chip)).left), reason: 'not stretched to the chip');
-    }, skip: _skip);
+    });
 
     for (final look in [MatrixLook.light, MatrixLook.dark]) {
       for (final theme in AppColorTheme.all) {
@@ -103,7 +101,7 @@ void main() {
             final otherFill = ((tester.widget<AnimatedContainer>(_pill(other)).decoration! as BoxDecoration).color)!;
             expect(otherFill.a, 0);
           }
-        }, skip: _skip);
+        });
       }
     }
 
@@ -112,7 +110,7 @@ void main() {
         await _pump(tester, period: period);
         expect(find.descendant(of: find.byKey(_chip), matching: find.text(label)), findsOneWidget, reason: period);
       }
-    }, skip: _skip);
+    });
 
     testWidgets('the chip in Kiswahili: short labels, still inside the card', (tester) async {
       for (final period in dashboardPeriods) {
@@ -120,7 +118,7 @@ void main() {
         expect(tester.takeException(), isNull);
         expect(tester.getRect(find.byKey(_chip)).right, lessThan(tester.getRect(find.byKey(_card)).right));
       }
-    }, skip: _skip);
+    });
 
     for (final width in [360.0, 390.0, 412.0]) {
       testWidgets('equal 16 px margins at $width wide, the chip never touching the edge', (tester) async {
@@ -132,7 +130,7 @@ void main() {
           expect(left, closeTo(16, 1), reason: '$period left');
           expect(right, closeTo(left, 1), reason: '$period right equals left');
         }
-      }, skip: _skip);
+      });
     }
 
     testWidgets('the exact range stays under the switch, small and muted', (tester) async {
@@ -144,7 +142,7 @@ void main() {
       expect(style.fontSize, 12);
       final context = tester.element(range);
       expect(style.color, context.colors.onBrandSurfaceMuted);
-    }, skip: _skip);
+    });
   });
 
   group('the removed lines', () {
@@ -155,7 +153,7 @@ void main() {
         expect(find.text('No sales yet'), findsNothing);
         expect(find.text('No visits yet'), findsNothing);
       }
-    }, skip: _skip);
+    });
   });
 
   group('the delta (pure)', () {
@@ -171,7 +169,7 @@ void main() {
       }
       // Rounded to a whole percent.
       expect(homeDeltaFor(period: 'Today', today: 1, yesterday: 3), const HomeDelta.change(-67));
-    }, skip: _skip);
+    });
   });
 
   group('the delta on the card', () {
@@ -180,7 +178,7 @@ void main() {
       expect(find.descendant(of: find.byKey(_delta), matching: find.text('up 12% vs yesterday')), findsOneWidget);
       expect(find.descendant(of: find.byKey(_delta), matching: find.byIcon(Icons.arrow_upward)), findsOneWidget);
       expect(tester.getRect(find.byKey(_delta)).left, greaterThan(tester.getRect(find.text(Money.format(1250000))).right));
-    }, skip: _skip);
+    });
 
     testWidgets('down and New', (tester) async {
       await _pump(tester, delta: const HomeDelta.change(-5));
@@ -188,13 +186,13 @@ void main() {
       expect(find.byIcon(Icons.arrow_downward), findsOneWidget);
       await _pump(tester, delta: const HomeDelta.fresh());
       expect(find.descendant(of: find.byKey(_delta), matching: find.text('New')), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('the eye hides it', (tester) async {
       await _pump(tester, delta: const HomeDelta.change(12), hidden: true);
       expect(find.byKey(_delta), findsNothing);
       expect(find.textContaining('vs yesterday'), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('it never changes the card\'s size or moves the eye (8-digit amounts, 360 wide, Kiswahili)', (tester) async {
       for (final look in [MatrixLook.light, MatrixLook.kiswahili]) {
@@ -210,6 +208,6 @@ void main() {
           expect(e, eye, reason: '$look $delta eye');
         }
       }
-    }, skip: _skip);
+    });
   });
 }
