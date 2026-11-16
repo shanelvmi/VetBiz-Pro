@@ -315,10 +315,10 @@ class TodayGlanceStrip extends StatelessWidget {
           Text(context.l10n.dashboard_todayAtAGlance, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5, color: context.colors.textPrimary)),
           // While the first load runs the three stats keep their place with the
           // values hidden, so the strip does not grow when they come (DASH-1).
-          _glanceStat(context, AppIcons.sales.outlined, '${saleCount ?? 0}', context.l10n.dashboard_sales, context.colors.primary, hideValue: loading),
-          _glanceStat(context, AppIcons.services.outlined, '${serviceCount ?? 0}', context.l10n.dashboard_services, context.colors.chart1, hideValue: loading),
-          _glanceStat(context, AppIcons.payments.outlined, Money.format(collected ?? (loading ? AppDefaults.glanceAmountPlaceholder : 0)), context.l10n.sales_collected, context.colors.primary, hideValue: loading),
-          _glanceStat(context, AppIcons.debtors.outlined, '$debtorCount', context.l10n.dashboard_outstandingDebts(debtorCount), context.colors.accent),
+          _glanceStat(context, AppIcons.sales.outlined, '${saleCount ?? 0}', context.l10n.dashboard_sales, hideValue: loading),
+          _glanceStat(context, AppIcons.services.outlined, '${serviceCount ?? 0}', context.l10n.dashboard_services, hideValue: loading),
+          _glanceStat(context, AppIcons.payments.outlined, Money.format(collected ?? (loading ? AppDefaults.glanceAmountPlaceholder : 0)), context.l10n.sales_collected, hideValue: loading),
+          _glanceStat(context, AppIcons.debtors.outlined, '$debtorCount', context.l10n.dashboard_outstandingDebts(debtorCount)),
           OutlinedButton.icon(
             onPressed: () => showInsightsScreen(context),
             icon: Icon(AppIcons.insights.filled, size: AppIconSize.i16, color: context.colors.primary),
@@ -330,19 +330,22 @@ class TodayGlanceStrip extends StatelessWidget {
     );
   }
 
-  Widget _glanceStat(BuildContext context, IconData icon, String value, String label, Color color,
+  // POL2 (owner rule 2): a figure's kind is never coloured: the icon in
+  // textSecondary, the value in textPrimary (they were primary, chart1 and
+  // accent by figure).
+  Widget _glanceStat(BuildContext context, IconData icon, String value, String label,
       {bool hideValue = false}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: AppIconSize.i16, color: color),
+        Icon(icon, size: AppIconSize.i16, color: context.colors.textSecondary),
         const SizedBox(width: AppSpacing.s6),
         Visibility(
           visible: !hideValue,
           maintainSize: true,
           maintainAnimation: true,
           maintainState: true,
-          child: Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14, color: color)),
+          child: Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14, color: context.colors.textPrimary)),
         ),
         const SizedBox(width: AppSpacing.s4),
         Text(label, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted)),

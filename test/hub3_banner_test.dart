@@ -101,11 +101,23 @@ void main() {
             }
             final pill = tester.widget<DecoratedBox>(
                 find.descendant(of: action, matching: find.byKey(const ValueKey('phone-subscription-banner-pill'))));
-            final pillFill = (pill.decoration as BoxDecoration).color!;
-            expect(pillFill, phoneBannerRole(colors, state.kind), reason: 'the solid role');
             final pillInk = tester.renderObject<RenderParagraph>(
                 find.descendant(of: action, matching: find.byType(RichText)).first).text.style!.color!;
-            expect(ColorMath.contrast(pillInk, pillFill), greaterThanOrEqualTo(4.5), reason: '$state pill');
+            if (state.kind == SubscriptionBannerKind.calmTrial) {
+              // POL2: the calm trial is neutral; its action is outlined in the
+              // role (no solid grey box), the word at 4.5 on the banner's tint.
+              final d = pill.decoration as BoxDecoration;
+              expect(d.color, isNull, reason: 'outlined');
+              expect((d.border! as Border).top.color, phoneBannerRole(colors, state.kind));
+              for (final backdrop in [colors.background, const Color(0xFF000000), const Color(0xFFFFFFFF)]) {
+                final over = ColorMath.composite(fill, backdrop);
+                expect(ColorMath.contrast(pillInk, over), greaterThanOrEqualTo(4.5), reason: '$state pill over $backdrop');
+              }
+            } else {
+              final pillFill = (pill.decoration as BoxDecoration).color!;
+              expect(pillFill, phoneBannerRole(colors, state.kind), reason: 'the solid role');
+              expect(ColorMath.contrast(pillInk, pillFill), greaterThanOrEqualTo(4.5), reason: '$state pill');
+            }
           }
         }
       }, skip: _skip);

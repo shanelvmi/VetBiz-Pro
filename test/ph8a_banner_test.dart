@@ -176,7 +176,7 @@ void main() {
             final colors = tester.element(find.byKey(_banner)).colors;
             final role = switch (state.kind) {
               SubscriptionBannerKind.locked => colors.danger,
-              SubscriptionBannerKind.calmTrial => colors.info,
+              SubscriptionBannerKind.calmTrial => colors.textSecondary, // POL2: neutral, was info
               _ => colors.warning,
             };
             // HUB3: the fill is a soft tint of the role (it floats over the

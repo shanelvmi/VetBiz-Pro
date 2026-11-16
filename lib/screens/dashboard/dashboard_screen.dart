@@ -90,6 +90,7 @@ import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
 import '../../config/app_info.dart';
 import '../../theme/app_dimens.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_tap_target.dart';
@@ -1275,7 +1276,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         // this same top bar (without the drawer, so without the hamburger).
         final PreferredSizeWidget? appBar = isLargeScreen ? null : AppBar(
             backgroundColor: context.colors.surface,
-            elevation: AppElevation.e1,
+            // POL2 (owner rule 4): no shadow under the bar; a hairline.
+            elevation: AppElevation.e0,
+            shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
             centerTitle: false,
             iconTheme: IconThemeData(color: context.colors.textPrimary),
             leading: isLargeScreen
@@ -1814,7 +1817,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // rather than a full background fill. Same deepened, burnt-amber
     // reasoning as before: the brand's own amber (accent) is too close to
     // yellow to read cleanly as an accent on a cream background.
-    final accent = isLocked ? context.colors.dangerAccent : (isInTrialInfo ? context.colors.info : context.colors.warningBannerText);
+    // POL2 (owner rule 2): the calm trial is neutral (it was info); the
+    // trial or subscription ending stays warning, locked stays danger.
+    final accent = isLocked ? context.colors.dangerAccent : (isInTrialInfo ? context.colors.textSecondary : context.colors.warningBannerText);
 
     // Full sentence now that this sits in its own row above the filter
     // chips, rather than the shortened version needed when it was
@@ -1841,12 +1846,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               key: const ValueKey('sub-banner-shown'),
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s8),
               decoration: BoxDecoration(
-                color: context.colors.warningBannerFill.withValues(alpha: 0.92),
+                // POL2: the calm trial on the plain surface (not the warning
+                // fill); no shadow (owner rule 4), the border carries it.
+                color: isInTrialInfo ? context.colors.surface : context.colors.warningBannerFill.withValues(alpha: 0.92),
                 borderRadius: BorderRadius.circular(AppRadius.r24),
                 border: Border.all(color: accent.withValues(alpha: AppAlpha.a40)),
-                boxShadow: [
-                  BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
-                ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

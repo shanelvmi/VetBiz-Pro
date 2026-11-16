@@ -7,6 +7,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/color_math.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
 
 /// PH8a: what the subscription banner tells, from the same rules as the
@@ -95,17 +96,18 @@ class SubscriptionBannerSnooze {
   void snooze(DateTime now) => _until = now.add(AppTimeouts.subscriptionNoticeSnooze);
 }
 
-/// The banner's status role: danger when locked, info in the calm trial,
-/// warning otherwise.
+/// The banner's status role: danger when locked, warning while access is
+/// about to change (the trial or subscription ending), and POL2 (owner rule
+/// 2, the four states only): neutral in the calm trial, which was info.
 Color phoneBannerRole(AppColors colors, SubscriptionBannerKind kind) => switch (kind) {
       SubscriptionBannerKind.locked => colors.danger,
-      SubscriptionBannerKind.calmTrial => colors.info,
+      SubscriptionBannerKind.calmTrial => colors.textSecondary,
       _ => colors.warning,
     };
 
 Color _deepRole(AppColors colors, SubscriptionBannerKind kind) => switch (kind) {
       SubscriptionBannerKind.locked => colors.dangerDeep,
-      SubscriptionBannerKind.calmTrial => colors.infoDeep,
+      SubscriptionBannerKind.calmTrial => colors.textPrimary,
       _ => colors.warningDeep,
     };
 
@@ -176,7 +178,8 @@ class PhoneSubscriptionBanner extends StatelessWidget {
     final ink = ColorMath.readableOn(_deepRole(colors, state.kind), [
       for (final backdrop in [colors.background, ...ColorMath.extremes]) ColorMath.composite(fill, backdrop),
     ]);
-    final pillInk = ColorMath.readableOn(colors.bannerInk, [role]);
+    final calm = state.kind == SubscriptionBannerKind.calmTrial;
+    final pillInk = calm ? colors.textPrimary : ColorMath.readableOn(colors.bannerInk, [role]);
     final radius = BorderRadius.circular(PhoneBannerMetrics.overlayRadius);
     return Semantics(
       container: true,
@@ -234,8 +237,12 @@ class PhoneSubscriptionBanner extends StatelessWidget {
                           widthFactor: 1,
                           child: DecoratedBox(
                             key: const ValueKey('phone-subscription-banner-pill'),
+                            // POL2: the calm trial's action is outlined
+                            // (neutral has no solid fill: in Dark it would be
+                            // a bright box); the others keep the solid role.
                             decoration: BoxDecoration(
-                              color: role,
+                              color: calm ? null : role,
+                              border: calm ? Border.all(color: role, width: PolishMetrics.hairline) : null,
                               borderRadius: BorderRadius.circular(PhoneBannerMetrics.pillHeight),
                             ),
                             child: SizedBox(

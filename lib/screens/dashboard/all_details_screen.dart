@@ -5,6 +5,7 @@ import '../../l10n/l10n.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
 import 'hub_destinations.dart' show HubTile;
 import 'phone_home.dart';
@@ -121,7 +122,9 @@ class AllDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: colors.surface,
         foregroundColor: colors.textPrimary,
-        elevation: AppElevation.e1,
+        // POL2 (owner rule 4): no shadow under the bar; a hairline.
+        elevation: AppElevation.e0,
+        shape: Border(bottom: BorderSide(color: colors.divider, width: PolishMetrics.hairline)),
         title: Text(l10n.home_allDetails, style: const TextStyle(fontWeight: AppFontWeight.bold)),
       ),
       body: ListenableBuilder(
