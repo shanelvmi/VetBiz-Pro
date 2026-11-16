@@ -8,13 +8,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_nav_bar.dart';
 
 import 'helpers/register_harness.dart';
 
-// G5: pressing Continue (or Create account) on an empty wizard step shows
-// its errors WITHOUT changing the card's height: every message line under a
-// field is kept, so an error replaces it. Measured on each step, wide and
-// 390 px, English and Kiswahili; the Back and Continue bar stays put too.
-// Written before the change, skipped until it exists.
-const _skip = false;
-
 void main() {
   // Steps 2 to 5 of the owner, step 3 of the assistant: walks there with
   // valid answers, leaving the step itself empty.
@@ -77,7 +70,7 @@ void main() {
           expect(barAfter, barBefore, reason: 'the Back and Continue bar');
           expect(tester.takeException(), isNull);
           await finishRegister(tester);
-        }, skip: _skip);
+        });
       }
     }
   }

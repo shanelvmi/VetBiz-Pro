@@ -23,8 +23,6 @@ import 'package:vetbiz_pro/widgets/press_scale.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _totals = DashboardPeriodTotals(
   totalSales: 1250000,
   totalCollected: 980000,
@@ -99,7 +97,7 @@ void main() {
       await _pump(tester, mode: HomeCardMode.services);
       expect(_selected(tester, HomeCardMode.services), isTrue);
       semantics.dispose();
-    }, skip: _skip);
+    });
 
     testWidgets('a tap on an option switches and does not open All details', (tester) async {
       final chosen = <HomeCardMode>[];
@@ -113,7 +111,7 @@ void main() {
       await tester.tap(find.byKey(_card), warnIfMissed: false);
       await tester.pumpAndSettle();
       expect(details, 1);
-    }, skip: _skip);
+    });
 
     testWidgets('a horizontal swipe on the card switches: left to Vet services, right to Sales', (tester) async {
       final chosen = <HomeCardMode>[];
@@ -130,12 +128,12 @@ void main() {
       await tester.fling(find.byKey(_card), const Offset(-200, 0), 1000);
       await tester.pumpAndSettle();
       expect(chosen, [HomeCardMode.services, HomeCardMode.sales]);
-    }, skip: _skip);
+    });
 
     testWidgets('press feedback on the card', (tester) async {
       await _pump(tester);
       expect(find.ancestor(of: find.byKey(_card), matching: find.byType(PressScale)), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 
   group('the choice on the device', () {
@@ -143,7 +141,7 @@ void main() {
       expect(HomeCardMode.values.map((m) => m.key), ['sales', 'services']);
       expect(HomeCardMode.fromKey(null), HomeCardMode.sales);
       expect(HomeCardMode.fromKey('anything'), HomeCardMode.sales);
-    }, skip: _skip);
+    });
 
     testWidgets('Sales by default; a choice is saved and read back', (tester) async {
       SharedPreferences.setMockInitialValues({});
@@ -156,7 +154,7 @@ void main() {
       final again = UiSettingsProvider();
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       expect(again.homeCardMode, HomeCardMode.services);
-    }, skip: _skip);
+    });
   });
 
   group('the figures', () {
@@ -167,7 +165,7 @@ void main() {
       }
       expect(find.text('Net profit'), findsOneWidget);
       expect(find.text(Money.format(145000)), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('Vet services (fallback): service revenue, then Visits, Collected and Owed', (tester) async {
       await _pump(tester, mode: HomeCardMode.services);
@@ -182,7 +180,7 @@ void main() {
       expect(find.text('Net profit'), findsNothing, reason: 'no service profit column in the fallback');
       final xs = [for (final l in labels) tester.getTopLeft(stat(l)).dx];
       expect(xs, orderedEquals([...xs]..sort()));
-    }, skip: _skip);
+    });
 
     // HUB3: "No sales yet" and "No visits yet" are gone (the zero says it;
     // the line is the live line now): hub3_header_test.dart.
@@ -195,7 +193,7 @@ void main() {
       await _pump(tester, isAdmin: false, mode: HomeCardMode.services);
       expect(find.text('Net profit'), findsNothing);
       expect(find.text('Visits'), findsNWidgets(2), reason: 'the switch and the figure');
-    }, skip: _skip);
+    });
 
     testWidgets('the eye hides every amount in both choices; Visits is a count and stays', (tester) async {
       await _pump(tester, hidden: true);
@@ -205,7 +203,7 @@ void main() {
       await _pump(tester, hidden: true, mode: HomeCardMode.services);
       expect(find.text(Money.format(84000)), findsNothing);
       expect(find.text('7'), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 
   group('the exact range under the switch', () {
@@ -228,7 +226,7 @@ void main() {
           final sw = tester.getRect(_option(HomeCardMode.sales));
           expect(tester.getTopLeft(shown).dy, greaterThanOrEqualTo(sw.bottom - 8));
           expect(tester.getRect(shown).right, lessThanOrEqualTo(tester.getRect(find.byKey(_card)).right));
-        }, skip: _skip);
+        });
       }
     }
   });
@@ -257,7 +255,7 @@ void main() {
             }
           }
         }
-      }, skip: _skip);
+      });
     }
   });
 }

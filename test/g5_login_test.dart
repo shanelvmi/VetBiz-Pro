@@ -13,12 +13,6 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/widgets/hover_link.dart';
 
-// G5 (the owner's corrections after testing), the login card: "Forgot
-// password?" at the far right of the Remember me line, and the Sign in
-// button without the fixed arrow at its right edge. Written before the
-// fixes, skipped until they exist.
-const _skip = false;
-
 class _NoAuth implements AuthService {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -79,7 +73,7 @@ void main() {
         final needed = remember.right - checkbox.left + AppSpacing.s16 + forgot.width;
         if (needed <= field.width) expect(oneLine, isTrue, reason: 'room for both on one line');
         expect(tester.takeException(), isNull);
-      }, skip: _skip);
+      });
     }
   });
 
@@ -92,6 +86,6 @@ void main() {
       // The one left is the circled one.
       final circle = tester.widget<Container>(find.ancestor(of: arrows, matching: find.byType(Container)).first);
       expect((circle.decoration! as BoxDecoration).shape, BoxShape.circle);
-    }, skip: _skip);
+    });
   });
 }

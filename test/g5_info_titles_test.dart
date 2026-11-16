@@ -12,12 +12,6 @@ import 'package:vetbiz_pro/screens/info/info_page.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 
-// G5: the About, How to use it and FAQs pages centre their top bar title,
-// once in the shared InfoPage, so the three agree; the back arrow stays at
-// the left and a long title never runs over it. Written before the change,
-// skipped until it exists.
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 
 void main() {
@@ -65,7 +59,7 @@ void main() {
           expect(text.left, greaterThanOrEqualTo(back.right));
           expect(text.right, lessThanOrEqualTo(bar.right));
           expect(tester.takeException(), isNull);
-        }, skip: _skip);
+        });
       }
     }
   }
@@ -80,5 +74,5 @@ void main() {
     expect(text.right, lessThanOrEqualTo(bar.right));
     expect(tester.widget<AppBar>(find.byType(AppBar)).centerTitle, isTrue);
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 }

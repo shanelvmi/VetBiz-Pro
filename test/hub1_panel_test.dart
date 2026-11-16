@@ -15,8 +15,6 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'helpers/hub1_hub.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 Future<void> _pump(WidgetTester tester, Widget hub, {Size size = const Size(390, 844), MatrixLook look = MatrixLook.light}) =>
     pumpAtSize(tester, screen: hub, size: size, look: look);
 
@@ -36,12 +34,12 @@ void main() {
       expect(tops, hasLength(2));
       expect(_open(tester), isFalse);
       expect(find.byKey(const ValueKey('hub-group-record')), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('assistant (and a Co-admin as an admin): the same eight', (tester) async {
       await _pump(tester, hubHarness(isAdmin: false));
       expect(hubDrawnTiles(tester), hubCollapsedTilesFor(isAdmin: false));
-    }, skip: _skip);
+    });
 
     testWidgets('tiles are 84 high and at least 48 wide; the last row is fully on screen', (tester) async {
       await _pump(tester, hubHarness(), size: const Size(360, 640));
@@ -51,13 +49,13 @@ void main() {
         expect(size.width, greaterThanOrEqualTo(48));
         expect(tester.getBottomLeft(hubTile(t)).dy, lessThanOrEqualTo(640));
       }
-    }, skip: _skip);
+    });
 
     testWidgets('no text near the handle: only the tiles\' labels are drawn', (tester) async {
       await _pump(tester, hubHarness());
       final panelTexts = find.descendant(of: find.byKey(hubPanel), matching: find.byType(Text));
       expect(panelTexts.evaluate(), hasLength(8));
-    }, skip: _skip);
+    });
   });
 
   group('snapping', () {
@@ -73,7 +71,7 @@ void main() {
       await _tapHandle(tester);
       expect(_open(tester), isFalse);
       expect(hubPanelTop(tester), folded);
-    }, skip: _skip);
+    });
 
     testWidgets('a drag up on the handle opens it, a drag down folds it; a short drag snaps back', (tester) async {
       await _pump(tester, hubHarness());
@@ -87,14 +85,14 @@ void main() {
       await tester.timedDrag(find.byKey(hubHandle), const Offset(0, -60), const Duration(seconds: 1));
       await tester.pumpAndSettle();
       expect(hubPanelTop(tester), folded);
-    }, skip: _skip);
+    });
 
     testWidgets('a drag up on the tiles opens it too (the sheet\'s own drag)', (tester) async {
       await _pump(tester, hubHarness());
       await tester.fling(hubTile(HubTile.sales), const Offset(0, -300), 1500);
       await tester.pumpAndSettle();
       expect(hubPanelTop(tester), kToolbarHeight);
-    }, skip: _skip);
+    });
 
     testWidgets('reduced motion: the handle snaps at once', (tester) async {
       await _pump(tester, MediaQuery(
@@ -105,7 +103,7 @@ void main() {
       await tester.pump();
       await tester.pump();
       expect(hubPanelTop(tester), kToolbarHeight);
-    }, skip: _skip);
+    });
   });
 
   group('Escape and Back', () {
@@ -115,7 +113,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
       expect(_open(tester), isFalse);
-    }, skip: _skip);
+    });
 
     testWidgets('Back folds the open panel and stays on Home; folded, Back leaves Home', (tester) async {
       final key = GlobalKey<NavigatorState>();
@@ -141,7 +139,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(hubHandle), findsNothing);
       expect(find.text('before'), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 
   group('accessibility', () {
@@ -162,7 +160,7 @@ void main() {
       expect(after.flagsCollection.isExpanded.toBoolOrNull(), isTrue);
       expect(after.getSemanticsData().hasAction(SemanticsAction.collapse), isTrue);
       semantics.dispose();
-    }, skip: _skip);
+    });
 
     testWidgets('48 px targets folded and open', (tester) async {
       final semantics = tester.ensureSemantics();
@@ -171,7 +169,7 @@ void main() {
       await _tapHandle(tester);
       await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
       semantics.dispose();
-    }, skip: _skip);
+    });
   });
 
   group('search and tiles', () {
@@ -190,7 +188,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('hub-search-clear')));
       await tester.pump();
       expect(hubDrawnTiles(tester).length, greaterThan(8));
-    }, skip: _skip);
+    });
 
     testWidgets('Kiswahili shown: the groups and search in Kiswahili', (tester) async {
       await _pump(tester, hubHarness(), look: MatrixLook.kiswahili);
@@ -199,7 +197,7 @@ void main() {
       await tester.enterText(find.byKey(hubSearch), 'mauzo');
       await tester.pump();
       expect(hubDrawnTiles(tester), contains(HubTile.sales));
-    }, skip: _skip);
+    });
 
     testWidgets('a tile runs its action with its tile and folds the open panel', (tester) async {
       final tapped = <HubTile>[];
@@ -211,12 +209,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(tapped, [HubTile.recordPayment, HubTile.insights]);
       expect(_open(tester), isFalse);
-    }, skip: _skip);
+    });
 
     testWidgets('platform admin: Platform Admin last in Business', (tester) async {
       await _pump(tester, hubHarness(isPlatformAdmin: true));
       await _tapHandle(tester);
       expect(hubDrawnTiles(tester).last, HubTile.platformAdmin);
-    }, skip: _skip);
+    });
   });
 }

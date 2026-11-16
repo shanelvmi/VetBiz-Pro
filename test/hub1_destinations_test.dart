@@ -20,8 +20,6 @@ import 'package:vetbiz_pro/screens/services/services_screen.dart';
 import 'package:vetbiz_pro/screens/store/stockstore_screen.dart';
 import 'package:vetbiz_pro/screens/transactions/transactions_screen.dart';
 
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));
 
@@ -47,11 +45,11 @@ void main() {
         'recordSale', 'recordVisit', 'recordPayment', 'addClient', //
         'sales', 'products', 'clients', 'debtors',
       ]);
-    }, skip: _skip);
+    });
 
     test('assistant: the same eight (no collapsed tile is admin-only today)', () {
       expect(hubCollapsedTilesFor(isAdmin: false), hubCollapsedTilesFor(isAdmin: true));
-    }, skip: _skip);
+    });
 
     test('row 2 labels are one word in English and Kiswahili', () {
       for (final l10n in [_en, _sw]) {
@@ -60,7 +58,7 @@ void main() {
         }
       }
       expect([for (final t in hubCollapsedTiles.skip(4)) hubTileLabel(_en, t)], ['Sales', 'Products', 'Clients', 'Debtors']);
-    }, skip: _skip);
+    });
   });
 
   group('the expanded groups', () {
@@ -70,25 +68,25 @@ void main() {
         'dailyWork': ['sales', 'products', 'services', 'clients', 'debtors', 'payments', 'transactions', 'stockStore'],
         'business': ['reports', 'insights'],
       });
-    }, skip: _skip);
+    });
 
     test('assistant: no Add Product; the rest keep their order', () {
       final g = _groups(isAdmin: false);
       expect(g['record'], ['recordSale', 'recordVisit', 'recordPayment', 'addClient', 'recordTransaction', 'addBatch']);
       expect(g['dailyWork'], _groups(isAdmin: true)['dailyWork']);
       expect(g['business'], ['reports', 'insights']);
-    }, skip: _skip);
+    });
 
     test('platform admin: Platform Admin last in Business (owner answer)', () {
       expect(_groups(isAdmin: true, isPlatformAdmin: true)['business'], ['reports', 'insights', 'platformAdmin']);
       expect(_groups(isAdmin: false, isPlatformAdmin: true)['business'], ['reports', 'insights', 'platformAdmin']);
-    }, skip: _skip);
+    });
 
     test('every collapsed tile is in a group; group titles reuse existing labels', () {
       final all = [for (final g in hubGroupsFor(isAdmin: true)) ...g.tiles];
       expect(all.toSet().containsAll(hubCollapsedTiles), isTrue);
       expect([for (final g in HubGroup.values) hubGroupTitle(_en, g)], ['Record', 'Daily work', 'Business']);
-    }, skip: _skip);
+    });
   });
 
   group('Find a feature', () {
@@ -101,23 +99,23 @@ void main() {
       expect(find('owe'), containsAll(['recordPayment', 'debtors']));
       expect(find('warehouse'), ['stockStore']);
       expect(find('  CHARTS '), ['insights']);
-    }, skip: _skip);
+    });
 
     test('Kiswahili words find their tile whatever the language shown', () {
       expect(find('mauzo'), contains('sales'));
       expect(find('wadaiwa'), contains('debtors'));
       expect(find('bidhaa', shown: _sw), contains('products'));
-    }, skip: _skip);
+    });
 
     test('Settings-screen and profile-menu destinations are not in the panel', () {
       for (final q in ['subscription', 'export', 'trash', 'printer', 'team', 'settings', 'help']) {
         expect(find(q), isEmpty, reason: q);
       }
-    }, skip: _skip);
+    });
 
     test('an empty query finds everything', () {
       expect(find(''), _names(HubTile.values));
-    }, skip: _skip);
+    });
   });
 
   group('places open the same screens as before', () {
@@ -150,7 +148,7 @@ void main() {
         expect(route.builder(route.navigator!.context).runtimeType, e.value);
         route.navigator!.removeRoute(route);
         await tester.pump();
-      }, skip: _skip);
+      });
     }
   });
 
@@ -185,7 +183,7 @@ void main() {
         await runHubTile(ctx, tile, actions: actions(), guard: guard(locked: false), onDone: () => done++);
         expect(opened, [tile.name]);
         expect(done, 1);
-      }, skip: _skip);
+      });
     }
 
     testWidgets('a place does not pass the guard and runs onDone after its screen', (tester) async {
@@ -202,6 +200,6 @@ void main() {
           onDone: () => done++);
       expect(opened, [HubTile.debtors]);
       expect(done, 1);
-    }, skip: _skip);
+    });
   });
 }

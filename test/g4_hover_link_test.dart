@@ -12,8 +12,6 @@ import 'package:vetbiz_pro/widgets/hover_link.dart';
 // G4: the one hover link of the signed-out pages. Written before the widget
 // (c7eec14): run against the stub, a plain tappable Text, every test but the
 // tap failed.
-const _skip = false;
-
 void main() {
   final colors = AppColors.fromTheme(AppColorTheme.pasture);
   const rest = Color(0xFF123456); // A resting colour no role has.
@@ -53,7 +51,7 @@ void main() {
       expect(styleOf(tester).decoration, anyOf(isNull, TextDecoration.none));
       expect(tester.getSize(find.byType(HoverLink)).height, greaterThanOrEqualTo(48));
       expect(tester.getSemantics(find.text('Forgot Password?')), isSemantics(isLink: true, hasTapAction: true, label: 'Forgot Password?'));
-    }, skip: _skip);
+    });
 
     testWidgets('hover: accent, underlined, the click cursor, no size change', (tester) async {
       await pump(tester, textLink());
@@ -69,7 +67,7 @@ void main() {
       await mouse.moveTo(const Offset(1, 1));
       await tester.pumpAndSettle();
       expect(styleOf(tester).color, rest);
-    }, skip: _skip);
+    });
 
     testWidgets('keyboard focus: accent, underlined, a focus ring; Enter opens it', (tester) async {
       FocusManager.instance.highlightStrategy = FocusHighlightStrategy.alwaysTraditional;
@@ -86,7 +84,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
       expect(find.text('next page'), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('a tap opens it', (tester) async {
       await pump(tester, textLink());
@@ -99,7 +97,7 @@ void main() {
       await pump(tester, textLink(underlineAtRest: true));
       expect(styleOf(tester).decoration, TextDecoration.underline);
       expect(styleOf(tester).decorationColor, rest);
-    }, skip: _skip);
+    });
   });
 
   group('HoverLink.icon', () {
@@ -126,6 +124,6 @@ void main() {
       await tester.tap(find.byIcon(Icons.star));
       expect(taps, 1);
       expect(find.byTooltip('Facebook'), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 }

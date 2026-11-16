@@ -25,14 +25,6 @@ import 'package:vetbiz_pro/widgets/updates_carousel.dart';
 import 'g6_support_contact_store_test.dart' show FakeContactRead, sixLinks;
 import 'helpers/register_harness.dart';
 
-// G6, the owner's report "the footer bounces twice": each page read the
-// support contact itself and drew no icons until that read answered, and the
-// icons made the bottom row taller. Written before the fix (skipped until it
-// exists). The pages read a Firestore that holds the six links (what the old
-// code reads) and the app's store reads them through a fake that answers when
-// the test says (what the new code reads).
-const _skip = false;
-
 class _NoAuth implements AuthService {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -112,7 +104,7 @@ void main() {
         await answer(tester);
         expect(icons(tester), 6, reason: 'the icons did arrive');
         expect(footerTop(tester), before);
-      }, skip: _skip);
+      });
     }
   }
 
@@ -129,7 +121,7 @@ void main() {
       expect(icons(tester), 6);
       expect(tester.getSize(find.byKey(AuthFooter.bottomRowKey)).height, none);
       expect(none, greaterThanOrEqualTo(AuthFooterMetrics.tapTarget));
-    }, skip: _skip);
+    });
   }
 
   testWidgets('login, Register, then login again: the icons are on the FIRST frame of each later page', (tester) async {
@@ -146,7 +138,7 @@ void main() {
     expect(icons(tester), 6, reason: 'login again, first frame');
     await tester.pumpAndSettle();
     expect(read.reads, 1, reason: 'one read for the whole session');
-  }, skip: _skip);
+  });
 
   testWidgets('a cold start with a persisted copy draws the icons on the first frame', (tester) async {
     SharedPreferences.setMockInitialValues({SupportContactStore.prefsKey: jsonEncode(sixLinks)});
@@ -155,14 +147,14 @@ void main() {
     expect(icons(tester), 6);
     await answer(tester);
     expect(icons(tester), 6);
-  }, skip: _skip);
+  });
 
   for (final page in _Page.values) {
     testWidgets('${page.name}: on a tall window the footer sits at the bottom edge', (tester) async {
       await pumpPage(tester, page, await dbWith(sixLinks), width: 1200, height: 2600);
       await answer(tester);
       expect(tester.getRect(find.byKey(AuthFooter.bandKey)).bottom, 2600);
-    }, skip: _skip);
+    });
   }
 
   group('the Updates frame while their first answer is pending', () {
@@ -191,7 +183,7 @@ void main() {
         expect(find.byKey(UpdatesCarousel.skeletonKey), findsNothing);
         expect(find.byType(UpdatesSlides), findsOneWidget);
         expect(footerTop(tester), before, reason: 'the Updates arrived without moving the footer');
-      }, skip: _skip);
+      });
     }
 
     testWidgets('no updates: the skeleton, then the calm panel, the footer unmoved', (tester) async {
@@ -202,7 +194,7 @@ void main() {
       expect(find.byType(UpdatesSlides), findsNothing);
       expect(find.byKey(UpdatesCarousel.emptyKey), findsOneWidget);
       expect(footerTop(tester), before);
-    }, skip: _skip);
+    });
 
     testWidgets('the answer is remembered for the next visit: its first frame has the slides', (tester) async {
       final db = await withUpdate();
@@ -211,6 +203,6 @@ void main() {
       await pumpPage(tester, _Page.login, db, width: 768);
       expect(find.byKey(UpdatesCarousel.skeletonKey), findsNothing);
       expect(find.byType(UpdatesSlides), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 }

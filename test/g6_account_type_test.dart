@@ -10,13 +10,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_option_card.dart';
 
 import 'helpers/register_harness.dart';
 
-// G6, the owner's report: registration step 1 must not pre-select the account
-// type. Nothing is chosen at first; each card is a toggle; Continue with
-// nothing chosen stays on step 1 with the step's error in the line kept for
-// it (nothing changes height). Written before the change (skipped until it
-// exists).
-const _skip = false;
-
 void main() {
   final en = registerEn;
   String step(int n) => en.wizard_stepOf(n, 5);
@@ -39,7 +32,7 @@ void main() {
     expect(find.text(error(en)), findsNothing);
     handle.dispose();
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the cards are toggles: select, deselect, select again, switch', (tester) async {
     await pumpRegister(tester, chooseOwner: false);
@@ -54,7 +47,7 @@ void main() {
     await tapText(tester, en.register_roleAssistantSubtitle);
     expect(choice(tester), [false, false]);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   for (final width in [1200.0, 390.0]) {
     testWidgets('$width: Continue with nothing chosen stays, shows the error, and nothing changes height', (tester) async {
@@ -81,7 +74,7 @@ void main() {
       await tapContinue(tester);
       expect(find.text(step(2)), findsOneWidget);
       await finishRegister(tester);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the choice is kept on Back', (tester) async {
@@ -93,7 +86,7 @@ void main() {
     expect(find.text(step(1)), findsOneWidget);
     expect(choice(tester), [false, true]);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the owner flow, chosen by hand, still reaches Create', (tester) async {
     await pumpRegister(tester, chooseOwner: false);
@@ -101,7 +94,7 @@ void main() {
     await fillOwnerSteps(tester);
     expect(find.text(step(5)), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the assistant flow, chosen by hand, still reaches Create', (tester) async {
     await pumpRegister(tester, chooseOwner: false);
@@ -121,7 +114,7 @@ void main() {
     await tapContinue(tester);
     expect(find.text(step(5)), findsOneWidget);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   for (final width in [360.0, 390.0, 768.0, 1200.0]) {
     for (final brightness in Brightness.values) {
@@ -136,7 +129,7 @@ void main() {
           await tapText(tester, t.register_roleAdminSubtitle);
           expect(tester.takeException(), isNull, reason: 'chosen');
           await finishRegister(tester);
-        }, skip: _skip);
+        });
       }
     }
   }

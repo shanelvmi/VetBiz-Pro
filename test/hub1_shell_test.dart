@@ -11,8 +11,6 @@ import 'package:vetbiz_pro/screens/dashboard/phone_hub.dart';
 import 'helpers/hub1_hub.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _homeList = ValueKey<String>('hub-test-home-list');
 
 /// A Home with state: a long list (its scroll offset) and a field (its text).
@@ -49,7 +47,7 @@ void main() {
     expect(find.byKey(const ValueKey('phone-bar-shape')), findsNothing);
     expect(find.byType(IndexedStack), findsNothing, reason: 'no hidden tabs');
     expect(find.byKey(hubPanel), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('Home\'s end clears the folded panel', (tester) async {
     await pumpAtSize(tester, screen: _hub(), size: const Size(390, 844));
@@ -58,7 +56,7 @@ void main() {
     expect(tester.getBottomLeft(find.text('row 39')).dy, lessThanOrEqualTo(hubPanelTop(tester)));
     final context = tester.element(find.byKey(_homeList));
     expect(HomePanelInsets.bottomOf(context), HomeActionPanel.collapsedHeightOf(context));
-  }, skip: _skip);
+  });
 
   testWidgets('a pushed screen covers the hub; Back returns to the same Home', (tester) async {
     await pumpAtSize(
@@ -95,5 +93,5 @@ void main() {
     expect(state.position.pixels, offset);
     expect(find.text('kept', skipOffstage: false), findsOneWidget);
     expect(find.text('banner'), findsOneWidget);
-  }, skip: _skip);
+  });
 }

@@ -13,8 +13,6 @@ import 'helpers/hub1_hub.dart';
 import 'helpers/real_font.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _sizes = [
   MatrixSize('360x740', Size(360, 740), phone: true),
   MatrixSize('390x844', Size(390, 844), phone: true),
@@ -43,20 +41,20 @@ void main() {
       testWidgets('${matrixCase(s, look)}: folded and open', (tester) async {
         await pumpAtSize(tester, screen: hubHarness(isPlatformAdmin: true), size: s.size, look: look);
         await _check(tester, s, matrixCase(s, look));
-      }, skip: _skip);
+      });
     }
     for (final theme in _themes.skip(1)) {
       testWidgets('${s.label} ${theme.id}: folded and open', (tester) async {
         await pumpAtSize(tester, screen: hubHarness(), size: s.size, colorTheme: theme);
         await _check(tester, s, '${s.label} ${theme.id}');
-      }, skip: _skip);
+      });
     }
   }
 
   testWidgets('360x740 text 1.3: folded and open, labels wrap without overflow', (tester) async {
     await pumpAtSize(tester, screen: hubHarness(), size: const Size(360, 740), textScale: matrixLargeTextScale);
     await _check(tester, _sizes.first, '360x740 text 1.3');
-  }, skip: _skip);
+  });
 
   for (final look in [MatrixLook.light, MatrixLook.kiswahili]) {
     for (final width in [360.0, 390.0]) {
@@ -70,7 +68,7 @@ void main() {
           expect(paragraph.size.height, lessThanOrEqualTo(12 * 1.25 + 0.5), reason: '${t.name} wraps');
           expect(paragraph.didExceedMaxLines, isFalse, reason: t.name);
         }
-      }, skip: _skip);
+      });
     }
   }
 }

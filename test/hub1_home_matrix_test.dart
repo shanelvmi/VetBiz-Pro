@@ -16,8 +16,6 @@ import 'helpers/hub1_hub.dart';
 import 'helpers/phone_home_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 const _sizes = [
   MatrixSize('360x740', Size(360, 740), phone: true),
   MatrixSize('390x844', Size(390, 844), phone: true),
@@ -46,7 +44,7 @@ void main() {
             // Sideways: the eight folded tiles in one row (Home keeps room).
             expect({for (final t in hubCollapsedTiles) tester.getTopLeft(hubTile(t)).dy}, hasLength(1), reason: where);
           }
-        }, skip: _skip);
+        });
       }
     }
   }

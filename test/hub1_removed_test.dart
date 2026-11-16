@@ -6,8 +6,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-const _skip = false;
-
 const _deletedFiles = [
   'lib/screens/dashboard/phone_shell.dart',
   'lib/screens/dashboard/phone_bar_shape.dart',
@@ -48,7 +46,7 @@ void main() {
     for (final f in _deletedFiles) {
       expect(File(f).existsSync(), isFalse, reason: f);
     }
-  }, skip: _skip);
+  });
 
   test('none of its names is left in lib/', () {
     final found = <String>[];
@@ -59,5 +57,5 @@ void main() {
       }
     }
     expect(found, isEmpty);
-  }, skip: _skip);
+  });
 }

@@ -19,8 +19,6 @@ import 'package:vetbiz_pro/widgets/wizard/wizard_consent_row.dart';
 // G4: every plain clickable text on Login and Register is the shared
 // HoverLink; the hand-written hover code is gone. Written before the switch:
 // run against the old screens, each test fails (no HoverLink, the old code).
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 
 class _NoAuth implements AuthService {
@@ -61,14 +59,14 @@ void main() {
     await pump(tester, LoginScreen(authService: _NoAuth(), firestore: FakeFirebaseFirestore()));
     expect(isHoverLink(tester, _en.login_forgotPassword), isTrue);
     expect(isHoverLink(tester, _en.login_register), isTrue);
-  }, skip: _skip);
+  });
 
   testWidgets('Register: the terms line names are HoverLinks', (tester) async {
     await pump(tester, RegisterScreen(firestore: FakeFirebaseFirestore()));
     final links = find.descendant(of: find.byType(HoverLink), matching: find.byType(Text));
     final labels = tester.widgetList<Text>(links).map((t) => t.data).toSet();
     expect(labels, containsAll([_en.common_termsOfService, _en.common_privacyPolicy]));
-  }, skip: _skip);
+  });
 
   testWidgets('WizardConsentRow: its names are HoverLinks, underlined at rest', (tester) async {
     await tester.pumpWidget(MaterialApp(
@@ -86,7 +84,7 @@ void main() {
     ));
     expect(tester.widgetList<HoverLink>(find.byType(HoverLink)).map((l) => (l.label, l.underlineAtRest)),
         [('Terms of Service', true), ('Privacy Policy', true)]);
-  }, skip: _skip);
+  });
 
   test('the hand-written hover code is gone', () {
     final login = File('lib/screens/login_screen.dart').readAsStringSync();
@@ -96,5 +94,5 @@ void main() {
     expect(login, isNot(contains('isRegisterHovered')));
     expect(register, isNot(contains('_LegalLink')));
     expect(consent, isNot(contains('TapGestureRecognizer')));
-  }, skip: _skip);
+  });
 }

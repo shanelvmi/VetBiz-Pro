@@ -13,8 +13,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-const _skip = false;
-
 /// Generic openers that are not a destination.
 const _generic = {'showDialog', 'showModalBottomSheet', 'showAppSheet', 'showGeneralDialog', 'showLockedDialog'};
 
@@ -64,18 +62,18 @@ void main() {
         expect(parts[names[i]]!.intersection(parts[names[j]]!), isEmpty, reason: '${names[i]} and ${names[j]}');
       }
     }
-  }, skip: _skip);
+  });
 
   test('everything the old navigation offered is reachable from exactly one of them', () {
     final parts = [_panel(), _profileMenu(), _settingsScreen()];
     for (final d in _before) {
       expect(parts.where((p) => p.contains(d)), hasLength(1), reason: d);
     }
-  }, skip: _skip);
+  });
 
   test('the owner\'s split: Settings and Help in the profile menu; Subscription in Settings only', () {
     expect(_profileMenu(), containsAll(['SettingsScreen', 'showSupportContactDialog']));
     expect(_settingsScreen(), contains('SubscriptionScreen'));
     expect(_panel(), isNot(contains('SubscriptionScreen')));
-  }, skip: _skip);
+  });
 }

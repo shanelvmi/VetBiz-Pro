@@ -11,8 +11,6 @@ import 'package:vetbiz_pro/widgets/phone_list/collapsing_fab.dart';
 
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 Finder _key(String k) => find.byKey(ValueKey(k));
 
 Finder get _list => find.descendant(of: _key('phoneList-scroll'), matching: find.byType(Scrollable)).first;
@@ -40,7 +38,7 @@ void main() {
     expect(find.descendant(of: fab, matching: find.text('Record Sale')), findsOneWidget);
     expect(_extended(tester), isTrue);
     expect(tester.getCenter(fab).dx, greaterThan(390 / 2));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('its icon only while scrolling down, extended again scrolling up', (tester) async {
     await _sales(tester, sales: _many);
@@ -50,7 +48,7 @@ void main() {
     await tester.drag(_list, const Offset(0, 150));
     await ph5Settle(tester);
     expect(_extended(tester), isTrue);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the last row is never under the button', (tester) async {
     await _sales(tester, sales: _many);
@@ -60,7 +58,7 @@ void main() {
     }
     final lastRow = tester.getRect(_key('phoneList-row-m23'));
     expect(lastRow.bottom, lessThanOrEqualTo(tester.getRect(_key('phoneList-fab')).top));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('hidden while the keyboard is open', (tester) async {
     await _sales(tester);
@@ -70,14 +68,14 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.pump();
     expect(_key('phoneList-fab'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('locked: the guard holds and no form opens', (tester) async {
     await _sales(tester, locked: true);
     await tester.tap(_key('phoneList-fab'));
     await ph5Settle(tester);
     expect(find.byType(AddSaleScreen), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('unlocked: the form opens', (tester) async {
     await _sales(tester);
@@ -85,5 +83,5 @@ void main() {
     await ph5Settle(tester);
     expect(find.byType(AddSaleScreen), findsOneWidget);
     while (tester.takeException() != null) {}
-  }, skip: _skip);
+  });
 }

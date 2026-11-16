@@ -8,13 +8,6 @@ import 'package:vetbiz_pro/data/support_contact_fields.dart';
 import 'package:vetbiz_pro/models/support_contact.dart';
 import 'package:vetbiz_pro/services/support_contact_store.dart';
 
-// G6, written before the store existed (skipped until it does): ONE read of
-// app_config/support_contact for any number of callers, a copy in memory for
-// the session, a persisted last-known copy (public fields only, sanitised
-// again when read back), a revalidation that tells listeners only when the
-// data changed, and a failed read that keeps the last-known.
-const _skip = false;
-
 const sixLinks = {
   'email': 'help@vetbiz.example',
   'facebook': 'facebook.com/vetbiz',
@@ -65,7 +58,7 @@ void main() {
     await store.contact();
     store.revalidate();
     expect(read.reads, 1);
-  }, skip: _skip);
+  });
 
   test('a failed read keeps the last-known copy (and the next caller tries again)', () async {
     final read = FakeContactRead();
@@ -84,7 +77,7 @@ void main() {
     expect(read.reads, 3);
     read.answer(sixLinks);
     await third;
-  }, skip: _skip);
+  });
 
   test('a failed first read with nothing known gives the empty contact', () async {
     final read = FakeContactRead();
@@ -93,7 +86,7 @@ void main() {
     read.fail();
     expect(await first, SupportContact.empty);
     expect(store.current, isNull);
-  }, skip: _skip);
+  });
 
   test('listeners hear a revalidation only when the data changed', () async {
     final read = FakeContactRead();
@@ -116,7 +109,7 @@ void main() {
     await pumpEventQueue();
     expect(heard, 2);
     expect(store.current?.socialLinks.single.key, SocialNetwork.facebook);
-  }, skip: _skip);
+  });
 
   test('the persisted copy holds only the public contact fields', () async {
     final read = FakeContactRead();
@@ -129,7 +122,7 @@ void main() {
     expect(saved, isNotNull);
     expect(saved!.keys.toSet(), {'email', 'phone', 'whatsapp', 'address', for (final n in SocialNetwork.values) n.field});
     expect(saved['facebook'], 'https://facebook.com/vetbiz');
-  }, skip: _skip);
+  });
 
   test('a cold start restores the persisted copy before any read', () async {
     SharedPreferences.setMockInitialValues({SupportContactStore.prefsKey: jsonEncode(sixLinks)});
@@ -144,7 +137,7 @@ void main() {
     store.revalidate();
     expect(read.reads, 1);
     read.answer(sixLinks);
-  }, skip: _skip);
+  });
 
   test('a stored invalid link or value is ignored when read back', () async {
     SharedPreferences.setMockInitialValues({
@@ -160,12 +153,12 @@ void main() {
     await store.restore();
     expect(store.current?.socialLinks.map((e) => e.key), [SocialNetwork.instagram]);
     expect(store.current?.email, '');
-  }, skip: _skip);
+  });
 
   test('an unreadable persisted copy is ignored', () async {
     SharedPreferences.setMockInitialValues({SupportContactStore.prefsKey: '{not json'});
     final store = SupportContactStore(fetch: FakeContactRead().call);
     await store.restore();
     expect(store.current, isNull);
-  }, skip: _skip);
+  });
 }

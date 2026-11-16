@@ -11,14 +11,6 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/widgets/auth_footer.dart';
 import 'package:vetbiz_pro/widgets/hover_link.dart';
 
-// G5: a shorter footer on wide windows (about a third less), 32 px link
-// rows there (mouse), 48 px tap targets on phones and narrow windows
-// (touch), and no empty gap between the columns and the bottom row. The
-// band, the columns, the hover and the icons stay. Heights before G5, with
-// the test font: wide 228, 390 px 479 (527 with an icon). Written before the
-// change, skipped until it exists.
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 
 const _beforeWide = 228.0;
@@ -60,7 +52,7 @@ void main() {
       final label = tester.getSize(find.text(text)).height;
       expect(linkRect(tester, text).height, label > 32 ? label : 32, reason: text);
     }
-  }, skip: _skip);
+  });
 
   for (final width in [390.0, 768.0]) {
     testWidgets('$width (touch): every text link and icon keeps its 48 px target', (tester) async {
@@ -71,7 +63,7 @@ void main() {
       final icon = tester.getSize(find.ancestor(of: find.byType(FaIcon), matching: find.byType(HoverLink)));
       expect(icon.height, greaterThanOrEqualTo(48));
       expect(icon.width, greaterThanOrEqualTo(48));
-    }, skip: _skip);
+    });
   }
 
   testWidgets('wide: about a third shorter than before G5, with or without icons', (tester) async {
@@ -85,14 +77,14 @@ void main() {
     expect(plain, withIcon);
     expect(plain, lessThanOrEqualTo(_beforeWide * 0.75));
     expect(withIcon, lessThanOrEqualTo(_beforeWide * 0.75));
-  }, skip: _skip);
+  });
 
   testWidgets('390: shorter than before G5 (with its icon line, now always kept)', (tester) async {
     await pump(tester, 390);
     // G6: the icons' own 48 px line is kept even with none, so the
     // comparison is with the old footer that had one (527); 499 now.
     expect(bandHeight(tester), lessThan(_beforePhoneWithIcon));
-  }, skip: _skip);
+  });
 
   for (final width in [390.0, 1200.0]) {
     testWidgets('$width: no empty gap between the last link and the line above the bottom row', (tester) async {
@@ -102,6 +94,6 @@ void main() {
       final line = tester.getRect(find.descendant(of: find.byType(AuthFooter), matching: find.byType(Divider)));
       // Only the link box's own space (and on wide windows a small gap).
       expect(line.top - tallest, lessThanOrEqualTo(width == 1200 ? AppSpacing.s8 : 0));
-    }, skip: _skip);
+    });
   }
 }
