@@ -328,7 +328,6 @@
     "R11": {},
     "R12": {},
     "R13": {
-      "lib/screens/dashboard/today_card.dart": 1,
       "lib/screens/login_screen.dart": 4,
       "lib/screens/platform_admin/promotions_screen.dart": 1,
       "lib/screens/register_screen.dart": 3

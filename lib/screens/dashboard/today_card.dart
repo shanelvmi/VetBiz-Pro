@@ -9,7 +9,10 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_text.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
+import '../../ui/polish/app_status.dart';
+import '../../ui/polish/status_pill.dart';
 import '../../widgets/press_scale.dart';
 import 'dashboard_figures.dart';
 
@@ -30,7 +33,8 @@ double _lineHeightOf(BuildContext context, TextStyle style) {
   return height;
 }
 
-/// The one Today card on the brand gradient (NAV1), HUB2's three rows: the
+/// The one Today card, on the brand gradient until POL2 and now a flat surface
+/// with a hairline border (NAV1), HUB2's three rows: the
 /// Sales | Visits switch with the exact range under it, and the period
 /// chip; the big amount with the eye at the row's right end (it hides every
 /// amount on the card, and only here); three figures, then a chevron.
@@ -111,7 +115,7 @@ class TodayCard extends StatelessWidget {
       fontSize: PhoneHomeMetrics.salesValue,
       fontWeight: AppFontWeight.semibold,
       fontFeatures: _tabular,
-      color: colors.onBrandSurface,
+      color: colors.textPrimary,
     );
     void swipe(DragEndDetails details) {
       final velocity = details.primaryVelocity ?? 0;
@@ -125,12 +129,11 @@ class TodayCard extends StatelessWidget {
       child: GestureDetector(
         onHorizontalDragEnd: swipe,
         child: DecoratedBox(
+        // POL2 (owner rule 4): a flat surface with a hairline border, no
+        // gradient; the same content, layout and heights.
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [colors.brandGradientStart, colors.brandGradientEnd],
-          ),
+          color: colors.surface,
+          border: Border.all(color: colors.border, width: PolishMetrics.hairline),
           borderRadius: BorderRadius.circular(PhoneHomeMetrics.cardRadius),
         ),
         child: Material(
@@ -195,7 +198,7 @@ class TodayCard extends StatelessWidget {
                               key: const ValueKey('home-card-range'),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: HomeCardMetrics.rangeLabel, color: colors.onBrandSurfaceMuted),
+                              style: TextStyle(fontSize: HomeCardMetrics.rangeLabel, color: colors.textSecondary),
                             ),
                             Row(
                               key: const ValueKey('home-card-amount-row'),
@@ -246,7 +249,7 @@ class TodayCard extends StatelessWidget {
                           Expanded(child: _Stat(label: stats[i].$1, value: stats[i].$2, hidden: amountsHidden && stats[i].$3)),
                         ],
                         ExcludeSemantics(
-                          child: Icon(Icons.chevron_right, size: PhoneHomeMetrics.rowIcon, color: colors.onBrandSurface),
+                          child: Icon(Icons.chevron_right, size: PhoneHomeMetrics.rowIcon, color: colors.textSecondary),
                         ),
                       ],
                     ),
@@ -280,7 +283,7 @@ class _Stat extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.onBrandSurfaceMuted),
+            style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.textSecondary),
           ),
           _Amount(
             value: value,
@@ -293,7 +296,7 @@ class _Stat extends StatelessWidget {
               fontSize: PhoneHomeMetrics.cardValue,
               fontWeight: AppFontWeight.semibold,
               fontFeatures: _tabular,
-              color: colors.onBrandSurface,
+              color: colors.textPrimary,
             ),
           ),
         ],
@@ -406,7 +409,7 @@ class _EyeButton extends StatelessWidget {
         icon: Icon(
           hidden ? Icons.visibility_off_outlined : Icons.visibility_outlined,
           size: PhoneHomeMetrics.eyeIcon,
-          color: context.colors.onBrandSurface,
+          color: context.colors.textSecondary,
         ),
       );
 }
@@ -415,8 +418,9 @@ class _EyeButton extends StatelessWidget {
 /// [HomeCardMetrics.segmentHeight] high and only as wide as its options, each
 /// option a 48 high target; a label too long for a narrow card ends in an
 /// ellipsis rather than pushing the chip out. HUB3 (the owner, after Light
-/// and Dark): the chosen option is a strong state, a white pill with the
-/// card's deep ink (brandGradientStart); the other keeps the muted ink.
+/// and Dark): the chosen option is a strong state. POL2: on the flat card it
+/// is a primary pill (owner rule 1: primary means selected) with onPrimary
+/// ink; the other keeps the secondary ink.
 class _ModeSwitch extends StatelessWidget {
   final HomeCardMode mode;
   final ValueChanged<HomeCardMode>? onChanged;
@@ -440,7 +444,7 @@ class _ModeSwitch extends StatelessWidget {
                 key: const ValueKey('home-card-mode-track'),
                 height: HomeCardMetrics.segmentHeight,
                 decoration: BoxDecoration(
-                  border: Border.all(color: colors.onBrandSurfaceSubtle),
+                  border: Border.all(color: colors.border),
                   borderRadius: BorderRadius.circular(HomeCardMetrics.segmentHeight),
                 ),
               ),
@@ -472,7 +476,7 @@ class _ModeSwitch extends StatelessWidget {
                               alignment: Alignment.center,
                               padding: const EdgeInsets.symmetric(horizontal: HomeCardMetrics.segmentPadding),
                               decoration: BoxDecoration(
-                                color: colors.onBrandSurface.withValues(alpha: m == mode ? 1 : 0),
+                                color: colors.primary.withValues(alpha: m == mode ? 1 : 0),
                                 borderRadius: BorderRadius.circular(pill),
                               ),
                               child: Text(
@@ -482,7 +486,7 @@ class _ModeSwitch extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: HomeCardMetrics.segmentLabel,
                                   fontWeight: AppFontWeight.semibold,
-                                  color: m == mode ? colors.brandGradientStart : colors.onBrandSurfaceMuted,
+                                  color: m == mode ? colors.onPrimary : colors.textSecondary,
                                 ),
                               ),
                             ),
@@ -528,19 +532,19 @@ class _PeriodChip extends StatelessWidget {
             height: PhoneHomeMetrics.chipHeight,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
             decoration: BoxDecoration(
-              color: colors.onBrandSurface.withValues(alpha: PhoneHomeMetrics.circleAlpha),
+              border: Border.all(color: colors.border, width: PolishMetrics.hairline, strokeAlign: BorderSide.strokeAlignOutside),
               borderRadius: BorderRadius.circular(PhoneHomeMetrics.chipHeight),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.calendar_today_outlined, size: PhoneHomeMetrics.chipIcon, color: colors.onBrandSurface),
+                Icon(Icons.calendar_today_outlined, size: PhoneHomeMetrics.chipIcon, color: colors.textSecondary),
                 const SizedBox(width: AppSpacing.s6),
                 Text(
                   dashboardPeriodShortLabel(l10n, period),
-                  style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.onBrandSurface),
+                  style: TextStyle(fontSize: PhoneHomeMetrics.label, color: colors.textPrimary),
                 ),
-                Icon(Icons.arrow_drop_down, size: PhoneHomeMetrics.rowIcon, color: colors.onBrandSurface),
+                Icon(Icons.arrow_drop_down, size: PhoneHomeMetrics.rowIcon, color: colors.textSecondary),
               ],
             ),
           ),
@@ -552,10 +556,11 @@ class _PeriodChip extends StatelessWidget {
 
 
 /// HUB3 (3): today against yesterday, right of the big amount: an arrow and
-/// the words ("up 12% vs yesterday", "New"), never colour alone. In the card's
-/// own ink on the period chip's soft fill: on the brand gradient neither
-/// trendUp nor trendDown reaches 3:1 in every theme, so the arrow's shape and
-/// the words carry the direction. One line, shorter than the amount's.
+/// the words ("up 12% vs yesterday", "New"), never colour alone. Until POL2 it
+/// was in the card's own ink (on the brand gradient neither trendUp nor
+/// trendDown reached 3:1); on the flat card it is the StatusPill, the words in
+/// textPrimary and the arrow in the state's role. One line, shorter than the
+/// amount's.
 class _DeltaChip extends StatelessWidget {
   final HomeDelta delta;
 
@@ -564,38 +569,21 @@ class _DeltaChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final colors = context.colors;
     final percent = delta.percent;
-    final (icon, text) = switch (percent) {
-      null => (Icons.arrow_upward, l10n.summary_trendNew),
-      0 => (Icons.trending_flat, l10n.home_deltaSame),
-      > 0 => (Icons.arrow_upward, l10n.home_deltaUp(percent)),
-      _ => (Icons.arrow_downward, l10n.home_deltaDown(-percent)),
+    // POL2: the one StatusPill, in the four states only: up success, down
+    // danger, the same or new (nothing to compare) neutral. The arrow and
+    // the words still carry the direction.
+    final (icon, text, status) = switch (percent) {
+      null => (Icons.arrow_upward, l10n.summary_trendNew, AppStatus.neutral),
+      0 => (Icons.trending_flat, l10n.home_deltaSame, AppStatus.neutral),
+      > 0 => (Icons.arrow_upward, l10n.home_deltaUp(percent), AppStatus.success),
+      _ => (Icons.arrow_downward, l10n.home_deltaDown(-percent), AppStatus.danger),
     };
-    return Container(
+    // The chip's slot keeps its height, so the amount's row does not move.
+    return SizedBox(
       key: const ValueKey('home-delta'),
       height: HomeCardMetrics.deltaHeight,
-      padding: const EdgeInsets.symmetric(horizontal: HomeCardMetrics.deltaPadding),
-      decoration: BoxDecoration(
-        color: colors.onBrandSurface.withValues(alpha: PhoneHomeMetrics.circleAlpha),
-        borderRadius: BorderRadius.circular(HomeCardMetrics.deltaHeight),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: HomeCardMetrics.deltaIcon, color: colors.onBrandSurface),
-          const SizedBox(width: AppSpacing.s4),
-          Flexible(
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                  fontSize: HomeCardMetrics.deltaLabel, fontWeight: AppFontWeight.semibold, color: colors.onBrandSurface),
-            ),
-          ),
-        ],
-      ),
+      child: Center(widthFactor: 1, child: StatusPill(status: status, label: text, icon: icon)),
     );
   }
 }

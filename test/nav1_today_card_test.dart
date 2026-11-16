@@ -84,23 +84,23 @@ Future<void> _tapEye(WidgetTester tester, {bool settle = true}) async {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  group('the gradient, every theme, Light and Dark', () {
+  // POL2 (owner rule 4) replaced the brand gradient with a flat surface and a
+  // hairline border; the same inks-at-4.5 check, on the surface.
+  group('the flat surface, every theme, Light and Dark', () {
     for (final theme in AppColorTheme.all) {
       for (final brightness in Brightness.values) {
-        testWidgets('${theme.id} ${brightness.name}: primary to its deep tone, the inks at 4.5 at both ends',
+        testWidgets('${theme.id} ${brightness.name}: the surface with a hairline border, the inks at 4.5',
             (tester) async {
           await _card(tester, theme: theme, brightness: brightness);
           final colors = AppColors.fromTheme(theme, brightness: brightness);
-          final gradient = _decoration(tester).gradient! as LinearGradient;
-          expect(gradient.colors, [colors.brandGradientStart, colors.brandGradientEnd]);
-          expect(_decoration(tester).color, isNull);
+          expect(_decoration(tester).gradient, isNull);
+          expect(_decoration(tester).color, colors.surface);
+          expect((_decoration(tester).border! as Border).top.color, colors.border);
           final sales = tester.widget<Text>(find.text(_amounts[0]));
           final label = tester.widget<Text>(find.textContaining('Sales'));
-          for (final end in gradient.colors) {
-            expect(ColorMath.contrast(sales.style!.color!, end), greaterThanOrEqualTo(4.5));
-          }
-          // HUB3: the chosen option's label sits on its white pill, in the deep ink.
-          expect(ColorMath.contrast(label.style!.color!, colors.onBrandSurface), greaterThanOrEqualTo(4.5));
+          expect(ColorMath.contrast(sales.style!.color!, colors.surface), greaterThanOrEqualTo(4.5));
+          // HUB3's strong chosen option: POL2, on its primary pill, in onPrimary.
+          expect(ColorMath.contrast(label.style!.color!, colors.primary), greaterThanOrEqualTo(4.5));
         }, skip: _skip);
       }
     }

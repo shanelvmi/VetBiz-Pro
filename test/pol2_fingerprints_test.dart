@@ -54,7 +54,7 @@ Future<void> seedPromotion(FirebaseFirestore fs) async {
 }
 
 /// The phone Today card as the dashboard wires it, today up 12 % on yesterday.
-Future<void> pumpTodayCard(WidgetTester tester, Size size, {Brightness brightness = Brightness.light}) async {
+Future<void> pumpTodayCard(WidgetTester tester, Size size, {Brightness brightness = Brightness.light, HomeDelta delta = const HomeDelta.change(12)}) async {
   SharedPreferences.setMockInitialValues({'facilityId': 'f1', 'facilityName': 'Mwanzo Agrovet'});
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -82,7 +82,7 @@ Future<void> pumpTodayCard(WidgetTester tester, Size size, {Brightness brightnes
             onAllDetails: () {},
             onToggleAmounts: () {},
             periodLabel: 'Mon 9 Nov',
-            delta: const HomeDelta.change(12),
+            delta: delta,
           ),
         ),
       ),
