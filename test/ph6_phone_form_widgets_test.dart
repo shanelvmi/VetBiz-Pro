@@ -9,8 +9,6 @@ import 'package:vetbiz_pro/widgets/phone_form/form_action_bar.dart';
 import 'package:vetbiz_pro/widgets/phone_form/phone_discard_scope.dart';
 import 'package:vetbiz_pro/widgets/phone_form/picker_sheet.dart';
 
-const _skip = false;
-
 Finder _key(String k) => find.byKey(ValueKey(k));
 
 Future<void> _pump(WidgetTester tester, Widget home, {Size size = const Size(390, 844), bool settle = true}) async {
@@ -71,7 +69,7 @@ void main() {
       expect(primary.right, closeTo(390 - 16, 0.5));
       expect(tester.getRect(_key('formActionBar')).bottom, 844);
       expect(find.text('3 items'), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('rises above a 300 px keyboard', (tester) async {
       await _pump(tester, form());
@@ -79,14 +77,14 @@ void main() {
       addTearDown(tester.view.resetViewInsets);
       await tester.pumpAndSettle();
       expect(tester.getRect(_key('formActionBar-primary')).bottom, lessThanOrEqualTo(844 - 300));
-    }, skip: _skip);
+    });
 
     testWidgets('while busy both buttons are off and a spinner shows', (tester) async {
       await _pump(tester, form(busy: true), settle: false);
       expect(tester.widget<FilledButton>(_key('formActionBar-primary')).onPressed, isNull);
       expect(tester.widget<OutlinedButton>(_key('formActionBar-secondary')).onPressed, isNull);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 
   group('PhoneDiscardScope', () {
@@ -104,7 +102,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('FORM'), findsNothing);
       expect(find.byType(AlertDialog), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('a dirty form asks; Keep editing stays; Discard leaves', (tester) async {
       await open(tester, dirty: true);
@@ -120,7 +118,7 @@ void main() {
       await tester.tap(find.text('Discard'));
       await tester.pumpAndSettle();
       expect(find.text('FORM'), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('a save leaves without asking', (tester) async {
       await open(tester, dirty: true);
@@ -128,14 +126,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('FORM'), findsNothing);
       expect(find.byType(AlertDialog), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('wider than a phone: no check (today\'s forms)', (tester) async {
       await open(tester, dirty: true, size: const Size(1024, 768));
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
       expect(find.text('FORM'), findsNothing);
-    }, skip: _skip);
+    });
   });
 
   group('showPickerSheet', () {
@@ -174,6 +172,6 @@ void main() {
       await tester.tap(_key('pickerSheet-option-Water'));
       await tester.pumpAndSettle();
       expect(picked, 'Water');
-    }, skip: _skip);
+    });
   });
 }

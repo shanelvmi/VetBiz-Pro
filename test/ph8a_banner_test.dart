@@ -23,9 +23,6 @@ import 'package:vetbiz_pro/widgets/phone_list/phone_quick_chips.dart';
 import 'helpers/real_font.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// Was true until the implementation (every call threw UnimplementedError).
-const _skip = false;
-
 const _banner = ValueKey('phone-subscription-banner');
 
 const _states = [
@@ -125,7 +122,7 @@ void main() {
       expect(s(SubscriptionStatus.active, 1), const SubscriptionBannerState(SubscriptionBannerKind.paidEnding, 1));
       expect(s(SubscriptionStatus.active, 8), isNull);
       expect(s(SubscriptionStatus.active, null), isNull);
-    }, skip: _skip);
+    });
 
     testWidgets('today\'s sentences, unchanged', (tester) async {
       await _pump(tester, Builder(builder: (context) {
@@ -139,7 +136,7 @@ void main() {
         expect(t(SubscriptionBannerKind.paidEnding, 1), l.subscription_expiresIn(1));
         return const SizedBox();
       }));
-    }, skip: _skip);
+    });
   });
 
   group('the snooze, as today', () {
@@ -151,7 +148,7 @@ void main() {
       expect(snooze.isSnoozed(at.add(const Duration(hours: 1, minutes: 59))), isTrue);
       expect(snooze.isSnoozed(at.add(const Duration(hours: 2))), isFalse);
       expect(SubscriptionBannerSnooze().isSnoozed(at), isFalse);
-    }, skip: _skip);
+    });
   });
 
   group('the phone banner', () {
@@ -187,7 +184,7 @@ void main() {
             final icon = tester.widget<Icon>(find.descendant(of: find.byKey(_banner), matching: find.byType(Icon)).first);
             expect(ColorMath.contrast(icon.color!, ColorMath.composite(tint, colors.background)), greaterThanOrEqualTo(4.5));
           }
-        }, skip: _skip);
+        });
       }
     }
 
@@ -200,7 +197,7 @@ void main() {
       await _pump(tester, Scaffold(body: _phoneBanner(_states[2], onOpen: () => opened++)));
       await tester.tap(find.text('Details'));
       expect((opened, snoozed), (2, 1));
-    }, skip: _skip);
+    });
 
     testWidgets('an assistant\'s Details shows today\'s sentence; nothing opens Subscription', (tester) async {
       var opened = 0;
@@ -212,7 +209,7 @@ void main() {
       expect(find.text(l.subscription_expiredGrace), findsOneWidget);
       expect(find.text('Your admin manages the subscription.'), findsOneWidget);
       expect(opened, 0);
-    }, skip: _skip);
+    });
   });
 
   group('on the hub', () {
@@ -223,7 +220,7 @@ void main() {
       final appBar = tester.getRect(find.byType(AppBar).hitTestable().first);
       expect(banner.top, greaterThanOrEqualTo(appBar.bottom));
       expect(_overlaps(banner, tester.getRect(find.byKey(const ValueKey('hub-handle')))), isFalse);
-    }, skip: _skip);
+    });
 
     testWidgets('not on a pushed screen, nor with no banner', (tester) async {
       await _pump(tester, _shell(banner: _phoneBanner(_states[0])));
@@ -233,6 +230,6 @@ void main() {
       expect(find.byKey(_banner), findsNothing);
       await _pump(tester, _shell());
       expect(find.byKey(_banner), findsNothing);
-    }, skip: _skip);
+    });
   });
 }

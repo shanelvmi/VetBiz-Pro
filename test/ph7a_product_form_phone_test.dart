@@ -18,8 +18,6 @@ import 'helpers/ph7a_fakes.dart';
 import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 /// A page whose button opens the form, so leaving it can be seen.
 class _Host extends StatelessWidget {
   final Widget form;
@@ -66,7 +64,7 @@ void main() {
     final bar = ph5Key('formActionBar');
     expect(find.descendant(of: bar, matching: find.text('Save Product')), findsOneWidget);
     expect(find.descendant(of: bar, matching: find.text('Cancel')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the bar stays above the keyboard', (tester) async {
     await _form(tester);
@@ -76,7 +74,7 @@ void main() {
     final bar = ph5Key('formActionBar');
     expect(tester.getBottomLeft(ph5Key('formActionBar-primary')).dy, lessThanOrEqualTo(844 - 300 + 1));
     expect(find.descendant(of: bar, matching: find.text('Save Product')).hitTestable(), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the type, category and unit pickers are sheets that save the stored value', (tester) async {
     await _form(tester);
@@ -95,14 +93,14 @@ void main() {
       expect(find.byType(BottomSheet), findsNothing);
       expect(find.text(option), findsOneWidget, reason: option);
     }
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('number keyboards for the prices and quantities', (tester) async {
     await _form(tester);
     for (final label in ['Buying Price (Tsh) *', 'Selling Price (Tsh) *', 'Quantity *', 'Minimum Stock Level']) {
       expect(tester.widget<TextField>(_field(label)).keyboardType, TextInputType.number, reason: label);
     }
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an empty save shows the messages in the kept lines: nothing moves', (tester) async {
     await _form(tester);
@@ -111,7 +109,7 @@ void main() {
     await ph5Settle(tester);
     expect(find.text('Product name is required'), findsOneWidget);
     expect(tester.getTopLeft(find.text('Injectable')).dy, before);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Back with typed data asks (Keep editing stays, Discard leaves); a clean form leaves', (tester) async {
     await _form(tester);
@@ -133,7 +131,7 @@ void main() {
     await tester.tap(find.text('Discard'));
     await ph5Settle(tester);
     expect(find.byType(AddEditProductScreen), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the photo: picked and uploaded as before; one over the size limit is refused', (tester) async {
     var storage = await _form(tester);
@@ -148,7 +146,7 @@ void main() {
     await tester.tap(find.text('Add photo'));
     await ph5Settle(tester);
     expect(storage.uploads, isEmpty);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Edit Product: Update Product in the bar; an assistant\'s details stay locked (quantities editable)', (tester) async {
     await _form(tester, edit: true);
@@ -156,5 +154,5 @@ void main() {
     await _form(tester, edit: true, admin: false);
     expect(tester.widget<TextField>(_field('Product Name *')).enabled, isFalse);
     expect(tester.widget<TextField>(_field('Store Qty *')).enabled, isNot(false));
-  }, skip: _skip);
+  });
 }

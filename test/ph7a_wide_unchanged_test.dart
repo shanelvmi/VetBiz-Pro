@@ -20,8 +20,6 @@ import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/tree_fingerprint.dart';
 
-const _skip = false;
-
 String _errors(WidgetTester tester) {
   final out = StringBuffer();
   for (var e = tester.takeException(); e != null; e = tester.takeException()) {
@@ -51,14 +49,14 @@ void main() {
         await tester.tap(find.byTooltip('Stock Alerts'));
         await ph5Settle(tester);
         _expect(tester, 'ph7a-$name-$at-bell', find.byType(StockAlertsScreen));
-      }, skip: _skip);
+      });
     }
 
     ph5TestWidgets('ph7a-stock-alerts-$at: the page as before PH7a', (tester) async {
       await pumpPh5(tester, (fs) => const Ph7Listening(child: StockAlertsScreen()),
           size: size, pushed: true, seed: ph7SeedProducts);
       _expect(tester, 'ph7a-stock-alerts-$at', find.byType(StockAlertsScreen));
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('ph7a-view-batches-$at: the batches and the adjust and delete dialogs as before PH7a', (tester) async {
       await pumpPh5(tester, (fs) => ViewBatchesScreen(product: ph7LongProduct, isModal: modal),
@@ -72,12 +70,12 @@ void main() {
       await tester.tap(find.byTooltip('Delete batch'));
       await ph5Settle(tester);
       _expect(tester, 'ph7a-view-batches-$at-delete', find.byType(AlertDialog));
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('ph7a-add-batch-$at: the form as before PH7a', (tester) async {
       await pumpPh5(tester, (fs) => AddBatchScreen(product: ph7LongProduct, isModal: modal), size: size);
       _expect(tester, 'ph7a-add-batch-$at', find.byType(AddBatchScreen));
-    }, skip: _skip);
+    });
 
     for (final (name, product) in [('add-product', null), ('edit-product', ph7LongProduct)]) {
       ph5TestWidgets('ph7a-$name-$at: the form as before PH7a', (tester) async {
@@ -88,7 +86,7 @@ void main() {
             size: size,
             seed: ph7SeedProducts);
         _expect(tester, 'ph7a-$name-$at', find.byType(AddEditProductScreen));
-      }, skip: _skip);
+      });
     }
   }
 }

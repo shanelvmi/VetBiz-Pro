@@ -19,8 +19,6 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/test_clock.dart';
 import 'helpers/tree_fingerprint.dart';
 
-const _skip = false;
-
 const _tabs = [
   'Summary',
   'Sales',
@@ -83,12 +81,12 @@ void main() {
         await ph7bOpenTab(tester, tab);
         _expect(tester, 'ph7b-tab-${_slug(tab)}-$at', find.byType(ReportTabbedContent));
       }
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('ph7b-tabs-$at: an assistant\'s Summary (no Activity Log tab) as before PH7b', (tester) async {
       await ph7bPumpTabs(tester, ph7bReport(day: _day), size: size, admin: false);
       _expect(tester, 'ph7b-tab-summary-assistant-$at', find.byType(ReportTabbedContent));
-    }, skip: _skip);
+    });
 
     for (final (name, report) in [
       ('submitted', ph7bReport(day: _viewDay)),
@@ -100,7 +98,7 @@ void main() {
         await pumpPh5(tester, (fs) => ViewReportsScreen(firestore: fs, authService: Ph7bNoAuth()),
             size: size, pushed: true, seed: report == null ? null : (fs) => ph7bSeedReport(fs, report));
         _expect(tester, 'ph7b-view-reports-$name-$at', find.byType(ViewReportsScreen));
-      }, skip: _skip);
+      });
     }
 
     ph5TestWidgets('ph7b-review-$at: the review form as before PH7b', (tester) async {
@@ -108,21 +106,21 @@ void main() {
       await pumpPh5(tester, (fs) => ReportReviewScreen(report: report, isModal: modal, firestore: fs),
           size: size, seed: (fs) => ph7bSeedReport(fs, report));
       _expect(tester, 'ph7b-review-$at', find.byType(ReportReviewScreen));
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('ph7b-full-view-$at: the full view as before PH7b', (tester) async {
       final report = ph7bReport(activityLog: true, day: _day);
       await pumpPh5(tester, (fs) => ReportFullViewScreen(report: report, isModal: modal, firestore: fs),
           size: size, seed: (fs) => ph7bSeedReport(fs, report));
       _expect(tester, 'ph7b-full-view-$at', find.byType(ReportFullViewScreen));
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('ph7b-detail-$at: the detail screen as before PH7b', (tester) async {
       final report = ph7bReport(day: _day);
       await pumpPh5(tester, (fs) => ReportDetailScreen(report: report, firestore: fs),
           size: size, pushed: true, seed: (fs) => ph7bSeedReport(fs, report));
       _expect(tester, 'ph7b-detail-$at', find.byType(ReportDetailScreen));
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('ph7b-past-reports-$at: Past Reports as before PH7b', (tester) async {
       await pumpPh5(tester, (fs) => PastReportsScreen(firestore: fs), size: size, pushed: true, seed: (fs) async {
@@ -131,6 +129,6 @@ void main() {
         }
       });
       _expect(tester, 'ph7b-past-reports-$at', find.byType(PastReportsScreen));
-    }, skip: _skip);
+    });
   }
 }

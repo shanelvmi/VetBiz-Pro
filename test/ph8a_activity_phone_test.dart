@@ -14,9 +14,6 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'ph8a_activity_wide_test.dart' show pumpActivity;
 
-// Was true until the phone list existed.
-const _skip = false;
-
 const _sales = ['Recorded sale to Mwanaisha', 'Recorded sale to Walk-in'];
 const _phone = Size(390, 844);
 
@@ -36,7 +33,7 @@ void main() {
         await tester.tap(find.byType(RecordTile).first);
         await ph5Settle(tester);
         await checkCase(tester, phone: true, where: '$where details');
-      }, skip: _skip);
+      });
     }
   }
 
@@ -49,7 +46,7 @@ void main() {
     await tester.scrollUntilVisible(find.textContaining('Recorded sale to Walk-in'), 200,
         scrollable: find.byWidgetPredicate((w) => w is Scrollable && w.axisDirection == AxisDirection.down).first);
     expect(find.textContaining('Recorded sale to Walk-in'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('a type chip shows what the tablet\'s chip shows', (tester) async {
     await pumpActivity(tester, size: const Size(1024, 768), modal: true);
@@ -64,7 +61,7 @@ void main() {
     await tester.tap(chip);
     await ph5Settle(tester);
     expect(_shown(tester, [..._sales, 'Added product', 'Restored', 'Approved', 'Recorded payment']), tablet);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the Filter sheet sets the same type filter', (tester) async {
     await pumpActivity(tester, size: _phone);
@@ -76,7 +73,7 @@ void main() {
     await ph5Settle(tester);
     expect(find.byType(RecordTile), findsOneWidget);
     expect(find.textContaining('Restored Amina Juma'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an admin chooses how long logs are kept in a sheet; a shorter time asks first, in a sheet too', (tester) async {
     await pumpActivity(tester, size: _phone);
@@ -92,14 +89,14 @@ void main() {
     await tester.tap(find.descendant(of: _sheet, matching: find.text('Cancel')));
     await ph5Settle(tester);
     expect(_sheet, findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an assistant sees the scope note and no retention choice', (tester) async {
     await pumpActivity(tester, size: _phone, admin: false);
     expect(find.byIcon(Icons.lock_outline), findsOneWidget);
     expect(find.byIcon(Icons.more_vert), findsNothing);
     expect(find.byType(RecordTile), findsNWidgets(3));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('no new queries: a phone opens the listeners the tablet opens', (tester) async {
     final wide = CountingFirestore();
@@ -108,5 +105,5 @@ void main() {
     await pumpActivity(tester, size: _phone, fs: phone);
     expect(phone.listens, wide.listens);
     expect(phone.gets, wide.gets);
-  }, skip: _skip);
+  });
 }

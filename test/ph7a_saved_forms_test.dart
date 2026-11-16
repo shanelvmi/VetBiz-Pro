@@ -22,8 +22,6 @@ import 'helpers/ph7a_fakes.dart';
 import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 const _fixture = 'test/fixtures/ph7a_saved_forms.json';
 
 final _autoId = RegExp(r'(?<![A-Za-z0-9])[A-Za-z0-9]{20}(?![A-Za-z0-9])');
@@ -143,7 +141,7 @@ void main() {
     await _tap(tester, find.text('Continue'));
     _drain(tester);
     _expectSameSaved('add-product', app.fs as FakeFirebaseFirestore, storage);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Edit Product saves what it saved before (price, name, store quantity)', (tester) async {
     final storage = FakeStorage();
@@ -161,7 +159,7 @@ void main() {
     await _tap(tester, find.text('Update Product').last);
     _drain(tester);
     _expectSameSaved('edit-product', app.fs as FakeFirebaseFirestore, storage);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Add Batch saves what it saved before (to the shelf, with an expiry)', (tester) async {
     final app = await pumpPh5(tester, (fs) => AddBatchScreen(product: ph7LongProduct), seed: ph7SeedProducts);
@@ -175,5 +173,5 @@ void main() {
     await _tap(tester, find.text('Add Batch').last);
     _drain(tester);
     _expectSameSaved('add-batch', app.fs as FakeFirebaseFirestore);
-  }, skip: _skip);
+  });
 }

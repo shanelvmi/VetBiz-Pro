@@ -11,8 +11,6 @@ import 'package:vetbiz_pro/screens/reports/report_tabbed_content.dart';
 import 'helpers/ph7b_report.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 const _tabs = [
   'Summary',
   'Sales',
@@ -92,7 +90,7 @@ void main() {
     final last = tester.getRect(find.text('Payment Methods'));
     expect(last.right, lessThanOrEqualTo(390));
     expect(last.left, greaterThanOrEqualTo(0));
-  }, skip: _skip);
+  });
 
   for (final tab in _tabs) {
     ph5TestWidgets('$tab: the phone shows the tablet\'s figures for the same report', (tester) async {
@@ -108,7 +106,7 @@ void main() {
       await ph7bOpenTab(tester, tab);
       expect(tester.takeException(), isNull);
       expect(await _phoneNumbers(tester, tab), tablet);
-    }, skip: _skip);
+    });
   }
 
   ph5TestWidgets('R3: Sales shows 5 rows and See all (7); See all opens every row in the same order', (tester) async {
@@ -134,7 +132,7 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await ph5Settle(tester);
     expect(page, findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('R4, R6: an assistant has 9 tabs (no Activity Log) and no Expenses in Summary; an admin has both', (tester) async {
     await ph7bPumpTabs(tester, ph7bReport(), admin: false);
@@ -149,7 +147,7 @@ void main() {
     expect(tester.widget<TabBar>(find.byType(TabBar)).tabs, hasLength(10));
     expect(find.descendant(of: find.byKey(const ValueKey('phoneReport-section-summary')), matching: find.text('Expenses')),
         findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('R5: Stock Reconciliation shows expected and physical, the difference as text and colour, the reason', (tester) async {
     await ph7bPumpTabs(tester, ph7bReport());
@@ -163,7 +161,7 @@ void main() {
     await ph7bPumpTabs(tester, ph7bReport(status: 'draft'));
     await ph7bOpenTab(tester, 'Stock Reconciliation');
     expect(find.text('Physical counts have not been submitted yet.'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('R6: the Activity Log tab lists the admin\'s log as two-line rows', (tester) async {
     await ph7bPumpTabs(tester, ph7bReport(activityLog: true));
@@ -171,7 +169,7 @@ void main() {
     expect(find.text('Expense: Electricity'), findsOneWidget);
     expect(find.text('09:10'), findsOneWidget);
     expect(find.text('Juma Admin'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('R7: Payment Methods shows Tigo Pesa and Mixx by Yas as one Mixx by Yas row', (tester) async {
     await ph7bPumpTabs(tester, ph7bReport());
@@ -182,7 +180,7 @@ void main() {
     // Sales 30,000 + 45,000, services 40,000 + 60,000, repayments 30,000,
     // other income 20,000.
     expect(find.descendant(of: row, matching: find.text(Money.format(225000))), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Products: a long press shows the adjustment\'s detail (the tablet\'s tooltip)', (tester) async {
     await ph7bPumpTabs(tester, ph7bReport());
@@ -190,12 +188,12 @@ void main() {
     await tester.longPress(find.text('Adjusted: -2'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Asha: 122 -> 120 at 10:20'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('tablets keep today\'s tab bar and tabs (no phone pieces)', (tester) async {
     await ph7bPumpTabs(tester, ph7bReport(), size: const Size(1024, 768));
     ph7bDropWideFontErrors(tester);
     expect(find.byKey(const ValueKey('phoneReport-tabBar')), findsNothing);
     expect(find.byType(ReportTabbedContent), findsOneWidget);
-  }, skip: _skip);
+  });
 }

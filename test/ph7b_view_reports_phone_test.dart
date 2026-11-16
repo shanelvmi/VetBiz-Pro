@@ -12,8 +12,6 @@ import 'helpers/counting_firestore.dart';
 import 'helpers/ph7b_report.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 Future<Ph5App> _view(WidgetTester tester, {String? status = 'submitted', bool admin = true, CountingFirestore? firestore}) =>
     pumpPh5(tester, (fs) => ViewReportsScreen(firestore: fs, authService: Ph7bNoAuth()),
         pushed: true,
@@ -43,7 +41,7 @@ void main() {
         findsOneWidget);
     expect(_primary(tester).onPressed, isNull);
     expect(await _menu(tester), ['Past Reports', 'View Full Report', 'Download PDF']);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an admin\'s draft: Delete Draft in the menu; Continue Closing opens Review', (tester) async {
     await _view(tester, status: 'draft');
@@ -56,12 +54,12 @@ void main() {
     expect(find.byType(ReportReviewScreen), findsOneWidget);
     // Review's own phone layout is ph7b_review_phone_test.dart's.
     while (tester.takeException() != null) {}
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an assistant: Share with Admin in the menu, no Delete Draft', (tester) async {
     await _view(tester, status: 'draft', admin: false);
     expect(await _menu(tester), ['Past Reports', 'View Full Report', 'Download PDF', 'Share with Admin']);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Past Reports in the menu opens it', (tester) async {
     await _view(tester);
@@ -69,7 +67,7 @@ void main() {
     await tester.tap(find.text('Past Reports'));
     await ph5Settle(tester);
     expect(find.byType(PastReportsScreen), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Accountability and Declaration sit under the Summary\'s figures', (tester) async {
     await _view(tester);
@@ -78,14 +76,14 @@ void main() {
       expect(find.text(t), findsOneWidget);
     }
     expect(find.text('Asha Mohamed'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('no report yet: today\'s empty texts, the generate action pinned', (tester) async {
     await _view(tester, status: null);
     expect(find.text('No report generated yet today'), findsOneWidget);
     expect(find.byKey(const ValueKey('formActionBar')), findsOneWidget);
     expect(find.byType(TabBarView), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('a failed load shows the error with Retry (not the empty state)', (tester) async {
     final db = CountingFirestore()..failDocGets = true;
@@ -97,7 +95,7 @@ void main() {
     await tester.tap(find.text('Retry'));
     await ph5Settle(tester);
     expect(find.byType(TabBarView), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('R12: a phone opens with the computer\'s reads (one get of today\'s report), no listener', (tester) async {
     final counts = <String, (int, int, int)>{};
@@ -113,5 +111,5 @@ void main() {
     // ignore: avoid_print
     print('PH7b View Reports cold open (listeners, gets, reads): computer ${counts['1200']}, phone ${counts['390']}');
     expect(counts['390'], counts['1200']);
-  }, skip: _skip);
+  });
 }

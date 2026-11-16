@@ -17,8 +17,6 @@ import 'helpers/fake_firestore.dart';
 import 'helpers/ph6_forms.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 const _fixture = 'test/fixtures/ph6_saved_forms.json';
 
 final _autoId = RegExp(r'(?<![A-Za-z0-9])[A-Za-z0-9]{20}(?![A-Za-z0-9])');
@@ -106,7 +104,7 @@ void main() {
     await _tap(tester, find.text('Save Client').last);
     _drain(tester);
     _expectSameSaved('add-client', app.fs as FakeFirebaseFirestore);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Add Transaction saves what it saved before', (tester) async {
     final app = await pumpPh6(tester, 'add-transaction');
@@ -120,7 +118,7 @@ void main() {
     await _tap(tester, find.text('Record Transaction').last);
     _drain(tester);
     _expectSameSaved('add-transaction', app.fs as FakeFirebaseFirestore);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Record Payment saves what it saved before', (tester) async {
     final app = await pumpPh6(tester, 'record-payment');
@@ -141,7 +139,7 @@ void main() {
     await _tap(tester, find.text('Save Payment').last);
     _drain(tester);
     _expectSameSaved('record-payment', app.fs as FakeFirebaseFirestore);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Record Visit saves what it saved before', (tester) async {
     final app = await pumpPh6(tester, 'record-visit');
@@ -163,7 +161,7 @@ void main() {
     await _tap(tester, find.text('Record Visit').last);
     _drain(tester);
     _expectSameSaved('record-visit', app.fs as FakeFirebaseFirestore);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Add Sale saves what it saved before (three items through Browse Products)', (tester) async {
     final app = await pumpPh6(tester, 'add-sale');
@@ -187,6 +185,6 @@ void main() {
     await _tap(tester, find.text('Record Sale').last);
     _drain(tester);
     _expectSameSaved('add-sale', app.fs as FakeFirebaseFirestore);
-  }, skip: _skip);
+  });
 }
 

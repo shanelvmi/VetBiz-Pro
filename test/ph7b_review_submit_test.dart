@@ -16,9 +16,6 @@ import 'helpers/fake_firestore.dart';
 import 'helpers/ph7b_report.dart';
 import 'helpers/phone_list_harness.dart';
 
-// The phone case runs once the phone form exists.
-const _skipPhone = false;
-
 const _fixture = 'test/fixtures/ph7b_submitted_report.json';
 
 final _isoTime = RegExp(r'^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}');
@@ -81,9 +78,9 @@ Future<void> _fillAndSubmit(WidgetTester tester) async {
 }
 
 void main() {
-  for (final (name, size, skip) in [
-    ('a computer (the old form)', const Size(1200, 800), false),
-    ('a phone', const Size(390, 844), _skipPhone),
+  for (final (name, size) in [
+    ('a computer (the old form)', const Size(1200, 800)),
+    ('a phone', const Size(390, 844)),
   ]) {
     ph5TestWidgets('on $name the form submits the recorded report', (tester) async {
       final report = ph7bReport(status: 'draft', day: DateTime(2025, 3, 12));
@@ -92,6 +89,6 @@ void main() {
       await _fillAndSubmit(tester);
       expect(find.byType(ReportReviewScreen), findsNothing, reason: 'the form closed after Submit');
       _expectSameSubmitted(app.fs as FakeFirebaseFirestore);
-    }, skip: skip);
+    });
   }
 }

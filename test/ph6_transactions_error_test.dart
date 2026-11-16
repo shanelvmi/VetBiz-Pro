@@ -10,8 +10,6 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 void main() {
   ph5TestWidgets('a failed list shows the message and Retry; Retry loads it', (tester) async {
     final db = CountingFirestore()..failListens = true;
@@ -24,5 +22,5 @@ void main() {
     await ph5Settle(tester);
     expect(ph5Key('phoneList-error'), findsNothing);
     expect(ph5RowIds(tester), {'t1', 't2'});
-  }, skip: _skip);
+  });
 }

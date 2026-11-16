@@ -22,9 +22,6 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'helpers/notification_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// Was true until the implementation (every call threw UnimplementedError).
-const _skip = false;
-
 final _anchor = GlobalKey();
 
 Widget _app(Widget home) => MaterialApp(
@@ -98,7 +95,7 @@ void main() {
           ),
         ),
       );
-    }, skip: _skip);
+    });
 
     test('per person, persistent items counted, read and the trial not', () async {
       final fs = FakeFirebaseFirestore();
@@ -120,7 +117,7 @@ void main() {
       subs.set(expiring);
       await settle();
       expect(a.unreadAlertCount, 3, reason: 'the subscription notice counts until I read it');
-    }, skip: _skip);
+    });
 
     testWidgets('the icon shows the number, 12 px or more, and nothing at 0', (tester) async {
       _size(tester, const Size(390, 844));
@@ -134,7 +131,7 @@ void main() {
         }
         expect(smallTexts(tester), isEmpty);
       }
-    }, skip: _skip);
+    });
   });
 
   group('the bell opens', () {
@@ -172,7 +169,6 @@ void main() {
           expect(find.byType(NotificationsScreen), findsNothing);
           expect(_offset(tester, 'home'), before);
         },
-        skip: _skip,
       );
     }
 
@@ -200,7 +196,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(HomeActionPanel), findsOneWidget);
       expect(_offset(tester, 'home'), before);
-    }, skip: _skip);
+    });
 
     test('every bell goes through the one helper; the copies are gone', () {
       final dashboard = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync();
@@ -212,6 +208,6 @@ void main() {
         expect(source.contains('_showNotificationsDropdown'), isFalse, reason: path);
         expect(source.contains('showAnchoredDropdown('), isTrue, reason: path);
       }
-    }, skip: _skip);
+    });
   });
 }

@@ -20,8 +20,6 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 // Tall, so every card of the tablet's lazy grid is built.
 const _wide = Size(1200, 2400);
 
@@ -78,7 +76,7 @@ void main() {
     await tester.tap(find.text('Stock Alerts'));
     await ph5Settle(tester);
     expect(find.byType(BottomSheet), findsOneWidget, reason: 'the bell\'s alerts open as a sheet');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Add Product floats for an admin and opens the form; an assistant has none (and no smart defaults)', (tester) async {
     await _products(tester);
@@ -95,7 +93,7 @@ void main() {
     await tester.tap(find.byTooltip('Show menu'));
     await ph5Settle(tester);
     expect(find.text('Recalculate smart defaults from usage history'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('locked: the floating Add Product shows the locked message and no form', (tester) async {
     await _products(tester, locked: true);
@@ -103,7 +101,7 @@ void main() {
     await ph5Settle(tester);
     expect(find.text('Subscription Expired'), findsOneWidget);
     expect(find.byType(AddEditProductScreen), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the stock chips give the side panel\'s results', (tester) async {
     for (final status in ['All Statuses', 'In Stock', 'Low Stock', 'Reorder Soon', 'Depleted', 'Expired']) {
@@ -114,7 +112,7 @@ void main() {
       await _tapIn(tester, ph5Key('phoneList-quickChips'), status == 'All Statuses' ? 'All' : status);
       expect(_rowNames(tester), expected, reason: status);
     }
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the Filter sheet (category, sort) gives the side panel\'s and the sort\'s results; applied filters are removable chips', (tester) async {
     await _products(tester, size: _wide);
@@ -135,7 +133,7 @@ void main() {
     await tester.tap(find.byTooltip('Remove').first);
     await ph5Settle(tester);
     expect(find.text('Category: Antibiotic'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('"7 products, Tsh X stock value" and a Summary sheet with the five cards\' figures', (tester) async {
     await _products(tester, size: _wide);
@@ -149,7 +147,7 @@ void main() {
     for (final e in cards.entries) {
       expect(ph5SheetValue(tester, e.key), e.value, reason: e.key);
     }
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('rows: the photo (or a stand-in), the name and the sellable quantity, the price and a status chip; name order; no buttons, no day headers', (tester) async {
     await _products(tester);
@@ -169,7 +167,7 @@ void main() {
     }
     final y = [for (final id in ['p1', 'p2', 'p6']) tester.getTopLeft(ph5Key('phoneList-row-$id')).dy];
     expect(y[0] < y[1] && y[1] < y[2], isTrue, reason: 'Albendazole, Ivermectin, Newcastle');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('search filters by name, brand or batch, and Close clears it', (tester) async {
     await _products(tester);
@@ -181,7 +179,7 @@ void main() {
     await tester.tap(find.byTooltip('Close'));
     await ph5Settle(tester);
     expect(ph5RowIds(tester), hasLength(7));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the details page: the card\'s content and its actions; Delete asks, closes, offers Undo', (tester) async {
     final app = await _products(tester);
@@ -210,7 +208,7 @@ void main() {
     expect(find.text('Undo'), findsOneWidget);
     expect(ph5RowIds(tester).contains('p1'), isFalse);
     expect(app.fs, isNotNull);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an assistant\'s page: Sell and the batches; no Edit (admin-only, PH7b), no Delete, no watchlist', (tester) async {
     await _products(tester, admin: false);
@@ -220,7 +218,7 @@ void main() {
     expect(find.descendant(of: ph5Page, matching: find.byTooltip('Delete')), findsNothing);
     expect(find.descendant(of: ph5Page, matching: find.text('Remove from Watchlist')), findsNothing);
     expect(find.descendant(of: ph5Page, matching: find.text('Add New Batch')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('pull to refresh runs today\'s refresh (one get of the products)', (tester) async {
     final db = CountingFirestore();
@@ -229,7 +227,7 @@ void main() {
     db.resetCounts();
     await ph5Pull(tester);
     expect(db.gets, 1);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('paging: 12 rows, the next 12 near the end; Load more is the fallback', (tester) async {
     final many = [for (var i = 0; i < 30; i++) Ph7Product('m${i.toString().padLeft(2, '0')}', 'Product ${i.toString().padLeft(2, '0')}')];
@@ -239,7 +237,7 @@ void main() {
     await tester.fling(ph5List, const Offset(0, -3000), 3000);
     await ph5Settle(tester);
     expect(ph5RowIds(tester).length, greaterThan(12));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('states: six skeleton rows, then the rows; empty with Add Product (admin only); error with Retry', (tester) async {
     final held = CountingFirestore()..holdListens = Completer<void>();
@@ -266,5 +264,5 @@ void main() {
     await tester.tap(find.text('Retry'));
     await ph5Settle(tester);
     expect(ph5RowIds(tester), hasLength(7));
-  }, skip: _skip);
+  });
 }

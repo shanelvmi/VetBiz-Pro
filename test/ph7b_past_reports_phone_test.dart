@@ -17,8 +17,6 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph7b_report.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 /// Three days in March and two in February 2025: one a draft.
 final _days = [DateTime(2025, 3, 12), DateTime(2025, 3, 11), DateTime(2025, 3, 10), DateTime(2025, 2, 27), DateTime(2025, 2, 26)];
 List<DailyReport> get _reports => [
@@ -45,7 +43,7 @@ void main() {
       expect(find.widgetWithText(ChoiceChip, chip), findsOneWidget, reason: chip);
     }
     expect(find.byTooltip('Filter'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('rows under month headers: the date and the revenue, who generated it, Completed or Not submitted', (tester) async {
     await _past(tester);
@@ -57,7 +55,7 @@ void main() {
     final r = _reports.first;
     expect(texts, containsAll(['Wednesday, 12 Mar 2025', Money.format(r.salesTotalValue + r.servicesTotalValue), 'Asha Mohamed', 'Completed']));
     expect(ph5Texts(ph5Key('phoneList-row-${ph7bReportId(_days[1])}')), contains('Not submitted'));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('a submitted report opens its detail; a draft opens Review', (tester) async {
     await _past(tester);
@@ -69,7 +67,7 @@ void main() {
     await tester.tap(ph5Key('phoneList-row-${ph7bReportId(_days[1])}'));
     await ph5Settle(tester);
     expect(find.byType(ReportReviewScreen), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the summary line and its sheet: the three old cards', (tester) async {
     await _past(tester);
@@ -79,7 +77,7 @@ void main() {
     for (final t in ['Reports generated', 'Loaded period', 'Latest', 'Feb 2025 - Mar 2025', '12 Mar 2025']) {
       expect(find.text(t), findsOneWidget, reason: t);
     }
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('search filters the loaded rows by date or name, as the tablet\'s field', (tester) async {
     await _past(tester);
@@ -88,7 +86,7 @@ void main() {
     await tester.enterText(find.byKey(const ValueKey('phoneList-searchField')), 'feb');
     await ph5Settle(tester);
     expect(ph5RowIds(tester).toList(), [ph7bReportId(_days[3]), ph7bReportId(_days[4])]);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('a chip reloads with today\'s queries (the page and the count)', (tester) async {
     final db = CountingFirestore();
@@ -107,7 +105,7 @@ void main() {
     await ph5Settle(tester);
     expect(db.gets, 2, reason: 'one page and one count, as the tablet\'s dropdown');
     expect(ph5RowIds(tester), isEmpty, reason: 'nothing this year');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('states: the skeleton, then the rows; empty; the error with Retry', (tester) async {
     final held = CountingFirestore()..holdGets = Completer<void>();
@@ -131,7 +129,7 @@ void main() {
     await tester.tap(find.text('Retry'));
     await ph5Settle(tester);
     expect(ph5RowIds(tester), hasLength(1));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('paging: 25 rows, the next page near the end, Load more as the fallback', (tester) async {
     final many = [for (var i = 0; i < 30; i++) ph7bReport(day: DateTime(2025, 1, 31).subtract(Duration(days: i)))];
@@ -141,5 +139,5 @@ void main() {
     await tester.tap(find.descendant(of: ph5Key('phoneList-loadMore'), matching: find.byType(OutlinedButton)));
     await ph5Settle(tester);
     expect(ph5RowIds(tester), hasLength(30));
-  }, skip: _skip);
+  });
 }

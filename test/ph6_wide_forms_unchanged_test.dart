@@ -9,8 +9,6 @@ import 'helpers/ph6_forms.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/tree_fingerprint.dart';
 
-const _skip = false;
-
 String _errors(WidgetTester tester) {
   final out = StringBuffer();
   for (var e = tester.takeException(); e != null; e = tester.takeException()) {
@@ -27,7 +25,7 @@ void main() {
       ph5TestWidgets('$where: the form as before PH6', (tester) async {
         await pumpPh6(tester, e.key, size: size);
         expectSameFingerprint(where, '${_errors(tester)}${treeFingerprint(tester, find.byType(type))}');
-      }, skip: _skip);
+      });
     }
   }
 }

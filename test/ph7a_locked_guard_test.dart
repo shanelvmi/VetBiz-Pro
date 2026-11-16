@@ -14,8 +14,6 @@ import 'package:vetbiz_pro/screens/store/stockstore_screen.dart';
 import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 const _phone = Size(390, 844);
 const _wide = Size(1200, 800);
 
@@ -63,7 +61,7 @@ void main() {
         await pumpPh5(tester, build, size: size, admin: admin, locked: true, pushed: true, seed: ph7SeedProducts);
         await _tapAndSettle(tester, opener);
         _expectLocked(tester);
-      }, skip: _skip);
+      });
     }
   }
 

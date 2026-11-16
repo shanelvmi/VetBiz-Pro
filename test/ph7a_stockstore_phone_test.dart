@@ -18,8 +18,6 @@ import 'helpers/ph5b_finders.dart';
 import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 // Tall, so every card of the tablet's lazy grid is built.
 const _wide = Size(1200, 2400);
 
@@ -63,7 +61,7 @@ void main() {
 
     await _store(tester, admin: false);
     expect(ph5Key('phoneList-fab'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Add Product goes through the guard: the form, or the locked message', (tester) async {
     await _store(tester);
@@ -78,7 +76,7 @@ void main() {
     await ph5Settle(tester);
     expect(find.text('Subscription Expired'), findsOneWidget);
     expect(find.byType(AddEditProductScreen), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the stock chips and the Filter sheet give the side panel\'s results', (tester) async {
     for (final status in ['All Statuses', 'In Stock', 'Depleted']) {
@@ -98,7 +96,7 @@ void main() {
     await _tapIn(tester, find.byType(BottomSheet), 'Feeds');
     await _tapIn(tester, find.byType(BottomSheet), 'Apply');
     expect(_rowNames(tester), expected);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('"3 products, Tsh X stock value" and a Summary sheet with the five cards\' figures', (tester) async {
     await _store(tester, size: _wide);
@@ -112,7 +110,7 @@ void main() {
     for (final e in cards.entries) {
       expect(ph5SheetValue(tester, e.key), e.value, reason: e.key);
     }
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('rows: the name and the stored quantity, the stored value and the expiry, a status chip; no buttons', (tester) async {
     await _store(tester);
@@ -126,7 +124,7 @@ void main() {
       expect(find.descendant(of: ph5Key('phoneList-row-$id'), matching: find.byType(IconButton)), findsNothing);
     }
     expect(ph5HasDayHeaders(tester), isFalse);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the details page: the card\'s content; Edit, Release, the batches and Delete for an admin', (tester) async {
     await _store(tester);
@@ -141,7 +139,7 @@ void main() {
     await tester.tap(find.descendant(of: ph5Page, matching: find.byTooltip('Delete')));
     await ph5Settle(tester);
     expect(find.text('Confirm Delete'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an assistant\'s page: the batches only (no Edit, Release or Delete, as today\'s card)', (tester) async {
     await _store(tester, admin: false);
@@ -153,5 +151,5 @@ void main() {
     }
     expect(find.descendant(of: ph5Page, matching: find.byTooltip('Edit')), findsNothing);
     expect(find.descendant(of: ph5Page, matching: find.byTooltip('Delete')), findsNothing);
-  }, skip: _skip);
+  });
 }

@@ -15,8 +15,6 @@ import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 /// A page with buttons that open View Batches and Add Batch, as the
 /// Products details page does.
 class _Host extends StatelessWidget {
@@ -55,13 +53,13 @@ void main() {
     final semantics = tester.ensureSemantics();
     await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
     semantics.dispose();
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an assistant\'s sheet has no Delete (as today)', (tester) async {
     await _open(tester, 'BATCHES', admin: false);
     expect(find.descendant(of: _sheet, matching: find.byTooltip('Delete batch')), findsNothing);
     expect(find.descendant(of: _sheet, matching: find.byTooltip('Adjust quantity')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Adjust quantity opens as a sheet with Cancel and Save at the bottom, and saves the batch', (tester) async {
     await _open(tester, 'BATCHES');
@@ -76,7 +74,7 @@ void main() {
     await tester.tap(save);
     await ph5Settle(tester);
     expect(find.textContaining('Store: 65'), findsWidgets);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Delete batch opens as a sheet with Cancel and Delete at the bottom', (tester) async {
     await _open(tester, 'BATCHES');
@@ -85,7 +83,7 @@ void main() {
     expect(find.byType(AlertDialog), findsNothing);
     expect(find.text('Delete This Batch?'), findsOneWidget);
     expect(find.widgetWithText(ElevatedButton, 'Delete'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Add Batch: the action bar above the keyboard, number keyboards, kept error lines, the discard check', (tester) async {
     await _open(tester, 'ADD');
@@ -122,7 +120,7 @@ void main() {
     await tester.tap(find.text('Discard'));
     await ph5Settle(tester);
     expect(find.byType(AddBatchScreen), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Add Batch: a clean form leaves without asking', (tester) async {
     await _open(tester, 'ADD');
@@ -130,5 +128,5 @@ void main() {
     await ph5Settle(tester);
     expect(find.byType(AddBatchScreen), findsNothing);
     expect(ph5Key('formActionBar'), findsNothing);
-  }, skip: _skip);
+  });
 }

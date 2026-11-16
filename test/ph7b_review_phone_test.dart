@@ -10,8 +10,6 @@ import 'package:vetbiz_pro/screens/reports/report_review_screen.dart';
 import 'helpers/ph7b_report.dart';
 import 'helpers/phone_list_harness.dart';
 
-const _skip = false;
-
 Future<void> _review(WidgetTester tester, {Size size = const Size(390, 844)}) async {
   final report = ph7bReport(status: 'draft');
   await pumpPh5(tester, (fs) => ReportReviewScreen(report: report, firestore: fs),
@@ -39,7 +37,7 @@ void main() {
     expect(find.descendant(of: bar, matching: find.text('Cancel')), findsOneWidget);
     expect(find.descendant(of: bar, matching: find.text('Enter a physical count for every watch-listed product')), findsOneWidget,
         reason: 'why Submit is off, above the buttons');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the declaration is the form\'s last item, right above the bar; ticking it is a 48 px row', (tester) async {
     await _review(tester);
@@ -51,7 +49,7 @@ void main() {
     final row = find.ancestor(of: checkbox, matching: find.byType(InkWell)).first;
     expect(tester.getSize(row).height, greaterThanOrEqualTo(48));
     expect(tester.getRect(row).bottom, lessThanOrEqualTo(tester.getRect(find.byKey(const ValueKey('formActionBar'))).top));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the keyboard lifts the bar: Submit stays visible', (tester) async {
     await _review(tester);
@@ -61,7 +59,7 @@ void main() {
     await tester.pump();
     final submit = tester.getRect(find.byKey(const ValueKey('formActionBar-primary')));
     expect(submit.bottom, lessThanOrEqualTo(844 - 320));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('reserved error lines: the reason field keeps its height when its error goes', (tester) async {
     await _review(tester);
@@ -76,7 +74,7 @@ void main() {
     await tester.pump();
     expect(tester.widget<TextField>(reason).decoration?.errorText, isNull);
     expect(tester.getSize(reason).height, before);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Back on a clean form leaves; with a count typed it asks (Keep editing stays, Discard leaves)', (tester) async {
     await _review(tester);
@@ -98,7 +96,7 @@ void main() {
     await tester.tap(find.text('Discard'));
     await ph5Settle(tester);
     expect(find.byType(ReportReviewScreen), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('ticking the declaration alone counts as entered (Back asks)', (tester) async {
     await _review(tester);
@@ -111,5 +109,5 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await ph5Settle(tester);
     expect(find.text('Discard these counts?'), findsOneWidget);
-  }, skip: _skip);
+  });
 }
