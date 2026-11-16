@@ -21,8 +21,6 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/theme/color_math.dart';
 import 'package:vetbiz_pro/theme/theme_context.dart';
 
-const _skip = false;
-
 const _banner = ValueKey('phone-subscription-banner');
 const _fill = ValueKey('phone-subscription-banner-fill');
 
@@ -78,7 +76,7 @@ bool _overlaps(Rect a, Rect b) => a.intersect(b).width > 0 && a.intersect(b).hei
 void main() {
   test('the fill\'s alpha is a named constant, about 92 percent', () {
     expect(PhoneBannerMetrics.overlayAlpha, 0.92);
-  }, skip: _skip);
+  });
 
   for (final tab in ['Home']) {
     testWidgets('on $tab the first row does not move: banner present, absent, snoozed', (tester) async {
@@ -95,7 +93,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(_banner), findsNothing);
       expect(tester.getRect(row), absent, reason: 'snoozed');
-    }, skip: _skip);
+    });
   }
 
   for (final tab in ['Home']) {
@@ -109,7 +107,7 @@ void main() {
       expect(banner.left, PhoneBannerMetrics.overlayMargin);
       expect(banner.right, 390 - PhoneBannerMetrics.overlayMargin);
       expect(_overlaps(banner, tester.getRect(find.byKey(const ValueKey('hub-handle')))), isFalse);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('a 12 px radius, a soft shadow, the role see-through (no blend into the surface), a live region',
@@ -135,7 +133,7 @@ void main() {
               of: find.byKey(_banner), matching: find.byWidgetPredicate((w) => w is Semantics && w.properties.liveRegion == true)),
           findsOneWidget);
     }
-  }, skip: _skip);
+  });
 
   for (final theme in AppColorTheme.all) {
     for (final dark in [false, true]) {
@@ -173,7 +171,7 @@ void main() {
             }
           }
         }
-      }, skip: _skip);
+      });
     }
   }
 
@@ -203,6 +201,6 @@ void main() {
         await tester.pumpAndSettle();
         expect(fade.opacity.value, 1);
       }
-    }, skip: _skip);
+    });
   }
 }

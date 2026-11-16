@@ -18,8 +18,6 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/tree_fingerprint.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = false;
-
 String _errors(WidgetTester tester) {
   final out = StringBuffer();
   for (var e = tester.takeException(); e != null; e = tester.takeException()) {
@@ -71,7 +69,7 @@ void main() {
             'ph8a-$name-bell-$at',
             find.ancestor(of: find.byType(StockAlertsScreen), matching: find.byType(Stack)).last,
           );
-        }, skip: _skip);
+        });
       }
     }
 
@@ -83,7 +81,7 @@ void main() {
         await pumpNotifications(tester, c, width: size.width, height: size.height, dropdown: dropdown);
         _expect(tester, 'ph8a-notifications-$kind-$at', find.byType(NotificationsScreen));
         await tester.pumpWidget(const SizedBox());
-      }, skip: _skip);
+      });
     }
   }
 }

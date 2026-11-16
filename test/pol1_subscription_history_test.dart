@@ -20,8 +20,6 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'ph8a_subscription_wide_test.dart' show seedSubscription;
 
-const _skip = false;
-
 /// The three claims of October (approved s1, rejected s2 with a reason,
 /// pending s3) and one approved claim in September.
 Future<void> _seed(FirebaseFirestore fs) async {
@@ -102,7 +100,7 @@ void main() {
             expect(dec.boxShadow, anyOf(isNull, isEmpty));
           }
         }
-      }, skip: _skip);
+      });
     }
 
     ph5TestWidgets('$name: the filter compares the stored keys; tapped again, All', (tester) async {
@@ -119,7 +117,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(StatusDot), findsNWidgets(4), reason: '$key tapped again: All');
       }
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('$name at text scale 1.3 with reduced motion: no overflow, the words stay', (tester) async {
       tester.platformDispatcher.textScaleFactorTestValue = 1.3;
@@ -128,7 +126,7 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.byType(StatusDot), findsNWidgets(4));
       expect(find.byKey(const ValueKey('subscriptionHistory-reason')), findsOneWidget);
-    }, skip: _skip);
+    });
   }
 
   for (final size in ph5WideSizes) {
@@ -139,6 +137,6 @@ void main() {
       expect(xs, orderedEquals([...xs]..sort()));
       expect(find.byType(TextField), findsOneWidget);
       expect(find.byType(DropdownButton<String>), findsNWidgets(2), reason: 'plan and method');
-    }, skip: _skip);
+    });
   }
 }

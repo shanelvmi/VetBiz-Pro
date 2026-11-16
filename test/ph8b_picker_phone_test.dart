@@ -13,9 +13,6 @@ import 'package:vetbiz_pro/screens/facilities/facility_picker_screen.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// Was true until the picker's phone fixes existed.
-const _skipPicker = false;
-
 const _items = <Map<String, dynamic>>[
   {'facilityId': 'f1', 'facilityName': matrixLongFacilityName, 'facilityType': 'Agrovet', 'facilityTypeDetail': null},
   {'facilityId': 'f2', 'facilityName': 'Mifugo Clinic', 'facilityType': 'Vet Clinic', 'facilityTypeDetail': null},
@@ -33,7 +30,7 @@ void main() {
           (tester) async {
         await _picker(tester, size.size, look);
         await checkCase(tester, phone: true, where: 'picker $where');
-      }, skip: _skipPicker);
+      });
 
     }
   }
@@ -48,5 +45,5 @@ void main() {
     final name = tester.getRect(find.text('Mifugo Clinic'));
     // 14 px padding, the 56 px logo and its 12 px gap before the name.
     expect(name.left - rect.left, 14 + 56 + 12);
-  }, skip: _skipPicker);
+  });
 }

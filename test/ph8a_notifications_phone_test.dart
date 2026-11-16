@@ -12,8 +12,6 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'helpers/test_clock.dart';
 
-const _skip = false;
-
 Future<NotificationFeedController> _feed(WidgetTester tester, {int window = 200}) async {
   final fs = FakeFirebaseFirestore();
   final clock = Clock()..now = testNow;
@@ -44,7 +42,7 @@ void main() {
             dark: look == MatrixLook.dark,
             locale: look == MatrixLook.kiswahili ? 'sw' : 'en');
         await checkCase(tester, phone: true, where: 'Notifications $where');
-      }, skip: _skip);
+      });
     }
   }
 
@@ -60,7 +58,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('notification-select-n4')));
     await tester.pumpAndSettle();
     await checkCase(tester, phone: true, where: 'selection mode');
-  }, skip: _skip);
+  });
 
   testWidgets('Load older at 390x844', (tester) async {
     final c = await _feed(tester, window: 2);
@@ -68,5 +66,5 @@ void main() {
     await tester.scrollUntilVisible(find.text('Load older'), 200,
         scrollable: find.descendant(of: find.byType(ListView).first, matching: find.byType(Scrollable)).first);
     await checkCase(tester, phone: true, where: 'Load older');
-  }, skip: _skip);
+  });
 }

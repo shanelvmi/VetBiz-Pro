@@ -25,9 +25,6 @@ import 'helpers/screen_size_matrix.dart';
 import 'ph8a_seams_test.dart' show Ph8Auth;
 import 'ph8a_settings_wide_test.dart' show seedFacility;
 
-// True until the phone pages exist.
-const _skip = false;
-
 final _pages = <(String, Widget Function(FirebaseFirestore))>[
   ('Business profile', (fs) => BusinessProfileScreen(firestore: fs, storage: FakeStorage())),
   ('Business hours', (fs) => BusinessHoursScreen(firestore: fs)),
@@ -68,7 +65,7 @@ void main() {
             expect(tester.takeException(), isNull, reason: '$where, scrolled');
             expect(smallTexts(tester), isEmpty, reason: '$where, scrolled');
           }
-        }, skip: _skip);
+        });
       }
     }
   }
@@ -77,7 +74,7 @@ void main() {
     await _pump(tester, _pages[0].$2, size: const Size(740, 360));
     expect(find.byType(SingleChildScrollView), findsOneWidget);
     expect(find.descendant(of: find.byType(FormActionBar), matching: find.text('Upload Logo')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Business hours: a closing time is chosen in a sheet; Save is in the action bar', (tester) async {
     await _pump(tester, _pages[1].$2);
@@ -90,7 +87,7 @@ void main() {
     await tester.tap(find.text('Done'));
     await ph5Settle(tester);
     expect(_sheet, findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Printer settings: the paper size is chosen in a sheet and saved as before', (tester) async {
     await _pump(tester, _pages[2].$2);
@@ -101,7 +98,7 @@ void main() {
     await ph5Settle(tester);
     final prefs = (await tester.runAsync(SharedPreferences.getInstance))!;
     expect(prefs.getString('printer_paper_size'), '80');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Export: the date range opens as a sheet', (tester) async {
     await _pump(tester, _pages[3].$2);
@@ -113,7 +110,7 @@ void main() {
     expect(_sheet, findsOneWidget);
     expect(find.descendant(of: _sheet, matching: find.text('Last 7 Days')), findsOneWidget);
     await checkCase(tester, phone: true, where: 'the date range sheet');
-  }, skip: _skip);
+  });
 
   for (final (tile, title) in [
     ('Sign Out of All Devices', 'Sign Out of All Devices?'),
@@ -131,7 +128,7 @@ void main() {
       await ph5Settle(tester);
       expect(_sheet, findsNothing);
       expect(find.byType(ManageAccountScreen), findsOneWidget);
-    }, skip: _skip);
+    });
   }
 
   ph5TestWidgets('Manage Account on a tablet keeps its dialogs', (tester) async {
@@ -140,5 +137,5 @@ void main() {
     await ph5Settle(tester);
     expect(find.byType(AlertDialog), findsOneWidget);
     expect(_sheet, findsNothing);
-  }, skip: _skip);
+  });
 }

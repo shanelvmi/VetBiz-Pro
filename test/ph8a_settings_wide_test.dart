@@ -26,9 +26,6 @@ import 'helpers/tree_fingerprint.dart';
 import 'ph8a_seams_test.dart' show Ph8Auth;
 import 'helpers/test_clock.dart';
 
-// The phone cases were skipped until the phone pages existed.
-const _skipPhone = false;
-
 String _errors(WidgetTester tester) {
   final out = StringBuffer();
   for (var e = tester.takeException(); e != null; e = tester.takeException()) {
@@ -138,13 +135,13 @@ void main() {
     });
   }
 
-  for (final (size, skip) in [(const Size(1200, 800), false), (const Size(390, 844), _skipPhone)]) {
+  for (final size in const [Size(1200, 800), Size(390, 844)]) {
     final at = '${size.width.toInt()}';
     ph5TestWidgets('Business profile at $at saves the logo as before PH8a', (tester) async {
       await saveLogo(tester, size: size, uploadLabel: 'Upload Logo');
-    }, skip: skip);
+    });
     ph5TestWidgets('Business hours at $at saves as before PH8a', (tester) async {
       await saveHours(tester, size: size, saveLabel: 'Save Business Hours');
-    }, skip: skip);
+    });
   }
 }

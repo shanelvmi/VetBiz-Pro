@@ -22,9 +22,6 @@ import 'helpers/ph8b_team.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// Was true until Facilities had its phone list.
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 const _names = ['Kilimo Agrovet', 'Mifugo Clinic', 'Shamba Hub'];
 const _ids = [testFacilityId, ph8bClinicId, ph8bOtherId];
@@ -94,7 +91,7 @@ void main() {
     // The 360 px list box and the details beside or under it are gone.
     expect(find.text(_en.facilities_moreActions), findsNothing);
     expect(_phoneIds(), _ids);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('rows: a 40 px leading, the name alone, the type only as the tag, the status; no buttons', (tester) async {
     await _pump(tester);
@@ -118,7 +115,7 @@ void main() {
     expect(find.descendant(of: _row(ph8bOtherId), matching: find.text('Kituo cha mafunzo')), findsOneWidget);
     expect(find.descendant(of: _row(ph8bOtherId), matching: find.text('Inactive')), findsOneWidget);
     expect(find.descendant(of: _row(testFacilityId), matching: find.text('Active')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   group('the chips and search equal today\'s list panel on the same data', () {
     final cases = <(String, Future<void> Function(WidgetTester) phone, Future<void> Function(WidgetTester) wide)>[
@@ -148,7 +145,7 @@ void main() {
         await _pump(tester);
         await phone(tester);
         expect(_phoneIds(), expected);
-      }, skip: _skip);
+      });
     }
   });
 
@@ -157,7 +154,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('phoneList-fab')));
     await _settle(tester);
     expect(find.text(_en.facilities_limitTitle), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Add Facility with room opens the Add form', (tester) async {
     await _pump(tester, seed: (fs) => _limit(fs, 9));
@@ -166,7 +163,7 @@ void main() {
     expect(find.text(_en.facilities_limitTitle), findsNothing);
     expect(find.text(_en.facilities_addTitle), findsWidgets);
     expect(find.byType(TextField), findsWidgets);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('a row opens that facility\'s details as a page, and back returns to the list', (tester) async {
     await _pump(tester);
@@ -179,7 +176,7 @@ void main() {
     await _settle(tester);
     expect(_phoneIds(), _ids);
     _dropTodaysOverflows(tester);
-  }, skip: _skip);
+  });
 
   group('states', () {
     ph5TestWidgets('six skeleton rows while loading', (tester) async {
@@ -187,14 +184,14 @@ void main() {
       // within the route's own first frames).
       await _pump(tester, settle: false, pushed: false);
       expect(find.byKey(const ValueKey('phoneList-skeleton')), findsOneWidget);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('none: today\'s sentence, and Add Facility', (tester) async {
       await _pump(tester, seed: (fs) => fs.collection(Collections.users).doc(testUserId).set({'role': 'admin', 'facilities': []}));
       expect(find.text(_en.facilities_noneFound), findsOneWidget);
       expect(find.descendant(of: find.byKey(const ValueKey('phoneList-empty')), matching: find.text(_en.facilities_addTitle)),
           findsOneWidget);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('no match: today\'s sentence', (tester) async {
       await _pump(tester);
@@ -202,7 +199,7 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('phoneList-searchField')), 'nothing like this');
       await _settle(tester);
       expect(find.text(_en.facilities_noMatchFilter), findsOneWidget);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('pull to refresh reads the facilities again (the old Refresh button)', (tester) async {
       final app = await _pump(tester);
@@ -215,7 +212,7 @@ void main() {
       await tester.fling(find.byKey(const ValueKey('phoneList-scroll')), const Offset(0, 400), 1000);
       await _settle(tester);
       expect(_row('facility4'), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 
   for (final size in ph5PhoneSizes) {
@@ -225,7 +222,7 @@ void main() {
         await _pump(tester, size: size.size, look: look, seed: (fs) => ph8bSeedFacilities(fs, longNames: true));
         await checkCase(tester, phone: true, where: where);
         expect(find.text(matrixLongFacilityName), findsOneWidget);
-      }, skip: _skip);
+      });
     }
   }
 }

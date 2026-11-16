@@ -14,9 +14,6 @@ import 'helpers/ph8b2_facility_page.dart';
 import 'helpers/ph8b_facilities.dart';
 import 'helpers/phone_list_harness.dart';
 
-// True until the phone page is built (P2).
-const _skip = false;
-
 final _en = ph8b2En;
 
 /// Each tab's index, its label and texts only its content shows.
@@ -49,7 +46,7 @@ void main() {
       expect(find.descendant(of: ph8b2TabRow(i), matching: find.byType(Icon)), findsWidgets, reason: label);
     }
     expect(_noSidewaysScroller(tester), isTrue);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the metrics sit in two columns', (tester) async {
     await pumpPh8b2(tester);
@@ -59,13 +56,13 @@ void main() {
       for (final l in labels) tester.getTopLeft(find.descendant(of: find.byKey(ph8b2Metrics), matching: find.text(l))).dx.round(),
     };
     expect(lefts.length, 2);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the Team Members row shows the assistant count', (tester) async {
     await pumpPh8b2(tester);
     await ph8b2OpenDetails(tester, ph8bClinicId);
     expect(find.descendant(of: ph8b2TabRow(1), matching: find.text('1')), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the menu holds today\'s More Actions: Edit, Switch to this (not the open one), Delete', (tester) async {
     await pumpPh8b2(tester, size: const Size(1200, 1600));
@@ -90,7 +87,7 @@ void main() {
     await ph8b2OpenDetails(tester);
     await ph8b2Tap(tester, find.byKey(ph8b2Menu));
     expect(ph8b2MenuTexts(tester), wideOpen);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the header card keeps the code and licence Copy buttons', (tester) async {
     final copied = <String>[];
@@ -106,7 +103,7 @@ void main() {
     await ph8b2Tap(tester, copies.first);
     await ph8b2Tap(tester, copies.last);
     expect(copied, ['VBP-001', 'LIC-0']);
-  }, skip: _skip);
+  });
 
   for (final (index, label, marks) in _tabs) {
     ph5TestWidgets('the $label row opens its own page with today\'s tab content', (tester) async {
@@ -132,7 +129,7 @@ void main() {
       await tester.pageBack();
       await ph8b2Settle(tester);
       expect(find.byKey(ph8b2Header), findsOneWidget);
-    }, skip: _skip);
+    });
   }
 
   ph5TestWidgets('the Settings page holds today\'s rows: Edit details, Deactivate, Delete, retention, overdue', (tester) async {
@@ -150,14 +147,14 @@ void main() {
       expect(find.descendant(of: page, matching: find.text(t)), findsOneWidget, reason: t);
     }
     expect(find.descendant(of: page, matching: find.text(_en.common_change)), findsNWidgets(2));
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('a metric\'s link opens its tab\'s page', (tester) async {
     await pumpPh8b2(tester);
     await ph8b2OpenDetails(tester);
     await ph8b2Tap(tester, find.descendant(of: find.byKey(ph8b2Metrics), matching: find.text(_en.facilities_viewReport)));
     expect(ph8b2TabPage(3), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('back from the page returns to the list', (tester) async {
     await pumpPh8b2(tester);
@@ -166,5 +163,5 @@ void main() {
     await ph8b2Settle(tester);
     expect(ph8b2Row(testFacilityId), findsOneWidget);
     expect(find.byKey(ph8b2Details), findsNothing);
-  }, skip: _skip);
+  });
 }

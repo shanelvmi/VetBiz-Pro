@@ -16,9 +16,6 @@ import 'helpers/ph8b2_facility_page.dart';
 import 'helpers/ph8b_facilities.dart';
 import 'helpers/phone_list_harness.dart';
 
-// True until the sheets are built (P4).
-const _skip = false;
-
 final _en = ph8b2En;
 
 /// A sheet is open, holding [title], and no dialog.
@@ -53,7 +50,7 @@ void main() {
     expect(find.text(_en.facilities_limitMessage(3)), findsOneWidget);
     await ph8b2Tap(tester, find.text(_en.common_ok));
     expect(find.byType(BottomSheet), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Delete blocked by an assistant: a sheet with the count and OK', (tester) async {
     await pumpPh8b2(tester);
@@ -62,7 +59,7 @@ void main() {
     expect(find.text(_en.facilities_cannotDeleteMessage(1)), findsOneWidget);
     await ph8b2Tap(tester, find.text(_en.common_ok));
     expect(find.byType(BottomSheet), findsNothing);
-  }, skip: _skip);
+  });
 
   group('Delete\'s typed confirmation', () {
     ph5TestWidgets('a sheet that a tap outside does not close', (tester) async {
@@ -75,7 +72,7 @@ void main() {
       expect(find.byType(BottomSheet), findsOneWidget);
       await ph8b2Tap(tester, find.text(_en.common_cancel));
       expect(find.byType(BottomSheet), findsNothing);
-    }, skip: _skip);
+    });
 
     for (final phone in [true, false]) {
       ph5TestWidgets('${phone ? 'phone' : 'wide'}: Delete only on the name typed exactly (case and inner spaces)', (tester) async {
@@ -105,7 +102,7 @@ void main() {
         await ph8b2Tap(tester, find.widgetWithText(ElevatedButton, _en.common_delete));
         if (!phone) ph8b2DropOverflows(tester);
         expect(app.functions.calls.map((c) => '${c.$1} ${c.$2}'), ['deleteOwnFacility {facilityId: $ph8bOtherId}']);
-      }, skip: _skip);
+      });
     }
   });
 
@@ -118,7 +115,7 @@ void main() {
     await ph8b2Tap(tester, find.descendant(of: find.byType(BottomSheet), matching: find.text(_en.team_deactivate)));
     expect((await _facility(tester, app.fs, testFacilityId))['status'], 'Inactive');
     expect(find.text(_en.facilities_reactivateThis), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the status toggle: Cancel changes nothing', (tester) async {
     final app = await pumpPh8b2(tester);
@@ -126,7 +123,7 @@ void main() {
     await ph8b2Tap(tester, find.text(_en.facilities_deactivateThis));
     await ph8b2Tap(tester, find.text(_en.common_cancel));
     expect((await _facility(tester, app.fs, testFacilityId))['status'], 'Active');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the retention picker: a sheet of radio rows, Cancel pinned; a longer window saves', (tester) async {
     final app = await pumpPh8b2(tester,
@@ -139,7 +136,7 @@ void main() {
     await ph8b2Tap(tester, find.text(_en.debtors_daysCount(60)));
     expect(find.byType(BottomSheet), findsNothing, reason: 'a longer window asks nothing');
     expect((await _facility(tester, app.fs, testFacilityId))['activityLogRetentionDays'], 60);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the retention picker: a shorter window asks first in a sheet; Cancel keeps it', (tester) async {
     final app = await pumpPh8b2(tester);
@@ -149,7 +146,7 @@ void main() {
     _expectSheet(_en.facilities_deleteOlderLogsTitle);
     await ph8b2Tap(tester, find.text(_en.common_cancel));
     expect((await _facility(tester, app.fs, testFacilityId))['activityLogRetentionDays'], isNull);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the retention confirmation: Delete and switch saves the shorter window', (tester) async {
     final app = await pumpPh8b2(tester);
@@ -158,7 +155,7 @@ void main() {
     await ph8b2Tap(tester, find.text(_en.debtors_daysCount(30)));
     await ph8b2Tap(tester, find.text(_en.facilities_deleteAndSwitch(30)));
     expect((await _facility(tester, app.fs, testFacilityId))['activityLogRetentionDays'], 30);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the overdue picker: a sheet of radio rows; a choice saves as today', (tester) async {
     final app = await pumpPh8b2(tester);
@@ -168,5 +165,5 @@ void main() {
     expect(find.descendant(of: find.byType(BottomSheet), matching: find.byType(RadioListTile<int>)), findsNWidgets(5));
     await ph8b2Tap(tester, find.text(_en.debtors_daysCount(60)));
     expect((await _facility(tester, app.fs, testFacilityId))['debtOverdueDays'], 60);
-  }, skip: _skip);
+  });
 }

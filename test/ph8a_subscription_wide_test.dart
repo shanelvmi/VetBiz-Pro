@@ -18,9 +18,6 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/tree_fingerprint.dart';
 import 'ph8a_seams_test.dart' show Ph8Auth;
 
-// The phone case was skipped until the phone form existed.
-const _skipPhone = false;
-
 String _errors(WidgetTester tester) {
   final out = StringBuffer();
   for (var e = tester.takeException(); e != null; e = tester.takeException()) {
@@ -87,7 +84,7 @@ void main() {
     });
   }
 
-  for (final (size, skip) in [(const Size(1200, 800), false), (const Size(390, 844), _skipPhone)]) {
+  for (final size in const [Size(1200, 800), Size(390, 844)]) {
     ph5TestWidgets('the claim saved at ${size.width.toInt()} is the one saved before PH8a', (tester) async {
       final app = await pumpPh5(tester, (fs) => SubscriptionScreen(firestore: fs, auth: Ph8Auth()),
           size: size, pushed: true, seed: seedSubscription);
@@ -114,6 +111,6 @@ void main() {
           what: 'the claim saved (the reference cleared)');
       while (tester.takeException() != null) {}
       expectSameSaved('subscription', await savedClaims(tester, app.fs));
-    }, skip: skip);
+    });
   }
 }

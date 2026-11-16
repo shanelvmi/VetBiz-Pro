@@ -20,9 +20,6 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'ph8a_settings_wide_test.dart' show ph8UserInfo, seedTrash;
 
-// Was true until the phone list existed.
-const _skip = false;
-
 Future<Ph5App> _pump(WidgetTester tester,
         {Size size = const Size(390, 844), MatrixLook look = MatrixLook.light, bool admin = true, FirebaseFirestore? fs, bool seed = true}) =>
     pumpPh5(tester, (fs) => TrashScreen(firestore: fs, currentUserInfo: ph8UserInfo),
@@ -43,7 +40,7 @@ void main() {
         await tester.tap(_row('Amina Juma').first);
         await ph5Settle(tester);
         await checkCase(tester, phone: true, where: '$where details');
-      }, skip: _skip);
+      });
     }
   }
 
@@ -59,7 +56,7 @@ void main() {
     await ph5Settle(tester);
     expect(find.byType(RecordTile), findsOneWidget);
     expect(_row('Amina Juma'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Restore from the details page puts it back and tells the lists', (tester) async {
     final changes = <String>[];
@@ -74,7 +71,7 @@ void main() {
     expect(await _exists(tester, app.fs, Collections.trashProducts, 'p1'), isFalse);
     expect(changes, [testFacilityId]);
     expect(find.text('Restore'), findsNothing, reason: 'the details page closes');
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Delete forever asks first (today\'s question); Cancel keeps it, confirming deletes it', (tester) async {
     final app = await _pump(tester);
@@ -91,7 +88,7 @@ void main() {
     await tester.tap(find.text('Delete Forever').last);
     await ph5Settle(tester);
     expect(await _exists(tester, app.fs, Collections.trashTransactions, 't1'), isFalse);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('an assistant sees the details but no Restore or Delete forever', (tester) async {
     await _pump(tester, admin: false);
@@ -99,7 +96,7 @@ void main() {
     await ph5Settle(tester);
     expect(find.text('Restore'), findsNothing);
     expect(find.text('Delete Forever'), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the empty state and the error state with Retry', (tester) async {
     await _pump(tester, seed: false);
@@ -107,7 +104,7 @@ void main() {
     final fs = CountingFirestore()..failListens = true;
     await _pump(tester, fs: fs);
     expect(find.text('Retry'), findsWidgets);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('the five listeners are made once: a chip or a rebuild does not listen again; pull to refresh does', (tester) async {
     final fs = CountingFirestore();
@@ -123,5 +120,5 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await ph5Settle(tester);
     expect(fs.listens, greaterThan(opened));
-  }, skip: _skip);
+  });
 }

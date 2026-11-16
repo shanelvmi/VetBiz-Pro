@@ -14,8 +14,6 @@ import 'package:vetbiz_pro/services/notification_feed.dart';
 
 import 'helpers/notification_harness.dart';
 
-const _skip = false;
-
 const _menu = ValueKey('notifications-page-more');
 
 // The cards' categories, in their order; "All" is no category.
@@ -86,7 +84,7 @@ void main() {
       expect(find.byKey(const ValueKey('notifications-summary')), findsNothing);
       expect(_cat(null), findsOneWidget);
       expect(_seg('unread'), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('on $where: All, Unread and the cards\' categories in order, each with its count', (tester) async {
       final c = await _feed(tester);
@@ -102,7 +100,7 @@ void main() {
         expect(x, greaterThan(lastX), reason: 'in the cards\' order');
         lastX = x;
       }
-    }, skip: _skip);
+    });
 
     testWidgets('on $where each segment filters as its card did; tapped again, All', (tester) async {
       final c = await _feed(tester);
@@ -130,7 +128,7 @@ void main() {
       await tester.tap(_cat(null));
       await tester.pumpAndSettle();
       expect(_rows(), all);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the selected segment says it is selected, not only a colour', (tester) async {
@@ -145,7 +143,7 @@ void main() {
     expect(tester.widget<Text>(label).style!.fontWeight, FontWeight.w600, reason: 'bold, besides the colour');
     expect(tester.getSemantics(_cat(NotificationCategory.stock)), isSemantics(isSelected: true, isButton: true, hasTapAction: true));
     handle.dispose();
-  }, skip: _skip);
+  });
 
   testWidgets('the header actions are in one overflow menu on a phone: Mark all read', (tester) async {
     final c = await _feed(tester);
@@ -160,7 +158,7 @@ void main() {
     await tester.tap(find.text('Mark all read'));
     await tester.pumpAndSettle();
     expect(c.hasUnread, isFalse);
-  }, skip: _skip);
+  });
 
   testWidgets('the menu\'s Remove read ones: the confirmation, then Undo', (tester) async {
     final c = await _feed(tester);
@@ -179,7 +177,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(c.items.map((i) => i.id).toSet(), before);
     await letToastGo(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('the menu\'s Select starts selection mode, as the button did', (tester) async {
     final c = await _feed(tester);
@@ -199,7 +197,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(c.items.map((i) => i.id), contains('n1'));
     await letToastGo(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('a tablet keeps the buttons and no menu', (tester) async {
     final c = await _feed(tester);
@@ -208,5 +206,5 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, 'Mark all read'), findsOneWidget);
     expect(find.widgetWithText(OutlinedButton, 'Remove read ones'), findsOneWidget);
     expect(find.widgetWithText(OutlinedButton, 'Select'), findsOneWidget);
-  }, skip: _skip);
+  });
 }

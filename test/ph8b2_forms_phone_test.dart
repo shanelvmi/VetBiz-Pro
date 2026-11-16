@@ -21,9 +21,6 @@ import 'helpers/ph8b_facilities.dart';
 import 'helpers/ph8b_team.dart';
 import 'helpers/phone_list_harness.dart';
 
-// True until the phone forms are built (P3).
-const _skip = false;
-
 final _en = ph8b2En;
 const _bar = ValueKey('formActionBar');
 const _primary = ValueKey('formActionBar-primary');
@@ -67,7 +64,7 @@ void main() {
       for (final f in [...tester.widgetList(find.byType(TextField)), ...tester.widgetList(find.byType(DropdownButtonFormField<String>))]) {
         expect(tester.getSize(find.byWidget(f)).height, greaterThanOrEqualTo(48));
       }
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('$name: the bar rises above a 300 px keyboard', (tester) async {
       await pumpPh8b2(tester);
@@ -78,7 +75,7 @@ void main() {
       expect(tester.getRect(find.byKey(_primary)).bottom, lessThanOrEqualTo(844 - 300));
       expect(tester.getRect(find.byKey(_primary)).height, greaterThanOrEqualTo(48));
       expect(tester.takeException(), isNull);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('$name: a clean form leaves without asking; Cancel too', (tester) async {
       await pumpPh8b2(tester);
@@ -90,7 +87,7 @@ void main() {
       await reopen(tester);
       await ph8b2Tap(tester, find.descendant(of: find.byKey(_bar), matching: find.text(_en.common_cancel)));
       expect(find.byKey(_bar), findsNothing);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('$name: with typed data, Back asks; Keep editing stays; Discard leaves', (tester) async {
       await pumpPh8b2(tester);
@@ -106,7 +103,7 @@ void main() {
       await ph8b2Settle(tester);
       await ph8b2Tap(tester, find.text(_en.phoneForm_discard));
       expect(find.byKey(_bar), findsNothing);
-    }, skip: _skip);
+    });
   }
 
   ph5TestWidgets('Add: today\'s fields in today\'s order; Other adds its words under the type', (tester) async {
@@ -118,7 +115,7 @@ void main() {
     await ph8b2Tap(tester, find.byKey(const ValueKey<String?>('facility-type-null')));
     await ph8b2Tap(tester, find.text('Other').last);
     expect(find.widgetWithText(TextField, _en.facilityType_detailLabel), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Edit: today\'s fields in today\'s order', (tester) async {
     await pumpPh8b2(tester);
@@ -139,7 +136,7 @@ void main() {
       _en.facilities_restockQuestion,
     ];
     expect(_order(tester, labels), labels);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Add: today\'s validators (name and type required; Other needs its words)', (tester) async {
     await pumpPh8b2(tester);
@@ -153,7 +150,7 @@ void main() {
     await ph8b2Tap(tester, find.byKey(_primary));
     expect(find.text(_en.facilityType_detailLabel), findsWidgets);
     expect(find.text(_en.facilities_nameAndTypeRequired), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('a logo too large is refused with today\'s message', (tester) async {
     final functions = Ph8bFunctions();
@@ -174,7 +171,7 @@ void main() {
     await ph8b2Tap(tester, find.byIcon(Icons.camera_alt));
     expect(find.text(_en.error_photoTooLarge), findsOneWidget);
     expect(find.text(_en.facilities_removeLogo), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Edit: Remove logo is offered for a facility with one, and goes once chosen', (tester) async {
     await pumpPh8b2(tester,
@@ -183,5 +180,5 @@ void main() {
     expect(find.text(_en.facilities_removeLogo), findsOneWidget);
     await ph8b2Tap(tester, find.text(_en.facilities_removeLogo));
     expect(find.text(_en.facilities_removeLogo), findsNothing);
-  }, skip: _skip);
+  });
 }

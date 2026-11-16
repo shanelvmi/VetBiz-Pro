@@ -17,9 +17,6 @@ import 'helpers/screen_size_matrix.dart';
 import 'ph8a_seams_test.dart' show Ph8Auth;
 import 'ph8a_subscription_wide_test.dart' show seedSubscription;
 
-// True until the phone layout exists.
-const _skip = false;
-
 Future<Ph5App> _pump(WidgetTester tester, {Size size = const Size(390, 844), MatrixLook look = MatrixLook.light,
     bool pending = false, CountingFirestore? firestore}) async {
   final app = await pumpPh5(tester, (fs) => SubscriptionScreen(firestore: fs, auth: Ph8Auth()),
@@ -39,7 +36,7 @@ void main() {
           await checkCase(tester, phone: true, where: where);
           await tester.scrollUntilVisible(find.byType(Card).last, 300, scrollable: find.byType(Scrollable).first);
           await checkCase(tester, phone: true, where: '$where, scrolled');
-        }, skip: _skip);
+        });
       }
       ph5TestWidgets('the history page at ${size.label} ${look.name}', (tester) async {
         await pumpPh5(
@@ -50,7 +47,7 @@ void main() {
             pushed: true,
             seed: seedSubscription);
         await checkCase(tester, phone: true, where: 'history ${size.label} ${look.name}');
-      }, skip: _skip);
+      });
     }
   }
 
@@ -60,7 +57,7 @@ void main() {
     await _pump(tester, size: const Size(1200, 800));
     expect(find.byType(FormActionBar), findsNothing);
     expect(find.text('Submit Payment for Review'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('Back with a reference typed asks first; a clean form leaves at once', (tester) async {
     await _pump(tester);
@@ -76,7 +73,7 @@ void main() {
     await tester.tap(find.text('Keep editing'));
     await ph5Settle(tester);
     expect(find.byType(SubscriptionScreen), findsOneWidget);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('a rebuild does not listen again (the recent claims are listened to once)', (tester) async {
     final fs = CountingFirestore();
@@ -87,5 +84,5 @@ void main() {
     await tester.tap(find.text('Yearly'));
     await ph5Settle(tester);
     expect(fs.listens, before, reason: 'choosing a plan rebuilds the screen, not its listeners');
-  }, skip: _skip);
+  });
 }

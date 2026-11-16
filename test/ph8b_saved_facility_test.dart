@@ -32,9 +32,6 @@ import 'helpers/ph8b_team.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/updates_harness.dart' show testPng;
 
-// True until the phone forms exist (P3).
-const _skipPhone = false;
-
 const _fixture = 'test/fixtures/ph8b_saved_facility.json';
 final _en = lookupAppLocalizations(const Locale('en'));
 final _cacheBust = RegExp(r'&cb=\d+');
@@ -158,7 +155,6 @@ void _expectSame(String name, Object? now) {
 void main() {
   for (final phone in [false, true]) {
     final where = phone ? 'phone' : 'wide';
-    final skip = phone && _skipPhone;
 
     for (final type in kFacilityTypes) {
       final logo = type == kFacilityTypes.first || type == kFacilityTypeOther;
@@ -172,7 +168,7 @@ void main() {
         if (type == kFacilityTypeOther) await _type(tester, _en.facilityType_detailLabel, 'Kituo cha mafunzo');
         await _save(tester, phone: phone, wideLabel: _en.common_add);
         _expectSame(name, await run.saved(tester, Ph8bFunctions.newFacilityId));
-      }, skip: skip);
+      });
     }
 
     ph5TestWidgets('$where: Edit, every field, the type Other and a new logo, saves as today', (tester) async {
@@ -194,7 +190,7 @@ void main() {
       await _choose(tester, find.widgetWithText(DropdownButtonFormField<String>, _en.facilities_restockQuestion), 'Monthly');
       await _save(tester, phone: phone, wideLabel: _en.common_save);
       _expectSame('edit-all', await run.saved(tester, testFacilityId));
-    }, skip: skip);
+    });
 
     ph5TestWidgets('$where: Edit, Remove logo, Other to Vet Clinic, a field emptied, saves as today', (tester) async {
       final run = await _pump(tester,
@@ -206,6 +202,6 @@ void main() {
       await _type(tester, _en.facilities_addressOptional, '');
       await _save(tester, phone: phone, wideLabel: _en.common_save);
       _expectSame('edit-remove-logo', await run.saved(tester, ph8bOtherId));
-    }, skip: skip);
+    });
   }
 }

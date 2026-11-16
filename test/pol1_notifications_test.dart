@@ -18,8 +18,6 @@ import 'package:vetbiz_pro/ui/polish/section_label.dart';
 
 import 'helpers/notification_harness.dart';
 
-const _skip = false;
-
 /// n1, n2, n4, n5 unread; n3, n6 read; n2 needs action (critical stock).
 Future<NotificationFeedController> _feed(WidgetTester tester) async {
   final fs = FakeFirebaseFirestore();
@@ -111,7 +109,7 @@ void main() {
           }
         }
         _noGradientOrShadow(tester);
-      }, skip: _skip);
+      });
     }
 
     testWidgets('$name: the category is plain grey text; only the item that needs action has the danger word', (tester) async {
@@ -138,7 +136,7 @@ void main() {
           fail('a tinted pill around "${(text.widget as Text).data}"');
         }
       }
-    }, skip: _skip);
+    });
 
     testWidgets('$name: "New" then "Earlier"; marking all read leaves only Earlier and no dot', (tester) async {
       final c = await _feed(tester);
@@ -157,7 +155,7 @@ void main() {
       expect(find.byWidgetPredicate((w) => w.key is ValueKey<String> && (w.key as ValueKey<String>).value.startsWith('notifications-unreadDot-')),
           findsNothing);
       expect(tester.widget<Text>(find.byKey(const ValueKey('notifications-filter-unread-count'))).data, '0');
-    }, skip: _skip);
+    });
 
     testWidgets('$name at text scale 1.3 with reduced motion: no overflow, the dot and the words stay', (tester) async {
       tester.platformDispatcher.textScaleFactorTestValue = 1.3;
@@ -170,7 +168,7 @@ void main() {
       expect(_dot('n1'), findsOneWidget);
       expect(find.byKey(const ValueKey('notifications-needsAction-n2')), findsOneWidget);
       expect(find.byKey(const ValueKey('notifications-filter-unread')), findsOneWidget);
-    }, skip: _skip);
+    });
   }
 
   for (final (name, width, height) in _sizes.skip(1)) {
@@ -189,7 +187,7 @@ void main() {
       for (final i in c.items) {
         expect(find.byKey(ValueKey('notification-more-${i.id}')), findsOneWidget, reason: 'each row keeps its menu');
       }
-    }, skip: _skip);
+    });
   }
 
   for (final locale in ['en', 'sw']) {
@@ -218,7 +216,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.widget<Text>(find.byKey(const ValueKey('notifications-filter-unread-count'))).data,
           '${c.items.where((i) => !i.isRead).length}');
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the status filter still compares its stored values: Read shows only the read rows', (tester) async {
@@ -235,5 +233,5 @@ void main() {
         .toSet();
     expect(shown, {for (final i in c.items) if (i.isRead) i.id});
     expect(tester.widget<Text>(find.byKey(const ValueKey('notifications-filter-all-count'))).data, '${c.items.length}');
-  }, skip: _skip);
+  });
 }

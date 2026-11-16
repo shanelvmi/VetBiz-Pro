@@ -23,9 +23,6 @@ import 'helpers/ph8b_team.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// Was true until Team Members had its phone list.
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 const _everyone = ['user1', ph8bCoAdminId, 'a1', 'a2', 'a3', 'a4', 'x1'];
 
@@ -117,7 +114,7 @@ void main() {
     // Today's cards, buttons in rows and pager are gone on a phone.
     expect(find.byType(OutlinedButton), findsNothing);
     expect(find.text(_en.team_acrossFacilities), findsNothing);
-  }, skip: _skip);
+  });
 
   ph5TestWidgets('rows: a 40 px avatar, the name and role chip, the email or phone and the status chip', (tester) async {
     await _pump(tester);
@@ -133,7 +130,7 @@ void main() {
     // Not a team member, never listed.
     expect(_row('x1'), findsNothing);
     expect(find.descendant(of: find.byType(RecordTile), matching: find.byType(ButtonStyleButton)), findsNothing);
-  }, skip: _skip);
+  });
 
   group('the chips, the facility filter and search equal the tablet\'s on the same data', () {
     final cases = <(String, Future<void> Function(WidgetTester) phone, Future<void> Function(WidgetTester) table)>[
@@ -173,7 +170,7 @@ void main() {
         await _pump(tester);
         await phone(tester);
         expect(_phoneIds(), expected);
-      }, skip: _skip);
+      });
     }
   });
 
@@ -191,7 +188,7 @@ void main() {
           await tester.pageBack();
           await _settle(tester);
         }
-      }, skip: _skip);
+      });
     }
 
     ph5TestWidgets('a Co-admin cannot deactivate another Co-admin; the owner can', (tester) async {
@@ -204,7 +201,7 @@ void main() {
       await _pump(tester);
       await _openDetails(tester, ph8bCoAdminId);
       expect(_buttons(_page), {_en.team_deactivate});
-    }, skip: _skip);
+    });
   });
 
   group('the actions do what they do today, through sheets on a phone', () {
@@ -218,7 +215,7 @@ void main() {
       await _openDetails(tester, 'a3');
       await _tap(tester, find.descendant(of: _page, matching: find.text(_en.team_reactivate)));
       expect(server.calls, ['status a1 approve', 'status a3 reactivate']);
-    }, skip: _skip);
+    });
 
     for (final failed in [false, true]) {
       ph5TestWidgets('Deactivate: ${failed ? 'the C2 warning when the sign-in could not be switched off' : 'done'}',
@@ -230,7 +227,7 @@ void main() {
         expect(server.calls, ['status a2 deactivate']);
         expect(find.text(_en.team_signInSwitchFailed), failed ? findsOneWidget : findsNothing);
         expect(find.text(_en.team_actionDone('Neema Active', 'deactivated')), failed ? findsNothing : findsOneWidget);
-      }, skip: _skip);
+      });
     }
 
     ph5TestWidgets('Reject asks in a sheet, then goes to the server', (tester) async {
@@ -243,7 +240,7 @@ void main() {
       expect(find.text(_en.team_rejectTitle('Juma Pending')), findsOneWidget);
       await _tap(tester, find.descendant(of: find.byType(BottomSheet), matching: find.text(_en.team_reject)));
       expect(server.calls, ['status a1 reject']);
-    }, skip: _skip);
+    });
 
     for (final failed in [false, true]) {
       ph5TestWidgets('Remove from Facility asks in a sheet${failed ? ', then the C2 warning' : ''}', (tester) async {
@@ -257,7 +254,7 @@ void main() {
         expect(server.calls, ['remove a3 $testFacilityId']);
         expect(find.text(_en.team_signInSwitchFailed), failed ? findsOneWidget : findsNothing);
         expect(find.text(_en.team_removed), failed ? findsNothing : findsOneWidget);
-      }, skip: _skip);
+      });
     }
 
     ph5TestWidgets('Reassign picks the other facility in a sheet', (tester) async {
@@ -269,7 +266,7 @@ void main() {
       expect(find.text(_en.team_moveTitle('Neema Active')), findsOneWidget);
       await _tap(tester, find.descendant(of: find.byType(BottomSheet), matching: find.text('Mifugo Clinic')));
       expect(server.calls, ['reassign a2 $ph8bSecondFacilityId']);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('the owner deactivates a Co-admin after the 340 px question, now a sheet: the same write and log',
         (tester) async {
@@ -286,7 +283,7 @@ void main() {
       final log = (await tester.runAsync(() => facilityCollection(app.fs, Collections.activityLogs).get()))!.docs;
       expect(log.map((d) => d.data()['description']), ['Deactivated co-admin Zawadi Co-admin']);
       expect(log.single.data()['targetUserId'], ph8bCoAdminId);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('Invite with two facilities asks which one in a sheet; a second tap opens nothing more', (tester) async {
       await _pump(tester);
@@ -298,14 +295,14 @@ void main() {
       expect(find.text(_en.team_inviteTo), findsOneWidget);
       expect(find.descendant(of: find.byType(BottomSheet), matching: find.text('Mifugo Clinic')), findsOneWidget);
       expect(find.descendant(of: find.byType(BottomSheet), matching: find.text('Kilimo Agrovet')), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 
   group('states', () {
     ph5TestWidgets('six skeleton rows until the team has loaded', (tester) async {
       await _pump(tester, settle: false);
       expect(find.byKey(const ValueKey('phoneList-skeleton')), findsOneWidget);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('just you: your row, then today\'s hint with Invite', (tester) async {
       await _pump(tester, seed: (fs) async {
@@ -316,12 +313,12 @@ void main() {
       });
       expect(_phoneIds(), [testUserId]);
       expect(find.text(_en.team_noAssistants), findsOneWidget);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('no facilities: today\'s sentence', (tester) async {
       await _pump(tester, seed: (fs) async {});
       expect(find.text(_en.team_noFacilities), findsOneWidget);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('no matches: today\'s sentence and Reset filters', (tester) async {
       await _pump(tester);
@@ -331,7 +328,7 @@ void main() {
       expect(find.text(_en.team_noMatches), findsOneWidget);
       await _tap(tester, find.text(_en.common_resetFilters));
       expect(_phoneIds(), isNotEmpty);
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('pull to refresh reads the facilities again (the old Refresh button)', (tester) async {
       final app = await _pump(tester);
@@ -345,7 +342,7 @@ void main() {
       await tester.fling(find.byKey(const ValueKey('phoneList-scroll')), const Offset(0, 400), 1000);
       await _settle(tester);
       expect(find.descendant(of: find.byType(RecordTile), matching: find.text('Halima New')), findsOneWidget);
-    }, skip: _skip);
+    });
   });
 
   for (final size in ph5PhoneSizes) {
@@ -360,7 +357,7 @@ void main() {
         final reject = lookupAppLocalizations(Locale(look == MatrixLook.kiswahili ? 'sw' : 'en')).team_reject;
         await _tap(tester, find.descendant(of: _page, matching: find.text(reject)));
         await checkCase(tester, phone: true, where: '$where sheet');
-      }, skip: _skip);
+      });
     }
   }
 }
