@@ -9,8 +9,6 @@ import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/utils/release_errors.dart';
 import 'package:vetbiz_pro/widgets/friendly_error_card.dart';
 
-const _skip = false;
-
 const _message = 'Something went wrong on this screen. Go back and try again.';
 
 class _Broken extends StatelessWidget {
@@ -47,7 +45,7 @@ void main() {
     expect(find.text('above'), findsOneWidget);
     expect(find.text('below'), findsOneWidget);
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 
   testWidgets('in a ListView and in a Row: sized to itself, nothing stretched', (tester) async {
     await _pumpReleased(
@@ -58,7 +56,7 @@ void main() {
     expect(find.text('last'), findsOneWidget);
     expect(tester.getSize(find.byType(FriendlyErrorCard).first).height, lessThan(200));
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 
   testWidgets('as a Scaffold body: the card, centred, no stack trace', (tester) async {
     await _pumpReleased(tester, const Scaffold(body: _Broken()));
@@ -66,13 +64,13 @@ void main() {
     expect(find.textContaining('broken on purpose'), findsNothing);
     expect(find.textContaining('StateError'), findsNothing);
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 
   testWidgets('the card draws even with no theme or localisations above it', (tester) async {
     await tester.pumpWidget(const FriendlyErrorCard());
     expect(find.text(_message), findsOneWidget);
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 
   test('a debug build keeps Flutter\'s own error screen and report', () {
     final builder = ErrorWidget.builder;
@@ -80,7 +78,7 @@ void main() {
     installReleaseErrorHandling(release: false);
     expect(ErrorWidget.builder, same(builder));
     expect(FlutterError.onError, same(onError));
-  }, skip: _skip);
+  });
 
   test('the console line: one line with the exception, library, widget and three frames', () {
     final stack = StackTrace.fromString('#0 first (a.dart:1)\n#1 second (b.dart:2)\n#2 third (c.dart:3)\n#3 fourth (d.dart:4)');
@@ -95,5 +93,5 @@ void main() {
       expect(line, contains(part), reason: part);
     }
     expect(line, isNot(contains('fourth')));
-  }, skip: _skip);
+  });
 }

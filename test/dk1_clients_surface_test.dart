@@ -13,8 +13,6 @@ import 'helpers/ph5b_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 final _clients = [
   Ph5Client('c1', 'Amina Juma', ph5When(0, minutes: 5), types: ['Farmer', 'Vet'], phone: '0712111111'),
   Ph5Client('c2', 'Baraka Mushi', ph5When(0, minutes: 30), types: ['Retailer'], status: 'Inactive'),
@@ -45,7 +43,7 @@ void main() {
       await ph5Settle(tester);
       expect(find.byType(AlertDialog), findsOneWidget);
       expectNoBadSurfaces(tester, dark: dark, where: 'Delete client confirmation');
-    }, skip: _skip);
+    });
 
     ph5TestWidgets('${look.name} wide: the side panel', (tester) async {
       await _pump(tester, const Size(1200, 800), look);
@@ -53,6 +51,6 @@ void main() {
       await ph5Settle(tester);
       expect(find.text('Client Details'), findsOneWidget);
       expectNoBadSurfaces(tester, dark: dark, where: 'Client details panel');
-    }, skip: _skip);
+    });
   }
 }

@@ -39,8 +39,6 @@ import 'package:vetbiz_pro/widgets/signed_in_home_host.dart';
 
 import 'helpers/fake_firestore.dart';
 
-const _skip = false;
-
 const _dashboard = 'DASHBOARD (stand-in)';
 const _login = 'LOGIN (stand-in)';
 
@@ -200,13 +198,13 @@ void main() {
       await _policy(web: true, marker: marker, user: true, calls: calls).applyAtStart();
       expect(calls.where((c) => c == 'signOut'), hasLength(1));
       expect(marker.isSet, isTrue);
-    }, skip: _skip);
+    });
 
     test('web, marker present, a user restored (a reload): no sign-out', () async {
       final calls = <String>[];
       await _policy(web: true, marker: _Marker(true), user: true, calls: calls).applyAtStart();
       expect(calls, isNot(contains('signOut')));
-    }, skip: _skip);
+    });
 
     test('web, marker missing, nobody restored: nothing happens, the marker is written', () async {
       final calls = <String>[];
@@ -214,13 +212,13 @@ void main() {
       await _policy(web: true, marker: marker, user: false, calls: calls).applyAtStart();
       expect(calls, isNot(contains('signOut')));
       expect(marker.writes, 1);
-    }, skip: _skip);
+    });
 
     test('web: SESSION persistence is set first, before the restored user is looked at', () async {
       final calls = <String>[];
       await _policy(web: true, marker: _Marker(false), user: true, calls: calls).applyAtStart();
       expect(calls, ['persistence', 'user?', 'signOut']);
-    }, skip: _skip);
+    });
 
     test('web: persistence failing still signs a leftover user out', () async {
       final calls = <String>[];
@@ -233,7 +231,7 @@ void main() {
       );
       await policy.applyAtStart();
       expect(calls, ['signOut']);
-    }, skip: _skip);
+    });
 
     test('not web: every cold start signs out (in-memory flag), the same process does not again', () async {
       final calls = <String>[];
@@ -245,7 +243,7 @@ void main() {
       MemorySessionMarker.resetForTest(); // the next cold start
       await _policy(web: false, marker: MemorySessionMarker(), user: true, calls: calls).applyAtStart();
       expect(calls, contains('signOut'));
-    }, skip: _skip);
+    });
 
     test('main.dart applies the policy before runApp, so before AppEntryPoint listens; SESSION on web', () {
       final main = File('lib/main.dart').readAsStringSync();
@@ -256,7 +254,7 @@ void main() {
       final policy = File('lib/services/session_policy.dart').readAsStringSync();
       expect(policy, contains('setPersistence(Persistence.SESSION)'));
       expect(policy, contains('forceLogoutAndShowLogin'), reason: 'the one sign-out path, stack and providers cleaned');
-    }, skip: _skip);
+    });
   });
 
   testWidgets('a leftover user: the login shows; sign in, sign out, sign in again: one route; a reload keeps it',
@@ -294,13 +292,13 @@ void main() {
 
     await start(); // a reload in the same tab: the marker is there
     expect(auth.signOuts, 2, reason: 'only the one sign-out pressed above');
-  }, skip: _skip);
+  });
 
   group('Remember my email', () {
     test('the checkbox says what it does', () {
       expect(en.login_rememberMe, 'Remember my email');
       expect(sw.login_rememberMe, 'Kumbuka barua pepe yangu');
-    }, skip: _skip);
+    });
 
     testWidgets('it stores the email only: no password, no token', (tester) async {
       tester.view.physicalSize = const Size(1400, 1000);
@@ -332,6 +330,6 @@ void main() {
       }
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(minutes: 1));
-    }, skip: _skip);
+    });
   });
 }

@@ -26,8 +26,6 @@ import 'package:vetbiz_pro/utils/facility_display.dart';
 // FN1 (docs/design/facility_name_display.md, owner's Option A): the facility
 // name is shown exactly as typed on every receipt, PDF, report, header and
 // dropdown, never joined with the type.
-const _skip = false;
-
 const _name = 'Ukuli Animal Care';
 
 // The same facility with two types: the words each type would have added.
@@ -131,7 +129,7 @@ void main() {
     expect(FacilityDisplay.name(null), '');
     expect(FacilityDisplay.name('   ', fallback: 'Facility'), 'Facility');
     expect(FacilityDisplay.name(null, fallback: 'Facility'), 'Facility');
-  }, skip: _skip);
+  });
 
   for (final entry in _cases.entries) {
     final f = entry.value.facility;
@@ -140,19 +138,19 @@ void main() {
     group('type ${entry.key}: exactly "$_name"', () {
       test('the dashboard header', () {
         expect(DashboardScreen.headerFacilityName(f), _name);
-      }, skip: _skip);
+      });
 
       test('the Team Members dropdown entry', () {
         expect(ManageAssistantsScreen.facilityLabel(f), _name);
-      }, skip: _skip);
+      });
 
       test('the sale A4 PDF', () async {
         _expectNameOnly(_pdfText(await ReceiptPdfService.saleBytesFor(_sale, f)), typeWords, 'sale A4');
-      }, skip: _skip);
+      });
 
       test('the service A4 PDF', () async {
         _expectNameOnly(_pdfText(await ReceiptPdfService.serviceBytesFor(_service, f)), typeWords, 'service A4');
-      }, skip: _skip);
+      });
 
       test('the daily report PDF header and Facility row', () async {
         final name = DailyReportPdfService.facilityNameOf(f);
@@ -166,21 +164,21 @@ void main() {
         );
         final doc = await DailyReportPdfService.build(report, facilityName: name);
         _expectNameOnly(_pdfText(await doc.save()), typeWords, 'daily report');
-      }, skip: _skip);
+      });
 
       testWidgets('the sale receipt (thermal preview and details panel)', (tester) async {
         final provider = await tester.runAsync(() => _provider(f));
         await _pumpReceipt(tester, provider!, ReceiptPreviewScreen(sale: _sale));
         _expectNameOnly(_screenText(tester), typeWords, 'sale receipt');
         expect(find.text(_name), findsWidgets);
-      }, skip: _skip);
+      });
 
       testWidgets('the service receipt (thermal preview and details panel)', (tester) async {
         final provider = await tester.runAsync(() => _provider(f));
         await _pumpReceipt(tester, provider!, ServiceReceiptPreviewScreen(service: _service));
         _expectNameOnly(_screenText(tester), typeWords, 'service receipt');
         expect(find.text(_name), findsWidgets);
-      }, skip: _skip);
+      });
     });
   }
 
@@ -200,5 +198,5 @@ void main() {
       }
     }
     expect(found, isEmpty);
-  }, skip: _skip);
+  });
 }

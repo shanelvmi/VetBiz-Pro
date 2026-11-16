@@ -17,8 +17,6 @@ import 'helpers/login_harness.dart';
 // both cards' sentences drawn by AuthPanelHeading on one horizontal line;
 // the circle icons crisp in Dark (at least 4.5:1 on the circle's effective
 // fill, the glow weaker than Light's), Light exactly as before.
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));
 
@@ -61,7 +59,7 @@ void main() {
       expect(_rect(tester, find.byKey(UpdatesCard.surfaceKey)).height, closeTo(_rect(tester, find.byKey(LoginScreen.loginCardKey)).height, 1));
       expect(_rect(tester, find.byKey(UpdatesCard.welcomeHeadingKey)).top, closeTo(_rect(tester, row).top, 1));
       expect(tester.takeException(), isNull);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('Kiswahili, 1200: the heading and its subtext, on the welcome sentence\'s line', (tester) async {
@@ -70,14 +68,14 @@ void main() {
     final sub = find.text('Tumia barua pepe na nenosiri lako.');
     expect(_rect(tester, sub).top, closeTo(_rect(tester, find.text(_sw.updates_welcomeLine)).top, 1));
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 
   testWidgets('390: the heading and its subtext on the phone too', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1), width: 390, height: 2400);
     expect(find.descendant(of: find.byKey(LoginScreen.welcomeBackRowKey), matching: find.text(_title)), findsOneWidget);
     expect(find.descendant(of: find.byKey(LoginScreen.welcomeBackRowKey), matching: find.text(_subtitle)), findsOneWidget);
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 
   for (final theme in AppColorTheme.all) {
     for (final brightness in Brightness.values) {
@@ -90,7 +88,7 @@ void main() {
           // Light does not change by one value.
           if (brightness == Brightness.light) expect(_icon(tester, key), c.primary);
         }
-      }, skip: _skip);
+      });
     }
   }
 
@@ -108,6 +106,6 @@ void main() {
         expect(dark.single.blurRadius, lessThan(light.single.blurRadius));
         expect(dark.single.color.a, lessThan(light.single.color.a));
       }
-    }, skip: _skip);
+    });
   }
 }

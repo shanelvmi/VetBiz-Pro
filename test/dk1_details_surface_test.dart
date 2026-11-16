@@ -20,8 +20,6 @@ import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-const _skip = false;
-
 Future<void> _seed(dynamic fs) async {
   await seedProduct(fs, id: 'p1', legacyQty: 10);
   await ph5SeedSales(fs, [Ph5Sale('s1', ph5When(0, minutes: 5), client: 'Amina Juma', amount: 45000, paid: 20000, receipt: 1)]);
@@ -61,7 +59,7 @@ void main() {
           // it); only the colours matter here.
           while (tester.takeException() != null) {}
           expectNoBadSurfaces(tester, dark: dark, where: '${e.key} details panel');
-        }, skip: _skip);
+        });
       }
 
       if (delete) {
@@ -73,7 +71,7 @@ void main() {
           await ph5Settle(tester);
           expect(find.byType(AlertDialog), findsOneWidget);
           expectNoBadSurfaces(tester, dark: dark, where: '${e.key} delete confirmation');
-        }, skip: _skip);
+        });
       }
     }
 
@@ -86,6 +84,6 @@ void main() {
       await ph5Settle(tester);
       expect(find.text('Confirm Delete'), findsOneWidget);
       expectNoBadSurfaces(tester, dark: dark, where: 'Product delete confirmation');
-    }, skip: _skip);
+    });
   }
 }

@@ -33,8 +33,6 @@ import 'helpers/register_harness.dart';
 // row), each step has its round icon above the centred heading, the fields'
 // radius is 16, Sign in is under every step, and there is no footer
 // (test/ui8_phone_register_test.dart).
-const _skip = false;
-
 const _page = ValueKey<String>('register-phone-page');
 const _brand = ValueKey<String>('register-phone-brand');
 
@@ -135,7 +133,7 @@ void main() {
         expect(find.byType(WizardNavBar), findsOneWidget);
         expect(find.byType(AuthFooter), findsNothing);
         await finishRegister(tester);
-      }, skip: _skip);
+      });
     }
   }
 
@@ -144,7 +142,7 @@ void main() {
     expect(_rect(tester, find.byType(WizardStepIntro)).width, lessThanOrEqualTo(420 - 48));
     expect(find.byKey(AuthCard.surfaceKey), findsNothing);
     await finishRegister(tester);
-  }, skip: _skip);
+  });
 
   for (final step in [1, 2, 3, 4, 5]) {
     // UI8: the step count is in the strip at the top (left, with the controls
@@ -163,7 +161,7 @@ void main() {
         expect(tester.widget<Text>(t.first).textAlign, TextAlign.center, reason: '${tester.widget<Text>(t.first).data}');
       }
       await finishRegister(tester);
-    }, skip: _skip);
+    });
   }
 
   for (final size in const [Size(390, 844), Size(412, 915)]) {
@@ -189,7 +187,7 @@ void main() {
         expect(shown(find.text(_en.products_continue).last), isTrue);
         expect(shown(find.byType(WizardNavBar)), isTrue);
         await finishRegister(tester);
-      }, skip: _skip);
+      });
     }
   }
 
@@ -215,7 +213,7 @@ void main() {
         expect((e.renderObject! as RenderBox).size.height, 52);
       }
       await finishRegister(tester);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the page, the fields and the texts: contrast in all four themes, Light and Dark', (tester) async {
@@ -254,5 +252,5 @@ void main() {
         }
       }
     }
-  }, skip: _skip);
+  });
 }

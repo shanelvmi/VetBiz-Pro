@@ -21,8 +21,6 @@ import 'ph8a_settings_wide_test.dart' show seedFacility;
 // the build was given (tool/serve_web.ps1 passes the local date and time),
 // dev without one; the sign-in footer's bottom row and Settings show it
 // after the version. The screens' tests were written before the change.
-const _skipShown = false;
-
 const _stamp = '2026-11-09 14:05';
 
 void main() {
@@ -75,7 +73,7 @@ void main() {
       AppInfo.buildStampOverride = null;
       await pumpFooter(tester, const Locale('en'), size);
       expect(find.text('${AppInfo.versionLabel} (build dev)'), findsOneWidget);
-    }, skip: _skipShown);
+    });
   }
 
   testWidgets('the footer in Kiswahili: the version and the stamp', (tester) async {
@@ -84,7 +82,7 @@ void main() {
     final shown = find.textContaining(_stamp);
     expect(shown, findsOneWidget);
     expect(tester.widget<Text>(shown).data, startsWith(AppInfo.versionLabel));
-  }, skip: _skipShown);
+  });
 
   for (final size in const [Size(390, 844), Size(1200, 800)]) {
     final at = '${size.width.toInt()}';
@@ -105,7 +103,7 @@ void main() {
       await tester.tap(row);
       await tester.pumpAndSettle();
       expect(find.text('${AppInfo.version} (build $_stamp)'), findsOneWidget);
-    }, skip: _skipShown);
+    });
   }
 
   testWidgets('390 Kiswahili: Settings, no overflow with the stamp', (tester) async {
@@ -115,5 +113,5 @@ void main() {
     await tester.dragUntilVisible(find.textContaining(_stamp), find.byType(ListView).first, const Offset(0, -200));
     expect(find.textContaining(_stamp), findsOneWidget);
     expect(tester.takeException(), isNull);
-  }, skip: _skipShown);
+  });
 }

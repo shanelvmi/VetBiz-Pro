@@ -21,8 +21,6 @@ import 'helpers/real_font.dart';
 // not a paw (the right card keeps its lock); the footer's brand line may take
 // three lines on wide windows (four on phones) so the Kiswahili is never cut,
 // measured in a real font (Roboto), while the English stays at two there.
-const _skip = false;
-
 const _welcome = 'Track our latest news and notices.';
 const _welcomeSw = 'Fuatilia habari na taarifa zetu za hivi punde.';
 
@@ -34,7 +32,7 @@ void main() {
       await pumpLogin(tester, await dbWithUpdates(1), locale: locale);
       expect(find.descendant(of: find.byKey(UpdatesCard.surfaceKey), matching: find.text(text)), findsOneWidget);
       expect(text, isNot(lookupAppLocalizations(locale).authFooter_description));
-    }, skip: _skip);
+    });
   }
 
   for (final brightness in Brightness.values) {
@@ -43,13 +41,13 @@ void main() {
       expect(find.descendant(of: find.byKey(UpdatesCard.welcomeHeadingKey), matching: find.byIcon(Icons.vaccines_outlined)), findsOneWidget);
       expect(find.byIcon(Icons.pets_outlined), findsNothing);
       expect(find.descendant(of: find.byKey(LoginScreen.welcomeBackRowKey), matching: find.byIcon(Icons.lock_outline)), findsOneWidget);
-    }, skip: _skip);
+    });
   }
 
   test('the brand line may take three lines on a wide window, four on phones', () {
     expect(AuthFooterMetrics.descriptionMaxLinesWide, 3);
     expect(AuthFooterMetrics.descriptionMaxLines, 4);
-  }, skip: _skip);
+  });
 
   for (final locale in const [Locale('en'), Locale('sw')]) {
     for (final width in [1024.0, 1200.0, 768.0, 390.0, 360.0]) {
@@ -80,7 +78,7 @@ void main() {
           expect(tester.takeException(), isNull);
           // ignore: avoid_print
           print('AN5 footer ${locale.languageCode} $width ${brightness.name}: ${tester.getSize(find.byKey(AuthFooter.bandKey)).height} px, $lines lines');
-        }, skip: _skip);
+        });
       }
     }
   }

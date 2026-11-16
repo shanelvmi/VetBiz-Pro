@@ -22,10 +22,6 @@ import 'helpers/login_harness.dart';
 // nothing to show the login card stands centred alone (AN6: no longer; the
 // card shows a calm panel); no grey panel behind the login card; a softer
 // page frame shadow.
-const _skip = false;
-// Unskipped with its commit.
-const _skipShadow = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 
 Rect _rect(WidgetTester tester, Key key) => tester.getRect(find.byKey(key));
@@ -52,7 +48,7 @@ void main() {
       expect(frame.left, greaterThan(left.left));
       expect(frame.right, lessThan(left.right));
       expect(left.bottom - dots.bottom, lessThan(40), reason: 'pinned at the bottom');
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the left card has the login card\'s surface, radius, border and shadow, but no accent line', (tester) async {
@@ -67,7 +63,7 @@ void main() {
         .widgetList<DecoratedBox>(find.descendant(of: find.byKey(UpdatesCard.surfaceKey), matching: find.byType(DecoratedBox)))
         .where((d) => d.decoration is BoxDecoration && (d.decoration as BoxDecoration).gradient != null);
     expect(gradients, isEmpty, reason: 'the login card keeps the only accent line');
-  }, skip: _skip);
+  });
 
   // UI8: phones show no Updates on the sign-in page (ui8_phone_login_test).
   for (final width in [768.0]) {
@@ -80,7 +76,7 @@ void main() {
       expect(_rect(tester, updates).top, greaterThan(_rect(tester, LoginScreen.loginCardKey).bottom));
       expect(find.text(_en.updates_label), findsOneWidget);
       expect(find.byType(UpdatesDots), findsOneWidget);
-    }, skip: _skip);
+    });
   }
 
   // UI8: phones show no Updates on the sign-in page (ui8_phone_login_test).
@@ -100,7 +96,7 @@ void main() {
       } else {
         expect(_rect(tester, updates).top, greaterThan(_rect(tester, LoginScreen.loginCardKey).bottom));
       }
-    }, skip: _skip);
+    });
   }
 
 
@@ -110,7 +106,7 @@ void main() {
       await pumpLogin(tester, await dbWithUpdates(3), width: width, height: 2400);
       final size = _rect(tester, UpdatesSlides.frameKey).size;
       expect(size.width / size.height, closeTo(AppLimits.posterAspectRatio, 0.01));
-    }, skip: _skip);
+    });
   }
 
   testWidgets('no grey panel: no ancestor of the login card is tinted surfaceMuted or divider, or a gradient', (tester) async {
@@ -129,7 +125,7 @@ void main() {
         return w.key != AuthCard.surfaceKey;
       });
     }
-  }, skip: _skip);
+  });
 
   testWidgets('the page frame\'s shadow is about half as strong (blur 20, a fifth of the shadow role)', (tester) async {
     await pumpLogin(tester, FakeFirebaseFirestore());
@@ -137,7 +133,7 @@ void main() {
     final shadow = (tester.widget<Container>(find.byKey(AuthCard.surfaceKey)).decoration! as BoxDecoration).boxShadow!.single;
     expect(shadow.blurRadius, lessThanOrEqualTo(20));
     expect(shadow.color.a, closeTo(c.shadow.a * 0.2, 0.01));
-  }, skip: _skipShadow);
+  });
 
   // AN6: no last-known state needed any more (UpdatesLastKnown retired):
   // the whole left card is there from the first frame whatever is known.
@@ -152,7 +148,7 @@ void main() {
     expect(find.byType(UpdatesSlides), findsOneWidget);
     expect(_rect(tester, UpdatesCard.surfaceKey), card);
     expect(_rect(tester, LoginScreen.loginCardKey), login);
-  }, skip: _skip);
+  });
 
   testWidgets('no overflow at 360, 390, 768, 1024 and 1200: Light, Dark, Kiswahili; none, one, several; a very long welcome line', (tester) async {
     final dbs = [for (final n in [0, 1, 3]) await dbWithUpdates(n)];
@@ -173,5 +169,5 @@ void main() {
         expect(_rect(tester, UpdatesCard.surfaceKey).height, closeTo(_rect(tester, LoginScreen.loginCardKey).height, 1));
       }
     }
-  }, skip: _skip);
+  });
 }

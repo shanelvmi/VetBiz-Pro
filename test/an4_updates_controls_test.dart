@@ -20,18 +20,6 @@ import 'package:vetbiz_pro/widgets/updates_parts.dart';
 import 'helpers/login_harness.dart';
 import 'helpers/updates_harness.dart';
 
-// AN4, written before the change: a larger Updates label (16 px on phones,
-// 18 px on wide windows, semibold) with its chips scaled to match; slide
-// controls that read at 3:1 or more on the card in every theme, Light and
-// Dark, with larger dots (the selected one larger and another colour); the
-// footer's brand column without the description sentence.
-// AN6 (owner): no arrows; the selected dot is a pill whose fill is the
-// other colour; the dots' tap areas are 24 x 48 px.
-// Unskipped with their commits.
-const _skipWideLabel = false;
-// The second AN5 correction: unskipped with its footer commit.
-const _skipFooter = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 
 // The sentence the footer's brand column used to show (now the welcome note's).
@@ -55,7 +43,7 @@ void main() {
         final r = tester.getRect(find.ancestor(of: find.text(chip), matching: find.byType(UpdateChip)));
         expect(r.top >= row.top - 0.5 && r.bottom <= row.bottom + 0.5, isTrue, reason: '$chip inside the row');
       }
-    }, skip: width > 1000 ? _skipWideLabel : false);
+    });
   }
 
   Future<void> pumpCard(WidgetTester tester, List<Announcement> slides, AppColorTheme theme, Brightness brightness) async {
@@ -161,6 +149,6 @@ void main() {
       } else {
         expect(rest, lessThan(before));
       }
-    }, skip: _skipFooter);
+    });
   }
 }

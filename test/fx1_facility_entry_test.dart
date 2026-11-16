@@ -5,8 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/data/fields.dart';
 import 'package:vetbiz_pro/models/facility_entry.dart';
 
-const _skip = false;
-
 void main() {
   test('safeString: a String stays, a number or a bool becomes text, anything else null', () {
     expect(FacilityEntry.safeString('Kilimo'), 'Kilimo');
@@ -16,19 +14,19 @@ void main() {
     expect(FacilityEntry.safeString(null), isNull);
     expect(FacilityEntry.safeString({'a': 1}), isNull);
     expect(FacilityEntry.safeString(['a']), isNull);
-  }, skip: _skip);
+  });
 
   test('fromObject: null for anything that is not a map', () {
     for (final value in [null, 'f1', 12, ['f1'], true]) {
       expect(FacilityEntry.fromObject(value), isNull, reason: '$value');
     }
-  }, skip: _skip);
+  });
 
   test('fromObject: a Map<dynamic, dynamic> as the web gives it, with stored keys', () {
     final Map<dynamic, dynamic> raw = {'facilityId': 'f1', 'name': 'Kilimo Agrovet', 'type': 'Agrovet', 'typeDetail': null};
     final entry = FacilityEntry.fromObject(raw)!;
     expect((entry.id, entry.name, entry.type, entry.typeDetail), ('f1', 'Kilimo Agrovet', 'Agrovet', null));
-  }, skip: _skip);
+  });
 
   test('fromObject: odd values become safe text or null, never throw', () {
     final entry = FacilityEntry.fromObject(<dynamic, dynamic>{
@@ -39,7 +37,7 @@ void main() {
       5: 'a non-string key',
     })!;
     expect((entry.id, entry.name, entry.type, entry.typeDetail), ('7', null, null, '3'));
-  }, skip: _skip);
+  });
 
   test('fromObject: the old in-app map keys when the stored ones are missing', () {
     final entry = FacilityEntry.fromObject({
@@ -49,7 +47,7 @@ void main() {
       'facilityTypeDetail': 'Mobile',
     })!;
     expect((entry.id, entry.name, entry.type, entry.typeDetail), ('f2', 'Mifugo Clinic', 'Vet Clinic', 'Mobile'));
-  }, skip: _skip);
+  });
 
   test('listFrom: drops non-maps and items without an id; not a list gives none', () {
     final list = FacilityEntry.listFrom(<dynamic>[
@@ -64,7 +62,7 @@ void main() {
     expect(FacilityEntry.listFrom(null), isEmpty);
     expect(FacilityEntry.listFrom({'facilityId': 'f1'}), isEmpty);
     expect(FacilityEntry.listFrom(<dynamic>[]), isEmpty);
-  }, skip: _skip);
+  });
 
   test('toMap: the old map, with the empty name and type main.dart always gave', () {
     expect(const FacilityEntry(id: 'f1').toMap(), {
@@ -79,5 +77,5 @@ void main() {
       'facilityType': 'Agrovet',
       'facilityTypeDetail': 'x',
     });
-  }, skip: _skip);
+  });
 }

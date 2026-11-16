@@ -21,8 +21,6 @@ import 'helpers/updates_harness.dart' show textUpdate;
 // there are none), and nothing moves when the answer arrives; the header and
 // the two cards enter together once per page, never on a rebuild or a
 // resize, and not at all under reduced motion.
-const _skip = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 
 Rect _rect(WidgetTester tester, Key key) => tester.getRect(find.byKey(key));
@@ -51,7 +49,7 @@ void main() {
       expect(find.byKey(UpdatesCard.welcomeKey), wide ? findsOneWidget : findsNothing);
       expect(find.text(_en.updates_label), findsOneWidget);
       expect(find.byKey(UpdatesCarousel.skeletonKey), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('$width: an EMPTY answer shows the calm panel, no chips, and nothing moves', (tester) async {
       await pumpLogin(tester, FakeFirebaseFirestore(), width: width, height: 2400, settle: false, reduceMotion: true);
@@ -63,7 +61,7 @@ void main() {
       expect(find.text(_en.updates_new), findsNothing);
       expect(find.text(_en.updates_important), findsNothing);
       expect(_rects(tester), before);
-    }, skip: _skip);
+    });
 
     testWidgets('$width: an answer with slides shows the first poster, and nothing moves', (tester) async {
       final db = await dbWithUpdates(2);
@@ -79,7 +77,7 @@ void main() {
       );
       expect(poster, findsOneWidget);
       expect(_rects(tester), before);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('with a persisted copy the slides are there on the FIRST frame', (tester) async {
@@ -90,7 +88,7 @@ void main() {
     await pumpLogin(tester, FakeFirebaseFirestore(), settle: false);
     expect(find.text('Title kept'), findsOneWidget);
     expect(find.byKey(UpdatesCarousel.skeletonKey), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('the entrance: the header and both cards fade in and rise 12 px together, once', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1));
@@ -115,7 +113,7 @@ void main() {
     for (var i = 0; i < find.byType(AuthEntrance).evaluate().length; i++) {
       expect(_opacity(tester, i), 1, reason: 'part $i after resizing');
     }
-  }, skip: _skip);
+  });
 
   testWidgets('the entrance plays again when the page shows again after the page above it goes back', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1));
@@ -131,14 +129,14 @@ void main() {
     expect(lowest, lessThan(0.5));
     await tester.pumpAndSettle();
     expect(_opacity(tester, 1), 1);
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: no entrance at all', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1), reduceMotion: true);
     for (var i = 0; i < 3; i++) {
       expect(_opacity(tester, i), 1);
     }
-  }, skip: _skip);
+  });
 
   testWidgets('no overflow at 360 to 1200, Light, Dark, Kiswahili: loading, none, one, several', (tester) async {
     final dbs = [for (final n in [0, 1, 3]) await dbWithUpdates(n)];
@@ -156,5 +154,5 @@ void main() {
         }
       }
     }
-  }, skip: _skip);
+  });
 }

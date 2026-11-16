@@ -18,8 +18,6 @@ import 'package:vetbiz_pro/widgets/announcement_poster.dart';
 // back); a failed read keeps the last-known list; the audience, urgent and
 // five-slide rules applied per language when read; the first, next and
 // previous posters warmed once per URL.
-const _skip = false;
-
 class _Feed {
   int subscribes = 0;
   final controller = StreamController<List<Announcement>>.broadcast();
@@ -59,7 +57,7 @@ void main() {
     s.start();
     s.start();
     expect(feed.subscribes, 1);
-  }, skip: _skip);
+  });
 
   test('nothing known before the first answer; then the list at once, and live changes', () async {
     final s = store()..start();
@@ -74,14 +72,14 @@ void main() {
     await pumpEventQueue();
     expect(s.current!.map((a) => a.id), ['3']);
     expect(told, 2);
-  }, skip: _skip);
+  });
 
   test('an empty answer is known and empty (not "nothing known")', () async {
     final s = store()..start();
     feed.controller.add([]);
     await pumpEventQueue();
     expect(s.slidesFor('en'), isEmpty);
-  }, skip: _skip);
+  });
 
   test('the persisted copy restores before any read, and a later launch starts from it', () async {
     final first = store()..start();
@@ -94,7 +92,7 @@ void main() {
     expect(next.current![1].imageUrl, 'https://files.example/2.png');
     expect(next.current![0].publishedAt, DateTime(2026, 1, 1));
     expect(first.current, isNotNull);
-  }, skip: _skip);
+  });
 
   test('a restore after an answer does not replace it', () async {
     SharedPreferences.setMockInitialValues({UpdatesStore.prefsKey: jsonEncode([{'id': 'old', 'title': 'Old'}])});
@@ -103,7 +101,7 @@ void main() {
     await pumpEventQueue();
     await s.restore();
     expect(s.current!.map((a) => a.id), ['new']);
-  }, skip: _skip);
+  });
 
   test('the persisted copy goes through the validators: audience, link, image address', () async {
     SharedPreferences.setMockInitialValues({
@@ -124,14 +122,14 @@ void main() {
     expect(two.audience, AnnouncementAudience.sw);
     expect(AnnouncementLinkButton.addressOf(two), 'https://a.example/x');
     expect(two.urgent, isFalse, reason: 'only a real true is urgent');
-  }, skip: _skip);
+  });
 
   test('an unreadable persisted copy is ignored', () async {
     SharedPreferences.setMockInitialValues({UpdatesStore.prefsKey: '{not json'});
     final s = store();
     await s.restore();
     expect(s.current, isNull);
-  }, skip: _skip);
+  });
 
   test('a failed read keeps the last-known list; with nothing known it answers empty (never loading for ever)', () async {
     final seeded = store()..start();
@@ -145,7 +143,7 @@ void main() {
     fresh.start();
     await pumpEventQueue();
     expect(fresh.slidesFor('en'), isEmpty);
-  }, skip: _skip);
+  });
 
   test('per language when read: the audience, urgent ones take over, five at most', () async {
     final s = store()..start();
@@ -161,7 +159,7 @@ void main() {
     expect(s.slidesFor('sw')!.map((a) => a.id), ['swUrgent']);
     expect(s.slidesFor('en')!.map((a) => a.id), ['en', 'all1', 'all2', 'all3', 'all4']);
     expect(s.slidesFor('en'), hasLength(AppLimits.updatesMaxSlides));
-  }, skip: _skip);
+  });
 
   test('warming: the first, next and previous posters for the language, once per URL', () async {
     final s = store()..start();
@@ -181,7 +179,7 @@ void main() {
     await pumpEventQueue();
     s.warmFor('en');
     expect(warmed, hasLength(3), reason: 'once per URL');
-  }, skip: _skip);
+  });
 
   test('warming at startup: from the persisted copy, for the saved language', () async {
     final seed = store()..start();
@@ -193,5 +191,5 @@ void main() {
     warmed.clear();
     await store().restore();
     expect(warmed, ['https://f.example/sw.png']);
-  }, skip: _skip);
+  });
 }

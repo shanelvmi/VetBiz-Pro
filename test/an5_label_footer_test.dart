@@ -22,10 +22,6 @@ import 'helpers/login_harness.dart';
 // mark and the name (authFooterMutedText, 13 or 14 px, at most four lines,
 // two on a wide window, not the welcome sentence; the owner's sentence since
 // the second AN5 correction); no overflow on the login page.
-const _skip = false;
-// The second AN5 correction (the owner's sentence): unskipped with its footer commit.
-const _skipFooter = false;
-
 final _en = lookupAppLocalizations(const Locale('en'));
 
 const _description = 'Sales, stock, clients, debts and veterinary services for agrovets, vet clinics, vet hospitals and ambulatory services.';
@@ -41,7 +37,7 @@ void main() {
         expect(style.color, c.textPrimary);
         expect(ColorMath.contrast(style.color!, c.surface), greaterThanOrEqualTo(7));
         expect(style.fontWeight, AppFontWeight.bold);
-      }, skip: _skip);
+      });
     }
   }
 
@@ -50,7 +46,7 @@ void main() {
     testWidgets('$width: the Updates label is $size px', (tester) async {
       await pumpLogin(tester, await dbWithUpdates(1), width: width, height: 2400);
       expect(tester.widget<Text>(find.text(_en.updates_label)).style!.fontSize, size);
-    }, skip: _skip);
+    });
   }
 
   Future<double> pumpFooter(WidgetTester tester, double width, {Brightness brightness = Brightness.light, Locale locale = const Locale('en')}) async {
@@ -96,14 +92,14 @@ void main() {
         }
         expect(tester.getSize(find.byKey(AuthFooter.bottomRowKey)).height, greaterThanOrEqualTo(AuthFooterMetrics.bottomRowHeight));
         expect(tester.takeException(), isNull);
-      }, skip: _skipFooter);
+      });
     }
   }
 
   testWidgets('the description line is not the welcome note\'s sentence', (tester) async {
     expect(_description, isNot(_en.updates_welcomeLine));
     expect(_descriptionSw, isNot(lookupAppLocalizations(const Locale('sw')).updates_welcomeLine));
-  }, skip: _skip);
+  });
 
   testWidgets('360 Kiswahili: the long description line wraps in the column, four lines at most', (tester) async {
     await pumpFooter(tester, 360, locale: const Locale('sw'));
@@ -111,7 +107,7 @@ void main() {
     expect(line, findsOneWidget);
     expect(tester.widget<Text>(line).maxLines, 4);
     expect(tester.takeException(), isNull);
-  }, skip: _skipFooter);
+  });
 
   for (final width in [360.0, 390.0, 768.0, 1024.0, 1200.0]) {
     for (final (brightness, locale) in [
@@ -122,7 +118,7 @@ void main() {
       testWidgets('$width ${brightness.name} ${locale.languageCode}: the login page has no overflow', (tester) async {
         await pumpLogin(tester, await dbWithUpdates(3), width: width, height: 2400, brightness: brightness, locale: locale);
         expect(tester.takeException(), isNull);
-      }, skip: _skip);
+      });
     }
   }
 }

@@ -24,8 +24,6 @@ import 'helpers/updates_harness.dart';
 // that slides in from the right, follows the finger and the mouse, loops
 // forward, goes in a tapped dot's direction, answers the Left and Right
 // keys; one slide: no dots, the same row height; 3:1 in every theme.
-const _skip = false;
-
 final _three = [textUpdate('1'), textUpdate('2'), textUpdate('3')];
 
 double _fill(WidgetTester tester) => tester.widget<FractionallySizedBox>(find.byKey(UpdatesDots.pillFillKey)).widthFactor!;
@@ -58,7 +56,7 @@ void main() {
         expect(find.byIcon(icon), findsNothing, reason: '$icon');
       }
       expect(find.descendant(of: find.byType(UpdatesSlides), matching: find.byType(IconButton)), findsNothing);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the dots: 8 px with 24 x 48 px tap areas; the active one a 28 x 8 px pill', (tester) async {
@@ -75,7 +73,7 @@ void main() {
       expect(slot.width, greaterThanOrEqualTo(UpdatesMetrics.dotSlot));
       expect(slot.height, greaterThanOrEqualTo(kMinInteractiveDimension));
     }
-  }, skip: _skip);
+  });
 
   testWidgets('the pill fills over the slide\'s time, pauses on hover, resumes when the pointer leaves', (tester) async {
     await pumpSlides(tester, _three);
@@ -94,7 +92,7 @@ void main() {
     await tester.pump();
     await tester.pump(AppTimeouts.updatesAdvance * 0.2);
     expect(_fill(tester), closeTo(paused + 0.2, 0.05), reason: 'resumed from there');
-  }, skip: _skip);
+  });
 
   testWidgets('the pill pauses while a finger touches and resumes after', (tester) async {
     await pumpSlides(tester, _three, width: 390);
@@ -108,7 +106,7 @@ void main() {
     await tester.pump();
     await tester.pump(AppTimeouts.updatesAdvance * 0.2);
     expect(_fill(tester), greaterThan(paused + 0.1));
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: no fill, no auto-advance, the active pill simply wide', (tester) async {
     await pumpSlides(tester, _three, reduceMotion: true);
@@ -121,7 +119,7 @@ void main() {
     await tester.pump();
     expect(find.text('Title 3'), findsOneWidget, reason: 'instant');
     expect(find.text('Title 1'), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('auto-advance slides in from the right and loops forward from the last to the first', (tester) async {
     await pumpSlides(tester, _three);
@@ -133,7 +131,7 @@ void main() {
       expect(find.text('Title $to'), findsOneWidget);
       expect(find.text('Title $from'), findsNothing);
     }
-  }, skip: _skip);
+  });
 
   testWidgets('the outgoing slide moves about 70 percent as far as the incoming one', (tester) async {
     await pumpSlides(tester, _three);
@@ -144,7 +142,7 @@ void main() {
     final out = start1 - _title(tester, '1').center.dx;
     final incoming = (start1 + frame(tester).width) - _title(tester, '2').center.dx;
     expect(out / incoming, closeTo(AppMotion.updatesOutgoingTravel, 0.05));
-  }, skip: _skip);
+  });
 
   testWidgets('a dot slides in the direction of that dot: a later one from the right, an earlier one from the left', (tester) async {
     await pumpSlides(tester, _three);
@@ -164,7 +162,7 @@ void main() {
     expect(_title(tester, '2').center.dx, greaterThan(_title(tester, '1').center.dx));
     await _settleSlide(tester);
     expect(find.text('Title 3'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   for (final kind in [PointerDeviceKind.mouse, PointerDeviceKind.touch]) {
     testWidgets('a ${kind.name} drag moves the page, following the pointer', (tester) async {
@@ -181,7 +179,7 @@ void main() {
       await tester.pump(AppMotion.updatesSlide);
       expect(find.text('Title 2'), findsOneWidget);
       expect(find.text('Title 1'), findsNothing);
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the keyboard: one Tab stop on the dots with a visible ring; Right and Left move', (tester) async {
@@ -206,7 +204,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();
     expect(FocusManager.instance.primaryFocus, same(group), reason: 'one Tab stop for the group');
-  }, skip: _skip);
+  });
 
   testWidgets('each dot: "Slide n of total", a button, with the selected state', (tester) async {
     final handle = tester.ensureSemantics();
@@ -215,7 +213,7 @@ void main() {
     expect(tester.getSemantics(find.bySemanticsLabel('Slide 1 of 3')), isSemantics(isButton: true, isSelected: true));
     expect(tester.getSemantics(find.bySemanticsLabel('Slide 2 of 3')), isSemantics(isButton: true, isSelected: false));
     handle.dispose();
-  }, skip: _skip);
+  });
 
   testWidgets('one slide: no dots, still, and the controls row keeps its height', (tester) async {
     await pumpSlides(tester, [textUpdate('1')]);
@@ -225,7 +223,7 @@ void main() {
     expect(UpdatesSlides.debugTimerStarts, 0);
     await pumpSlides(tester, _three);
     expect(tester.getSize(find.byType(UpdatesSlides)).height, one);
-  }, skip: _skip);
+  });
 
   for (final theme in AppColorTheme.all) {
     for (final brightness in Brightness.values) {
@@ -260,7 +258,7 @@ void main() {
         ]) {
           expect(ColorMath.contrast(ColorMath.composite(color, card), card), greaterThanOrEqualTo(3), reason: name);
         }
-      }, skip: _skip);
+      });
     }
   }
 
@@ -277,5 +275,5 @@ void main() {
         }
       }
     }
-  }, skip: _skip);
+  });
 }
