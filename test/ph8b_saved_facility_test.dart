@@ -23,6 +23,7 @@ import 'package:vetbiz_pro/l10n/stored_labels.dart';
 import 'package:vetbiz_pro/screens/facilities/facility_screen.dart';
 import 'package:vetbiz_pro/services/membership_service.dart';
 
+import 'helpers/fixture_lock.dart';
 import 'helpers/fake_firestore.dart';
 import 'helpers/fake_storage.dart';
 import 'helpers/ph7a_fakes.dart' show FakeImagePicker;
@@ -142,9 +143,13 @@ void _expectSame(String name, Object? now) {
   final file = File(_fixture);
   final recorded = file.existsSync() ? (jsonDecode(file.readAsStringSync()) as Map<String, dynamic>) : <String, dynamic>{};
   if (const bool.fromEnvironment('PH8B_RECORD')) {
-    recorded[name] = now;
-    final sorted = Map.fromEntries(recorded.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
-    file.writeAsStringSync('${const JsonEncoder.withIndent('  ').convert(sorted)}\n');
+    // STAB1: read again and write under the lock.
+    withFixtureLock(_fixture, () {
+      final latest = file.existsSync() ? (jsonDecode(file.readAsStringSync()) as Map<String, dynamic>) : <String, dynamic>{};
+      latest[name] = now;
+      final sorted = Map.fromEntries(latest.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+      file.writeAsStringSync('${const JsonEncoder.withIndent('  ').convert(sorted)}\n');
+    });
     return;
   }
   expect(now, recorded[name], reason: '$name: what the form saves changed');

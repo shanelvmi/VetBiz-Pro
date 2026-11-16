@@ -12,6 +12,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'helpers/fixture_lock.dart';
 import 'helpers/fake_firestore.dart';
 import 'helpers/ph6_forms.dart';
 import 'helpers/phone_list_harness.dart';
@@ -52,10 +53,14 @@ void _expectSameSaved(String name, FakeFirebaseFirestore fs) {
   final file = File(_fixture);
   final recorded = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, dynamic> : <String, dynamic>{};
   if (const bool.fromEnvironment('PH6_RECORD')) {
-    recorded[name] = jsonDecode(saved);
-    // One form a line, so a change shows which form it is.
-    final keys = recorded.keys.toList()..sort();
-    file.writeAsStringSync('{\n${[for (final k in keys) '  ${jsonEncode(k)}: ${jsonEncode(recorded[k])}'].join(',\n')}\n}\n');
+    // STAB1: read again and write under the lock.
+    withFixtureLock(_fixture, () {
+      final latest = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, dynamic> : <String, dynamic>{};
+      latest[name] = jsonDecode(saved);
+      // One form a line, so a change shows which form it is.
+      final keys = latest.keys.toList()..sort();
+      file.writeAsStringSync('{\n${[for (final k in keys) '  ${jsonEncode(k)}: ${jsonEncode(latest[k])}'].join(',\n')}\n}\n');
+    });
     return;
   }
   expect(jsonDecode(saved), recorded[name], reason: '$name: the saved data changed');

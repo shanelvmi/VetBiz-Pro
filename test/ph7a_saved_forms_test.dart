@@ -16,6 +16,7 @@ import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/screens/products/add_batch_screen.dart';
 import 'package:vetbiz_pro/screens/products/add_edit_product_screen.dart';
 
+import 'helpers/fixture_lock.dart';
 import 'helpers/fake_firestore.dart';
 import 'helpers/ph7a_fakes.dart';
 import 'helpers/ph7a_seed.dart';
@@ -64,9 +65,13 @@ void _expectSameSaved(String name, FakeFirebaseFirestore fs, [FakeStorage? stora
   final file = File(_fixture);
   final recorded = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, dynamic> : <String, dynamic>{};
   if (const bool.fromEnvironment('PH7A_RECORD')) {
-    recorded[name] = jsonDecode(saved);
-    final keys = recorded.keys.toList()..sort();
-    file.writeAsStringSync('{\n${[for (final k in keys) '  ${jsonEncode(k)}: ${jsonEncode(recorded[k])}'].join(',\n')}\n}\n');
+    // STAB1: read again and write under the lock.
+    withFixtureLock(_fixture, () {
+      final latest = file.existsSync() ? jsonDecode(file.readAsStringSync()) as Map<String, dynamic> : <String, dynamic>{};
+      latest[name] = jsonDecode(saved);
+      final keys = latest.keys.toList()..sort();
+      file.writeAsStringSync('{\n${[for (final k in keys) '  ${jsonEncode(k)}: ${jsonEncode(latest[k])}'].join(',\n')}\n}\n');
+    });
     return;
   }
   expect(jsonDecode(saved), recorded[name], reason: '$name: the saved data changed');

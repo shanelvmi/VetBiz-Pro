@@ -6,6 +6,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'fixture_lock.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal.dart';
 
 final _months = RegExp(r'\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b');
@@ -137,9 +139,13 @@ void expectSameFingerprint(String name, String fingerprint) {
   final recorded = file.existsSync() ? (jsonDecode(file.readAsStringSync()) as Map<String, dynamic>) : <String, dynamic>{};
   final hash = '${fingerprintHash(fingerprint)} ${'\n'.allMatches(fingerprint).length}';
   if (const bool.fromEnvironment('PH5A_RECORD')) {
-    recorded[name] = hash;
-    final sorted = Map.fromEntries(recorded.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
-    file.writeAsStringSync('${const JsonEncoder.withIndent('  ').convert(sorted)}\n');
+    // STAB1: read again and write under the lock (another file may record).
+    withFixtureLock(_fixture, () {
+      final latest = file.existsSync() ? (jsonDecode(file.readAsStringSync()) as Map<String, dynamic>) : <String, dynamic>{};
+      latest[name] = hash;
+      final sorted = Map.fromEntries(latest.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+      file.writeAsStringSync('${const JsonEncoder.withIndent('  ').convert(sorted)}\n');
+    });
     File('build/ph5a_fingerprints/$name.txt')
       ..createSync(recursive: true)
       ..writeAsStringSync(fingerprint);

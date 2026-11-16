@@ -7,6 +7,8 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fixture_lock.dart';
+
 const _fixture = 'test/fixtures/ph8a_saved_forms.json';
 
 Object? _normalize(Object? node) {
@@ -26,9 +28,13 @@ void expectSameSaved(String name, List<Map<String, dynamic>> saved) {
   final file = File(_fixture);
   final recorded = file.existsSync() ? (jsonDecode(file.readAsStringSync()) as Map<String, dynamic>) : <String, dynamic>{};
   if (const bool.fromEnvironment('PH8A_RECORD')) {
-    recorded[name] = now;
-    final sorted = Map.fromEntries(recorded.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
-    file.writeAsStringSync('${const JsonEncoder.withIndent('  ').convert(sorted)}\n');
+    // STAB1: read again and write under the lock (another file may record).
+    withFixtureLock(_fixture, () {
+      final latest = file.existsSync() ? (jsonDecode(file.readAsStringSync()) as Map<String, dynamic>) : <String, dynamic>{};
+      latest[name] = now;
+      final sorted = Map.fromEntries(latest.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
+      file.writeAsStringSync('${const JsonEncoder.withIndent('  ').convert(sorted)}\n');
+    });
     return;
   }
   expect(now, recorded[name], reason: '$name: what the form saves changed');
