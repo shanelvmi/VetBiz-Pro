@@ -9,6 +9,7 @@ import 'package:vetbiz_pro/services/updates_store.dart';
 import 'package:vetbiz_pro/utils/app_clock.dart';
 import 'package:vetbiz_pro/widgets/reveal/reveal_image.dart';
 
+import 'helpers/fixture_guard.dart';
 import 'helpers/test_clock.dart';
 
 // Runs around every test file. G6, AN6: the support contact and the Updates
@@ -26,6 +27,16 @@ import 'helpers/test_clock.dart';
 // testNow), so no test depends on the real date; a test may fix another
 // moment with fixTestClock.
 Future<void> testExecutable(FutureOr<void> Function() testMain) async {
+  // STAB1: a normal run never writes a fixture (fixture_guard.dart). The file
+  // fails here, naming the fixture, if one changed while it ran.
+  late Map<String, String?> fixturesAtStart;
+  setUpAll(() => fixturesAtStart = fixtureSnapshot());
+  tearDownAll(() {
+    if (recordingFixtures) return;
+    final changed = changedFixtures(fixturesAtStart, fixtureSnapshot());
+    expect(changed, isEmpty,
+        reason: 'a fixture was written during a normal run (record only with --dart-define=..._RECORD=true): $changed');
+  });
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     SupportContactStore.debugReset();
