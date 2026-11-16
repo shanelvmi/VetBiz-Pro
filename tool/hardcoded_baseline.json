@@ -355,7 +355,6 @@
       "lib/screens/transactions/transactions_screen.dart": 1,
       "lib/widgets/auth_card.dart": 1,
       "lib/widgets/auth_panel.dart": 4,
-      "lib/widgets/notification_row.dart": 1,
       "lib/widgets/summary_card.dart": 1
     }
   }
