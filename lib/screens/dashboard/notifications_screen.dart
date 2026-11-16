@@ -15,7 +15,6 @@ import '../../widgets/updates_parts.dart';
 import '../../data/announcement_fields.dart';
 import '../../utils/announcement_visibility.dart';
 import '../../utils/updates_selection.dart';
-import '../../widgets/notification_row.dart';
 import '../../services/notification_feed.dart';
 import '../../widgets/notification_actions.dart';
 import '../../ui/polish/filter_row.dart';
@@ -1227,18 +1226,23 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           child: Row(
             children: [
-              Text(
-                context.l10n.common_notifications,
-                style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
+              // POL2: the title may shorten (ellipsis) so the bar fits the
+              // 400 px panel at a large text scale (it overflowed at 1.3).
+              Flexible(
+                child: Text(
+                  context.l10n.common_notifications,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
+                ),
               ),
+              // POL2: the unread count as plain text in the bar's own ink
+              // (a count is not a state, so no warning-coloured pill).
               if (totalUnread > 0) ...[
                 const SizedBox(width: AppSpacing.s8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
-                  decoration: BoxDecoration(color: context.colors.warning, borderRadius: BorderRadius.circular(AppRadius.r10)),
-                  child: Text('$totalUnread',
-                      style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f11)),
-                ),
+                Text('$totalUnread',
+                    key: const ValueKey('notifications-dropdown-unreadCount'),
+                    style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f15)),
               ],
               const Spacer(),
               Flexible(
@@ -1314,22 +1318,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       children: [
         _buildUrgentAnnouncements(),
         if (plan.isNotEmpty) ...[
-          _sectionHeader(Icons.workspace_premium_outlined, context.l10n.notifications_yourPlan, plan.length, context.colors.info),
-          const SizedBox(height: AppSpacing.s8),
+          _sectionHeader(context.l10n.notifications_yourPlan, 'plan'),
           ...plan.map(_dropdownRow),
-          const SizedBox(height: AppSpacing.s20),
         ],
         if (attention.isNotEmpty) ...[
-          _sectionHeader(Icons.priority_high, context.l10n.notifications_needsAttention, attention.length, context.colors.warning),
-          const SizedBox(height: AppSpacing.s8),
+          _sectionHeader(context.l10n.notifications_needsAttention, 'attention'),
           ...attention.map(_dropdownRow),
-          const SizedBox(height: AppSpacing.s20),
         ],
         if (earlier.isNotEmpty) ...[
-          _sectionHeader(Icons.history, context.l10n.notifications_earlier, earlier.length, context.colors.textHint),
-          const SizedBox(height: AppSpacing.s8),
+          _sectionHeader(context.l10n.notifications_earlier, 'earlier'),
           ...earlier.map(_dropdownRow),
-          const SizedBox(height: AppSpacing.s12),
         ],
         if (widget.isDropdown)
           Center(
@@ -1361,16 +1359,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  // One row of the dropdown: tap to read, the more menu, the swipes.
-  Widget _dropdownRow(NotificationItem i) => _swipe(
-        i,
-        NotificationRow(
-          key: ValueKey(i.id),
-          notification: i.notification,
-          isRead: i.isRead,
-          onTap: () => _onTap(i),
-          trailing: _moreButton(i),
-        ),
+  // One row of the dropdown: POL2, the full page's own narrow row (the unread
+  // dot, the bold title and tint, the grey category, the needs-action word),
+  // with its tap to read, the more menu and the swipes.
+  Widget _dropdownRow(NotificationItem i) => Padding(
+        padding: const EdgeInsets.only(bottom: PolishMetrics.gapInGroup),
+        child: _buildNarrowCard(i),
       );
 
   // The same plain words as the full screen's empty state, no "all caught
@@ -1438,8 +1432,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.campaign_outlined, context.l10n.notifications_urgentAnnouncements, rows.length, context.colors.danger),
-          const SizedBox(height: AppSpacing.s8),
+          _sectionHeader(context.l10n.notifications_urgentAnnouncements, 'urgent'),
           ...rows.map(_announcementRow),
         ],
       ),
@@ -1482,23 +1475,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _sectionHeader(IconData icon, String title, int count, Color color) {
-    return Row(
-      children: [
-        Icon(icon, size: AppIconSize.i16, color: context.colors.primary),
-        const SizedBox(width: AppSpacing.s6),
-        Expanded(
-          child: Text(title,
-              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14, color: context.colors.primary)),
+  // POL2: the dropdown's group headers are the full page's SectionLabel (no
+  // icon, no coloured count pill); the list already has its side padding.
+  Widget _sectionHeader(String title, String group) => SectionLabel(
+        title,
+        key: ValueKey('notifications-dropdown-group-$group'),
+        padding: const EdgeInsets.only(
+          top: PolishMetrics.sectionLabelPaddingTop,
+          bottom: PolishMetrics.sectionLabelPaddingBottom,
         ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s3),
-          decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a15), borderRadius: BorderRadius.circular(AppRadius.r12)),
-          child: Text('$count', style: TextStyle(color: color, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12)),
-        ),
-      ],
-    );
-  }
+      );
 }
 
 /// Shared "notification card" look - a colored left accent bar, a
@@ -1543,9 +1529,8 @@ class _AccentCard extends StatelessWidget {
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r10),
         // UI1: no coloured bar down the left; the colour stays on the icon.
-        boxShadow: [
-          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
-        ],
+        // POL2: a hairline border, no shadow (owner rule 4).
+        border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
       ),
       child: InkWell(
         onTap: onTap,

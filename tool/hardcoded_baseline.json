@@ -339,7 +339,6 @@
       "lib/screens/clients/clients_screen.dart": 1,
       "lib/screens/dashboard/dashboard_screen.dart": 1,
       "lib/screens/dashboard/insights_screen.dart": 3,
-      "lib/screens/dashboard/notifications_screen.dart": 1,
       "lib/screens/debtors/debtors_screen.dart": 1,
       "lib/screens/facilities/facility_screen.dart": 2,
       "lib/screens/legal/legal_document_screen.dart": 1,
