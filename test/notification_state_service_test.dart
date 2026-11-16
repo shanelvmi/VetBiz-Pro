@@ -13,9 +13,6 @@ import 'package:vetbiz_pro/models/notification_model.dart';
 import 'package:vetbiz_pro/models/notification_state.dart';
 import 'package:vetbiz_pro/services/notification_state_service.dart';
 
-// Until the implementation: every call throws UnimplementedError('NOTIF-2b').
-const _skipUntilImplemented = false;
-
 final now0 = DateTime(2026, 10, 24, 10);
 
 class FakeClock {
@@ -90,7 +87,7 @@ void main() {
       expect((await stateOf(fs, 'owner')).seenStage, {subscriptionNoticeId: 'grace'});
       await expectRuleShape(fs, 'owner');
       expect((await me.watch().first).read.keys.toSet(), {'n1', 'n2'});
-    }, skip: _skipUntilImplemented);
+    });
 
     test('per person: A removes and reads; B, from B\'s own state, still sees it, unread', () async {
       final a = serviceFor(fs, 'owner', clock);
@@ -102,7 +99,7 @@ void main() {
       expect((sa.isRemoved('n1'), sa.isReadByMe('n2')), (true, true));
       expect((sb.isRemoved('n1'), sb.isReadByMe('n2')), (false, false));
       expect((await b.watch().first).removed, isEmpty);
-    }, skip: _skipUntilImplemented);
+    });
 
     test('a bulk removal of 50 is ONE write; its Undo restores the previous state exactly', () async {
       final me = serviceFor(fs, 'owner', clock);
@@ -129,7 +126,7 @@ void main() {
       expect(after.removed, before.removed);
       expect(after.read, before.read);
       await sub.cancel();
-    }, skip: _skipUntilImplemented);
+    });
 
     test('two devices of the same person: both writes survive (merge)', () async {
       final phone = serviceFor(fs, 'owner', clock);
@@ -141,7 +138,7 @@ void main() {
       final s = await stateOf(fs, 'owner');
       expect(s.read.keys.toSet(), {'p1', 'l2'});
       expect(s.removed.keys.toSet(), {'l1', 'p2'});
-    }, skip: _skipUntilImplemented);
+    });
 
     test('entries older than 120 days are pruned on the next write (119 kept, 120 and 121 gone)', () async {
       Timestamp ago(int d) => Timestamp.fromDate(now0.subtract(Duration(days: d)));
@@ -158,7 +155,7 @@ void main() {
       expect(s.unread.keys.toSet(), {'u10'});
       expect(s.removed.keys.toSet(), {'x1'});
       expect(s.seenStage, {subscriptionNoticeId: 'grace'}, reason: 'a stage has no age');
-    }, skip: _skipUntilImplemented);
+    });
 
     test('never above 2000 entries: the oldest go first', () async {
       final max = AppLimits.notificationStateMapMax;
@@ -176,6 +173,6 @@ void main() {
       expect(s.removed.keys, isNot(contains('n2')));
       expect(s.removed.keys, contains('n3'));
       await expectRuleShape(fs, 'owner');
-    }, skip: _skipUntilImplemented);
+    });
   });
 }

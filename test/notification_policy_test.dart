@@ -17,9 +17,6 @@ const persistent = NotificationClass.persistent;
 const dismissible = NotificationClass.dismissible;
 const routine = NotificationClass.routine;
 
-// Until the implementation: every call throws UnimplementedError('NOTIF-2b').
-const _skipUntilImplemented = false;
-
 final t0 = DateTime(2026, 10, 1, 9);
 DateTime days(DateTime from, int n) => from.add(Duration(days: n));
 
@@ -56,7 +53,7 @@ void main() {
         expect(NotificationPolicy.classOf(entry.key), entry.value);
         expect(NotificationPolicy.canRemove(entry.key), entry.value != persistent);
         expect(NotificationPolicy.persistentReason(entry.key) != null, entry.value == persistent);
-      }, skip: _skipUntilImplemented);
+      });
     }
 
     test('urgent announcements are dismissible (D5); only the legacy trialStarted is never shown', () {
@@ -64,14 +61,14 @@ void main() {
       for (final type in NotificationType.values) {
         expect(NotificationPolicy.isNeverShown(type), type == NotificationType.trialStarted, reason: type.name);
       }
-    }, skip: _skipUntilImplemented);
+    });
 
     test('the explanation for each persistent type', () {
       expect(NotificationPolicy.persistentReason(NotificationType.subscriptionExpiring), PersistentReason.untilRenewed);
       expect(NotificationPolicy.persistentReason(NotificationType.trialStatus), PersistentReason.untilTrialEnds);
       expect(NotificationPolicy.persistentReason(NotificationType.assistantPending), PersistentReason.untilDecided);
       expect(NotificationPolicy.persistentReason(NotificationType.subscriptionRejected), PersistentReason.untilNewClaim);
-    }, skip: _skipUntilImplemented);
+    });
   });
 
   group('a persistent item is resolved only by its own condition', () {
@@ -82,14 +79,14 @@ void main() {
       expect(resolved(t, const PersistentFacts(newerClaimExists: true)), isTrue);
       expect(resolved(t, const PersistentFacts(newerClaimExists: false)), isFalse);
       expect(resolved(t, const PersistentFacts()), isFalse, reason: 'an unknown fact resolves nothing');
-    }, skip: _skipUntilImplemented);
+    });
 
     test('assistant waiting: once the decision is made', () {
       const t = NotificationType.assistantPending;
       expect(resolved(t, const PersistentFacts(decisionMade: true)), isTrue);
       expect(resolved(t, const PersistentFacts(decisionMade: false)), isFalse);
       expect(resolved(t, const PersistentFacts()), isFalse);
-    }, skip: _skipUntilImplemented);
+    });
 
     test('subscription: once nothing needs attention; trial row: once the calm trial is over', () {
       expect(resolved(NotificationType.subscriptionExpiring,
@@ -100,7 +97,7 @@ void main() {
       expect(resolved(NotificationType.subscriptionExpiring, const PersistentFacts()), isFalse);
       expect(resolved(NotificationType.trialStatus, const PersistentFacts(inCalmTrial: false)), isTrue);
       expect(resolved(NotificationType.trialStatus, const PersistentFacts(inCalmTrial: true)), isFalse);
-    }, skip: _skipUntilImplemented);
+    });
 
     test('never for a type that is not persistent, whatever the facts', () {
       const all = PersistentFacts(
@@ -108,7 +105,7 @@ void main() {
       for (final t in [NotificationType.newClient, NotificationType.promotion, NotificationType.lowStock]) {
         expect(resolved(t, all), isFalse, reason: t.name);
       }
-    }, skip: _skipUntilImplemented);
+    });
   });
 
   group('lifetimes (the day before, the day of, the day after each limit)', () {
@@ -128,14 +125,14 @@ void main() {
       expect(hidden(routine, days(readAt, 29), created: t0, mine: readAt), isFalse);
       expect(hidden(routine, days(readAt, 30), created: t0, mine: readAt), isTrue);
       expect(hidden(routine, days(readAt, 31), created: t0, mine: readAt), isTrue);
-    }, skip: _skipUntilImplemented);
+    });
 
     test('routine, unread: hidden 90 days after it was created', () {
       expect(hidden(routine, days(t0, 89), created: t0), isFalse);
       expect(hidden(routine, days(t0, 90), created: t0), isTrue);
       expect(hidden(routine, days(t0, 91), created: t0), isTrue);
       expect(hidden(routine, days(t0, 400)), isFalse, reason: 'no createdAt: never hidden by age');
-    }, skip: _skipUntilImplemented);
+    });
 
     test('a legacy shared readAt counts as read for me, 30 days from it; my own read wins', () {
       final shared = days(t0, 2);
@@ -144,13 +141,13 @@ void main() {
       final mine = days(t0, 20);
       expect(hidden(routine, days(shared, 31), created: t0, shared: shared, mine: mine), isFalse);
       expect(hidden(routine, days(mine, 30), created: t0, shared: shared, mine: mine), isTrue);
-    }, skip: _skipUntilImplemented);
+    });
 
     test('marked unread by me over a shared readAt: the 90 days from created apply', () {
       final shared = days(t0, 1);
       expect(hidden(routine, days(shared, 31), created: t0, shared: shared, unread: true), isFalse);
       expect(hidden(routine, days(t0, 90), created: t0, shared: shared, unread: true), isTrue);
-    }, skip: _skipUntilImplemented);
+    });
 
     test('dismissible: hidden at its end; with no end, as routine', () {
       final ends = days(t0, 10);
@@ -160,7 +157,7 @@ void main() {
       expect(hidden(dismissible, days(t0, 89), created: t0), isFalse);
       expect(hidden(dismissible, days(t0, 90), created: t0), isTrue);
       expect(hidden(dismissible, days(t0, 31), created: t0, mine: t0), isTrue);
-    }, skip: _skipUntilImplemented);
+    });
 
     test('persistent: never hidden by age, read or not', () {
       final ages = [days(t0, 31), days(t0, 91), days(t0, 1000)];
@@ -168,7 +165,7 @@ void main() {
         expect(hidden(persistent, now, created: t0, mine: t0, shared: t0, ends: days(t0, 1)), isFalse);
         expect(hidden(persistent, now, created: t0), isFalse);
       }
-    }, skip: _skipUntilImplemented);
+    });
   });
 
   group('escalation by stage (replaces comparing the English message)', () {
@@ -179,14 +176,14 @@ void main() {
       expect(again(SubscriptionNoticeStage.expiring, SubscriptionNoticeStage.grace), isTrue);
       expect(again(SubscriptionNoticeStage.grace, SubscriptionNoticeStage.locked), isTrue);
       expect(again(SubscriptionNoticeStage.expiring, SubscriptionNoticeStage.locked), isTrue);
-    }, skip: _skipUntilImplemented);
+    });
 
     test('the same stage, a calmer stage, or nothing seen yet: not unread again', () {
       expect(again(SubscriptionNoticeStage.expiring, SubscriptionNoticeStage.expiring), isFalse);
       expect(again(SubscriptionNoticeStage.locked, SubscriptionNoticeStage.expiring), isFalse);
       expect(again(SubscriptionNoticeStage.grace, SubscriptionNoticeStage.none), isFalse);
       expect(again(null, SubscriptionNoticeStage.grace), isFalse);
-    }, skip: _skipUntilImplemented);
+    });
 
     test('the stored stage keys never change', () {
       expect([for (final s in SubscriptionNoticeStage.values) s.key], ['none', 'expiring', 'grace', 'locked']);
@@ -213,14 +210,14 @@ void main() {
         final at6 = await stageFor({'subscriptionExpiresAt': inDays(5.9)});
         expect((at7, at6), (SubscriptionNoticeStage.expiring, SubscriptionNoticeStage.expiring));
         expect(NotificationPolicy.isUnreadAgain(seenStage: at7, current: at6), isFalse);
-      }, skip: _skipUntilImplemented);
+      });
 
       test('expired: grace, then locked after the grace days; a trial the same', () async {
         expect(await stageFor({'subscriptionExpiresAt': inDays(-1)}), SubscriptionNoticeStage.grace);
         expect(await stageFor({'subscriptionExpiresAt': inDays(-10)}), SubscriptionNoticeStage.locked);
         expect(await stageFor({'trialExpiresAt': inDays(3)}), SubscriptionNoticeStage.expiring);
         expect(await stageFor({'trialExpiresAt': inDays(-1)}), SubscriptionNoticeStage.grace);
-      }, skip: _skipUntilImplemented);
+      });
 
       test('a change of language cannot change the stage', () async {
         final facility = {'subscriptionExpiresAt': inDays(-1)};
@@ -228,7 +225,7 @@ void main() {
         L10n.setLocale(const Locale('sw'));
         addTearDown(() => L10n.setLocale(const Locale('en')));
         expect(await stageFor(facility), english);
-      }, skip: _skipUntilImplemented);
+      });
     });
   });
 }

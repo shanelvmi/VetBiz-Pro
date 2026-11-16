@@ -12,9 +12,6 @@ import 'package:vetbiz_pro/services/notification_feed.dart';
 
 import 'helpers/notification_harness.dart';
 
-// Was true until the implementation (every call threw UnimplementedError).
-const _skip = false;
-
 Future<NotificationFeedController> feed(FirebaseFirestore fs, String uid, Clock clock,
     {Subs? subs, int window = 200, int olderPage = 100, bool admin = true}) async {
   final c = newFeed(fs, uid, clock, subs: subs, window: window, olderPage: olderPage, admin: admin)..start();
@@ -46,7 +43,7 @@ void main() {
     expect(b.items.every((i) => !i.isRead), isTrue);
     // Nothing shared changed: no readAt on the documents.
     expect((await fs.doc('facilities/F1/notifications/n2').get()).data()!.containsKey('readAt'), isFalse);
-  }, skip: _skip);
+  });
 
   test('Mark all as read is per person', () async {
     final fs = FakeFirebaseFirestore();
@@ -59,7 +56,7 @@ void main() {
     await settle();
     expect(a.hasUnread, isFalse);
     expect(b.hasUnread, isTrue);
-  }, skip: _skip);
+  });
 
   test('lifetimes hide items through the policy (injected clock)', () async {
     final fs = FakeFirebaseFirestore();
@@ -87,14 +84,14 @@ void main() {
     clock.now = t0.add(const Duration(days: 90));
     c.refresh();
     expect(idsOf(c), ['pending'], reason: 'unread: 90 days; persistent: never by age');
-  }, skip: _skip);
+  });
 
   test('an assistant does not see an admins-only notice', () async {
     final fs = FakeFirebaseFirestore();
     await seed(fs, 'pending', 'assistantPending', audience: 'admins');
     final c = await feed(fs, 'S', Clock(), admin: false);
     expect(c.items, isEmpty);
-  }, skip: _skip);
+  });
 
   test('escalation by stage: a new stage is unread again, a new day count is not', () async {
     final fs = FakeFirebaseFirestore();
@@ -126,7 +123,7 @@ void main() {
     subs.set(SubscriptionFacts.none);
     await settle();
     expect(idsOf(c), isNot(contains(subscriptionNoticeId)), reason: 'renewed: resolved');
-  }, skip: _skip);
+  });
 
   test('a read from an earlier subscription cycle does not count', () async {
     final fs = FakeFirebaseFirestore();
@@ -139,7 +136,7 @@ void main() {
     subs.set(SubscriptionFacts(stage: SubscriptionNoticeStage.expiring, notice: expiring.notice, cycleStart: clock.now));
     await settle();
     expect(item(c, subscriptionNoticeId).isRead, isFalse);
-  }, skip: _skip);
+  });
 
   test('Remove read ones: only my read routine and dismissible items; Undo restores exactly', () async {
     final fs = FakeFirebaseFirestore();
@@ -162,7 +159,7 @@ void main() {
     await c.restore(entries);
     await settle();
     expect([for (final i in c.items) '${i.id}:${i.isRead}'], before);
-  }, skip: _skip);
+  });
 
   test('remove skips persistent items', () async {
     final fs = FakeFirebaseFirestore();
@@ -172,7 +169,7 @@ void main() {
     await c.remove(c.items);
     await settle();
     expect(idsOf(c).toSet(), {'p1', 'rej'});
-  }, skip: _skip);
+  });
 
   test('a rejection stays until a newer claim is sent', () async {
     final fs = FakeFirebaseFirestore();
@@ -183,7 +180,7 @@ void main() {
         {'status': 'pending', 'submittedAt': Timestamp.fromDate(t0.add(const Duration(hours: 1)))});
     await settle();
     expect(c.items, isEmpty);
-  }, skip: _skip);
+  });
 
   test('Load older: the window, then 100 at a time, until none are left', () async {
     final fs = FakeFirebaseFirestore();
@@ -199,7 +196,7 @@ void main() {
     await c.loadOlder();
     expect(idsOf(c).length, 7);
     expect(c.canLoadOlder, isFalse);
-  }, skip: _skip);
+  });
 
   test('a dismissed promotion is dismissed for me only', () async {
     final fs = FakeFirebaseFirestore();
@@ -216,7 +213,7 @@ void main() {
     expect(isPromotionDismissed(promotionLabel: 'October Offer', stored: stored, state: stateOf('B')), isFalse);
     expect(isPromotionDismissed(promotionLabel: 'Another', stored: stored, state: stateOf('A')), isFalse);
     expect(idsOf(b), ['promo']);
-  }, skip: _skip);
+  });
 }
 
 // The bell (dashboard_screen.dart) reads the same controller: its red dot
@@ -234,7 +231,7 @@ void bellTests() {
     await settle();
     expect(a.hasUnreadAlert, isFalse, reason: 'the unread trial row is the blue dot');
     expect(b.hasUnreadAlert, isTrue);
-  }, skip: _skipBell);
+  });
 
   test('a dismissed promotion no longer lights the accent for me', () async {
     final fs = FakeFirebaseFirestore();
@@ -246,8 +243,6 @@ void bellTests() {
     await settle();
     expect(a.isPromotionDismissedForMe('October Offer'), isTrue);
     expect(b.isPromotionDismissedForMe('October Offer'), isFalse);
-  }, skip: _skipBell);
+  });
 }
 
-// Was true until the bell's members were implemented.
-const _skipBell = false;

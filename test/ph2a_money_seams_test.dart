@@ -33,8 +33,6 @@ import 'helpers/wait_until.dart';
 // PH2a seams for the money screens (phone_foundations.md section 10): each
 // takes an optional firestore (and Add Transaction an authService), as
 // LoginScreen does, so the size matrix can build them in PH5 and PH6.
-const _skip = false;
-
 /// No one signed in; nothing else is called while a screen only builds.
 class _NoAuth implements AuthService {
   @override
@@ -133,7 +131,7 @@ void main() {
       final others = errors.where((m) => !m.contains('RenderFlex overflowed')).toList();
       expect(others, isEmpty, reason: e.key);
       expect(find.byWidgetPredicate((w) => w.runtimeType == e.value(fs).runtimeType), findsOneWidget);
-    }, skip: _skip);
+    });
 
     final overflow = _overflowsToday[e.key];
     testWidgets('${e.key} at 390x844 with no exception${overflow == null ? '' : ' (skipped: $overflow)'}', (tester) async {
@@ -141,7 +139,7 @@ void main() {
       final wrap = await _providers(tester, fs);
       await pumpAtSize(tester, screen: e.value(fs), size: const Size(390, 844), wrap: wrap);
       await checkCase(tester, phone: false, where: e.key);
-    }, skip: _skip || overflow != null);
+    }, skip: overflow != null);
   }
 
   test('with nothing passed, each screen uses FirebaseFirestore.instance (and Add Transaction a new AuthService)', () {
@@ -166,5 +164,5 @@ void main() {
     final tx = File('lib/screens/transactions/add_transaction_screen.dart').readAsStringSync();
     expect(tx, contains('widget.authService ?? AuthService()'));
     expect('AuthService()'.allMatches(tx).length, 1);
-  }, skip: _skip);
+  });
 }

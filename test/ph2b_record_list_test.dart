@@ -7,8 +7,6 @@ import 'package:vetbiz_pro/widgets/record_list.dart';
 import 'helpers/screen_size_matrix.dart';
 
 // PH2b S5: RecordList alone (no screen uses it yet; PH5 moves the lists).
-const _skip = false;
-
 class _Rec {
   final String name;
   final double amount;
@@ -76,12 +74,10 @@ Widget _screen({
     );
 
 void main() {
-  if (!_skip) {
-    screenSizeMatrix('RecordList with records', screen: () => _screen(items: _records, hasMore: true, selected: _records[1]));
-    screenSizeMatrix('RecordList empty', screen: () => _screen(items: const []));
-    screenSizeMatrix('RecordList loading', screen: () => _screen());
-    screenSizeMatrix('RecordList error', screen: () => _screen(errorText: 'Imeshindwa kupakia rekodi.', onRetry: () {}));
-  }
+  screenSizeMatrix('RecordList with records', screen: () => _screen(items: _records, hasMore: true, selected: _records[1]));
+  screenSizeMatrix('RecordList empty', screen: () => _screen(items: const []));
+  screenSizeMatrix('RecordList loading', screen: () => _screen());
+  screenSizeMatrix('RecordList error', screen: () => _screen(errorText: 'Imeshindwa kupakia rekodi.', onRetry: () {}));
 
   testWidgets('a table with a header at 900 and wider, cards below', (tester) async {
     await pumpAtSize(tester, screen: _screen(items: _records), size: const Size(1200, 800));
@@ -89,7 +85,7 @@ void main() {
     expect(find.byType(Card), findsNothing);
     await pumpAtSize(tester, screen: _screen(items: _records), size: const Size(899, 800));
     expect(find.text('Jina la mteja au bidhaa iliyouzwa'), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('the header stays while the rows scroll', (tester) async {
     await pumpAtSize(tester, screen: _screen(items: _records), size: const Size(1200, 800));
@@ -97,7 +93,7 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -400));
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(find.text('Kiasi kilicholipwa')), before);
-  }, skip: _skip);
+  });
 
   testWidgets('too narrow for the columns\' minimum widths: cards, never a sideways scroll', (tester) async {
     final wide = [
@@ -106,7 +102,7 @@ void main() {
     await pumpAtSize(tester, screen: _screen(items: _records, columns: wide), size: const Size(1000, 800));
     expect(find.text('Jina la mteja au bidhaa iliyouzwa'), findsNothing);
     expect(tester.takeException(), isNull);
-  }, skip: _skip);
+  });
 
   for (final size in const [Size(390, 844), Size(1200, 800)]) {
     testWidgets('at $size: a tap opens the record, rows are 48 high or more, the selected one says so', (tester) async {
@@ -121,13 +117,13 @@ void main() {
       // The given label first; the card's own texts follow it.
       expect(node.label, startsWith(_records[1].name));
       semantics.dispose();
-    }, skip: _skip);
+    });
   }
 
   testWidgets('on a phone the card text is at least 14 px', (tester) async {
     await pumpAtSize(tester, screen: _screen(items: _records), size: const Size(360, 740));
     expect(smallTexts(tester, min: 14), isEmpty);
-  }, skip: _skip);
+  });
 
   testWidgets('load more: a button after the last record, a spinner while it loads', (tester) async {
     var asked = 0;
@@ -137,7 +133,7 @@ void main() {
     await pumpAtSize(tester, screen: _screen(items: _records.take(2).toList(), loadingMore: true), size: const Size(390, 844));
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.text('Load more'), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('loading, empty and error states; Retry calls back', (tester) async {
     await pumpAtSize(tester, screen: _screen(), size: const Size(390, 844));
@@ -149,5 +145,5 @@ void main() {
     expect(find.text('Imeshindwa'), findsOneWidget);
     await tester.tap(find.text('Retry'));
     expect(retried, 1);
-  }, skip: _skip);
+  });
 }

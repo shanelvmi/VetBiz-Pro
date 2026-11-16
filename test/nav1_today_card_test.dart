@@ -15,8 +15,6 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
 import 'package:vetbiz_pro/theme/color_math.dart';
 
-const _skip = false;
-
 const _figures = PhoneHomeFigures(sales: 1250000, collected: 980000, owed: 310000, netProfit: 145000);
 final _amounts = [_figures.sales, _figures.collected, _figures.owed, _figures.netProfit].map(Money.format).toList();
 const _key = 'ui_home_amounts_hidden';
@@ -109,7 +107,7 @@ void main() {
           expect(ColorMath.contrast(muted.style!.color!, d.color!), greaterThanOrEqualTo(4.5));
           // HUB3: the chosen option's label sits on its white pill, in the deep ink.
           expect(ColorMath.contrast(label.style!.color!, colors.onBrandSurface), greaterThanOrEqualTo(4.5));
-        }, skip: _skip);
+        });
       }
     }
   });
@@ -134,7 +132,7 @@ void main() {
     for (final amount in _amounts) {
       expect(find.text(amount), findsOneWidget);
     }
-  }, skip: _skip);
+  });
 
   testWidgets('a short cross-fade, no backdrop blur', (tester) async {
     await _card(tester);
@@ -145,7 +143,7 @@ void main() {
     expect(find.byType(BackdropFilter), findsNothing);
     await tester.pumpAndSettle();
     expect(_masks, findsNWidgets(4));
-  }, skip: _skip);
+  });
 
   testWidgets('reduced motion: the mask replaces the amounts in one frame', (tester) async {
     await _card(tester, reduceMotion: true);
@@ -153,7 +151,7 @@ void main() {
     await tester.pump();
     expect(find.text(_amounts[0]), findsNothing);
     expect(_masks, findsNWidgets(4));
-  }, skip: _skip);
+  });
 
   testWidgets('tooltip and Semantics say what a tap does; a 48 target', (tester) async {
     final semantics = tester.ensureSemantics();
@@ -166,7 +164,7 @@ void main() {
     expect(find.byTooltip('Show amounts'), findsOneWidget);
     expect(tester.getSemantics(find.byTooltip('Show amounts')).tooltip, 'Show amounts');
     semantics.dispose();
-  }, skip: _skip);
+  });
 
   testWidgets('remembered on the device: saved, kept across a rebuild and restored on the next start',
       (tester) async {
@@ -181,7 +179,7 @@ void main() {
     expect(_masks, findsNWidgets(4));
     await _tapEye(tester);
     expect((await SharedPreferences.getInstance()).getBool(_key), isFalse);
-  }, skip: _skip);
+  });
 
   testWidgets('an assistant never sees Net profit, hidden or shown; hiding changes no figure', (tester) async {
     await _card(tester, isAdmin: false);
@@ -195,7 +193,7 @@ void main() {
     for (final amount in _amounts.take(3)) {
       expect(find.text(amount), findsOneWidget);
     }
-  }, skip: _skip);
+  });
 
   group('size matrix', () {
     for (final size in const [Size(360, 740), Size(390, 844), Size(740, 360)]) {
@@ -212,7 +210,7 @@ void main() {
               final card = tester.getRect(find.byType(TodayCard));
               final eye = tester.getRect(find.descendant(of: find.byType(TodayCard), matching: find.byType(IconButton)));
               expect(card.contains(eye.topLeft) && card.contains(eye.bottomRight - const Offset(1, 1)), isTrue);
-            }, skip: _skip);
+            });
           }
         }
       }

@@ -10,9 +10,6 @@ import 'package:vetbiz_pro/services/notification_feed.dart';
 
 import 'helpers/notification_harness.dart';
 
-// Was true until the screens were wired (NOTIF-2c).
-const _skip = false;
-
 const _minTap = 48.0;
 
 NotificationItem itemOf(NotificationFeedController c, String id) => c.items.firstWhere((i) => i.id == id);
@@ -51,7 +48,7 @@ void main() {
       expect(moreOf(id), findsOneWidget, reason: id);
     }
     await letToastGo(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('selection mode: checkboxes, never on persistent rows, Remove selected with Undo', (tester) async {
     final fs = FakeFirebaseFirestore();
@@ -76,7 +73,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(c.items.length, 3);
     await letToastGo(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Load older on the full screen; not in the dropdown', (tester) async {
     final fs = FakeFirebaseFirestore();
@@ -95,7 +92,7 @@ void main() {
     addTearDown(d.dispose);
     await pumpNotifications(tester, d, dropdown: true);
     expect(find.text('Load older'), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('the wide table has the menu on every row; tapping a row reads it', (tester) async {
     final fs = FakeFirebaseFirestore();
@@ -108,7 +105,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(itemOf(c, 'n1').isRead, isTrue);
     expect(find.text('Remove read ones'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   for (final dark in [false, true]) {
     for (final width in [360.0, 390.0]) {
@@ -134,7 +131,7 @@ void main() {
 
         await openMenu(tester, 'p1');
         expect(tester.takeException(), isNull);
-      }, skip: _skip);
+      });
     }
   }
 
@@ -151,7 +148,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('notification-header-more')));
     await tester.pumpAndSettle();
     expect(find.text('Remove read ones'), findsOneWidget);
-  }, skip: _skip);
+  });
 }
 
 // Kiswahili texts are longer: the same screens at 360 px, Light and Dark,

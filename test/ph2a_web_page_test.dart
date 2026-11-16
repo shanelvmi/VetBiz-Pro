@@ -9,8 +9,6 @@ import 'package:vetbiz_pro/theme/app_palette.dart';
 // PH2a: the web page's own texts and the installed app's manifest
 // (docs/design/phone_foundations.md risk 10, S10, and the owner's answers 3
 // and 4). Seen when the link is shared, saved to a home screen or installed.
-const _skip = false;
-
 const _name = AppInfo.name;
 const _description = 'Records for agrovets and veterinary centres.';
 
@@ -34,16 +32,16 @@ void main() {
     test('the tab title and the iOS home screen title are the app name', () {
       expect(RegExp('<title>([^<]*)</title>').firstMatch(html)?.group(1), _name);
       expect(_meta(html, 'apple-mobile-web-app-title'), _name);
-    }, skip: _skip);
+    });
 
     test('the description is the owner\'s sentence, the language English', () {
       expect(_meta(html, 'description'), _description);
       expect(html, contains('<html lang="en">'));
-    }, skip: _skip);
+    });
 
     test('the browser bar takes the Pasture primary', () {
       expect(_meta(html, 'theme-color')?.toUpperCase(), _hex(AppPalette.primary));
-    }, skip: _skip);
+    });
 
     test('no viewport-fit=cover yet (PH3 decides it on real devices)', () {
       expect(html, isNot(contains('viewport-fit')));
@@ -55,16 +53,16 @@ void main() {
       expect(manifest['name'], _name);
       expect(manifest['short_name'], _name);
       expect(manifest['description'], _description);
-    }, skip: _skip);
+    });
 
     test('the installed app may turn (the owner\'s answer 3)', () {
       expect(manifest['orientation'], 'any');
-    }, skip: _skip);
+    });
 
     test('the colours come from the Pasture palette', () {
       expect((manifest['theme_color'] as String).toUpperCase(), _hex(AppPalette.primary));
       expect((manifest['background_color'] as String).toUpperCase(), _hex(AppPalette.background));
-    }, skip: _skip);
+    });
 
     test('every icon is listed with a size and type, and its file exists', () {
       final icons = (manifest['icons'] as List).cast<Map<String, dynamic>>();

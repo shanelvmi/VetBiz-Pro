@@ -29,8 +29,6 @@ import 'helpers/login_harness.dart';
 // UI8 (owner) changed three things, so these checks follow: the brand row is
 // now a tinted header (AuthPhoneHeader; test/ui8_phone_login_test.dart),
 // the page has no Updates and no footer, and the fields' radius is 16.
-const _skip = false;
-
 const _page = ValueKey<String>('login-phone-page');
 const _brand = ValueKey<String>('login-phone-brand');
 const _button = ValueKey<String>('login-sign-in-button');
@@ -109,13 +107,13 @@ void main() {
     // The column: at most 420 wide, 24 px in from the sides.
     expect(_rect(tester, form).left, 24);
     expect(_rect(tester, form).width, 390 - 48);
-  }, skip: _skip);
+  });
 
   testWidgets('560 wide (still a phone): the column keeps 420 at most', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1), width: 560, height: 900);
     await _settle(tester);
     expect(_rect(tester, find.byKey(LoginScreen.loginCardKey)).width, lessThanOrEqualTo(420 - 48));
-  }, skip: _skip);
+  });
 
   testWidgets('the fields: filled, 52 high, a 1 px border, 16 px radius (UI8; was 14), leading icons; the button 52 high', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1), width: 390, height: 844);
@@ -136,7 +134,7 @@ void main() {
     expect(tester.widget<TextField>(fields.at(1)).decoration!.suffixIcon, isNotNull, reason: 'the eye');
     expect(_rect(tester, find.byKey(_button)).height, 52);
     expect(_rect(tester, find.byKey(_button)).width, 390 - 48);
-  }, skip: _skip);
+  });
 
   for (final size in const [Size(390, 844), Size(412, 915), Size(360, 740)]) {
     final at = '${size.width.toInt()}x${size.height.toInt()}';
@@ -153,7 +151,7 @@ void main() {
         expect(shown(find.text(_en.login_rememberMe)), isTrue);
         expect(shown(find.text(_en.login_forgotPassword)), isTrue);
       }
-    }, skip: _skip);
+    });
   }
 
   testWidgets('the background, the fields and the texts: contrast in all four themes, Light and Dark', (tester) async {
@@ -192,7 +190,7 @@ void main() {
         }
       }
     }
-  }, skip: _skip);
+  });
 
   // UI8: no Updates on a phone, so what the store holds never moves the page.
   testWidgets('none, one, several and loading Updates: no Updates frame, and the page does not move', (tester) async {
@@ -210,7 +208,7 @@ void main() {
     for (final MapEntry(:key, :value) in buttons.entries) {
       expect(value, buttons.values.first, reason: key);
     }
-  }, skip: _skip);
+  });
 
   testWidgets('the entrance: the header, then the form, once', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1), width: 390, height: 844);
@@ -227,7 +225,7 @@ void main() {
     tester.view.physicalSize = const Size(412, 915);
     await tester.pump();
     expect(opacity(), 1);
-  }, skip: _skip);
+  });
 
   testWidgets('the error and the red borders on the phone, as on wide windows', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(1), width: 390, height: 844);
@@ -240,7 +238,7 @@ void main() {
       final side = (f.decoration!.enabledBorder! as OutlineInputBorder).borderSide;
       expect(side.color, colors.dangerAccent.withValues(alpha: AppAlpha.a70));
     }
-  }, skip: _skip);
+  });
 
   testWidgets('landscape 740x360: the page scrolls to the button', (tester) async {
     await pumpLogin(tester, await dbWithUpdates(3), width: 740, height: 360);
@@ -248,5 +246,5 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.scrollUntilVisible(find.byKey(_button), 100, scrollable: find.byType(Scrollable).first);
     expect(_rect(tester, find.byKey(_button)).bottom, lessThanOrEqualTo(360));
-  }, skip: _skip);
+  });
 }

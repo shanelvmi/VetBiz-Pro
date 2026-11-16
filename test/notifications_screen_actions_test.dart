@@ -10,9 +10,6 @@ import 'package:vetbiz_pro/services/notification_feed.dart';
 
 import 'helpers/notification_harness.dart';
 
-// Was true until the screens were wired (NOTIF-2c).
-const _skip = false;
-
 NotificationItem itemOf(NotificationFeedController c, String id) => c.items.firstWhere((i) => i.id == id);
 
 void main() {
@@ -40,7 +37,7 @@ void main() {
 
     await openMenu(tester, 'pay');
     expect(find.text('Open'), findsNothing, reason: 'nothing to open');
-  }, skip: _skip);
+  });
 
   testWidgets('persistent rows: no Remove, the reason line instead', (tester) async {
     final fs = FakeFirebaseFirestore();
@@ -63,7 +60,7 @@ void main() {
       await tester.tapAt(const Offset(1, 1));
       await tester.pumpAndSettle();
     }
-  }, skip: _skip);
+  });
 
   testWidgets('the trial row explains itself too', (tester) async {
     final fs = FakeFirebaseFirestore();
@@ -74,7 +71,7 @@ void main() {
     await openMenu(tester, trialStatusRowId);
     expect(find.text('Remove'), findsNothing);
     expect(find.text('Stays until the free trial ends'), findsOneWidget);
-  }, skip: _skip);
+  });
 
   testWidgets('tapping a row marks it read for me only', (tester) async {
     final fs = FakeFirebaseFirestore();
@@ -88,7 +85,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(itemOf(a, 'n1').isRead, isTrue);
     expect(itemOf(b, 'n1').isRead, isFalse);
-  }, skip: _skip);
+  });
 
   testWidgets('a single Remove has no dialog, only the Undo toast; Undo puts it back', (tester) async {
     final fs = FakeFirebaseFirestore();
@@ -109,7 +106,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('T n1'), findsOneWidget);
     await letToastGo(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('Remove read ones: confirmation, only read removable ones, then Undo restores', (tester) async {
     final fs = FakeFirebaseFirestore();
@@ -135,7 +132,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(c.items.map((i) => i.id).toSet(), {'r1', 'r2', 'u1', 'p1'});
     await letToastGo(tester);
-  }, skip: _skip);
+  });
 
   testWidgets('cancelling the confirmation removes nothing; there is no delete everything', (tester) async {
     final fs = FakeFirebaseFirestore();
@@ -152,7 +149,7 @@ void main() {
     expect(c.items.map((i) => i.id), ['r1']);
     expect(find.textContaining('Delete'), findsNothing);
     expect(find.textContaining('Remove all'), findsNothing);
-  }, skip: _skip);
+  });
 
   testWidgets('Mark all as read is per person on the screen', (tester) async {
     final fs = FakeFirebaseFirestore();
@@ -166,7 +163,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(a.hasUnread, isFalse);
     expect(b.hasUnread, isTrue);
-  }, skip: _skip);
+  });
 
   testWidgets('the empty state keeps its plain texts, in the dropdown too', (tester) async {
     for (final dropdown in [false, true]) {
@@ -177,5 +174,5 @@ void main() {
       expect(find.text("You're all caught up!"), findsNothing);
       c.dispose();
     }
-  }, skip: _skip);
+  });
 }

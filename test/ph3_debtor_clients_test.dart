@@ -24,8 +24,6 @@ import 'helpers/fake_firestore.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'helpers/wait_until.dart';
 
-const _skip = false;
-
 class _NoAuth implements AuthService {
   @override
   User? getCurrentUser() => null;
@@ -48,14 +46,14 @@ void main() {
     await _seed(fs);
     final debtors = await fetchAllDebtorClients(fs, testFacilityId);
     expect({for (final c in debtors) c.name: c.balance}, {'Juma': 12500, 'Baraka': 300});
-  }, skip: _skip);
+  });
 
   test('nobody owes money: an empty list; no facility open: an empty list', () async {
     final fs = newFakeFirestore();
     await seedClient(fs, id: 'c2', name: 'Neema', balance: 0);
     expect(await fetchAllDebtorClients(fs, testFacilityId), isEmpty);
     expect(await fetchAllDebtorClients(fs, null), isEmpty);
-  }, skip: _skip);
+  });
 
   testWidgets('Debtors: Record Payment still opens the form with every debtor and their balances', (tester) async {
     SharedPreferences.setMockInitialValues({'facilityId': testFacilityId, 'facilityName': 'Kilimo Agrovet'});
@@ -88,5 +86,5 @@ void main() {
     expect(form.debtorBalances, {'c1': 12500, 'c3': 300});
     expect(form.facilityId, testFacilityId);
     expect(Provider.of<ClientProvider>(tester.element(find.byType(DebtorsScreen)), listen: false), isNotNull);
-  }, skip: _skip);
+  });
 }

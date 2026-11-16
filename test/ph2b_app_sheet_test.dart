@@ -10,8 +10,6 @@ import 'package:vetbiz_pro/widgets/app_sheet.dart';
 // PH2b S4 and S8: showAppSheet alone (no screen uses it yet: the "+" sheet
 // in PH3 and the row details in PH5 will), AdaptiveFormSize's presets, and
 // the bottom safe-area helper.
-const _skip = false;
-
 const _home = Key('home');
 const _content = Key('content');
 
@@ -79,7 +77,7 @@ void main() {
       );
       expect(find.text('Rekodi malipo ya mteja mwenye jina refu sana'), findsOneWidget);
       expect(tester.takeException(), isNull);
-    }, skip: _skip);
+    });
 
     testWidgets('long content: at most 92% of the height, and it scrolls', (tester) async {
       await _host(tester, const Size(390, 844), lines: 60);
@@ -90,24 +88,24 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Done'), findsOneWidget);
       expect(tester.takeException(), isNull);
-    }, skip: _skip);
+    });
 
     testWidgets('the content ends above the home indicator', (tester) async {
       await _host(tester, const Size(390, 844));
       final done = tester.getRect(find.text('Done'));
       expect(done.bottom, lessThanOrEqualTo(844 - 34));
-    }, skip: _skip);
+    });
 
     testWidgets('the sheet rises above the keyboard', (tester) async {
       await _host(tester, const Size(390, 844), keyboard: 300);
       final done = tester.getRect(find.text('Done'));
       expect(done.bottom, lessThanOrEqualTo(844 - 300));
-    }, skip: _skip);
+    });
 
     testWidgets('a phone on its side is still a phone', (tester) async {
       await _host(tester, const Size(844, 390));
       expect(find.byType(BottomSheet), findsOneWidget);
-    }, skip: _skip);
+    });
 
     testWidgets('fullPage: a page with an AppBar and a back arrow', (tester) async {
       final results = await _host(tester, const Size(390, 844), fullPage: true);
@@ -118,14 +116,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byKey(_content), findsNothing);
       expect(results, [null]);
-    }, skip: _skip);
+    });
 
     testWidgets('the result comes back on pop', (tester) async {
       final results = await _host(tester, const Size(390, 844));
       await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();
       expect(results, ['done']);
-    }, skip: _skip);
+    });
   });
 
   group('on a tablet or a computer', () {
@@ -138,14 +136,14 @@ void main() {
         expect(box.width, lessThanOrEqualTo(AppSizes.dialogLg));
         expect(box.height, lessThanOrEqualTo(size.height * AppSheetMetrics.dialogMaxHeightFactor));
         expect(tester.takeException(), isNull);
-      }, skip: _skip);
+      });
     }
 
     testWidgets('fullPage stays a dialog on wide windows', (tester) async {
       await _host(tester, const Size(1200, 800), fullPage: true);
       expect(find.byType(Dialog), findsOneWidget);
       expect(find.byType(AppBar), findsNothing);
-    }, skip: _skip);
+    });
 
     testWidgets('its Close button (English and Kiswahili) closes it with no result', (tester) async {
       final results = await _host(tester, const Size(1200, 800), locale: const Locale('sw'));
@@ -154,7 +152,7 @@ void main() {
       await tester.tap(close);
       await tester.pumpAndSettle();
       expect(results, [null]);
-    }, skip: _skip);
+    });
   });
 
   test('AdaptiveFormSize: the presets keep the old numbers', () {
@@ -166,7 +164,7 @@ void main() {
     expect(AdaptiveFormSize.reportFull.resolve(const Size(2000, 800)), const Size(1100, 720));
     expect(AdaptiveFormSize.reportReview.resolve(const Size(2000, 800)).width, 900);
     expect(AdaptiveFormSize.activityLog.resolve(const Size(1200, 800)), const Size(1000, 680));
-  }, skip: _skip);
+  });
 
   testWidgets('AppSafeArea.bottomOf is the window\'s bottom view padding, keyboard or not', (tester) async {
     tester.view.devicePixelRatio = 1;
