@@ -554,10 +554,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             decoration: BoxDecoration(
               color: context.colors.dangerSurface,
               borderRadius: BorderRadius.circular(AppRadius.r12),
+              // POL2: the danger border carries it; no red glow (owner rule 4).
               border: Border.all(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a40)),
-              boxShadow: [
-                BoxShadow(color: context.colors.dangerAccent.withValues(alpha: AppAlpha.a20), blurRadius: 16, offset: const Offset(0, 6)),
-              ],
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
