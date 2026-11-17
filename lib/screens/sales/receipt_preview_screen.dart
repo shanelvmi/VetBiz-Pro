@@ -31,6 +31,9 @@ import '../../utils/receipt_texts.dart';
 import '../../utils/facility_display.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/printable_theme.dart';
+import '../../data/payment_status.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/app_status.dart';
 
 /// Shows the receipt as it will actually look before doing anything with
 /// it - a real preview, not a blind print. From here it can be shared or
@@ -232,7 +235,6 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     final statusText = balance > 0
         ? (sale.totalPaid > 0 ? ReceiptTexts.partiallyPaid : ReceiptTexts.balanceDue)
         : ReceiptTexts.paidInFull;
-    final statusColor = balance > 0 ? context.colors.danger : context.colors.success;
 
     return Scaffold(
       backgroundColor: context.colors.surfaceMuted,
@@ -327,7 +329,6 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
                 balance: balance,
                 facilityName: facilityName,
                 statusText: statusText,
-                statusColor: statusColor,
               ),
             ],
           );
@@ -718,7 +719,6 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
     required double balance,
     required String facilityName,
     required String statusText,
-    required Color statusColor,
   }) {
     Widget field(IconData icon, String label, String value) {
       return Padding(
@@ -750,7 +750,10 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r14),
-        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 10, offset: const Offset(0, 3))],
+        // POL4 (owner rule 4): the details panel beside the receipt is a flat
+        // card with a hairline (its shadow was allowlisted as the receipt
+        // paper's, but the paper has none). The receipt itself is unchanged.
+        border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -758,24 +761,15 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.s6),
-                  decoration: BoxDecoration(color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
-                  child: Icon(Icons.receipt_long_outlined, size: AppIconSize.i18, color: context.colors.primary),
-                ),
+                // POL4: no tinted tile behind the icon (decorative).
+                Icon(Icons.receipt_long_outlined, size: AppIconSize.i18, color: context.colors.textSecondary),
                 const SizedBox(width: AppSpacing.s8),
                 Expanded(child: Text(context.l10n.receipt_details, style: const TextStyle(fontSize: AppFontSize.f16, fontWeight: AppFontWeight.bold))),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r20)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.check_circle, size: AppIconSize.i12, color: statusColor),
-                      const SizedBox(width: AppSpacing.s3),
-                      Text(_statusLabel(statusText), style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: statusColor)),
-                    ],
-                  ),
+                // POL4 (owner rule 3): the dot and the word; a part payment is
+                // warning, as in the lists (it was drawn red here).
+                StatusDot(
+                  status: paymentAppStatus(PaymentStatus.of(sale.totalPaid, sale.totalAmount)),
+                  label: _statusLabel(statusText),
                 ),
               ],
             ),

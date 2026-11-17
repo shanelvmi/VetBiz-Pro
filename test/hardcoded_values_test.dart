@@ -113,8 +113,8 @@ void main() {
       'lib/screens/dashboard/subscription_banner.dart',
       // POL4: Add Sale's floating product picker.
       'lib/screens/sales/add_sale_screen.dart',
-      'lib/screens/sales/receipt_preview_screen.dart',
-      'lib/screens/services/service_receipt_preview_screen.dart',
+      // POL4: the receipt previews' entries are gone: that shadow was the
+      // details panel's (decorative, now a hairline), not the paper's.
     ]));
     for (final a in allowed) {
       expect(a.reason, matches(RegExp(r'^POL\d+: functional')), reason: a.file);
