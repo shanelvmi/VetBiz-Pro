@@ -168,6 +168,9 @@ Future<Ph5App> pumpPh5(
   bool settle = true,
   bool reduceMotion = false,
   AuthService? auth,
+  // POL4: a colour theme and the text scale (the defaults change nothing).
+  AppColorTheme colorTheme = AppColorTheme.pasture,
+  double textScale = 1,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -219,9 +222,11 @@ Future<Ph5App> pumpPh5(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: locale,
-      theme: AppTheme.build(AppColorTheme.pasture, look == MatrixLook.dark ? Brightness.dark : Brightness.light),
+      theme: AppTheme.build(colorTheme, look == MatrixLook.dark ? Brightness.dark : Brightness.light),
       builder: (context, child) =>
-          MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion), child: child!),
+          MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: reduceMotion, textScaler: TextScaler.linear(textScale)),
+              child: child!),
       home: pushed ? const Scaffold(body: Text('UNDER')) : screen(fs),
     ),
   )));
