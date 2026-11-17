@@ -47,4 +47,8 @@ after it. The tests let them through only as RenderFlex overflows
 
 ## Products (group 4, POL5)
 
-(Added as found.)
+None found. Products, Stock Store and Stock Alerts were pumped at 360x640,
+390x844, 768x1024, 1024x768 and 1200x800, text 1.0 and 1.3 (reduced motion),
+every error collected one by one: no overflow (pol5_products_test.dart).
+Not a defect but worth knowing: at 1024 Stock Alerts' kind FilterRow
+scrolls sideways (Expired is off the edge until scrolled).
