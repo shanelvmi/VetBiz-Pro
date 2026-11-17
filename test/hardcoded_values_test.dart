@@ -111,15 +111,19 @@ void main() {
     expect(allowed.map((a) => a.file), unorderedEquals([
       'lib/screens/dashboard/home_action_panel.dart',
       'lib/screens/dashboard/subscription_banner.dart',
+      // POL4: Add Sale's floating product picker.
+      'lib/screens/sales/add_sale_screen.dart',
       'lib/screens/sales/receipt_preview_screen.dart',
       'lib/screens/services/service_receipt_preview_screen.dart',
     ]));
     for (final a in allowed) {
-      expect(a.reason, startsWith('POL1: functional'), reason: a.file);
+      expect(a.reason, matches(RegExp(r'^POL\d+: functional')), reason: a.file);
     }
     // The ratchet as POL1 seeded it; it only goes down.
     expect(totals(baseline.counts)['R13'], lessThanOrEqualTo(11));
     expect(totals(baseline.counts)['R14'], lessThanOrEqualTo(35));
+    // POL4 (group 3): 19 -> 16 (two card shadows gone, the picker allowlisted).
+    expect(totals(baseline.counts)['R14'], lessThanOrEqualTo(16));
   });
 
   // POL3 (owner: no gradient, ever): R13 is at zero and nothing is

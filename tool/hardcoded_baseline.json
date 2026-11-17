@@ -303,6 +303,12 @@
     },
     {
       "rule": "R14",
+      "file": "lib/screens/sales/add_sale_screen.dart",
+      "lineContains": "BoxShadow(",
+      "reason": "POL4: functional, Add Sale's product picker is a draggable panel floating over the form; the shadow is its edge"
+    },
+    {
+      "rule": "R14",
       "file": "lib/screens/sales/receipt_preview_screen.dart",
       "lineContains": "BoxShadow(",
       "reason": "POL1: functional, the receipt preview is a sheet of paper on the page (receipts stay light)"
@@ -337,7 +343,6 @@
       "lib/screens/products/products_screen.dart": 3,
       "lib/screens/products/stock_alerts_screen.dart": 1,
       "lib/screens/register_screen.dart": 1,
-      "lib/screens/sales/add_sale_screen.dart": 1,
       "lib/screens/store/stockstore_screen.dart": 3,
       "lib/screens/transactions/transactions_screen.dart": 1
     }

@@ -29,6 +29,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_tap_target.dart';
 import '../../theme/app_motion.dart';
@@ -1637,7 +1638,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
           style: ButtonStyle(
             shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10))),
             backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-              if (states.contains(WidgetState.hovered)) return context.colors.accent;
+              if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary); // POL4: one accent (POL3's hover)
               return context.colors.primary;
             }),
           ),
@@ -2130,7 +2131,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                   children: _clientSearchResults.map((client) {
                     return ListTile(
                       title: Text(client.name),
-                      hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a15),
+                      hoverColor: context.colors.primary.withValues(alpha: AppAlpha.a15),
                       onTap: () {
                         setState(() {
                           selectedClient = client;
@@ -2210,7 +2211,7 @@ class _AddSaleScreenState extends State<AddSaleScreen> {
                 ),
                 title: Text(product.name),
                 subtitle: Text(context.l10n.sales_availablePrice(product.sellableQty, context.l10n.productUnitLabel(product.unit), Money.unitPrice(product.sellPrice))),
-                hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a15),
+                hoverColor: context.colors.primary.withValues(alpha: AppAlpha.a15),
                 onTap: () => _addProductToSale(product),
               );
             }).toList(),

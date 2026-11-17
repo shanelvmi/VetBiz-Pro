@@ -24,6 +24,7 @@ import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
@@ -554,7 +555,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                 style: ButtonStyle(
                   shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10))),
                   backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                    if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                    if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary); // POL4: one accent (POL3's hover)
                     return context.colors.primary;
                   }),
                 ),
@@ -700,7 +701,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                     label: Text(context.l10n.services_addItem, style: TextStyle(color: context.colors.primary)),
                     style: ButtonStyle(
                       overlayColor: WidgetStateProperty.all(
-                        context.colors.accent.withValues(alpha: AppAlpha.a20),
+                        context.colors.primary.withValues(alpha: AppAlpha.a20),
                       ),
                     ),
                     onPressed: _addItem,
@@ -872,7 +873,8 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
       decoration: BoxDecoration(
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
+        // POL4: a decorative edge, in the border role (hairline).
+        border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1236,7 +1238,7 @@ class _AddEditServiceScreenState extends State<AddEditServiceScreen> {
                         return ListTile(
                           title: Text(client.name),
                           subtitle: Text(client.phone),
-                          hoverColor: context.colors.accent.withValues(alpha: AppAlpha.a15),
+                          hoverColor: context.colors.primary.withValues(alpha: AppAlpha.a15),
                           onTap: () {
                             setState(() {
                               _selectedClient = client;
