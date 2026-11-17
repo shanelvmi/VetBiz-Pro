@@ -260,6 +260,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get products_statusExpired => 'Expired';
 
   @override
+  String get products_statusEmpty => 'Empty';
+
+  @override
   String get summary_trendNew => 'New';
 
   @override

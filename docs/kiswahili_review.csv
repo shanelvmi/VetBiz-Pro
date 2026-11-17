@@ -78,6 +78,7 @@ products_statusLowStock,Low Stock,Stoo Chache,Stock status filter: low stock.,dr
 products_statusReorderSoon,Reorder Soon,Agiza Karibuni,Stock status filter: should be reordered soon.,draft
 products_statusDepleted,Depleted,Imeisha,Stock status filter: none left.,draft
 products_statusExpired,Expired,Muda Umepita,Stock status filter: past its expiry date.,draft
+products_statusEmpty,Empty,Tupu,Batch state: no units left in this batch.,draft
 summary_trendNew,New,Mpya,Badge on a summary card when there was nothing in the previous period to compare with.,draft
 loading_accountTitle,Loading your account...,Inapakia akaunti yako...,Title of the full loading screen after sign-in.,draft
 loading_accountSubtitle,Preparing your facility data and services,Inaandaa taarifa na huduma za kituo chako,Second line of the full loading screen after sign-in.,draft

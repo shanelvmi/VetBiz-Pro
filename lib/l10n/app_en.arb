@@ -158,6 +158,8 @@
   "@products_statusDepleted": {"description":"Stock status filter: none left."},
   "products_statusExpired": "Expired",
   "@products_statusExpired": {"description":"Stock status filter: past its expiry date."},
+  "products_statusEmpty": "Empty",
+  "@products_statusEmpty": {"description":"Batch state: no units left in this batch."},
   "summary_trendNew": "New",
   "@summary_trendNew": {"description":"Badge on a summary card when there was nothing in the previous period to compare with."},
   "loading_accountTitle": "Loading your account...",

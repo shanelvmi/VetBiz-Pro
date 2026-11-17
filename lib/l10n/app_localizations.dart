@@ -572,6 +572,12 @@ abstract class AppLocalizations {
   /// **'Expired'**
   String get products_statusExpired;
 
+  /// Batch state: no units left in this batch.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty'**
+  String get products_statusEmpty;
+
   /// Badge on a summary card when there was nothing in the previous period to compare with.
   ///
   /// In en, this message translates to:

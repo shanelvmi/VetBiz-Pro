@@ -261,6 +261,9 @@ class AppLocalizationsSw extends AppLocalizations {
   String get products_statusExpired => 'Muda Umepita';
 
   @override
+  String get products_statusEmpty => 'Tupu';
+
+  @override
   String get summary_trendNew => 'Mpya';
 
   @override

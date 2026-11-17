@@ -71,3 +71,16 @@ class StatusDot extends StatelessWidget {
     );
   }
 }
+
+/// POL5: a product's stock status (the STORED value products_screen's
+/// `_getProductStatus` writes and the counts and status filter compare:
+/// Active, Depleted, Low Stock, Reorder Soon, Expiring Soon, Expired, Not
+/// Stocked, Unknown) as one of the four states. It takes the stored English
+/// text, never a translated label, so the dot is the same in every language.
+/// Nothing in stock is "success": in stock is the normal case, so neutral.
+/// An unknown value is neutral.
+AppStatus stockAppStatus(String storedStatus) => switch (storedStatus) {
+      'Depleted' || 'Expired' => AppStatus.danger,
+      'Low Stock' || 'Reorder Soon' || 'Expiring Soon' => AppStatus.warning,
+      _ => AppStatus.neutral,
+    };

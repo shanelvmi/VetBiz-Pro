@@ -78,6 +78,7 @@
   "products_statusReorderSoon": ["Agiza Karibuni","Stock status filter: should be reordered soon.","draft"],
   "products_statusDepleted": ["Imeisha","Stock status filter: none left.","draft"],
   "products_statusExpired": ["Muda Umepita","Stock status filter: past its expiry date.","draft"],
+  "products_statusEmpty": ["Tupu","Batch state: no units left in this batch.","draft"],
   "summary_trendNew": ["Mpya","Badge on a summary card when there was nothing in the previous period to compare with.","draft"],
   "loading_accountTitle": ["Inapakia akaunti yako...","Title of the full loading screen after sign-in.","draft"],
   "loading_accountSubtitle": ["Inaandaa taarifa na huduma za kituo chako","Second line of the full loading screen after sign-in.","draft"],

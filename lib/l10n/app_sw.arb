@@ -158,6 +158,8 @@
   "@products_statusDepleted": {"x-review":"draft"},
   "products_statusExpired": "Muda Umepita",
   "@products_statusExpired": {"x-review":"draft"},
+  "products_statusEmpty": "Tupu",
+  "@products_statusEmpty": {"x-review":"draft"},
   "summary_trendNew": "Mpya",
   "@summary_trendNew": {"x-review":"draft"},
   "loading_accountTitle": "Inapakia akaunti yako...",
