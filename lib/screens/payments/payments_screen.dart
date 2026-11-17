@@ -19,7 +19,6 @@ import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_layout.dart';
-import '../../theme/app_motion.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
@@ -37,6 +36,9 @@ import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../utils/app_clock.dart';
+import '../../ui/polish/app_status.dart';
+import '../../ui/polish/flat_stat_card.dart';
+import '../../theme/polish_metrics.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -573,8 +575,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   }
 
   Widget _buildMetricsRow() {
-    return SizedBox(
-      height: 92,
+    // POL6: flat cards of one height (their own, not a fixed 92).
+    return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -590,47 +592,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
+  // POL6: flat cards (FlatStatCard, the loading flag kept); the trend is a
+  // StatusDot under the count. The figures are unchanged.
   Widget _metricCard(String title, _PaymentMetric? metric) {
-    final isLoading = _isMetricsLoading && metric == null;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.s12),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
-          const SizedBox(height: AppSpacing.s4),
-          AnimatedSwitcher(
-            duration: AppMotion.slow,
-            child: isLoading
-                ? SizedBox(key: const ValueKey('loading'), height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.primary))
-                : Column(
-                    key: const ValueKey('loaded'),
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            Money.format(metric?.amount ?? 0),
-                            style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold),
-                          ),
-                          if (metric?.trendPercent != null) ...[
-                            const SizedBox(width: AppSpacing.s8),
-                            _trendPill(metric!.trendPercent!),
-                          ],
-                        ],
-                      ),
-                      Text(context.l10n.payments_paymentCount(metric?.count ?? 0), style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
-                    ],
-                  ),
-          ),
-        ],
-      ),
+    return FlatStatCard(
+      label: title,
+      value: Money.format(metric?.amount ?? 0),
+      hint: context.l10n.payments_paymentCount(metric?.count ?? 0),
+      loading: _isMetricsLoading && metric == null,
+      footer: metric?.trendPercent == null ? null : _trend(metric!.trendPercent!),
     );
   }
 
@@ -638,68 +608,26 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     final trendPercent = (_previousOutstanding != null && _previousOutstanding != 0 && _outstandingAmount != null)
         ? ((_outstandingAmount! - _previousOutstanding!) / _previousOutstanding!) * 100
         : null;
-    final isLoading = _isMetricsLoading && _outstandingAmount == null;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.s12),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(context.l10n.payments_outstanding, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
-          const SizedBox(height: AppSpacing.s4),
-          AnimatedSwitcher(
-            duration: AppMotion.slow,
-            child: isLoading
-                ? SizedBox(key: const ValueKey('loading'), height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: context.colors.primary))
-                : Column(
-                    key: const ValueKey('loaded'),
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            Money.format(_outstandingAmount ?? 0),
-                            style: TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold, color: context.colors.accent),
-                          ),
-                          if (trendPercent != null) ...[
-                            const SizedBox(width: AppSpacing.s8),
-                            _trendPill(trendPercent, invertColors: true),
-                          ],
-                        ],
-                      ),
-                      Text(context.l10n.payments_debtCount(_outstandingCount ?? 0), style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
-                    ],
-                  ),
-          ),
-        ],
-      ),
+    // POL6: the figure is plain (it was in the accent, which means "yours").
+    return FlatStatCard(
+      label: context.l10n.payments_outstanding,
+      value: Money.format(_outstandingAmount ?? 0),
+      hint: context.l10n.payments_debtCount(_outstandingCount ?? 0),
+      loading: _isMetricsLoading && _outstandingAmount == null,
+      footer: trendPercent == null ? null : _trend(trendPercent, invertColors: true),
     );
   }
 
-  // For most metrics, up is good (green) and down is bad (red). For
-  // Outstanding, that's inverted - a rising unpaid balance is the bad
-  // direction, a falling one is good.
-  Widget _trendPill(double percent, {bool invertColors = false}) {
+  // For most metrics, up is good and down is bad. For Outstanding, that's
+  // inverted - a rising unpaid balance is the bad direction, a falling one
+  // is good. POL6: the one status style, the dot (success or danger, as
+  // the pill's colours were) and the arrow with the percentage as its word.
+  Widget _trend(double percent, {bool invertColors = false}) {
     final isUp = percent >= 0;
     final isGood = invertColors ? !isUp : isUp;
-    final color = isGood ? context.colors.successStrong : context.colors.dangerStrong;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
-      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r6)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(isUp ? Icons.arrow_upward : Icons.arrow_downward, size: AppIconSize.i12, color: color),
-          const SizedBox(width: AppSpacing.s2),
-          Text('${percent.abs().toStringAsFixed(1)}%', style: TextStyle(
-                  fontSize: AppFontSize.f10_5, color: color, fontWeight: AppFontWeight.semibold)),
-        ],
-      ),
+    return StatusDot(
+      status: isGood ? AppStatus.success : AppStatus.danger,
+      label: '${isUp ? '\u2191' : '\u2193'} ${percent.abs().toStringAsFixed(1)}%',
     );
   }
 
@@ -739,30 +667,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.s4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-              decoration: BoxDecoration(
-                  color: context.colors.success.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.check_circle, size: AppIconSize.i14, color: context.colors.successStrong),
-                  const SizedBox(width: AppSpacing.s4),
-                  Text(context.l10n.payments_received, style: TextStyle(
-                      fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.successStrong, fontWeight: AppFontWeight.semibold)),
-                ],
-              ),
-            ),
+            // POL6: the state as the dot plus the word.
+            StatusDot(status: AppStatus.success, label: context.l10n.payments_received),
             const SizedBox(height: AppSpacing.s12),
             Text(Money.format(e.amount), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22)),
             const SizedBox(height: AppSpacing.s4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-              decoration: BoxDecoration(
-                  color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-              child: Text(e.description, style: TextStyle(
-                  fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.primary, fontWeight: AppFontWeight.semibold)),
-            ),
+            // POL6: what the payment was for is a kind: plain secondary text.
+            Text(e.description, style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.textSecondary)),
             const SizedBox(height: AppSpacing.s4),
             Row(
               children: [
@@ -990,7 +901,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     return AppBar(
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e1,
+      elevation: AppElevation.e0,
+      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
@@ -1154,7 +1066,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         // While searching by name the list is not by day: the date too.
         grouped ? AppDateFormat.time24.format(e.timestamp) : AppDateFormat.dateShortTime24.format(e.timestamp),
       ],
-      status: RecordStatus(source, context.colors.primary),
+      // POL6: a kind, not a state: the neutral role, not the accent.
+      status: RecordStatus(source, context.colors.textSecondary),
       // A client's initials; an entry with no client (other income) shows
       // its kind's icon.
       initialsOf: e.clientName,

@@ -20,6 +20,10 @@ class FlatStatCard extends StatelessWidget {
   /// the value's place (a later refresh keeps showing the last figures).
   final bool loading;
 
+  /// POL6: one more line under the hint, for a figure's state (Payments:
+  /// the trend as a StatusDot). Null by default: no other card changes.
+  final Widget? footer;
+
   const FlatStatCard({
     super.key,
     required this.label,
@@ -28,6 +32,7 @@ class FlatStatCard extends StatelessWidget {
     this.onTap,
     this.selected = false,
     this.loading = false,
+    this.footer,
   });
 
   @override
@@ -78,6 +83,10 @@ class FlatStatCard extends StatelessWidget {
               if (hint != null) ...[
                 const SizedBox(height: PolishMetrics.statLineGap),
                 Text(hint!, maxLines: 1, overflow: TextOverflow.ellipsis, style: secondary),
+              ],
+              if (footer != null && !loading) ...[
+                const SizedBox(height: PolishMetrics.statLineGap),
+                footer!,
               ],
             ],
           ),

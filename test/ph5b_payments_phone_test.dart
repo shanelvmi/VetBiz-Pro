@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:vetbiz_pro/config/money.dart';
 import 'package:vetbiz_pro/screens/payments/payments_screen.dart';
+import 'package:vetbiz_pro/ui/polish/flat_stat_card.dart';
 import 'package:vetbiz_pro/widgets/date_range_dialog.dart';
 
 import 'helpers/counting_firestore.dart';
@@ -59,7 +60,9 @@ Future<void> _tapChip(WidgetTester tester, String label) async {
 }
 
 /// A wide card's figures (its title, then the amount and the count).
-Set<String> _card(String title) => ph5Texts(find.ancestor(of: find.text(title), matching: find.byType(Column)).first)..remove(title);
+// POL6: the cards are FlatStatCards; the trend is a StatusDot (an arrow and the percentage).
+Set<String> _card(String title) =>
+    ph5Texts(find.byWidgetPredicate((w) => w is FlatStatCard && w.label == title))..remove(title);
 
 void main() {
   ph5TestWidgets('the app bar: back arrow, title, search, Date Range in the menu; no floating button', (tester) async {
@@ -117,7 +120,7 @@ void main() {
     await _open(tester, size: _wide);
     _drainWide(tester);
     final cards = {for (final t in ['Today', 'This Week', 'This Month', 'Outstanding']) t: _card(t)};
-    expect(cards['Today'], containsAll([Money.format(27000), '2 payments', '80.0%']));
+    expect(cards['Today'], containsAll([Money.format(27000), '2 payments', '↑ 80.0%']));
     expect(find.text('Total: ${Money.format(27000)}'), findsOneWidget);
 
     await _open(tester);
