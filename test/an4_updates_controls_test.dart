@@ -79,7 +79,7 @@ void main() {
           final color = (dot.decoration! as BoxDecoration).color!;
           expect(ColorMath.contrast(ColorMath.composite(color, card), card), greaterThanOrEqualTo(3));
         }
-      }, skip: false);
+      });
     }
   }
 
@@ -108,13 +108,13 @@ void main() {
       expect(size.height, greaterThanOrEqualTo(48));
     }
     expect(find.bySemanticsLabel(_en.updates_slideOf(2, 3)), findsOneWidget);
-  }, skip: false);
+  });
 
   testWidgets('one update: no dots and no arrows', (tester) async {
     await pumpCard(tester, [textUpdate('1')], AppColorTheme.pasture, Brightness.light);
     expect(find.byType(UpdatesDots), findsNothing);
     expect(find.byIcon(Icons.arrow_back), findsNothing);
-  }, skip: false);
+  });
 
   Future<double> pumpFooter(WidgetTester tester, double width) async {
     tester.view.physicalSize = Size(width, 1600);
