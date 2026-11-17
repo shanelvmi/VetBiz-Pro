@@ -8,6 +8,7 @@ import '../../providers/product_provider.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../theme/polish_metrics.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../data/collections.dart';
 import '../../data/fields.dart';
@@ -197,8 +198,9 @@ Future<void> releaseProductToShop(BuildContext context, Product product, {int in
           style: ButtonStyle(
             backgroundColor: WidgetStateProperty.resolveWith<Color>(
               (states) {
+                // POL5: a lightened primary, never the accent.
                 if (states.contains(WidgetState.hovered)) {
-                  return context.colors.accent;
+                  return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                 }
                 return context.colors.primary;
               },

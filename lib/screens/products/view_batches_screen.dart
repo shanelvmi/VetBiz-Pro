@@ -21,6 +21,8 @@ import '../../widgets/app_safe_area.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
 import '../../utils/app_clock.dart';
+import '../../ui/polish/app_status.dart';
+import '../../theme/polish_metrics.dart';
 
 /// Full management view for one product's stock - every batch on file,
 /// with a way to correct or top up any of them directly, plus a clear
@@ -65,10 +67,9 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
   late final Stream<List<ProductBatch>> _batchesStream;
 
   /// PH7a: on a phone the sheet's and its dialogs' text is at least 14
-  /// (the badge at least 12); tablets keep theirs.
+  /// (POL5: the status is a StatusDot, its own size); tablets keep theirs.
   bool get _isPhone => AppLayout.isPhone(context);
   double _phone14(double size) => _isPhone && size < PhoneFormMetrics.body ? PhoneFormMetrics.body : size;
-  double _phone12(double size) => _isPhone && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
 
   @override
   void initState() {
@@ -178,7 +179,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
               onPressed: isSaving ? null : () => Navigator.pop(context),
               style: ButtonStyle(
                 foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                   return context.colors.primary;
                 }),
               ),
@@ -226,7 +227,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                     },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                   return context.colors.primary;
                 }),
                 foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
@@ -313,7 +314,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
               onPressed: isDeleting ? null : () => Navigator.pop(context),
               style: ButtonStyle(
                 foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                  if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                   return context.colors.primary;
                 }),
               ),
@@ -377,7 +378,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                 },
                                 style: ButtonStyle(
                                   foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                                    if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                                    if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                                     return context.colors.primary;
                                   }),
                                 ),
@@ -418,14 +419,20 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                           children: batches.map((batch) {
                             final isExpired = batch.expiry != null && batch.expiry!.isBefore(now);
                             final isDepleted = batch.stockQty <= 0 && batch.sellableQty <= 0;
+                            // POL5: a flat card with a hairline, no shadow.
                             return Card(
                               margin: const EdgeInsets.only(bottom: AppSpacing.s10),
+                              elevation: AppElevation.e0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(PolishMetrics.cardRadius),
+                                side: BorderSide(color: context.colors.border, width: PolishMetrics.hairline),
+                              ),
                               child: ListTile(
                                 leading: Icon(
                                   Icons.inventory_2_outlined,
-                                  color: isExpired
-                                      ? context.colors.dangerAccent
-                                      : (isDepleted ? context.colors.textHint : context.colors.primary),
+                                  // POL5 (owner note 2): the icon is neutral; the state is
+                                  // the dot plus its word beside the batch's name.
+                                  color: context.colors.textSecondary,
                                 ),
                                 title: Row(
                                   children: [
@@ -436,30 +443,13 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                             : context.l10n.batch_unlabeled,
                                       ),
                                     ),
-                                    if (isDepleted) ...[
+                                    // POL5 (owner note 2): Expired (danger) or Empty
+                                    // (neutral), never only in the subtitle. Expired wins.
+                                    if (isExpired || isDepleted) ...[
                                       const SizedBox(width: AppSpacing.s8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
-                                        decoration: BoxDecoration(
-                                          color: context.colors.danger.withValues(alpha: AppAlpha.a10),
-                                          borderRadius: BorderRadius.circular(AppRadius.r20),
-                                          border: Border.all(color: context.colors.danger.withValues(alpha: AppAlpha.a40)),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.circle, size: AppSizes.statusDot, color: context.colors.danger),
-                                            SizedBox(width: AppSpacing.s4),
-                                            Text(
-                                              context.l10n.batch_outOfStock,
-                                              style: TextStyle(
-                                                color: context.colors.danger,
-                                                fontSize: _phone12(AppFontSize.f11),
-                                                fontWeight: AppFontWeight.semibold,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
+                                      StatusDot(
+                                        status: isExpired ? AppStatus.danger : AppStatus.neutral,
+                                        label: isExpired ? context.l10n.products_statusExpired : context.l10n.products_statusEmpty,
                                       ),
                                     ],
                                   ],
@@ -478,7 +468,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                         tooltip: widget.moveToStockAction.label(context.l10n),
                                         style: ButtonStyle(
                                           foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                                            if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                                            if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                                             return context.colors.primary;
                                           }),
                                         ),
@@ -502,7 +492,7 @@ class _ViewBatchesScreenState extends State<ViewBatchesScreen> {
                                       tooltip: context.l10n.batch_adjustQuantity,
                                       style: ButtonStyle(
                                         foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                                          if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                                          if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                                           return context.colors.primary;
                                         }),
                                       ),

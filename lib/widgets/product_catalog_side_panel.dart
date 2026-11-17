@@ -9,6 +9,7 @@ import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
+import '../ui/polish/app_status.dart';
 import 'reveal/reveal_image.dart';
 
 /// The light filter panel shared by Products and Stock Store.
@@ -157,17 +158,19 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
                     color: context.colors.textMuted,
                     letterSpacing: 0.5)),
             const SizedBox(height: AppSpacing.s8),
+            // POL5: each dot is its stored value's state (stockAppStatus); In
+            // stock is neutral, the normal case.
             _buildStatusRow('All', l10n.products_statusAll, null, widget.totalCount),
             _buildStatusRow(
-                'Active', l10n.products_statusInStock, context.colors.success, widget.statusCounts['Active'] ?? 0),
+                'Active', l10n.products_statusInStock, stockAppStatus('Active').roleIn(context.colors), widget.statusCounts['Active'] ?? 0),
             _buildStatusRow(
-                'Low Stock', l10n.products_statusLowStock, context.colors.warning, widget.statusCounts['Low Stock'] ?? 0),
-            _buildStatusRow('Reorder Soon', l10n.products_statusReorderSoon, context.colors.warning,
+                'Low Stock', l10n.products_statusLowStock, stockAppStatus('Low Stock').roleIn(context.colors), widget.statusCounts['Low Stock'] ?? 0),
+            _buildStatusRow('Reorder Soon', l10n.products_statusReorderSoon, stockAppStatus('Reorder Soon').roleIn(context.colors),
                 widget.statusCounts['Reorder Soon'] ?? 0),
             _buildStatusRow(
-                'Depleted', l10n.products_statusDepleted, context.colors.danger, widget.statusCounts['Depleted'] ?? 0),
+                'Depleted', l10n.products_statusDepleted, stockAppStatus('Depleted').roleIn(context.colors), widget.statusCounts['Depleted'] ?? 0),
             _buildStatusRow(
-                'Expired', l10n.products_statusExpired, context.colors.danger, widget.statusCounts['Expired'] ?? 0),
+                'Expired', l10n.products_statusExpired, stockAppStatus('Expired').roleIn(context.colors), widget.statusCounts['Expired'] ?? 0),
           ],
         ),
       ),

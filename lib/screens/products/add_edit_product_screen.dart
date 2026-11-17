@@ -35,6 +35,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_icons.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../config/app_timeouts.dart';
 import '../../ui/feedback/app_feedback.dart';
@@ -214,14 +215,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       padding: const EdgeInsets.only(bottom: AppSpacing.s10),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.s6),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-            ),
-            child: Icon(icon, size: AppIconSize.i16, color: context.colors.primary),
-          ),
+          // POL5: the icon alone, no tinted circle.
+          Icon(icon, size: AppIconSize.i16, color: context.colors.primary),
           const SizedBox(width: AppSpacing.s8),
           // On a phone the title wraps (Kiswahili at 360); elsewhere as before.
           if (_isPhone)
@@ -872,7 +867,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith(
                   (states) => states.contains(WidgetState.hovered)
-                      ? context.colors.accent
+                      ? Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary)
                       : context.colors.primary,
                 ),
                 foregroundColor: WidgetStateProperty.all(context.colors.background),
@@ -1217,8 +1212,9 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                     margin: const EdgeInsets.only(top: AppSpacing.s10),
                     padding: const EdgeInsets.all(AppSpacing.s14),
                     decoration: BoxDecoration(
-                      color: context.colors.accent.withValues(alpha: AppAlpha.a10),
-                      borderRadius: BorderRadius.circular(AppRadius.r10),
+                      // POL5 (owner note 1): the notice is neutral: a hairline, no fill.
+                      borderRadius: BorderRadius.circular(PolishMetrics.cardRadius),
+                      border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
                       // UI2: no coloured bar down the left edge; the notice
                       // says it in words.
                     ),
@@ -1228,12 +1224,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         if (match != null) ...[
                           Row(
                             children: [
-                              Icon(Icons.info_outline, size: AppIconSize.i18, color: context.colors.warningStrong),
+                              Icon(Icons.info_outline, size: AppIconSize.i18, color: context.colors.textSecondary),
                               const SizedBox(width: AppSpacing.s6),
                               Expanded(
                                 child: Text(
                                   context.l10n.products_alreadyExistsNamed(match.name),
-                                  style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.warningStrong),
+                                  style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary),
                                 ),
                               ),
                             ],
@@ -1259,7 +1255,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                               label: Text(context.l10n.products_openThisProduct),
                               style: ButtonStyle(
                                 backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                                  if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                                  if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                                   return context.colors.primary;
                                 }),
                                 foregroundColor: WidgetStateProperty.all(context.colors.background),
@@ -1269,11 +1265,11 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         ] else ...[
                           Row(
                             children: [
-                              Icon(Icons.search, size: AppIconSize.i18, color: context.colors.warningStrong),
+                              Icon(Icons.search, size: AppIconSize.i18, color: context.colors.textSecondary),
                               const SizedBox(width: AppSpacing.s6),
                               Text(
                                 context.l10n.products_similarExist,
-                                style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.warningStrong, fontSize: _phone14(AppFontSize.f13)),
+                                style: TextStyle(fontWeight: AppFontWeight.bold, color: context.colors.textPrimary, fontSize: _phone14(AppFontSize.f13)),
                               ),
                             ],
                           ),
