@@ -59,7 +59,8 @@ Future<void> _tapIn(WidgetTester tester, Finder within, String text) async {
 /// A tablet metric card's value beside its label.
 String _cardValue(WidgetTester tester, String label) {
   // POL5: the five figure cards are FlatStatCards (no grid).
-  final card = find.ancestor(of: find.text(label).first, matching: find.byType(FlatStatCard)).first;
+  // (The side panel shows some of the same words, so look inside the cards.)
+  final card = find.byWidgetPredicate((w) => w is FlatStatCard && w.label == label);
   return (ph5Texts(card)..remove(label)).single;
 }
 
