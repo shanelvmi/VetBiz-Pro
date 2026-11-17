@@ -66,7 +66,10 @@ void main() {
     ph5TestWidgets('chip ${kind?.name ?? 'All'} lists exactly what the tablet card lists', (tester) async {
       await pumpPh5(tester, _alerts, size: const Size(1024, 1400), pushed: true, seed: _seed);
       if (kind != null) {
-        await tester.tap(find.descendant(of: find.byType(GridView), matching: find.textContaining(_titleEn(kind))).first);
+        // POL5: the tablet's kind cards are now one FilterRow.
+        await tester.ensureVisible(ph5Key('pol5-alertKind-${kind.name}'));
+        await ph5Settle(tester);
+        await tester.tap(ph5Key('pol5-alertKind-${kind.name}'));
         await ph5Settle(tester);
       }
       final wide = _rows(tester);

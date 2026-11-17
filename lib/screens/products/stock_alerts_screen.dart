@@ -24,12 +24,14 @@ import '../../config/app_limits.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
-import '../../theme/app_colors.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_layout.dart';
 import '../../utils/app_clock.dart';
+import '../../ui/polish/app_status.dart';
+import '../../ui/polish/filter_row.dart';
+import '../../theme/polish_metrics.dart';
 
 /// What kind of thing needs attention. Declared in the order they're
 /// shown - most urgent first.
@@ -156,22 +158,18 @@ class StockAlertsScreen extends StatelessWidget {
     }
   }
 
-  // Same colors and icons the notification system uses for these same
-  // situations, so an alert looks the same wherever it appears.
-  static Color _color(StockAlertKind k, AppColors colors) {
-    switch (k) {
-      case StockAlertKind.depleted:
-        return NotificationType.criticalStock.colorIn(colors);
-      case StockAlertKind.expired:
-        return NotificationType.productExpiry.colorIn(colors);
-      case StockAlertKind.lowStock:
-        return NotificationType.lowStock.colorIn(colors);
-      case StockAlertKind.expiringSoon:
-        return colors.warning;
-      case StockAlertKind.restockShelf:
-        return NotificationType.restockShelf.colorIn(colors);
-    }
-  }
+  // The icons are the ones the notification system uses for these same
+  // situations. POL5: the colour is the state's (appStatus), drawn as a dot.
+
+  /// POL5: an alert kind as one of the four states, for the dot. Depleted
+  /// and Expired danger, Low Stock and Expiring Soon warning. Restock shelf
+  /// is NEUTRAL (owner note 3) until the owner decides the warehouse-versus-
+  /// shelf low-stock rule; what raises the alert is unchanged.
+  static AppStatus appStatus(StockAlertKind k) => switch (k) {
+        StockAlertKind.depleted || StockAlertKind.expired => AppStatus.danger,
+        StockAlertKind.lowStock || StockAlertKind.expiringSoon => AppStatus.warning,
+        StockAlertKind.restockShelf => AppStatus.neutral,
+      };
 
   static IconData _icon(StockAlertKind k) {
     switch (k) {
@@ -224,7 +222,8 @@ class StockAlertsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: context.colors.surface,
         foregroundColor: context.colors.textPrimary,
-        elevation: AppElevation.e1,
+        elevation: AppElevation.e0,
+        shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
         centerTitle: true,
         toolbarHeight: 72,
         title: Column(
@@ -343,14 +342,13 @@ class StockAlertsScreen extends StatelessWidget {
   }
 
   Widget _buildSectionHeader(BuildContext context, _SectionHeader h) {
-    final color = _color(h.kind, context.colors);
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpacing.s2, AppSpacing.s6, AppSpacing.s2, AppSpacing.s8),
       child: Row(
         children: [
           Text(
             _title(context.l10n, h.kind).toUpperCase(),
-            style: TextStyle(fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.bold, letterSpacing: 0.6, color: color),
+            style: TextStyle(fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.bold, letterSpacing: 0.6, color: context.colors.textSecondary),
           ),
           const SizedBox(width: AppSpacing.s6),
           Text('${h.count}', style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
@@ -360,32 +358,28 @@ class StockAlertsScreen extends StatelessWidget {
   }
 
   Widget _buildAlertTile(BuildContext context, StockAlert alert) {
-    final color = _color(alert.kind, context.colors);
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.s8),
       decoration: BoxDecoration(
         color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r10),
-        boxShadow: [
-          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
-        ],
+        borderRadius: BorderRadius.circular(PolishMetrics.cardRadius),
+        border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.s12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
+            Padding(
               padding: const EdgeInsets.all(AppSpacing.s8),
-              decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
-              child: Icon(_icon(alert.kind), color: color, size: AppIconSize.i18),
+              child: Icon(_icon(alert.kind), color: context.colors.textSecondary, size: AppIconSize.i18),
             ),
             const SizedBox(width: AppSpacing.s10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_title(context.l10n, alert.kind), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                  StatusDot(status: appStatus(alert.kind), label: _title(context.l10n, alert.kind)),
                   const SizedBox(height: AppSpacing.s2),
                   Text(_message(context.l10n, alert), style: TextStyle(color: context.colors.textSoft, fontSize: AppFontSize.f12_5)),
                 ],
@@ -406,12 +400,8 @@ Widget _caughtUpContent(BuildContext context) {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
+        Padding(
           padding: const EdgeInsets.all(AppSpacing.s20),
-          decoration: BoxDecoration(
-            color: context.colors.success.withValues(alpha: AppAlpha.a10),
-            shape: BoxShape.circle,
-          ),
           child: Icon(Icons.check_circle_outline, color: context.colors.success, size: AppIconSize.i48),
         ),
         const SizedBox(height: AppSpacing.s16),
@@ -462,14 +452,6 @@ class _AlertsBodyState extends State<_AlertsBody> {
     StockAlertKind.expiringSoon,
     StockAlertKind.expired,
   ];
-
-  static String _cardHint(AppLocalizations l, StockAlertKind kind) => switch (kind) {
-        StockAlertKind.lowStock => l.alerts_hintLowStock,
-        StockAlertKind.depleted => l.alerts_hintDepleted,
-        StockAlertKind.restockShelf => l.alerts_hintRestockShelf,
-        StockAlertKind.expiringSoon => l.alerts_hintExpiringSoon,
-        StockAlertKind.expired => l.alerts_hintExpired,
-      };
 
   final TextEditingController _searchController = TextEditingController();
   final DateFormat _dateFormat = AppDateFormat.date;
@@ -640,7 +622,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
-          child: _buildCards(counts),
+          child: _buildKindFilter(counts, all.length),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
@@ -698,7 +680,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
       title: p.name,
       amount: quantity,
       details: [category],
-      status: RecordStatus(title, StockAlertsScreen._color(a.kind, context.colors)),
+      status: RecordStatus.state(title, StockAlertsScreen.appStatus(a.kind)),
       leading: ProductLeading(product: p),
       colorSeed: p.name,
       semanticsLabel: l10n.phoneList_productRowSemantics(p.name, quantity, category, title),
@@ -793,82 +775,23 @@ class _AlertsBodyState extends State<_AlertsBody> {
 
   // ==================== CARDS ====================
 
-  Widget _buildCards(Map<StockAlertKind, int> counts) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= AppBreakpoints.fiveColumnCards ? 5 : 3;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            mainAxisExtent: 90,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-          ),
-          itemCount: _cardOrder.length,
-          itemBuilder: (context, index) {
-            final kind = _cardOrder[index];
-            return _alertCard(kind, counts[kind] ?? 0);
-          },
-        );
-      },
-    );
-  }
-
-  // Same small card as the Sales screen's, but tappable: it filters the
-  // table to that kind, and tapping it again clears the filter.
-  Widget _alertCard(StockAlertKind kind, int count) {
-    final color = StockAlertsScreen._color(kind, context.colors);
-    final selected = _kindFilter == kind;
-    final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadius.r12),
-      side: BorderSide(
-        color: selected ? color.withValues(alpha: AppAlpha.a70) : context.colors.textHint.withValues(alpha: AppAlpha.a15),
-        width: selected ? 1.5 : 1,
-      ),
-    );
-    return Material(
-      color: selected ? color.withValues(alpha: AppAlpha.a05) : context.colors.surface,
-      shape: shape,
-      elevation: AppElevation.e1,
-      shadowColor: context.colors.shadow.withValues(alpha: AppAlpha.a05),
-      child: InkWell(
-        customBorder: shape,
-        onTap: () => setState(() {
-          _kindFilter = selected ? null : kind;
-          _page = 1;
-        }),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.topLeft,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration:
-                          BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
-                      child: Icon(StockAlertsScreen._icon(kind), color: color, size: AppIconSize.i14),
-                    ),
-                    const SizedBox(width: AppSpacing.s8),
-                    Text('$count', style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.s4),
-                Text(StockAlertsScreen._title(context.l10n, kind), style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.textMuted)),
-                Text(_cardHint(context.l10n, kind), style: TextStyle(fontSize: _phoneMin(AppFontSize.f10_5), color: context.colors.textDisabled)),
-              ],
-            ),
-          ),
-        ),
-      ),
+  // POL5: the five kind cards only repeated a filter (owner rule), so they
+  // are one FilterRow: All and each kind with its count. Choosing the chosen
+  // kind again clears it, as tapping a card did.
+  Widget _buildKindFilter(Map<StockAlertKind, int> counts, int allCount) {
+    final l10n = context.l10n;
+    return FilterRow(
+      keyPrefix: 'pol5-alertKind-',
+      padding: EdgeInsets.zero,
+      values: ['All', for (final k in _cardOrder) k.name],
+      selected: _kindFilter?.name ?? 'All',
+      label: (v) => v == 'All' ? l10n.common_all : StockAlertsScreen._title(l10n, StockAlertKind.values.byName(v)),
+      count: (v) => v == 'All' ? allCount : counts[StockAlertKind.values.byName(v)] ?? 0,
+      onSelected: (v) => setState(() {
+        final kind = v == 'All' ? null : StockAlertKind.values.byName(v);
+        _kindFilter = kind == _kindFilter ? null : kind;
+        _page = 1;
+      }),
     );
   }
 
@@ -1056,37 +979,16 @@ class _AlertsBodyState extends State<_AlertsBody> {
     );
   }
 
-  Widget _alertChip(StockAlertKind kind) {
-    final color = StockAlertsScreen._color(kind, context.colors);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
-      decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(StockAlertsScreen._icon(kind), size: AppIconSize.i14, color: color),
-          const SizedBox(width: AppSpacing.s4),
-          Text(
-            StockAlertsScreen._title(context.l10n, kind),
-            style: TextStyle(color: color, fontSize: _phoneMin(AppFontSize.f11_5), fontWeight: AppFontWeight.semibold),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _alertChip(StockAlertKind kind) =>
+      StatusDot(status: StockAlertsScreen.appStatus(kind), label: StockAlertsScreen._title(context.l10n, kind));
 
-  Widget _categoryChip(String category) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
-      decoration: BoxDecoration(color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-      child: Text(
+  // POL5: a category is never coloured: plain secondary text.
+  Widget _categoryChip(String category) => Text(
         context.l10n.productCategoryLabel(category),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: context.colors.primary, fontSize: _phoneMin(AppFontSize.f11_5), fontWeight: AppFontWeight.semibold),
-      ),
-    );
-  }
+        style: TextStyle(color: context.colors.textSecondary, fontSize: _phoneMin(AppFontSize.f11_5)),
+      );
 
   Widget _actionButton(StockAlert a, bool isAdmin) {
     final action = _actionFor(a, isAdmin);
