@@ -35,9 +35,10 @@ class UpdatesCard extends StatelessWidget {
       decoration: AuthPanel.decoration(context),
       padding: EdgeInsets.fromLTRB(
         AuthPanelMetrics.padding,
-        // No accent line here: its height is added instead, so the welcome
-        // heading sits on the line of the login card's "Sign in to your account".
-        AuthPanelMetrics.padding + (wide ? AuthPanelMetrics.accentHeight : 0),
+        // POL3: the login card's accent line is gone, and with it the inset
+        // that matched it here, so the welcome heading still sits on the line
+        // of the login card's "Sign in to your account".
+        AuthPanelMetrics.padding,
         AuthPanelMetrics.padding,
         AuthPanelMetrics.paddingBottom,
       ),

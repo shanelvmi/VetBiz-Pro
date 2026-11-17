@@ -36,6 +36,12 @@ class PolishMetrics {
   static const double cardPadding = AppSpacing.s16;
   static const double cardRadius = AppRadius.r12;
   static const double hairline = 1;
+
+  /// POL3: the flat primary button's states, onPrimary laid over primary
+  /// (the onPrimary ink stays at 4.5:1 or more on both, every theme, Light
+  /// and Dark; the pressed state is the lower, 4.71 in Ledger Dark).
+  static const double buttonHoverAlpha = AppAlpha.a05;
+  static const double buttonPressedAlpha = AppAlpha.a10;
   static const double statValue = AppFontSize.f20;
   static const double statLabel = AppFontSize.f12;
   static const double statLineGap = AppSpacing.s4;

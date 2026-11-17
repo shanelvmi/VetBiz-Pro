@@ -88,14 +88,12 @@ void main() {
     // UI8: no Updates on a phone.
     expect(find.byType(UpdatesCarousel), findsNothing);
     expect(find.text(_en.updates_label), findsNothing);
-    // The only gradient left is the Sign in button's own.
+    // POL3: no gradient at all (the Sign in button's own was the last).
     final gradients = find.byWidgetPredicate((w) {
       final d = w is Container ? w.decoration : (w is DecoratedBox ? w.decoration : null);
       return d is BoxDecoration && d.gradient != null;
     });
-    for (final e in gradients.evaluate()) {
-      expect(_inside(e, (w) => w.key == _button), isTrue, reason: 'a gradient outside the button: ${e.widget}');
-    }
+    expect(gradients, findsNothing);
     // The brand (UI8: the tinted header): the mark, the name and the toggle,
     // at the page's top.
     final brand = find.byKey(_brand);

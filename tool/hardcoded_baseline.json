@@ -328,7 +328,6 @@
     "R11": {},
     "R12": {},
     "R13": {
-      "lib/screens/login_screen.dart": 4,
       "lib/screens/platform_admin/promotions_screen.dart": 1,
       "lib/screens/register_screen.dart": 3
     },
@@ -337,7 +336,6 @@
       "lib/screens/debtors/debtors_screen.dart": 1,
       "lib/screens/facilities/facility_screen.dart": 2,
       "lib/screens/legal/legal_document_screen.dart": 1,
-      "lib/screens/login_screen.dart": 1,
       "lib/screens/payments/payments_screen.dart": 2,
       "lib/screens/products/products_screen.dart": 3,
       "lib/screens/products/stock_alerts_screen.dart": 1,
@@ -346,9 +344,7 @@
       "lib/screens/sales/sales_screen.dart": 1,
       "lib/screens/services/services_screen.dart": 1,
       "lib/screens/store/stockstore_screen.dart": 3,
-      "lib/screens/transactions/transactions_screen.dart": 1,
-      "lib/widgets/auth_card.dart": 1,
-      "lib/widgets/auth_panel.dart": 4
+      "lib/screens/transactions/transactions_screen.dart": 1
     }
   }
 }

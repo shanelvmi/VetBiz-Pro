@@ -274,10 +274,6 @@ class AuthPanelMetrics {
   static const double padding = AppSpacing.s28;
   static const double paddingBottom = AppSpacing.s24;
 
-  /// The login card's gradient line along its top edge. Only the login card
-  /// draws it; the Updates card adds its height to its top inset instead,
-  /// so the two heading rows sit on one line.
-  static const double accentHeight = 4;
 
   /// The soft circle beside each heading (the lock, the vaccine), its
   /// outline, and the gap to the heading (POL3: its glow is gone).

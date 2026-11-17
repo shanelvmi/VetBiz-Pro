@@ -30,6 +30,8 @@ import '../theme/app_layout.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
+import '../theme/polish_metrics.dart';
+import '../ui/polish/brand_surface.dart';
 import '../widgets/hover_link.dart';
 
 /// What Sign in is opened with after a registration that made the account
@@ -363,13 +365,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.s16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
+      // POL3: one solid deep tone (BrandSurface), no gradient.
+      color: BrandSurface.fill(context),
+      foregroundDecoration: BrandSurface.darkEdge(context, bottomOnly: true),
       child: SizedBox(
         // Tall enough for the theme toggle's 48 px touch target.
         height: kMinInteractiveDimension,
@@ -652,14 +650,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Thin gradient accent along the top edge (this card's
-                  // alone; the Updates card has none).
-                  if (!flat) Container(
-                    height: AuthPanelMetrics.accentHeight,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(colors: [context.colors.brandSurface, context.colors.brandTealOnBrand, context.colors.brandTealGlow]),
-                    ),
-                  ),
+                  // POL3: the thin gradient line along the top edge is gone
+                  // (owner rule: flat cards); the Updates card dropped the
+                  // matching inset, so the two headings still share a line.
                   Padding(
                     padding:
                         flat
@@ -781,8 +774,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             height: flat ? AuthPhoneMetrics.buttonHeight : kMinInteractiveDimension,
                             isLoading: isLoggingIn,
                             onPressed: isLoggingIn ? null : _login,
-                            primaryColor: context.colors.brandSurface,
-                            accentColor: context.colors.brandTealOnBrand,
                           ),
                         ),
                         const SizedBox(height: AppSpacing.s20),
@@ -1003,16 +994,12 @@ class _AnimatedLoginButton extends StatefulWidget {
   final double height;
   final bool isLoading;
   final VoidCallback? onPressed;
-  final Color primaryColor;
-  final Color accentColor;
 
   const _AnimatedLoginButton({
     super.key,
     required this.height,
     required this.isLoading,
     required this.onPressed,
-    required this.primaryColor,
-    required this.accentColor,
   });
 
   @override
@@ -1021,6 +1008,8 @@ class _AnimatedLoginButton extends StatefulWidget {
 
 class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  // POL3: pressed shows its own state (onPrimary laid over primary).
+  bool _pressed = false;
   // The hover sweep (was 450 ms; a tie between slower and slowest, so up;
   // parked_values.md C8).
   static const Duration _hoverSweep = AppMotion.slowest;
@@ -1054,6 +1043,9 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
       cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       child: GestureDetector(
         onTap: enabled ? widget.onPressed : null,
+        onTapDown: enabled ? (_) => setState(() => _pressed = true) : null,
+        onTapUp: enabled ? (_) => setState(() => _pressed = false) : null,
+        onTapCancel: enabled ? () => setState(() => _pressed = false) : null,
         child: Semantics(
           button: true,
           enabled: enabled,
@@ -1071,43 +1063,20 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                     borderRadius: BorderRadius.circular(AppRadius.r24),
                     child: Stack(
                       children: [
-                        // Base gradient - reverses direction as hover
-                        // progresses, rather than a solid amber overlay.
+                        // POL3 (owner: one accent, no gradient): the flat
+                        // primary; hover lays onPrimary over it (faded in
+                        // with the arrow's slide), pressed a little more.
                         Positioned.fill(
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Color.lerp(widget.primaryColor, widget.accentColor, t)!,
-                                  Color.lerp(widget.accentColor, widget.primaryColor, t)!,
-                                ],
+                              color: Color.alphaBlend(
+                                context.colors.onPrimary.withValues(
+                                    alpha: _pressed ? PolishMetrics.buttonPressedAlpha : PolishMetrics.buttonHoverAlpha * t),
+                                context.colors.primary,
                               ),
                             ),
                           ),
                         ),
-                        // A soft light band sweeping left to right once as
-                        // t goes 0->1 - purely decorative, so it's wrapped
-                        // in IgnorePointer to never intercept the tap.
-                        if (t > 0)
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: Align(
-                                alignment: Alignment(-1.6 + t * 3.2, 0),
-                                child: Container(
-                                  width: 60,
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        context.colors.onBrandSurface.withValues(alpha: 0),
-                                        context.colors.onBrandSurface.withValues(alpha: AppAlpha.a40 * t),
-                                        context.colors.onBrandSurface.withValues(alpha: 0),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6),
                           child: widget.isLoading
@@ -1115,7 +1084,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                   child: SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.onBrandSurface),
+                                    child: CircularProgressIndicator(strokeWidth: 2.5, color: context.colors.onPrimary),
                                   ),
                                 )
                               : Stack(
@@ -1124,7 +1093,7 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                     Center(
                                       child: Text(context.l10n.login_loginButton,
                                           style: TextStyle(
-                                              color: Color.lerp(context.colors.onBrandSurface, context.colors.accent, t),
+                                              color: context.colors.onPrimary,
                                               fontWeight: AppFontWeight.semibold,
                                               fontSize: AppFontSize.f15)),
                                     ),
@@ -1138,14 +1107,11 @@ class _AnimatedLoginButtonState extends State<_AnimatedLoginButton> with SingleT
                                         width: 32,
                                         height: 32,
                                         decoration: BoxDecoration(
-                                          color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a20),
+                                          color: context.colors.onPrimary.withValues(alpha: AppAlpha.a20),
                                           shape: BoxShape.circle,
-                                          border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a50), width: 1.2),
-                                          boxShadow: [
-                                            BoxShadow(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a30), blurRadius: 8),
-                                          ],
+                                          border: Border.all(color: context.colors.onPrimary.withValues(alpha: AppAlpha.a50), width: 1.2),
                                         ),
-                                        child: Icon(Icons.arrow_forward, color: Color.lerp(context.colors.onBrandSurface, context.colors.accent, t), size: AppIconSize.i16),
+                                        child: Icon(Icons.arrow_forward, color: context.colors.onPrimary, size: AppIconSize.i16),
                                       ),
                                     ),
                                   ],

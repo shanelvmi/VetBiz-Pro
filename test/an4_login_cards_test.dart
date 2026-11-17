@@ -62,7 +62,7 @@ void main() {
     final gradients = tester
         .widgetList<DecoratedBox>(find.descendant(of: find.byKey(UpdatesCard.surfaceKey), matching: find.byType(DecoratedBox)))
         .where((d) => d.decoration is BoxDecoration && (d.decoration as BoxDecoration).gradient != null);
-    expect(gradients, isEmpty, reason: 'the login card keeps the only accent line');
+    expect(gradients, isEmpty, reason: "no accent line (POL3: the login card's is gone too)");
   });
 
   // UI8: phones show no Updates on the sign-in page (ui8_phone_login_test).
