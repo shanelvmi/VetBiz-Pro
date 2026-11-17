@@ -84,3 +84,13 @@ AppStatus stockAppStatus(String storedStatus) => switch (storedStatus) {
       'Low Stock' || 'Reorder Soon' || 'Expiring Soon' => AppStatus.warning,
       _ => AppStatus.neutral,
     };
+
+/// POL6: a client's debt standing as one of the four states, keeping
+/// today's words and threshold (Debtors' `isOverdue`: older than the
+/// overdue days). Overdue is danger; Current is neutral (the normal case,
+/// green before POL6).
+AppStatus debtAppStatus({required bool isOverdue}) => isOverdue ? AppStatus.danger : AppStatus.neutral;
+
+/// POL6: a client's STORED status (Active, Inactive) as one of the four
+/// states: neutral either way, the word tells them apart (owner answer 1).
+AppStatus clientAppStatus(String storedStatus) => AppStatus.neutral;
