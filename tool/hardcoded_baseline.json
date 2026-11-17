@@ -323,7 +323,6 @@
     "R12": {},
     "R13": {},
     "R14": {
-      "lib/screens/debtors/debtors_screen.dart": 1,
       "lib/screens/facilities/facility_screen.dart": 2,
       "lib/screens/legal/legal_document_screen.dart": 1,
       "lib/screens/payments/payments_screen.dart": 2,

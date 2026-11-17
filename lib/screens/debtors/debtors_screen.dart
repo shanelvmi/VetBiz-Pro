@@ -38,6 +38,9 @@ import '../../widgets/phone_list/record_tile.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/app_clock.dart';
+import '../../ui/polish/app_status.dart';
+import '../../ui/polish/flat_stat_card.dart';
+import '../../theme/polish_metrics.dart';
 
 class DebtorsScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
@@ -372,73 +375,33 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     return metrics;
   }
 
+  // POL6: four flat cards (the loading flag kept), in rows of their own
+  // height; 2 or 4 per row as before. The figures are unchanged.
   Widget _buildMetricsRow() {
-    final metrics = _metricsList();
+    final cards = [
+      for (final m in _metricsList()) FlatStatCard(label: m.$1, value: m.$2, hint: m.$5, loading: m.$6),
+    ];
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < AppBreakpoints.compact;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isNarrow ? 2 : 4,
-            mainAxisExtent: 90,
-            crossAxisSpacing: AppSpacing.s12,
-            mainAxisSpacing: AppSpacing.s12,
-          ),
-          itemCount: metrics.length,
-          itemBuilder: (context, index) {
-            final m = metrics[index];
-            return _metricCard(m.$1, m.$2, m.$3, m.$4, m.$5, m.$6);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _metricCard(String label, String value, IconData icon, Color color, String subtitle, bool isLoading) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
-        boxShadow: [
-          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.topLeft,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        final perRow = constraints.maxWidth < AppBreakpoints.compact ? 2 : 4;
+        return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration:
-                      BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
-                  child: Icon(icon, color: color, size: AppIconSize.i14),
-                ),
-                const SizedBox(width: AppSpacing.s8),
-                isLoading
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(value, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16, color: color)),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.s4),
-            Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
-            Text(subtitle, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
+            for (var i = 0; i < cards.length; i += perRow) ...[
+              if (i > 0) const SizedBox(height: PolishMetrics.gapInGroup),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var j = i; j < i + perRow; j++) ...[
+                    if (j > i) const SizedBox(width: PolishMetrics.gapInGroup),
+                    Expanded(child: j < cards.length ? cards[j] : const SizedBox.shrink()),
+                  ],
+                ],
+              ),
+            ],
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -474,7 +437,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     return AppBar(
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e1,
+      elevation: AppElevation.e0,
+      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
@@ -736,12 +700,13 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // POL6 (owner answer 4): the phone lists' one neutral tint.
                   CircleAvatar(
                     radius: 16,
-                    backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a15),
+                    backgroundColor: leadingColorFor(context.colors, debtor.clientName).withValues(alpha: PhoneListMetrics.leadingAlpha),
                     child: Text(
                       debtor.clientName.isNotEmpty ? debtor.clientName[0].toUpperCase() : '?',
-                      style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13),
+                      style: TextStyle(color: context.colors.textPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.s10),
@@ -761,8 +726,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             ),
             Expanded(
               flex: 2,
+              // POL6 (owner answer 2): an amount owed, not a state: plain.
               child: Text(Money.format(debtor.totalOwed),
-                  style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold, color: context.colors.danger)),
+                  style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
             ),
             Expanded(
               flex: 2,
@@ -782,14 +748,12 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-                decoration: BoxDecoration(
-                  color: (isOverdue ? context.colors.danger : context.colors.success).withValues(alpha: AppAlpha.a10),
-                  borderRadius: BorderRadius.circular(AppRadius.r10),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: StatusDot(
+                  status: debtAppStatus(isOverdue: isOverdue),
+                  label: isOverdue ? context.l10n.debtors_overdue : context.l10n.debtors_current,
                 ),
-                child: Text(isOverdue ? context.l10n.debtors_overdue : context.l10n.debtors_current,
-                    style: TextStyle(color: isOverdue ? context.colors.danger : context.colors.success, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
               ),
             ),
             Expanded(
@@ -974,7 +938,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       title: debtor.clientName,
       amount: amount,
       details: [since, if (debtor.isOverdue) l10n.debtors_daysCount(debtor.daysSinceOldestDebt)],
-      status: RecordStatus(status, debtor.isOverdue ? context.colors.danger : context.colors.success),
+      status: RecordStatus.state(status, debtAppStatus(isOverdue: debtor.isOverdue)),
       initialsOf: debtor.clientName,
       colorSeed: debtor.clientName,
       semanticsLabel: l10n.phoneList_rowSemantics(debtor.clientName, amount, status, since),
@@ -1102,10 +1066,10 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               children: [
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: context.colors.primary.withValues(alpha: AppAlpha.a15),
+                  backgroundColor: leadingColorFor(context.colors, debtor.clientName).withValues(alpha: PhoneListMetrics.leadingAlpha),
                   child: Text(
                     debtor.clientName.isNotEmpty ? debtor.clientName[0].toUpperCase() : '?',
-                    style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
+                    style: TextStyle(color: context.colors.textPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s12),
@@ -1119,14 +1083,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
-                  decoration: BoxDecoration(
-                    color: (isOverdue ? context.colors.danger : context.colors.success).withValues(alpha: AppAlpha.a10),
-                    borderRadius: BorderRadius.circular(AppRadius.r12),
-                  ),
-                  child: Text(isOverdue ? context.l10n.debtors_overdue : context.l10n.debtors_current,
-                      style: TextStyle(color: isOverdue ? context.colors.danger : context.colors.success, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
+                StatusDot(
+                  status: debtAppStatus(isOverdue: isOverdue),
+                  label: isOverdue ? context.l10n.debtors_overdue : context.l10n.debtors_current,
                 ),
               ],
             ),
@@ -1155,7 +1114,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             const SizedBox(height: AppSpacing.s20),
             Text(context.l10n.common_summary, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
             const SizedBox(height: AppSpacing.s10),
-            _totalsRow(context.l10n.debtors_totalOwed, Money.format(debtor.totalOwed), color: context.colors.danger),
+            _totalsRow(context.l10n.debtors_totalOwed, Money.format(debtor.totalOwed)),
             FutureBuilder<List<Debt>>(
               future: _getDetailsDebtsFuture(debtor.clientId),
               builder: (context, snapshot) {
@@ -1317,11 +1276,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                 ),
               ),
               if (isOverdue)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
-                  decoration: BoxDecoration(color: context.colors.danger.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
-                  child: Text(context.l10n.debtors_overdue, style: TextStyle(color: context.colors.danger, fontSize: _phoneMin(AppFontSize.f10_5), fontWeight: AppFontWeight.semibold)),
-                ),
+                StatusDot(status: debtAppStatus(isOverdue: true), label: context.l10n.debtors_overdue),
             ],
           ),
           const SizedBox(height: AppSpacing.s4),
@@ -1590,7 +1545,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, 'whatsapp'),
-            style: ElevatedButton.styleFrom(backgroundColor: context.colors.success, foregroundColor: context.colors.onPrimary),
+            style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
             child: Text(context.l10n.debtors_viaWhatsApp),
           ),
         ],
