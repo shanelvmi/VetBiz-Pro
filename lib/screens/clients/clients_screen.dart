@@ -37,6 +37,9 @@ import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/printable_theme.dart';
 import '../../utils/app_clock.dart';
+import '../../ui/polish/app_status.dart';
+import '../../ui/polish/flat_stat_card.dart';
+import '../../theme/polish_metrics.dart';
 
 class ClientsScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH2a).
@@ -174,14 +177,14 @@ class _ClientsScreenState extends State<ClientsScreen> {
   Widget _buildMetricsRow(List<Client> allClients) {
     final (:newThisMonth, :mostActiveType, :mostActivePercent, :lastAdded) = _metrics(allClients);
 
-    return SizedBox(
-      height: 96,
+    // POL6: flat cards of one height (their own, not a fixed 96).
+    return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(child: _metricCard(context.l10n.clients_total, '${allClients.length}', context.l10n.clients_allTime, Icons.people_outline, context.colors.primary)),
+          Expanded(child: _metricCard(context.l10n.clients_total, '${allClients.length}', context.l10n.clients_allTime)),
           const SizedBox(width: AppSpacing.s12),
-          Expanded(child: _metricCard(context.l10n.clients_newThisMonth, '$newThisMonth', null, Icons.person_add_alt_outlined, context.colors.primary)),
+          Expanded(child: _metricCard(context.l10n.clients_newThisMonth, '$newThisMonth', null)),
           const SizedBox(width: AppSpacing.s12),
           Expanded(
             child: _metricCard(
@@ -189,8 +192,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
               // A stored client type, shown by its label ('-' when there are no clients).
               mostActiveType == '-' ? mostActiveType : context.l10n.clientTypeLabel(mostActiveType),
               allClients.isEmpty ? null : context.l10n.clients_percentOfClients(mostActivePercent.toStringAsFixed(0)),
-              Icons.shopping_cart_outlined,
-              context.colors.accent,
             ),
           ),
           const SizedBox(width: AppSpacing.s12),
@@ -199,8 +200,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
               context.l10n.clients_lastAdded,
               lastAdded?.name ?? '-',
               lastAdded?.createdAt != null ? AppDateFormat.date.format(lastAdded!.createdAt!) : null,
-              Icons.calendar_today_outlined,
-              context.colors.primary,
             ),
           ),
         ],
@@ -208,51 +207,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
-  Widget _metricCard(String title, String value, String? subtitle, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.s14),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.s6),
-                decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-                child: Icon(icon, size: AppIconSize.i16, color: color),
-              ),
-              const SizedBox(width: AppSpacing.s8),
-              Expanded(
-                child: Text(title, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.s8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(
-                child: Text(value, style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-              ),
-              if (subtitle != null) ...[
-                const SizedBox(width: AppSpacing.s6),
-                Flexible(
-                  child: Text(subtitle, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _metricCard(String title, String value, String? subtitle) =>
+      FlatStatCard(label: title, value: value, hint: subtitle);
 
   Widget _buildToolbarRow() {
     final border = OutlineInputBorder(
@@ -340,38 +296,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
     );
   }
 
-  IconData _iconForType(String type) {
-    switch (type) {
-      case 'Farmer':
-        return Icons.agriculture;
-      case 'Vet':
-        return Icons.medical_services;
-      case 'Wholesaler':
-        return Icons.warehouse;
-      case 'Retailer':
-        return Icons.storefront;
-      default:
-        return Icons.person;
-    }
-  }
-
-  // [at]: a context under PrintableTheme (the client card PNG).
-  Color _colorForType(String type, [BuildContext? at]) {
-    final context = at ?? this.context;
-    switch (type) {
-      case 'Farmer':
-        return context.colors.primary;
-      case 'Vet':
-        return context.colors.chart1;
-      case 'Wholesaler':
-        return context.colors.chart2;
-      case 'Retailer':
-        return context.colors.chart3;
-      default:
-        return context.colors.textMuted;
-    }
-  }
-
   /// [onDeleted]: the phone's details page closes itself once the client is
   /// in Trash (PH5b, as PH5a R7), before Undo is offered.
   Future<void> _confirmDelete(Client client, {VoidCallback? onDeleted}) async {
@@ -392,7 +316,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             onPressed: () => Navigator.pop(context, false),
             style: ButtonStyle(
               foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                 return context.colors.primary;
               }),
             ),
@@ -403,7 +327,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
             style: ButtonStyle(
               foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                 if (states.contains(WidgetState.hovered)) return context.colors.dangerDeep;
-                return context.colors.accent;
+                // POL6: Delete in the danger role, not the accent.
+                return context.colors.danger;
               }),
             ),
             icon: const Icon(Icons.delete),
@@ -602,7 +527,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
   Widget _clientCard(BuildContext context, Client client, {(int, double)? stats}) {
     final types = client.types.isNotEmpty ? client.types : [kClientTypeOther];
     final latestNote = client.debtorNotes.isNotEmpty ? client.debtorNotes.last['text'] as String? : null;
-    final accent = _colorForType(types.first, context);
     return Container(
       color: context.colors.surface,
       child: Column(
@@ -610,12 +534,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
         children: [
             Row(
               children: [
+                // POL6 (owner answer 4): the phone lists' one neutral tint.
                 CircleAvatar(
                   radius: 20,
-                  backgroundColor: accent.withValues(alpha: AppAlpha.a10),
+                  backgroundColor: leadingColorFor(context.colors, client.name).withValues(alpha: PhoneListMetrics.leadingAlpha),
                   child: Text(
                     client.name.isNotEmpty ? client.name[0].toUpperCase() : '?',
-                    style: TextStyle(color: accent, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
+                    style: TextStyle(color: context.colors.textPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s12),
@@ -635,7 +560,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.phone_outlined, size: AppIconSize.i18, color: accent),
+                  icon: Icon(Icons.phone_outlined, size: AppIconSize.i18, color: context.colors.primary),
                   tooltip: context.l10n.common_call,
                   onPressed: () async {
                     final uri = AppLinks.tel(client.phone);
@@ -655,21 +580,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
             Wrap(
               spacing: AppSpacing.s6,
               runSpacing: AppSpacing.s6,
-              children: types.map((type) {
-                final typeAccent = _colorForType(type, context);
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-                  decoration: BoxDecoration(color: typeAccent.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(_iconForType(type), size: AppIconSize.i12, color: typeAccent),
-                      const SizedBox(width: AppSpacing.s4),
-                      Text(context.l10n.clientTypeLabel(type), style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: typeAccent, fontWeight: AppFontWeight.semibold)),
-                    ],
-                  ),
-                );
-              }).toList(),
+              // POL6: a client type is never coloured: plain secondary text.
+              children: types.map((type) => Text(context.l10n.clientTypeLabel(type), style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: context.colors.textSecondary))).toList(),
             ),
             const SizedBox(height: AppSpacing.s16),
             _detailLabel(context, context.l10n.clients_joinedOn),
@@ -679,21 +591,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ),
             const SizedBox(height: AppSpacing.s16),
             _detailLabel(context, context.l10n.common_status),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-              decoration: BoxDecoration(
-                color: (client.status == 'Active' ? context.colors.success : context.colors.textHint).withValues(alpha: AppAlpha.a10),
-                borderRadius: BorderRadius.circular(AppRadius.r10),
-              ),
-              child: Text(
-                context.l10n.clientStatusLabel(client.status),
-                style: TextStyle(
-                  fontSize: _phoneMin(AppFontSize.f11_5),
-                  color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted,
-                  fontWeight: AppFontWeight.semibold,
-                ),
-              ),
-            ),
+            // POL6: the stored status as the dot plus the word (clientAppStatus).
+            StatusDot(status: clientAppStatus(client.status), label: context.l10n.clientStatusLabel(client.status)),
             const SizedBox(height: AppSpacing.s16),
             FutureBuilder<(int, double)>(
               future: _getClientStatsFuture(client),
@@ -843,7 +742,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
     return AppBar(
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e1,
+      elevation: AppElevation.e0,
+      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
@@ -911,8 +811,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   Widget _buildClientRow(Client client) {
     final types = client.types.isNotEmpty ? client.types : [kClientTypeOther];
-    final primaryType = types.first;
-    final accent = _colorForType(primaryType);
     final isAdmin = Provider.of<UserRoleProvider>(context, listen: false).isAdmin;
     final isSelected = _selectedClient?.id == client.id;
 
@@ -934,10 +832,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
               children: [
                 CircleAvatar(
                   radius: 16,
-                  backgroundColor: accent.withValues(alpha: AppAlpha.a10),
+                  backgroundColor: leadingColorFor(context.colors, client.name).withValues(alpha: PhoneListMetrics.leadingAlpha),
                   child: Text(
                     client.name.isNotEmpty ? client.name[0].toUpperCase() : '?',
-                    style: TextStyle(color: accent, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13),
+                    style: TextStyle(color: context.colors.textPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s8),
@@ -952,21 +850,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             child: Wrap(
               spacing: AppSpacing.s4,
               runSpacing: AppSpacing.s4,
-              children: types.map((type) {
-                final typeAccent = _colorForType(type);
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
-                  decoration: BoxDecoration(color: typeAccent.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(_iconForType(type), size: AppIconSize.i12, color: typeAccent),
-                      const SizedBox(width: AppSpacing.s3),
-                      Text(context.l10n.clientTypeLabel(type), style: TextStyle(fontSize: AppFontSize.f10_5, color: typeAccent, fontWeight: AppFontWeight.semibold)),
-                    ],
-                  ),
-                );
-              }).toList(),
+              children: types.map((type) => Text(context.l10n.clientTypeLabel(type), style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textSecondary))).toList(),
             ),
           ),
           Expanded(
@@ -975,27 +859,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-              decoration: BoxDecoration(
-                color: (client.status == 'Active' ? context.colors.success : context.colors.textHint).withValues(alpha: AppAlpha.a10),
-                borderRadius: BorderRadius.circular(AppRadius.r10),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.circle, size: AppSizes.statusDot, color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted),
-                  const SizedBox(width: AppSpacing.s4),
-                  Text(
-                    context.l10n.clientStatusLabel(client.status),
-                    style: TextStyle(
-                      fontSize: AppFontSize.f11_5,
-                      color: client.status == 'Active' ? context.colors.successStrong : context.colors.textMuted,
-                      fontWeight: AppFontWeight.semibold,
-                    ),
-                  ),
-                ],
-              ),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: StatusDot(status: clientAppStatus(client.status), label: context.l10n.clientStatusLabel(client.status)),
             ),
           ),
           Expanded(
@@ -1133,7 +999,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
       // No amount: a client row names the person (the balance is on Debtors).
       amount: '',
       details: [client.phone, joined],
-      status: RecordStatus(chip, _colorForType(types.first)),
+      // POL6: a type, not a state: the neutral role, never a hue.
+      status: RecordStatus(chip, context.colors.textSecondary),
       initialsOf: client.name,
       colorSeed: client.name,
       semanticsLabel: l10n.phoneList_rowSemantics(client.name, client.phone, typeLabels, joined),
@@ -1238,7 +1105,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             label: Text(context.l10n.clients_createIndex),
             style: ButtonStyle(
               backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                 return context.colors.primary;
               }),
               foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),

@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:vetbiz_pro/screens/clients/add_client_screen.dart';
 import 'package:vetbiz_pro/screens/clients/clients_screen.dart';
+import 'package:vetbiz_pro/ui/polish/flat_stat_card.dart';
 
 import 'helpers/counting_firestore.dart';
 import 'helpers/ph5b_finders.dart';
@@ -119,7 +120,8 @@ void main() {
     final cards = {'Total Clients': '3', 'New This Month': '3', 'Most Active Type': 'Farmer', 'Last Added': 'Amina Juma'};
     await _clients(tester, size: _wide);
     for (final e in cards.entries) {
-      final card = find.ancestor(of: find.text(e.key), matching: find.byType(Container)).first;
+      // POL6: the cards are FlatStatCards.
+      final card = find.byWidgetPredicate((w) => w is FlatStatCard && w.label == e.key);
       expect(find.descendant(of: card, matching: find.text(e.value)), findsOneWidget, reason: e.key);
     }
     expect(find.text('67% of clients'), findsOneWidget);
