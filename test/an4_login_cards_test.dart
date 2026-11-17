@@ -127,12 +127,16 @@ void main() {
     }
   });
 
-  testWidgets('the page frame\'s shadow is about half as strong (blur 20, a fifth of the shadow role)', (tester) async {
+  // POL3 (owner rule: flat cards): the frame's shadow (AN4: half strength)
+  // is gone; a hairline in the border role, drawn in front of the card.
+  testWidgets('the page frame is flat: no shadow, a hairline in the border role', (tester) async {
     await pumpLogin(tester, FakeFirebaseFirestore());
     final c = AppColors.fromTheme(AppColorTheme.pasture);
-    final shadow = (tester.widget<Container>(find.byKey(AuthCard.surfaceKey)).decoration! as BoxDecoration).boxShadow!.single;
-    expect(shadow.blurRadius, lessThanOrEqualTo(20));
-    expect(shadow.color.a, closeTo(c.shadow.a * 0.2, 0.01));
+    final frame = tester.widget<Container>(find.byKey(AuthCard.surfaceKey));
+    expect((frame.decoration! as BoxDecoration).boxShadow, anyOf(isNull, isEmpty));
+    final edge = (frame.foregroundDecoration! as BoxDecoration).border! as Border;
+    expect(edge.top.color, c.border);
+    expect(edge.top.width, 1);
   });
 
   // AN6: no last-known state needed any more (UpdatesLastKnown retired):

@@ -173,12 +173,7 @@ class AuthCardMetrics {
   static const double paddingNarrow = AppSpacing.s18;
 
   static const double radius = AppRadius.r24;
-
-  /// AN4 (owner): about half the old frame shadow (blur 40, offset 20,
-  /// AppAlpha.a40 of the shadow role), so the cards inside it lead.
-  static const double shadowBlur = 20;
-  static const double shadowOffsetY = 10;
-  static const double shadowAlpha = AppAlpha.a20;
+  // POL3: the card's shadow (AN4) is gone; a hairline border instead.
 }
 
 /// LG1: the login on phones (AppLayout.isPhone) as one flat page, no frame
@@ -284,28 +279,15 @@ class AuthPanelMetrics {
   /// so the two heading rows sit on one line.
   static const double accentHeight = 4;
 
-  /// The soft circle beside each heading (the lock, the vaccine), its outline
-  /// and glow, and the gap to the heading.
+  /// The soft circle beside each heading (the lock, the vaccine), its
+  /// outline, and the gap to the heading (POL3: its glow is gone).
   static const double iconCircle = 42;
   static const double iconCircleBorder = 1.4;
-  static const double iconCircleGlow = 14;
-  static const double iconCircleGlowAlpha = AppAlpha.a50;
-
-  /// Dark (AN5): a smaller, fainter glow, so the light ring does not haze
-  /// the icon on the dark card. Light keeps the two above.
-  static const double iconCircleGlowDark = 6;
-  static const double iconCircleGlowAlphaDark = AppAlpha.a15;
   static const double headingGap = AppSpacing.s14;
 
   /// Between a heading and its subtitle (the welcome sentence, the sign-in
   /// subtext), the same in both cards so the two lines share a line (AN5).
   static const double subtitleGap = AppSpacing.s12;
-
-  /// Two shadows: a wide tinted lift and a tight, crisp edge.
-  static const double liftBlur = 32;
-  static const double liftOffsetY = 14;
-  static const double edgeBlur = 8;
-  static const double edgeOffsetY = 2;
 
   /// Between the two cards: side by side, and stacked on phones.
   static const double gap = AppSpacing.s28;

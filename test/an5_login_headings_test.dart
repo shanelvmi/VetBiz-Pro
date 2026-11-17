@@ -16,7 +16,7 @@ import 'helpers/login_harness.dart';
 // the right card's heading "Sign in to your account" with a subtext line,
 // both cards' sentences drawn by AuthPanelHeading on one horizontal line;
 // the circle icons crisp in Dark (at least 4.5:1 on the circle's effective
-// fill, the glow weaker than Light's), Light exactly as before.
+// fill), Light exactly as before; POL3: no glow (it was weaker in Dark).
 final _en = lookupAppLocalizations(const Locale('en'));
 final _sw = lookupAppLocalizations(const Locale('sw'));
 
@@ -92,20 +92,20 @@ void main() {
     }
   }
 
+  // POL3 (owner rule: no glow): the circles' glow (AN5: weaker in Dark) is
+  // gone in Light and Dark; the soft fill and the outline stay.
   for (final theme in [AppColorTheme.pasture, AppColorTheme.ledger]) {
-    testWidgets('${theme.id}: the Dark glow is weaker than the Light glow; Light\'s exactly as before', (tester) async {
-      await pumpLogin(tester, await dbWithUpdates(1), theme: theme);
-      final light = _circle(tester, LoginScreen.welcomeBackRowKey).boxShadow!;
-      final glow = AppColors.fromTheme(theme).brandTealGlow;
-      expect(light, [BoxShadow(color: glow.withValues(alpha: 0.5), blurRadius: 14)]);
-      await pumpLogin(tester, await dbWithUpdates(1), theme: theme, brightness: Brightness.dark);
-      // MaterialApp animates a theme change: let it finish.
-      await tester.pump(const Duration(seconds: 1));
-      final dark = _circle(tester, LoginScreen.welcomeBackRowKey).boxShadow ?? const <BoxShadow>[];
-      if (dark.isNotEmpty) {
-        expect(dark.single.blurRadius, lessThan(light.single.blurRadius));
-        expect(dark.single.color.a, lessThan(light.single.color.a));
-      }
-    });
+    for (final brightness in Brightness.values) {
+      testWidgets('${theme.id} ${brightness.name}: the circles have no glow, their fill and outline kept', (tester) async {
+        await pumpLogin(tester, await dbWithUpdates(1), theme: theme, brightness: brightness);
+        final glow = AppColors.fromTheme(theme, brightness: brightness).brandTealGlow;
+        for (final key in [LoginScreen.welcomeBackRowKey, UpdatesCard.welcomeHeadingKey]) {
+          final circle = _circle(tester, key);
+          expect(circle.boxShadow, anyOf(isNull, isEmpty), reason: '$key');
+          expect(circle.color, glow.withValues(alpha: 0.2), reason: '$key');
+          expect(circle.border, isNotNull, reason: '$key');
+        }
+      });
+    }
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_breakpoints.dart';
 import '../theme/app_dimens.dart';
+import '../theme/polish_metrics.dart';
 import '../theme/theme_context.dart';
 
 /// What the card tells its body: the width the page gives the card (after
@@ -59,16 +60,16 @@ class AuthCard extends StatelessWidget {
             key: surfaceKey,
             width: width,
             clipBehavior: Clip.antiAlias,
+            // POL3 (owner rule: flat cards): no shadow; a hairline in the
+            // border role. Drawn in front (foregroundDecoration), as a
+            // Container's own border would inset the content by its width.
             decoration: BoxDecoration(
               color: context.colors.surface,
               borderRadius: BorderRadius.circular(AuthCardMetrics.radius),
-              boxShadow: [
-                BoxShadow(
-                  color: context.colors.shadow.withValues(alpha: AuthCardMetrics.shadowAlpha),
-                  blurRadius: AuthCardMetrics.shadowBlur,
-                  offset: const Offset(0, AuthCardMetrics.shadowOffsetY),
-                ),
-              ],
+            ),
+            foregroundDecoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AuthCardMetrics.radius),
+              border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,

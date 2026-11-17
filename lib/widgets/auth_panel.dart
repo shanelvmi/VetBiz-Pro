@@ -5,8 +5,10 @@ import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 
 /// The look of the cards inside the signed-out frame (AN4): the login card
-/// and the Updates card beside it. One surface, radius, border and shadow,
-/// from [AuthPanelMetrics] and the theme's roles, so one place restyles both.
+/// and the Updates card beside it. One surface, radius and border, from
+/// [AuthPanelMetrics] and the theme's roles, so one place restyles both.
+/// POL3 (owner rule: flat cards): the hairline border alone; the tinted lift
+/// and the edge shadow are gone.
 class AuthPanel {
   AuthPanel._();
 
@@ -14,20 +16,6 @@ class AuthPanel {
     color: context.colors.surface,
     borderRadius: BorderRadius.circular(AuthPanelMetrics.radius),
     border: Border.all(color: context.colors.border),
-    // Two layers: a wide, teal-tinted one that lifts the card off the frame
-    // around it, and a tight one for a crisp edge.
-    boxShadow: [
-      BoxShadow(
-        color: context.colors.primary.withValues(alpha: AppAlpha.a15),
-        blurRadius: AuthPanelMetrics.liftBlur,
-        offset: const Offset(0, AuthPanelMetrics.liftOffsetY),
-      ),
-      BoxShadow(
-        color: context.colors.shadow.withValues(alpha: AppAlpha.a05),
-        blurRadius: AuthPanelMetrics.edgeBlur,
-        offset: const Offset(0, AuthPanelMetrics.edgeOffsetY),
-      ),
-    ],
   );
 }
 
@@ -50,7 +38,6 @@ class AuthPanelHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final glow = context.colors.brandTealGlow;
-    final dark = Theme.of(context).brightness == Brightness.dark;
     final icon = this.icon;
     final titleStyle = TextStyle(fontSize: AppFontSize.f20, fontWeight: AppFontWeight.extraBold, color: context.colors.textPrimary);
     final align = centered ? TextAlign.center : null;
@@ -59,15 +46,11 @@ class AuthPanelHeading extends StatelessWidget {
         Container(
           width: AuthPanelMetrics.iconCircle,
           height: AuthPanelMetrics.iconCircle,
+          // POL3: the soft fill and outline only; the glow around it is gone.
           decoration: BoxDecoration(
             color: glow.withValues(alpha: AppAlpha.a20),
             shape: BoxShape.circle,
             border: Border.all(color: glow.withValues(alpha: AppAlpha.a70), width: AuthPanelMetrics.iconCircleBorder),
-            boxShadow: [
-              dark
-                  ? BoxShadow(color: glow.withValues(alpha: AuthPanelMetrics.iconCircleGlowAlphaDark), blurRadius: AuthPanelMetrics.iconCircleGlowDark)
-                  : BoxShadow(color: glow.withValues(alpha: AuthPanelMetrics.iconCircleGlowAlpha), blurRadius: AuthPanelMetrics.iconCircleGlow),
-            ],
           ),
           child: Icon(icon, color: context.colors.authPanelIcon, size: AppIconSize.i20),
         ),
