@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../data/payment_status.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
 import '../../theme/polish_metrics.dart';
@@ -18,6 +19,18 @@ extension AppStatusRole on AppStatus {
         AppStatus.neutral => c.textSecondary,
       };
 }
+
+/// POL4: a sale's or a service's payment status (the STORED value,
+/// [PaymentStatus.of]) as one of the four states: the one mapping the Sales
+/// and Services lists, their archives, details and the receipt preview's
+/// panel use (before POL4 four copies of it in the lists, and the receipt
+/// panel showed a part payment red). An unknown value is neutral.
+AppStatus paymentAppStatus(String status) => switch (status) {
+      PaymentStatus.paid => AppStatus.success,
+      PaymentStatus.partial => AppStatus.warning,
+      PaymentStatus.unpaid => AppStatus.danger,
+      _ => AppStatus.neutral,
+    };
 
 /// POL1, owner rule 3: the one status style, a small dot plus the word, in
 /// one size and one gap. The word is always shown, so the state never rests

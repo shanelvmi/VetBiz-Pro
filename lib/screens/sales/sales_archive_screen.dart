@@ -18,7 +18,11 @@ import '../../data/payment_status.dart';
 import '../../utils/app_clock.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
-  const SalesArchiveScreen({super.key});
+  /// Null: the app's own Firestore. Tests pass an in-memory one (POL4: the
+  /// archive's fingerprint), the same seam as the lists' (PH3).
+  final FirebaseFirestore? firestore;
+
+  const SalesArchiveScreen({super.key, this.firestore});
 
   @override
   State<SalesArchiveScreen> createState() => _SalesArchiveScreenState();
@@ -124,7 +128,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   /// pulling everything in one shot.
   Future<void> _fetchArchivedSalesPage(String facilityId) async {
     try {
-      Query query = FirebaseFirestore.instance
+      Query query = (widget.firestore ?? FirebaseFirestore.instance)
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.archivedSales);
