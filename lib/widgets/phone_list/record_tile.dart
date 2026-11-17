@@ -31,22 +31,12 @@ class RecordStatus {
   const RecordStatus.state(this.label, AppStatus this.state) : color = null;
 }
 
-/// The chart role a name gets, the same one every time.
-Color leadingColorFor(AppColors colors, String seed) {
-  final roles = [
-    colors.chart1,
-    colors.chart2,
-    colors.chart3,
-    colors.chart4,
-    colors.chart5,
-    colors.chart6,
-    colors.chart7,
-    colors.chart8,
-    colors.chart9,
-  ];
-  final hash = seed.codeUnits.fold<int>(0, (h, c) => (h * 31 + c) & 0x7fffffff);
-  return roles[hash % roles.length];
-}
+/// POL6 (owner answer 3): the one neutral tint every initials leading uses,
+/// on every phone list (no rainbow: a different chart hue per name coloured
+/// a person, not a state). A photo stays a photo. [seed] is kept so the
+/// callers do not change; it no longer picks a colour. The wide client and
+/// debtor avatars use the same tint, so phone and wide match.
+Color leadingColorFor(AppColors colors, String seed) => colors.textSecondary;
 
 class RecordTile extends StatelessWidget {
   /// Line 1: the person (or Walk-in) and the amount, already formatted.
