@@ -31,6 +31,11 @@ class FilterRow extends StatelessWidget {
   /// Unread in view). 0, the default, scrolls the whole row.
   final int pinned;
 
+  /// POL6: the segments wrap onto a second line instead of scrolling, so
+  /// none sits off the edge (Stock Alerts: the danger kinds must show).
+  /// Off by default: every other row scrolls as before.
+  final bool wrap;
+
   const FilterRow({
     super.key,
     required this.values,
@@ -41,12 +46,21 @@ class FilterRow extends StatelessWidget {
     this.keyPrefix,
     this.padding = const EdgeInsets.symmetric(horizontal: PolishMetrics.pagePadding),
     this.pinned = 0,
+    this.wrap = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final fixed = pinned.clamp(0, values.length);
+    if (wrap) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: colors.divider, width: PolishMetrics.hairline)),
+        ),
+        child: Padding(padding: padding, child: Wrap(children: [for (final v in values) _segment(context, v)])),
+      );
+    }
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: colors.divider, width: PolishMetrics.hairline)),

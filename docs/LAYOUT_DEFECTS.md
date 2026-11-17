@@ -50,5 +50,7 @@ after it. The tests let them through only as RenderFlex overflows
 None found. Products, Stock Store and Stock Alerts were pumped at 360x640,
 390x844, 768x1024, 1024x768 and 1200x800, text 1.0 and 1.3 (reduced motion),
 every error collected one by one: no overflow (pol5_products_test.dart).
-Not a defect but worth knowing: at 1024 Stock Alerts' kind FilterRow
-scrolls sideways (Expired is off the edge until scrolled).
+~~At 1024 Stock Alerts' kind FilterRow scrolls sideways (Expired is off the
+edge until scrolled).~~ Fixed in POL6 Step 0: the kinds are by severity and
+the row wraps (FilterRow `wrap`); measured before: 86 px too wide at 1024
+and 342 at 768 (200 and 456 in Kiswahili). pol6_alerts_kind_row_test.dart.

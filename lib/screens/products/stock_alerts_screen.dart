@@ -443,14 +443,15 @@ class _AlertsBodyState extends State<_AlertsBody> {
       AppLayout.isPhone(context) && size < PhoneListMetrics.detailLabel ? PhoneListMetrics.detailLabel : size;
 
 
-  // Card order as requested. The table itself always lists the most
-  // urgent first (see StockAlertsScreen.currentAlerts).
+  // POL6: the kinds by severity, the danger ones first (the filter row and
+  // the phone's chips). The table itself always lists the most urgent first
+  // (see StockAlertsScreen.currentAlerts).
   static const List<StockAlertKind> _cardOrder = [
-    StockAlertKind.lowStock,
     StockAlertKind.depleted,
-    StockAlertKind.restockShelf,
-    StockAlertKind.expiringSoon,
     StockAlertKind.expired,
+    StockAlertKind.lowStock,
+    StockAlertKind.expiringSoon,
+    StockAlertKind.restockShelf,
   ];
 
   final TextEditingController _searchController = TextEditingController();
@@ -783,6 +784,8 @@ class _AlertsBodyState extends State<_AlertsBody> {
     return FilterRow(
       keyPrefix: 'pol5-alertKind-',
       padding: EdgeInsets.zero,
+      // POL6: every kind in view at 768 and 1024 (it scrolled before).
+      wrap: true,
       values: ['All', for (final k in _cardOrder) k.name],
       selected: _kindFilter?.name ?? 'All',
       label: (v) => v == 'All' ? l10n.common_all : StockAlertsScreen._title(l10n, StockAlertKind.values.byName(v)),

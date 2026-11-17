@@ -100,6 +100,9 @@ void main() {
       final count = all.where((a) => a.kind == kind).length;
       expect(find.descendant(of: ph5Key('ui2-alertChip-${kind.name}'), matching: find.text('${_titleEn(kind)} · $count')), findsOneWidget);
     }
+    // POL6: the kinds are by severity now; Low Stock may need a scroll.
+    await tester.ensureVisible(ph5Key('ui2-alertChip-lowStock'));
+    await ph5Settle(tester);
     await tester.tap(ph5Key('ui2-alertChip-lowStock'));
     await ph5Settle(tester);
     final chip = tester.widget<ChoiceChip>(ph5Key('ui2-alertChip-lowStock'));
