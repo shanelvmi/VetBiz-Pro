@@ -124,6 +124,9 @@ void main() {
     expect(totals(baseline.counts)['R14'], lessThanOrEqualTo(35));
     // POL4 (group 3): 19 -> 16 (two card shadows gone, the picker allowlisted).
     expect(totals(baseline.counts)['R14'], lessThanOrEqualTo(16));
+    // POL5 (group 4): 16 -> 9 (the Products and Stock Store cards, rows and
+    // grid cards, and the alerts bell's tiles: hairlines now).
+    expect(totals(baseline.counts)['R14'], lessThanOrEqualTo(9));
   });
 
   // POL3 (owner: no gradient, ever): R13 is at zero and nothing is
