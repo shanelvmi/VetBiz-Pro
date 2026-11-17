@@ -21,6 +21,7 @@ import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_choice_field.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
 import '../../widgets/phone_form/picker_sheet.dart';
+import '../../theme/polish_metrics.dart';
 
 class AddClientScreen extends StatefulWidget {
   final Client? client; // null = add, not null = edit
@@ -605,16 +606,17 @@ class _AddClientScreenState extends State<AddClientScreen> {
                           label: Text(context.l10n.clientStatusLabel('Active')),
                           selected: _status == 'Active',
                           onSelected: (_) => setState(() => _status = 'Active'),
-                          selectedColor: context.colors.success.withValues(alpha: AppAlpha.a15),
-                          labelStyle: TextStyle(color: _status == 'Active' ? context.colors.successStrong : context.colors.textPrimary),
+                          // POL6: a choice, not a state: chosen is the one accent (primary).
+                          selectedColor: context.colors.primary.withValues(alpha: AppAlpha.a15),
+                          labelStyle: TextStyle(color: _status == 'Active' ? context.colors.primary : context.colors.textPrimary),
                         ),
                         const SizedBox(width: AppSpacing.s8),
                         ChoiceChip(
                           label: Text(context.l10n.clientStatusLabel('Inactive')),
                           selected: _status == 'Inactive',
                           onSelected: (_) => setState(() => _status = 'Inactive'),
-                          selectedColor: context.colors.textHint.withValues(alpha: AppAlpha.a30),
-                          labelStyle: TextStyle(color: _status == 'Inactive' ? context.colors.textPrimary : context.colors.textPrimary),
+                          selectedColor: context.colors.primary.withValues(alpha: AppAlpha.a15),
+                          labelStyle: TextStyle(color: _status == 'Inactive' ? context.colors.primary : context.colors.textPrimary),
                         ),
                       ],
                     ),
@@ -769,8 +771,9 @@ class _AddClientScreenState extends State<AddClientScreen> {
       padding: const EdgeInsets.all(AppSpacing.s16),
       decoration: BoxDecoration(
         color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)),
+        // POL6: a flat panel, its edge in the border role (a hairline).
+        borderRadius: BorderRadius.circular(PolishMetrics.cardRadius),
+        border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
