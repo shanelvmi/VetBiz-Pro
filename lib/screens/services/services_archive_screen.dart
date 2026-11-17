@@ -18,6 +18,9 @@ import '../../theme/theme_context.dart';
 import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
 import '../../utils/app_clock.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/app_status.dart';
+import '../../ui/polish/filter_row.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (POL4: the
@@ -188,11 +191,9 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     return PaymentStatus.of(paid, total);
   }
 
-  Color _statusColor(double paid, double total) {
-    if (paid >= total) return context.colors.success;
-    if (paid > 0) return context.colors.warning;
-    return context.colors.danger;
-  }
+  /// POL4 (owner rule 3): the one status style, the dot and the word, in
+  /// the state paymentAppStatus gives (before: a coloured pill).
+  Widget _statusDot(String status) => StatusDot(status: paymentAppStatus(status), label: context.l10n.paymentStatusLabel(status));
 
   @override
   Widget build(BuildContext context) {
@@ -309,7 +310,9 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     return AppBar(
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e1,
+      // POL4 (owner rule 4): no shadow under the bar; a hairline.
+      elevation: AppElevation.e0,
+      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
@@ -361,43 +364,20 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     );
   }
 
+  /// POL4 (owner: one filter row): the page's one filter row, FilterRow (was
+  /// a row of filled chips). Each segment holds the STORED category and shows
+  /// its label; the filter compares the stored value, as before.
   Widget _buildCategoryChipsRow(List<String> categories) {
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.s8),
-        itemBuilder: (context, index) => _categoryChip(categories[index]),
-      ),
-    );
-  }
-
-  Widget _categoryChip(String category) {
-    final isSelected = _selectedCategory == category;
-    return InkWell(
-      onTap: () => setState(() {
+    return FilterRow(
+      values: categories,
+      selected: _selectedCategory,
+      label: (category) => category == 'All' ? context.l10n.common_all : context.l10n.serviceCategoryLabel(category),
+      keyPrefix: 'servicesArchive-category-',
+      padding: EdgeInsets.zero,
+      onSelected: (category) => setState(() {
         _selectedCategory = category;
         _currentPageIndex = 0;
       }),
-      borderRadius: BorderRadius.circular(AppRadius.r20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s8),
-        decoration: BoxDecoration(
-          color: isSelected ? context.colors.primary : context.colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.r20),
-          border: Border.all(color: isSelected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30)),
-        ),
-        child: Text(
-          // Shows the label; the chip selects the stored category.
-          category == 'All' ? context.l10n.common_all : context.l10n.serviceCategoryLabel(category),
-          style: TextStyle(
-            fontSize: AppFontSize.f12_5,
-            color: isSelected ? context.colors.surface : context.colors.textPrimary,
-            fontWeight: isSelected ? AppFontWeight.semibold : AppFontWeight.regular,
-          ),
-        ),
-      ),
     );
   }
 
@@ -479,7 +459,6 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     final totalPaid = ((service['totalPaid'] ?? 0.0) as num).toDouble();
     final totalAmount = ((service['totalAmount'] ?? 0.0) as num).toDouble();
     final status = _getPaymentStatus(totalPaid, totalAmount);
-    final statusColor = _statusColor(totalPaid, totalAmount);
     final isSelected = _selectedService?['id'] == service['id'];
     final serviceDate = service['serviceDate'] is Timestamp
         ? (service['serviceDate'] as Timestamp).toDate()
@@ -550,14 +529,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: AppAlpha.a10),
-                  borderRadius: BorderRadius.circular(AppRadius.r10),
-                ),
-                child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
-              ),
+              child: Align(alignment: AlignmentDirectional.centerStart, child: _statusDot(status)),
             ),
             Expanded(
               flex: 2,
@@ -642,7 +614,6 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
     final totalPaid = ((service['totalPaid'] ?? 0.0) as num).toDouble();
     final totalAmount = ((service['totalAmount'] ?? 0.0) as num).toDouble();
     final status = _getPaymentStatus(totalPaid, totalAmount);
-    final statusColor = _statusColor(totalPaid, totalAmount);
     final serviceDate = service['serviceDate'] is Timestamp
         ? (service['serviceDate'] as Timestamp).toDate()
         : AppClock.now();
@@ -674,11 +645,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                   child: Text((service['name'] as String?) ?? 'Service',
                       style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r12)),
-                  child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
-                ),
+                _statusDot(status),
               ],
             ),
             Text('${dateOnlyFormatter.format(serviceDate)}, ${timeOnlyFormatter.format(serviceDate)}',
@@ -698,7 +665,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(context.l10n.services_paymentInfo, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
-                      Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
+                      Flexible(child: _statusDot(status)),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.s10),
