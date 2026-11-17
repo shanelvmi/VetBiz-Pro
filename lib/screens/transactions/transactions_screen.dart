@@ -21,7 +21,6 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_layout.dart';
 import '../../theme/theme_context.dart';
-import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../services/trash_service.dart';
 import '../../data/collections.dart';
@@ -31,6 +30,9 @@ import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../utils/app_clock.dart';
+import '../../ui/polish/app_status.dart';
+import '../../ui/polish/flat_stat_card.dart';
+import '../../theme/polish_metrics.dart';
 
 class TransactionScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH5b, as
@@ -245,7 +247,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
     return AppBar(
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e1,
+      elevation: AppElevation.e0,
+      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
@@ -286,72 +289,30 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   Widget _buildMetricsRow(double subProfit) {
-    return SizedBox(
-      height: 92,
+    // POL6: flat cards of one height (their own, not a fixed 92). No colour:
+    // the sign of the figure says whether income beat expenses.
+    return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: _metricCard(context.l10n.payments_typeOtherIncome, _otherIncomeTotal, context.colors.accent),
+            child: _metricCard(context.l10n.payments_typeOtherIncome, _otherIncomeTotal),
           ),
           const SizedBox(width: AppSpacing.s12),
           Expanded(
-            child: _metricCard(context.l10n.transactions_expenses, _expensesTotal, context.colors.dangerSoft),
+            child: _metricCard(context.l10n.transactions_expenses, _expensesTotal),
           ),
           const SizedBox(width: AppSpacing.s12),
           Expanded(
-            child: _metricCard(
-              context.l10n.transactions_incomeVsExpenses,
-              subProfit,
-              subProfit >= 0 ? context.colors.successStrong : context.colors.dangerSoft,
-            ),
+            child: _metricCard(context.l10n.transactions_incomeVsExpenses, subProfit),
           ),
         ],
       ),
     );
   }
 
-  Widget _metricCard(String title, double amount, Color color) {
-    final isLoading = _isSummaryLoading;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.s12),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        boxShadow: [BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.s6),
-                decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
-                child: Icon(Icons.account_balance_wallet_outlined, size: AppIconSize.i14, color: color),
-              ),
-              const SizedBox(width: AppSpacing.s8),
-              Expanded(
-                child: Text(title, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted), maxLines: 1, overflow: TextOverflow.ellipsis),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.s6),
-          AnimatedSwitcher(
-            duration: AppMotion.slow,
-            child: isLoading
-                ? SizedBox(key: const ValueKey('loading'), height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: color))
-                : Text(
-                    Money.format(amount),
-                    key: const ValueKey('loaded'),
-                    style: const TextStyle(fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _metricCard(String title, double amount) =>
+      FlatStatCard(label: title, value: Money.format(amount), loading: _isSummaryLoading);
 
   Widget _buildToolbarRow(int count) {
     final hasActiveFilter = _filterType != null;
@@ -509,7 +470,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   Widget _buildTransactionRow(TransactionModel tx, {required TransactionProvider transactionProvider}) {
     final isIncome = tx.type.toLowerCase() == 'other income';
-    final accentColor = isIncome ? context.colors.accent : context.colors.dangerAccent;
     final isSelected = _selectedTransaction?.id == tx.id;
 
     return InkWell(
@@ -528,11 +488,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: accentColor.withValues(alpha: AppAlpha.a10),
-                  child: Icon(isIncome ? Icons.arrow_downward : Icons.arrow_upward, size: AppIconSize.i14, color: accentColor),
-                ),
+                // POL6: in or out as a neutral arrow (the amount's sign says it too).
+                Icon(isIncome ? Icons.arrow_downward : Icons.arrow_upward, size: AppIconSize.i14, color: context.colors.textSecondary),
                 const SizedBox(width: AppSpacing.s8),
                 Text(AppDateFormat.time12.format(tx.date), style: const TextStyle(fontSize: AppFontSize.f13)),
               ],
@@ -542,11 +499,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
             flex: 2,
             child: tx.category.isEmpty
                 ? const Text('-', style: TextStyle(fontSize: AppFontSize.f13))
-                : Container(
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
-                    decoration: BoxDecoration(color: accentColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
-                    child: Text(context.l10n.transactionCategoryLabel(tx.category), style: TextStyle(fontSize: AppFontSize.f10_5, color: accentColor, fontWeight: AppFontWeight.semibold), maxLines: 1, overflow: TextOverflow.ellipsis),
-                  ),
+                // POL6: a category is never coloured: plain secondary text.
+                : Text(context.l10n.transactionCategoryLabel(tx.category),
+                    style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
           Expanded(
             flex: 3,
@@ -563,10 +518,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
           ),
           Expanded(
             flex: 2,
-            child: Text(
-              Money.format(tx.amount),
-              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13, color: accentColor),
-            ),
+            // POL6 (owner answer 1): "+Tsh 5,000" / "-Tsh 5,000", plain; a
+            // display prefix only (the stored amount and Money unchanged).
+            child: Text(_signedAmount(tx), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13)),
           ),
           Expanded(
             flex: 2,
@@ -705,7 +659,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
   /// page's app bar has them).
   Widget _buildDetailsPanel(TransactionModel tx, {bool onPage = false}) {
     final isIncome = tx.type.toLowerCase() == 'other income';
-    final accentColor = isIncome ? context.colors.accent : context.colors.dangerAccent;
     final reference = tx.receiptNumber != null
         ? '${isIncome ? 'OI' : 'EXP'}-${tx.receiptNumber.toString().padLeft(6, '0')}'
         : null;
@@ -733,16 +686,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
               ],
             ),
             const SizedBox(height: AppSpacing.s4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-              decoration: BoxDecoration(color: accentColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r10)),
-              child: Text(_typeLabel(tx.type), style: TextStyle(fontSize: _phoneMin(AppFontSize.f11_5), color: accentColor, fontWeight: AppFontWeight.semibold)),
-            ),
+            // POL6 (owner answer 1): Income or Expense in words, a neutral dot.
+            StatusDot(status: AppStatus.neutral, label: _typeLabel(tx.type)),
             const SizedBox(height: AppSpacing.s12),
-            Text(
-              Money.format(tx.amount),
-              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22, color: accentColor),
-            ),
+            Text(_signedAmount(tx), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f22)),
             const SizedBox(height: AppSpacing.s4),
             Text(
               tx.description.isEmpty ? _typeLabel(tx.type) : tx.description,
@@ -903,7 +850,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
         if (tx.category.isNotEmpty) l10n.transactionCategoryLabel(tx.category),
         AppDateFormat.time24.format(tx.date),
       ],
-      status: RecordStatus(type, _isIncome(tx) ? context.colors.accent : context.colors.dangerAccent),
+      // POL6 (owner answer 1): the type word with a neutral dot; the amount
+      // already carries its + or - sign.
+      status: RecordStatus.state(type, AppStatus.neutral),
       // The wide row's leading: money in or money out (no category has an
       // icon of its own).
       icon: _isIncome(tx) ? Icons.arrow_downward : Icons.arrow_upward,
