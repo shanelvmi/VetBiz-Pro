@@ -328,8 +328,7 @@
     "R11": {},
     "R12": {},
     "R13": {
-      "lib/screens/platform_admin/promotions_screen.dart": 1,
-      "lib/screens/register_screen.dart": 3
+      "lib/screens/platform_admin/promotions_screen.dart": 1
     },
     "R14": {
       "lib/screens/clients/clients_screen.dart": 1,

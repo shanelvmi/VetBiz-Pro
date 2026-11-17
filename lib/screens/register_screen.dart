@@ -39,6 +39,7 @@ import '../config/app_limits.dart';
 import '../theme/app_text.dart';
 import '../theme/app_dimens.dart';
 import '../theme/theme_context.dart';
+import '../ui/polish/brand_surface.dart';
 import '../theme/app_breakpoints.dart';
 import '../theme/app_icons.dart';
 import '../theme/app_layout.dart';
@@ -965,13 +966,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-      ),
+      // POL3: one solid deep tone (BrandSurface), no gradient.
+      color: BrandSurface.fill(context),
+      foregroundDecoration: BrandSurface.darkEdge(context, bottomOnly: true),
       child: Row(
         children: [
           Container(
@@ -1003,7 +1000,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: context.colors.brandTealGlow, size: AppIconSize.i20),
+              // POL3 (owner): the on-brand ink, one accent.
+              Icon(icon, color: context.colors.onBrandSurface, size: AppIconSize.i20),
               const SizedBox(width: AppSpacing.s10),
               Expanded(
                 child: Text(text, style: TextStyle(color: context.colors.onBrandSurface, fontSize: AppFontSize.f13_5, height: 1.4)),
@@ -1014,14 +1012,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s24),
+      // POL3: one solid deep tone (BrandSurface), no gradient; the circle
+      // and the icons in the on-brand ink.
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: BrandSurface.fill(context),
         borderRadius: BorderRadius.circular(AppRadius.r20),
       ),
+      foregroundDecoration: BrandSurface.darkEdge(context, radius: BorderRadius.circular(AppRadius.r20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1030,9 +1027,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             width: 46,
             height: 46,
             decoration: BoxDecoration(
-              color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a20),
+              color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a20),
               shape: BoxShape.circle,
-              border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a70), width: 1.4),
+              border: Border.all(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), width: 1.4),
             ),
             child: Icon(Icons.rocket_launch_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i22),
           ),
@@ -1074,23 +1071,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildWelcomeStrip() {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s16),
+      // POL3: as the welcome panel (BrandSurface, the on-brand ink).
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [context.colors.brandSurface, context.colors.brandTealOnBrand],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: BrandSurface.fill(context),
         borderRadius: BorderRadius.circular(AppRadius.r16),
       ),
+      foregroundDecoration: BrandSurface.darkEdge(context, radius: BorderRadius.circular(AppRadius.r16)),
       child: Row(
         children: [
           Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a20),
+              color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a20),
               shape: BoxShape.circle,
-              border: Border.all(color: context.colors.brandTealGlow.withValues(alpha: AppAlpha.a70), width: 1.2),
+              border: Border.all(color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a70), width: 1.2),
             ),
             child: Icon(Icons.rocket_launch_outlined, color: context.colors.onBrandSurface, size: AppIconSize.i20),
           ),
