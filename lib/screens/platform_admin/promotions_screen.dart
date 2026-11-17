@@ -26,7 +26,9 @@ import '../../utils/app_clock.dart';
 /// not by this screen's own structure.
 class PromotionsScreen extends StatelessWidget {
   final bool isModal;
-  const PromotionsScreen({super.key, this.isModal = false});
+  // POL3: for tests (the pol3-promotions fingerprints); the app passes none.
+  final FirebaseFirestore? firestore;
+  const PromotionsScreen({super.key, this.isModal = false, this.firestore});
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +52,7 @@ class PromotionsScreen extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 700),
           child: StreamBuilder<List<Promotion>>(
-            stream: streamAllPromotions(),
+            stream: streamAllPromotions(firestore: firestore),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());

@@ -100,8 +100,8 @@ class Promotion {
 /// Live list of every promotion (active or not, ended or not) - for
 /// the management screen, which needs to show everything, not just
 /// what's currently applicable.
-Stream<List<Promotion>> streamAllPromotions() {
-  return FirebaseFirestore.instance
+Stream<List<Promotion>> streamAllPromotions({FirebaseFirestore? firestore}) {
+  return (firestore ?? FirebaseFirestore.instance)
       .collection(Collections.promotions)
       .orderBy(Fields.createdAt, descending: true)
       .snapshots()
