@@ -54,3 +54,22 @@ every error collected one by one: no overflow (pol5_products_test.dart).
 edge until scrolled).~~ Fixed in POL6 Step 0: the kinds are by severity and
 the row wraps (FilterRow `wrap`); measured before: 86 px too wide at 1024
 and 342 at 768 (200 and 456 in Kiswahili). pol6_alerts_kind_row_test.dart.
+
+## Clients, Debtors, Payments and Transactions (group 5, found in POL6)
+
+Measured as above (POL6 seed, helpers/ph5b_seed.dart), errors one by one.
+Each was there before POL6 at text 1.0 (the same before and after each
+commit; checked by running the code before the commit); POL6 removed the
+cards' own overflows (Payments: bottom 11-45, right 8.8-105 px;
+Transactions: bottom 16 and 42 px; Clients: the type and status chips, 26,
+33, 47 px). At text 1.3 none is in a widget POL6 changed. A widget that
+overflows is reported once: Transactions' time cell at 768 shows its 55 px
+with the details open only because the list no longer overflows first.
+
+| # | Screen | Size | Overflow (text 1.0; at 1.3) | Widget | Shown by | Skip |
+|---|---|---|---|---|---|---|
+| 13 | Clients, details open | 768 / 1024 | 177 px right; at 1.3 305 / 49 | the page bar, clients_screen.dart `_buildPaginationBar` Row | ph5b fingerprints (inside), pol6_money_lists_test | none |
+| 14 | Clients, details open, text 1.3 | 768 / every wide size | 60 (toolbar Row :218); 45 (details title row :484) | toolbar, details title | pol6_money_lists_test (1.3) | none |
+| 15 | Debtors | 768 list; details open at every wide size | toolbar 57 / 182 / 5.6 px (244 / 369 / 193 at 1.3); the row's action cell 23 / 31 / 50 (89 at 1.3); page bar 217 (345 / 89 at 1.3); a details row 23 (9.5 / 78 / 130 at 1.3), the details title 2.7 at 1.3 | debtors_screen.dart toolbar :523, row actions :761, page bar :814, `_totalsRow` :1507, title :1054 | ph5b fingerprints (inside), pol6_money_lists_test | none |
+| 16 | Payments | 768 / 1024 / 1200 | toolbar 204 px (381 / 125 / 290 at 1.3); a details row 1.2 (32 / 49 / 14 at 1.3); at 1.3 the details title 66, the date row 65, a row cell 116 | payments_screen.dart toolbar :782, row :1206, title :659, date :678, :1170 | the same | none |
+| 17 | Transactions | details open, every wide size | the time cell 4.2 (1024), 55 (768); toolbar 77; a day header 45 and 6.8; a details row 59 (150 at 1.3); at 1.3 the app bar title 104, details date row 65, toolbar 197, day header 99 | transactions_screen.dart time cell :488, toolbar :323, day header :448, details :678 / :699, app bar :247 | the same | none |

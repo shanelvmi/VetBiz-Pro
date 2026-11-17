@@ -127,6 +127,9 @@ void main() {
     // POL5 (group 4): 16 -> 9 (the Products and Stock Store cards, rows and
     // grid cards, and the alerts bell's tiles: hairlines now).
     expect(totals(baseline.counts)['R14'], lessThanOrEqualTo(9));
+    // POL6 (group 5): 9 -> 4 (the Clients, Debtors, Payments and
+    // Transactions figure cards: flat now).
+    expect(totals(baseline.counts)['R14'], lessThanOrEqualTo(4));
   });
 
   // POL3 (owner: no gradient, ever): R13 is at zero and nothing is
