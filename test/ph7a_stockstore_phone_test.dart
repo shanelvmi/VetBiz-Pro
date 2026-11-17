@@ -12,6 +12,7 @@ import 'package:vetbiz_pro/config/app_date_format.dart';
 import 'package:vetbiz_pro/config/money.dart';
 import 'package:vetbiz_pro/screens/products/add_edit_product_screen.dart';
 import 'package:vetbiz_pro/screens/store/stockstore_screen.dart';
+import 'package:vetbiz_pro/ui/polish/flat_stat_card.dart';
 import 'package:vetbiz_pro/widgets/product_catalog_side_panel.dart';
 
 import 'helpers/ph5b_finders.dart';
@@ -41,8 +42,8 @@ Future<void> _tapIn(WidgetTester tester, Finder within, String text) async {
 }
 
 String _cardValue(WidgetTester tester, String label) {
-  final labelText = find.descendant(of: find.byType(GridView), matching: find.text(label)).first;
-  final card = find.ancestor(of: labelText, matching: find.byType(Row)).first;
+  // POL5: the five figure cards are FlatStatCards (no grid), read by label.
+  final card = find.byWidgetPredicate((w) => w is FlatStatCard && w.label == label);
   return (ph5Texts(card)..remove(label)).single;
 }
 

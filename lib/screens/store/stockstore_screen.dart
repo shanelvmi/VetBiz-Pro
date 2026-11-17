@@ -32,6 +32,9 @@ import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../products/product_phone_parts.dart';
 import '../../utils/app_clock.dart';
+import '../../ui/polish/app_status.dart';
+import '../../ui/polish/flat_stat_card.dart';
+import '../../theme/polish_metrics.dart';
 
 class StockStoreScreen extends StatefulWidget {
   const StockStoreScreen({super.key});
@@ -87,7 +90,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   String _categoryOf(Product p) => p.category.isNotEmpty ? p.category : 'Uncategorized';
 
   // _getProductStatus's 'text' is also what the counts and the status filter
-  // use, so it stays English; this is what a status chip shows.
+  // use, so it stays English; this is what a status dot shows.
   String _statusLabel(String status) => switch (status) {
         'Not Stocked' => context.l10n.products_statusNotStocked,
         'Depleted' => context.l10n.products_statusDepleted,
@@ -105,83 +108,58 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     required Map<String, int> statusCounts,
     required double totalStockValue,
   }) {
-    final metrics = [
-      (context.l10n.products_totalProducts, '$totalCount', Icons.shopping_bag_outlined, context.colors.primary),
-      (
-        context.l10n.products_statusInStock,
+    // POL5 (owner note 1): five flat figure cards, as on Products; In stock
+    // is neutral, no card is coloured. The counts are unchanged.
+    final cards = [
+      FlatStatCard(label: context.l10n.products_totalProducts, value: '$totalCount'),
+      FlatStatCard(
+        label: context.l10n.products_statusInStock,
         // 'Unknown' (no expiry set at all) is still genuinely in stock
         // and sellable - just missing expiry information - so it counts
         // here alongside 'Active' instead of vanishing from the summary.
-        '${(statusCounts['Active'] ?? 0) + (statusCounts['Unknown'] ?? 0)}',
-        Icons.check_circle_outline,
-        context.colors.success,
+        value: '${(statusCounts['Active'] ?? 0) + (statusCounts['Unknown'] ?? 0)}',
       ),
-      (context.l10n.products_statusLowStock, '${statusCounts['Low Stock'] ?? 0}', Icons.trending_down, context.colors.warning),
-      (context.l10n.products_statusDepleted, '${statusCounts['Depleted'] ?? 0}', Icons.remove_shopping_cart_outlined, context.colors.danger),
-      (context.l10n.store_stockValue, Money.format(totalStockValue), Icons.account_balance_wallet_outlined, context.colors.accent),
+      FlatStatCard(label: context.l10n.products_statusLowStock, value: '${statusCounts['Low Stock'] ?? 0}'),
+      FlatStatCard(label: context.l10n.products_statusDepleted, value: '${statusCounts['Depleted'] ?? 0}'),
+      FlatStatCard(label: context.l10n.store_stockValue, value: Money.format(totalStockValue)),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
         // Same smooth 2/3/4/5-column responsive progression as
         // products_screen.dart, so both screens' metric rows behave
-        // identically across screen sizes.
-        final crossAxisCount = (constraints.maxWidth / 160).floor().clamp(2, 5);
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
-          childAspectRatio: crossAxisCount <= 2 ? 3.0 : 2.6,
-          crossAxisSpacing: AppSpacing.s12,
-          mainAxisSpacing: AppSpacing.s12,
-          children: metrics.map((m) => _metricCard(m.$1, m.$2, m.$3, m.$4)).toList(),
+        // identically across screen sizes. POL5: rows of the card's own
+        // height (a fixed grid cell cut a flat card short).
+        final perRow = (constraints.maxWidth / 160).floor().clamp(2, 5);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < cards.length; i += perRow) ...[
+              if (i > 0) const SizedBox(height: PolishMetrics.gapInGroup),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var j = i; j < i + perRow; j++) ...[
+                    if (j > i) const SizedBox(width: PolishMetrics.gapInGroup),
+                    Expanded(child: j < cards.length ? cards[j] : const SizedBox.shrink()),
+                  ],
+                ],
+              ),
+            ],
+          ],
         );
       },
     );
   }
 
-  Widget _metricCard(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s10),
-      decoration: BoxDecoration(
-        color: context.colors.raisedSurface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
-        boxShadow: [
-          BoxShadow(
-              color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: AppIconSize.i20),
-          ),
-          const SizedBox(width: AppSpacing.s10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f17)),
-                ),
-                Text(label,
-                    style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  /// POL5: the status as the one status style, the dot in the state of its
+  /// STORED value (stockAppStatus), the word translated.
+  Widget _statusDot(String stored) => StatusDot(status: stockAppStatus(stored), label: _statusLabel(stored));
+
+  /// POL5 (owner note 3): Restock shelf is a NEUTRAL dot with its word, not
+  /// a warning, until the owner decides the warehouse-versus-shelf low-stock
+  /// rule. What raises the alert is unchanged.
+  Widget _restockDot() => StatusDot(status: AppStatus.neutral, label: context.l10n.products_restockShelf);
 
   Map<String, dynamic> _getProductStatus(Product product) {
     // A brand-new product that's never carried any stock reads very
@@ -538,18 +516,14 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
   Widget _buildProductListRow(Product p) {
     final status = _getProductStatus(p);
-    final statusColor = status['color'] as Color;
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s10),
       decoration: BoxDecoration(
-        color: context.colors.raisedSurface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        boxShadow: [
-          BoxShadow(
-              color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
-        ],
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(PolishMetrics.cardRadius),
+        border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -575,36 +549,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   spacing: AppSpacing.s6,
                   runSpacing: AppSpacing.s4,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: AppAlpha.a10),
-                        borderRadius: BorderRadius.circular(AppRadius.r10),
-                        border: Border.all(color: statusColor.withValues(alpha: AppAlpha.a40)),
-                      ),
-                      child: Text(_statusLabel(status['text'] as String),
-                          style: TextStyle(
-                              color: statusColor, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
-                    ),
-                    if (p.hasRestockShelfAlert)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s2),
-                        decoration: BoxDecoration(
-                          color: context.colors.info.withValues(alpha: AppAlpha.a10),
-                          borderRadius: BorderRadius.circular(AppRadius.r10),
-                          border: Border.all(color: context.colors.info.withValues(alpha: AppAlpha.a40)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.move_up, size: AppIconSize.i12, color: context.colors.infoStrong),
-                            const SizedBox(width: AppSpacing.s3),
-                            Text(context.l10n.products_restockShelf,
-                                style: TextStyle(
-                                    color: context.colors.infoStrong, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold)),
-                          ],
-                        ),
-                      ),
+                    _statusDot(status['text'] as String),
+                    if (p.hasRestockShelfAlert) _restockDot(),
                   ],
                 ),
               ],
@@ -612,7 +558,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
           ),
           Expanded(
             flex: 2,
-            child: _labelValue(context.l10n.products_stock, '${p.stockQty} ${context.l10n.productUnitLabel(p.unit)}', valueColor: statusColor),
+            child: _labelValue(context.l10n.products_stock, '${p.stockQty} ${context.l10n.productUnitLabel(p.unit)}'),
           ),
           Expanded(
             flex: 2,
@@ -670,7 +616,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     return AppBar(
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e1,
+      elevation: AppElevation.e0,
+      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
@@ -939,18 +886,14 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
   Widget _buildProductCard(Product p) {
     final status = _getProductStatus(p);
-    final statusColor = status['color'] as Color;
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s14),
       decoration: BoxDecoration(
-        color: context.colors.raisedSurface,
-        borderRadius: BorderRadius.circular(AppRadius.r14),
-        boxShadow: [
-          BoxShadow(
-              color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(PolishMetrics.cardRadius),
+        border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -997,47 +940,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                       spacing: AppSpacing.s6,
                       runSpacing: AppSpacing.s4,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: AppAlpha.a10),
-                            borderRadius: BorderRadius.circular(AppRadius.r10),
-                            border: Border.all(color: statusColor.withValues(alpha: AppAlpha.a40)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(status['icon'] as IconData, size: AppIconSize.i12, color: statusColor),
-                              const SizedBox(width: AppSpacing.s4),
-                              Text(
-                                _statusLabel(status['text'] as String),
-                                style: TextStyle(
-                                    color: statusColor, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (p.hasRestockShelfAlert)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-                            decoration: BoxDecoration(
-                              color: context.colors.info.withValues(alpha: AppAlpha.a10),
-                              borderRadius: BorderRadius.circular(AppRadius.r10),
-                              border: Border.all(color: context.colors.info.withValues(alpha: AppAlpha.a40)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.move_up, size: AppIconSize.i12, color: context.colors.infoStrong),
-                                const SizedBox(width: AppSpacing.s4),
-                                Text(
-                                  context.l10n.products_restockShelf,
-                                  style: TextStyle(
-                                      color: context.colors.infoStrong, fontSize: AppFontSize.f11, fontWeight: AppFontWeight.semibold),
-                                ),
-                              ],
-                            ),
-                          ),
+                        _statusDot(status['text'] as String),
+                        if (p.hasRestockShelfAlert) _restockDot(),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.s10),
@@ -1047,7 +951,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: _labelValue(context.l10n.products_stock, '${p.stockQty} ${context.l10n.productUnitLabel(p.unit)}', valueColor: statusColor),
+                          child: _labelValue(context.l10n.products_stock, '${p.stockQty} ${context.l10n.productUnitLabel(p.unit)}'),
                         ),
                         Expanded(child: _labelValue(context.l10n.products_price, Money.unitPrice(p.sellPrice))),
                       ],
@@ -1140,7 +1044,10 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                     style: ButtonStyle(
                       padding: WidgetStateProperty.all(const EdgeInsets.symmetric(vertical: AppSpacing.s10)),
                       backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                        if (states.contains(WidgetState.hovered)) return context.colors.accent;
+                        if (states.contains(WidgetState.hovered)) {
+                          return Color.alphaBlend(
+                              context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
+                        }
                         return context.colors.primary;
                       }),
                       foregroundColor: WidgetStateProperty.all(context.colors.background),
@@ -1174,7 +1081,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   RecordStatus _phoneStatus(Product p) {
     final status = _getProductStatus(p);
     final text = status['text'] as String;
-    return RecordStatus(text == 'Active' ? context.l10n.products_statusInStock : _statusLabel(text), status['color'] as Color);
+    return RecordStatus.state(text == 'Active' ? context.l10n.products_statusInStock : _statusLabel(text), stockAppStatus(text));
   }
 
   Future<void> _openPhoneDetails(Product product) {
@@ -1203,7 +1110,8 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
         status: _phoneStatus(p),
         chips: [
           if (p.hasRestockShelfAlert)
-            ProductInfoChip(label: l10n.products_restockShelf, icon: Icons.move_up, color: context.colors.infoStrong),
+            // POL5 (owner note 3): neutral until the warehouse-versus-shelf rule is decided.
+            ProductInfoChip(label: l10n.products_restockShelf, icon: Icons.move_up, color: context.colors.textSecondary),
         ],
         figures: [
           (l10n.products_stock, '${p.stockQty} ${l10n.productUnitLabel(p.unit)}'),

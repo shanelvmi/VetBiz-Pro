@@ -330,7 +330,6 @@
       "lib/screens/payments/payments_screen.dart": 2,
       "lib/screens/products/stock_alerts_screen.dart": 1,
       "lib/screens/register_screen.dart": 1,
-      "lib/screens/store/stockstore_screen.dart": 3,
       "lib/screens/transactions/transactions_screen.dart": 1
     }
   }
