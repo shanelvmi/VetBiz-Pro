@@ -19,7 +19,6 @@ import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
-import '../../theme/app_icons.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -30,6 +29,9 @@ import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/app_status.dart';
+import '../../ui/polish/flat_stat_card.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/restore_feedback.dart';
 import '../../l10n/l10n.dart';
@@ -214,11 +216,9 @@ class _SalesScreenState extends State<SalesScreen> {
     return PaymentStatus.of(paid, total);
   }
 
-  Color _statusColor(double paid, double total) {
-    if (paid >= total) return context.colors.success;
-    if (paid > 0) return context.colors.warning;
-    return context.colors.danger;
-  }
+  /// POL4 (owner rule 3): the one status style, the dot and the word, in
+  /// the state paymentAppStatus gives (before: a coloured pill).
+  Widget _statusDot(String status) => StatusDot(status: paymentAppStatus(status), label: context.l10n.paymentStatusLabel(status));
 
   @override
   Widget build(BuildContext context) {
@@ -337,78 +337,40 @@ class _SalesScreenState extends State<SalesScreen> {
     // original date.
     final collected = summary?['totalCollected'] ?? 0.0;
 
+    // POL4 (owner rule 4): flat cards, no coloured icon tile, no shadow.
+    // These four figures repeat no filter, so all four stay.
     final metrics = [
-      (context.l10n.reports_totalSales, '$count', Icons.receipt_long_outlined, context.colors.primary),
-      (context.l10n.reports_colRevenue, Money.format(total), Icons.bar_chart, context.colors.info),
-      (context.l10n.sales_collected, Money.format(collected), AppIcons.payments.outlined, context.colors.success),
-      (context.l10n.sales_pending, Money.format(pending), Icons.pending_actions_outlined, context.colors.accent),
+      (context.l10n.reports_totalSales, '$count'),
+      (context.l10n.reports_colRevenue, Money.format(total)),
+      (context.l10n.sales_collected, Money.format(collected)),
+      (context.l10n.sales_pending, Money.format(pending)),
+    ];
+    final cards = [
+      for (final m in metrics)
+        FlatStatCard(label: m.$1, value: m.$2, hint: context.l10n.services_last30, loading: isFirstLoadPending),
     ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < AppBreakpoints.compact;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isNarrow ? 2 : 4,
-            mainAxisExtent: 90,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-          ),
-          itemCount: metrics.length,
-          itemBuilder: (context, index) {
-            final m = metrics[index];
-            return _metricCard(m.$1, m.$2, m.$3, m.$4, isFirstLoadPending);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _metricCard(String label, String value, IconData icon, Color color, bool isLoading) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
-        boxShadow: [
-          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
-        ],
-      ),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        alignment: Alignment.topLeft,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        final perRow = constraints.maxWidth < AppBreakpoints.compact ? 2 : 4;
+        return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration:
-                      BoxDecoration(color: color.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r7)),
-                  child: Icon(icon, color: color, size: AppIconSize.i14),
-                ),
-                const SizedBox(width: AppSpacing.s8),
-                isLoading
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.s4),
-            Text(label, style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted)),
-            Text(context.l10n.services_last30, style: TextStyle(fontSize: AppFontSize.f10_5, color: context.colors.textDisabled)),
+            for (var i = 0; i < cards.length; i += perRow) ...[
+              if (i > 0) const SizedBox(height: PolishMetrics.gapInGroup),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var j = i; j < i + perRow; j++) ...[
+                    if (j > i) const SizedBox(width: PolishMetrics.gapInGroup),
+                    Expanded(child: cards[j]),
+                  ],
+                ],
+              ),
+            ],
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -564,7 +526,9 @@ class _SalesScreenState extends State<SalesScreen> {
     return AppBar(
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e1,
+      // POL4 (owner rule 4): no shadow under the bar; a hairline.
+      elevation: AppElevation.e0,
+      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
@@ -690,7 +654,6 @@ class _SalesScreenState extends State<SalesScreen> {
 
   Widget _buildSaleRow(Sale sale, DateFormat dateFormatter) {
     final status = _getPaymentStatus(sale.totalPaid, sale.totalAmount);
-    final statusColor = _statusColor(sale.totalPaid, sale.totalAmount);
     final isSelected = _selectedSale?.id == sale.id;
     final firstItem = sale.items.isNotEmpty ? sale.items.first : null;
 
@@ -744,14 +707,7 @@ class _SalesScreenState extends State<SalesScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: AppAlpha.a10),
-                  borderRadius: BorderRadius.circular(AppRadius.r10),
-                ),
-                child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
-              ),
+              child: Align(alignment: AlignmentDirectional.centerStart, child: _statusDot(status)),
             ),
             Expanded(
               flex: 2,
@@ -926,7 +882,7 @@ class _SalesScreenState extends State<SalesScreen> {
         // Search results are not grouped by day, so they give the date too.
         grouped ? AppDateFormat.time24.format(sale.timestamp) : AppDateFormat.dateShortTime24.format(sale.timestamp),
       ],
-      status: RecordStatus(status, _statusColor(sale.totalPaid, sale.totalAmount)),
+      status: RecordStatus.state(status, paymentAppStatus(_getPaymentStatus(sale.totalPaid, sale.totalAmount))),
       initialsOf: sale.clientName,
       icon: Icons.person_outline,
       colorSeed: client,
@@ -1056,7 +1012,6 @@ class _SalesScreenState extends State<SalesScreen> {
   Widget _buildSaleDetailsPanel(Sale sale, DateFormat dateOnlyFormatter, DateFormat timeOnlyFormatter,
       {VoidCallback? onDeleted}) {
     final status = _getPaymentStatus(sale.totalPaid, sale.totalAmount);
-    final statusColor = _statusColor(sale.totalPaid, sale.totalAmount);
     final subtotal = sale.items.fold<double>(0, (sum, i) => sum + i.unitPrice * i.quantity);
     final totalDiscount = sale.items.fold<double>(0, (sum, i) => sum + i.discount);
     final balance = sale.totalAmount - sale.totalPaid;
@@ -1086,11 +1041,7 @@ class _SalesScreenState extends State<SalesScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _wrapOnPhone(Text(_invoiceNo(sale), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18))),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r12)),
-                  child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
-                ),
+                _statusDot(status),
               ],
             ),
             Text('${dateOnlyFormatter.format(sale.timestamp)}, ${timeOnlyFormatter.format(sale.timestamp)}',

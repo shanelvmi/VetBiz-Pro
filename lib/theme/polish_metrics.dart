@@ -46,6 +46,9 @@ class PolishMetrics {
   static const double statLabel = AppFontSize.f12;
   static const double statLineGap = AppSpacing.s4;
 
+  /// POL4: the stat card's first-load spinner, as thin as the lists' ones.
+  static const double spinnerStroke = 2;
+
   // The single filter row: text segments, the chosen one in primary with a
   // thin underline; 48 high so each segment is a full tap target.
   static const double filterHeight = AppSizes.minTapTarget;

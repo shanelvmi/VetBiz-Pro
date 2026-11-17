@@ -16,6 +16,10 @@ class FlatStatCard extends StatelessWidget {
   final VoidCallback? onTap;
   final bool selected;
 
+  /// POL4: the first load, before any figure has arrived: a small spinner in
+  /// the value's place (a later refresh keeps showing the last figures).
+  final bool loading;
+
   const FlatStatCard({
     super.key,
     required this.label,
@@ -23,6 +27,7 @@ class FlatStatCard extends StatelessWidget {
     this.hint,
     this.onTap,
     this.selected = false,
+    this.loading = false,
   });
 
   @override
@@ -47,16 +52,29 @@ class FlatStatCard extends StatelessWidget {
             children: [
               Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: secondary),
               const SizedBox(height: PolishMetrics.statLineGap),
-              Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: PolishMetrics.statValue,
-                  fontWeight: AppFontWeight.bold,
-                  color: colors.textPrimary,
+              if (loading)
+                const SizedBox.square(
+                  key: ValueKey('flatStatCard-loading'),
+                  dimension: PolishMetrics.statValue,
+                  child: CircularProgressIndicator(strokeWidth: PolishMetrics.spinnerStroke),
+                )
+              else
+                // POL4: a figure is never cut short ("Tsh 1,2..."): in a
+                // narrow card it scales down, as the Sales and Services
+                // cards did before (a FittedBox around the whole card).
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontSize: PolishMetrics.statValue,
+                      fontWeight: AppFontWeight.bold,
+                      color: colors.textPrimary,
+                    ),
+                  ),
                 ),
-              ),
               if (hint != null) ...[
                 const SizedBox(height: PolishMetrics.statLineGap),
                 Text(hint!, maxLines: 1, overflow: TextOverflow.ellipsis, style: secondary),

@@ -16,6 +16,8 @@ import '../../theme/theme_context.dart';
 import '../../l10n/l10n.dart';
 import '../../data/payment_status.dart';
 import '../../utils/app_clock.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/app_status.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (POL4: the
@@ -197,11 +199,9 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     return PaymentStatus.of(paid, total);
   }
 
-  Color _statusColor(double paid, double total) {
-    if (paid >= total) return context.colors.success;
-    if (paid > 0) return context.colors.warning;
-    return context.colors.danger;
-  }
+  /// POL4 (owner rule 3): the one status style, the dot and the word, in
+  /// the state paymentAppStatus gives (before: a coloured pill).
+  Widget _statusDot(String status) => StatusDot(status: paymentAppStatus(status), label: context.l10n.paymentStatusLabel(status));
 
   String _invoiceNo(Map<String, dynamic> sale) {
     final receiptNumber = sale['receiptNumber'];
@@ -306,7 +306,9 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     return AppBar(
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e1,
+      // POL4 (owner rule 4): no shadow under the bar; a hairline.
+      elevation: AppElevation.e0,
+      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
       centerTitle: true,
       toolbarHeight: 72,
       title: Column(
@@ -436,7 +438,6 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     final paid = ((sale['totalPaid'] ?? 0.0) as num).toDouble();
     final total = ((sale['totalAmount'] ?? 0.0) as num).toDouble();
     final status = _getPaymentStatus(paid, total);
-    final statusColor = _statusColor(paid, total);
     final isSelected = _selectedSale?['id'] == sale['id'];
     final timestamp = (sale['timestamp'] as Timestamp?)?.toDate() ?? AppClock.now();
     final items = (sale['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
@@ -492,14 +493,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: AppAlpha.a10),
-                  borderRadius: BorderRadius.circular(AppRadius.r10),
-                ),
-                child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f11_5, fontWeight: AppFontWeight.semibold)),
-              ),
+              child: Align(alignment: AlignmentDirectional.centerStart, child: _statusDot(status)),
             ),
             Expanded(
               flex: 2,
@@ -584,7 +578,6 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
     final paid = ((sale['totalPaid'] ?? 0.0) as num).toDouble();
     final total = ((sale['totalAmount'] ?? 0.0) as num).toDouble();
     final status = _getPaymentStatus(paid, total);
-    final statusColor = _statusColor(paid, total);
     final timestamp = (sale['timestamp'] as Timestamp?)?.toDate() ?? AppClock.now();
     final items = (sale['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final subtotal = items.fold<double>(
@@ -615,11 +608,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(_invoiceNo(sale), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10, vertical: AppSpacing.s4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r12)),
-                  child: Text(context.l10n.paymentStatusLabel(status), style: TextStyle(color: statusColor, fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold)),
-                ),
+                _statusDot(status),
               ],
             ),
             Text('${dateOnlyFormatter.format(timestamp)}, ${timeOnlyFormatter.format(timestamp)}',
@@ -1008,8 +997,10 @@ class _SearchArchiveDialogState extends State<_SearchArchiveDialog> {
           style: ButtonStyle(
             backgroundColor: WidgetStateProperty.resolveWith<Color>(
               (states) {
+                // POL4 (owner: one accent): hover lays onPrimary over the flat primary
+                // (POL3's button), never the second colour.
                 if (states.contains(WidgetState.hovered)) {
-                  return context.colors.accent;
+                  return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
                 }
                 return context.colors.primary;
               },

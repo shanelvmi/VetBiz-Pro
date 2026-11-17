@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/money.dart';
 import 'package:vetbiz_pro/screens/sales/sales_screen.dart';
+import 'package:vetbiz_pro/ui/polish/flat_stat_card.dart';
 
 import 'helpers/phone_list_harness.dart';
 
@@ -175,7 +176,7 @@ void main() {
     ph5TestWidgets('one line and a Summary sheet with every card\'s figure, equal to the tablet\'s cards', (tester) async {
       await _sales(tester, size: _wide);
       const labels = ['Total Sales', 'Revenue', 'Collected', 'Pending'];
-      final cards = {for (final l in labels) l: _valuesBeside(tester, find.text(l), FittedBox, skip: {'Last 30 days'})};
+      final cards = {for (final l in labels) l: _valuesBeside(tester, find.text(l), FlatStatCard, skip: {'Last 30 days'})};
       expect(cards['Revenue'], [Money.format(97000)]);
 
       await _sales(tester);

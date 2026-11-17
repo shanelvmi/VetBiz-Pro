@@ -4,6 +4,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../ui/polish/app_status.dart';
 import '../initials_avatar.dart';
 
 // PH5a R6 (docs/design/phone_list_pattern.md): one record on a phone. Two
@@ -12,11 +13,22 @@ import '../initials_avatar.dart';
 // colour. No buttons inside: a tap opens the details page (R7).
 
 /// A status as a chip: its text, and the role it is drawn in.
+///
+/// POL4: [RecordStatus.state] draws the one status style instead (StatusDot,
+/// the dot plus the word). Sales and Services use it; the other phone lists
+/// keep their chip until their own group (POL5 onward).
 class RecordStatus {
   final String label;
-  final Color color;
 
-  const RecordStatus(this.label, this.color);
+  /// The chip's role; null for [RecordStatus.state].
+  final Color? color;
+
+  /// The state the dot shows; null for a chip.
+  final AppStatus? state;
+
+  const RecordStatus(this.label, Color this.color) : state = null;
+
+  const RecordStatus.state(this.label, AppStatus this.state) : color = null;
 }
 
 /// The chart role a name gets, the same one every time.
@@ -210,18 +222,21 @@ class StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = status.state;
+    if (state != null) return StatusDot(status: state, label: status.label);
+    final color = status.color!;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: PhoneListMetrics.chipPaddingH,
         vertical: PhoneListMetrics.chipPaddingV,
       ),
       decoration: BoxDecoration(
-        color: status.color.withValues(alpha: PhoneListMetrics.chipAlpha),
+        color: color.withValues(alpha: PhoneListMetrics.chipAlpha),
         borderRadius: BorderRadius.circular(PhoneListMetrics.chipRadius),
       ),
       child: Text(
         status.label,
-        style: TextStyle(fontSize: PhoneListMetrics.chip, fontWeight: AppFontWeight.semibold, color: status.color),
+        style: TextStyle(fontSize: PhoneListMetrics.chip, fontWeight: AppFontWeight.semibold, color: color),
       ),
     );
   }
