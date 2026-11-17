@@ -122,6 +122,20 @@ void main() {
     expect(totals(baseline.counts)['R14'], lessThanOrEqualTo(35));
   });
 
+  // POL3 (owner: no gradient, ever): R13 is at zero and nothing is
+  // allowlisted for it, so any gradient outside lib/ui fails the guard.
+  test('POL3: R13 is zero with an empty allowlist; a gradient anywhere outside lib/ui fails', () {
+    final root = Directory.current;
+    final baseline = Baseline.load(root)!;
+    expect(baseline.allowlist.where((a) => a.rule == 'R13'), isEmpty);
+    expect(totals(baseline.counts)['R13'] ?? 0, 0);
+    expect(scan(root, allowlist: baseline.allowlist)['R13'] ?? const <String, int>{}, isEmpty);
+    expect(violations({'R13': {'lib/screens/any_screen.dart': 1}}, baseline.counts), hasLength(1));
+    expect(violations({'R13': {'lib/widgets/any_widget.dart': 1}}, baseline.counts), hasLength(1));
+    // POL3 also took R14 to 19 (only goes down).
+    expect(totals(baseline.counts)['R14'], lessThanOrEqualTo(19));
+  });
+
   test('the scanner sees what it should', () {
     final r4 = guardRules.firstWhere((r) => r.id == 'R4');
     bool hits(GuardRule rule, String line) =>

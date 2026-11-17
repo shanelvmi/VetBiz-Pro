@@ -16,6 +16,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../utils/app_clock.dart';
+import '../../ui/polish/brand_surface.dart';
 
 /// Manage subscription discounts/offers - "Nanenane Sale", a
 /// month-end push, a renew-now discount for facilities about to
@@ -126,18 +127,17 @@ class _PromotionCard extends StatelessWidget {
                 // the one thing that should catch the eye first.
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s8),
+                  // POL3: one solid deep tone (BrandSurface), no gradient,
+                  // the on-brand ink; a hairline in Dark only.
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [context.colors.primary, context.colors.primary.withValues(alpha: AppAlpha.a70)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: BrandSurface.fill(context),
                     borderRadius: BorderRadius.circular(AppRadius.r10),
                   ),
+                  foregroundDecoration: BrandSurface.darkEdge(context, radius: BorderRadius.circular(AppRadius.r10)),
                   child: Text(
                     '${promotion.discountPercent.toStringAsFixed(promotion.discountPercent % 1 == 0 ? 0 : 1)}%\nOFF',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: context.colors.onPrimary, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, height: 1.1),
+                    style: TextStyle(color: context.colors.onBrandSurface, fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15, height: 1.1),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s12),
