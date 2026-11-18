@@ -1994,10 +1994,17 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               title: p.name,
               subtitle: context.l10n.reports_colProduct,
               icon: AppIcons.products.outlined,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => ProductsScreen(initialSearchQuery: p.name)),
-              ),
+              // LAY5: in the shell's content on a wide window (Products highlighted,
+              // Back returns where you were); pushed when there is no shell.
+              onTap: () {
+                final shell = _shellKey.currentState;
+                final page = ProductsScreen(initialSearchQuery: p.name);
+                if (shell != null) {
+                  shell.openInContent(page, highlight: AppDestination.products);
+                } else {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+                }
+              },
             ));
           }
         }
@@ -2408,6 +2415,9 @@ Future<void> _openDestination(AppDestination d) async {
 Widget? _shellPageFor(AppDestination d) => switch (d) {
       // LAY4b (owner): a page at every wide width, no longer the 900+ modal.
       AppDestination.insights => const InsightsScreen(),
+      // LAY5: the two catalogue places; the filter panel follows the content width.
+      AppDestination.products => ProductsScreen(),
+      AppDestination.stockStore => StockStoreScreen(),
       AppDestination.settings => SettingsScreen(),
       AppDestination.reports => const ViewReportsScreen(),
       _ => null,
