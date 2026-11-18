@@ -62,6 +62,14 @@ class PolishMetrics {
   static const double sectionLabelPaddingTop = AppSpacing.s16;
   static const double sectionLabelPaddingBottom = AppSpacing.s8;
 
+  /// POL7: lines of one hue told apart by style (the Sales revenue chart:
+  /// Collections dashed, Services dotted) and their legend swatch, which
+  /// draws the same pattern.
+  static const List<int> chartDash = [6, 4];
+  static const List<int> chartDot = [2, 3];
+  static const double chartSwatchWidth = AppSpacing.s20;
+  static const double chartSwatchStroke = 2;
+
   /// An unread row: a soft primary tint (stronger than the old 5 %) and a
   /// primary dot at its leading edge.
   static const double unreadTintAlpha = AppAlpha.a10;
