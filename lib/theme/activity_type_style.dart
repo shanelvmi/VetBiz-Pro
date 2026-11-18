@@ -40,28 +40,9 @@ abstract final class ActivityTypeStyle {
     }
   }
 
-  static Color color(String actionType, AppColors c) {
-    switch (ActivityType.canonicalKey(actionType).toLowerCase()) {
-      case 'inventory move':
-        return c.info;
-      case 'products':
-        return c.success;
-      case 'sales':
-        return c.accent;
-      case 'services':
-        return c.chart4;
-      case 'transactions':
-        return c.chart7;
-      case 'clients':
-        return c.chart6;
-      case 'debtors':
-        return c.warning;
-      case 'settings':
-        return c.textHint;
-      case 'admin':
-        return c.danger;
-      default:
-        return c.primary;
-    }
-  }
+  /// POL7 (owner rule: never colour a category, type or kind): every type
+  /// is shown in the one neutral role, and the type word carries the
+  /// meaning. Before POL7 each type had its own hue (chart4, chart6, chart7,
+  /// accent...). The stored type values and the filters are unchanged.
+  static Color color(String actionType, AppColors c) => c.textSecondary;
 }

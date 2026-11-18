@@ -133,6 +133,10 @@ extension NotificationTypeDisplay on NotificationType {
 
   /// The type's colour from the theme's roles (pass `context.colors`); a
   /// model has no BuildContext of its own (Phase 2 spec, section 5).
+  /// POL7: no colour per kind (it read chart4, 6, 8 and 9): Reorder soon
+  /// is a warning state; a reminder, a promotion and a role change are
+  /// neutral. (Nothing draws this colour since the notification icons
+  /// went neutral in POL1.)
   Color colorIn(AppColors c) {
     switch (this) {
       case NotificationType.criticalStock:
@@ -142,7 +146,7 @@ extension NotificationTypeDisplay on NotificationType {
       case NotificationType.subscriptionExpiring:
         return c.warning;
       case NotificationType.reorderSoon:
-        return c.chart8;
+        return c.warning;
       case NotificationType.restockShelf:
         return c.info;
       case NotificationType.paymentReceived:
@@ -151,13 +155,13 @@ extension NotificationTypeDisplay on NotificationType {
       case NotificationType.newClient:
         return c.info;
       case NotificationType.debtReminder:
-        return c.chart9;
+        return c.textSecondary;
       case NotificationType.productExpiry:
         return c.danger;
       case NotificationType.promotion:
-        return c.chart4;
+        return c.textSecondary;
       case NotificationType.roleChanged:
-        return c.chart6;
+        return c.textSecondary;
       case NotificationType.trialStarted:
       case NotificationType.trialStatus:
         return c.info;

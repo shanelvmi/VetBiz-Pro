@@ -11,13 +11,13 @@ void main() {
 
   test("old 'Sale' entries look like 'Sales'", () {
     expect(ActivityTypeStyle.icon(ActivityType.sale.key), ActivityTypeStyle.icon(ActivityType.sales.key));
-    expect(ActivityTypeStyle.color('sale', c), c.accent);
+    expect(ActivityTypeStyle.color('sale', c), c.textSecondary);
   });
 
   test('matching is case-insensitive; unknown types get the default look', () {
     expect(ActivityTypeStyle.icon('TRANSACTIONS'), AppIcons.transactions.filled);
-    expect(ActivityTypeStyle.color('Transactions', c), c.chart7);
+    expect(ActivityTypeStyle.color('Transactions', c), c.textSecondary);
     expect(ActivityTypeStyle.icon('Report Draft Deleted'), Icons.info);
-    expect(ActivityTypeStyle.color('Unknown', c), c.primary);
+    expect(ActivityTypeStyle.color('Unknown', c), c.textSecondary);
   });
 }
