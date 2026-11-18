@@ -1,0 +1,191 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+
+import '../../navigation/app_destinations.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../theme/app_motion.dart';
+
+/// Builds the sidebar (or rail) for the place now [selected]; a tap calls
+/// [onSelect].
+typedef ShellSidebarBuilder = Widget Function(AppDestination selected, ValueChanged<AppDestination> onSelect);
+
+/// LAY4 (owner, 2026-11-18): the PC/tablet shell keeps the sidebar and the
+/// top bar on screen. The area under the top bar hosts its own Navigator:
+/// Home is its base page, and a migrated destination ([pageFor] gives a
+/// screen) sits on top of it, replacing any other destination with a short
+/// fade. Screens pushed from inside a destination stay in the content area.
+/// A destination not yet migrated ([pageFor] gives null) keeps opening full
+/// screen over everything through [onOpenFullScreen], as before.
+///
+/// Home stays alive underneath (its streams are not recreated), and
+/// [onReturnedHome] is told which destination was left when the content
+/// comes back to Home, so the caller refreshes only where the registry says.
+///
+/// Back (the browser's, Android's, Windows') pops the content first: a
+/// screen pushed inside, then the destination, then Home as before.
+///
+/// Width: the screens inside measure the window (MediaQuery), but they have
+/// only the content area. The navigator gets a MediaQuery whose width is the
+/// content's (never below [AppBreakpoints.compact], so no phone layout shows
+/// inside the shell) and whose height stays the window's (the phone-landscape
+/// rule is not touched). Home keeps the window's MediaQuery, as it had.
+class AppShell extends StatefulWidget {
+  const AppShell({
+    super.key,
+    required this.sidebar,
+    required this.topBar,
+    required this.home,
+    required this.pageFor,
+    required this.onOpenFullScreen,
+    required this.onReturnedHome,
+  });
+
+  final ShellSidebarBuilder sidebar;
+  final Widget topBar;
+  final Widget home;
+
+  /// The screen of a destination that lives in the shell, or null for one
+  /// that still opens full screen.
+  final Widget? Function(AppDestination d) pageFor;
+  final Future<void> Function(AppDestination d) onOpenFullScreen;
+  final ValueChanged<AppDestination> onReturnedHome;
+
+  @override
+  State<AppShell> createState() => AppShellState();
+}
+
+class AppShellState extends State<AppShell> {
+  final GlobalKey<NavigatorState> contentNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell-content');
+
+  /// The destination on top of Home, or null when Home shows.
+  AppDestination? _open;
+
+  /// The place the sidebar highlights: the open destination (a screen pushed
+  /// above it keeps it), else Home.
+  AppDestination get selected => _open ?? AppDestination.home;
+
+  void select(AppDestination d) {
+    if (d == AppDestination.home) {
+      if (_open != null) _leave();
+      return;
+    }
+    if (widget.pageFor(d) == null) {
+      widget.onOpenFullScreen(d);
+      return;
+    }
+    if (d == _open) {
+      // The place already open: back to its own first screen.
+      contentNavigatorKey.currentState?.popUntil((r) => r.settings is _ShellPage);
+      return;
+    }
+    setState(() => _open = d);
+  }
+
+  void _leave() {
+    final left = _open!;
+    setState(() => _open = null);
+    widget.onReturnedHome(left);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final window = MediaQuery.of(context);
+    final open = _open;
+    final page = open == null ? null : widget.pageFor(open);
+    return Row(
+      children: [
+        widget.sidebar(selected, select),
+        Expanded(
+          child: Column(
+            children: [
+              widget.topBar,
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => MediaQuery(
+                    data: window.copyWith(
+                      size: Size(math.max(constraints.maxWidth, AppBreakpoints.compact), window.size.height),
+                    ),
+                    child: NavigatorPopHandler<Object?>(
+                      onPopWithResult: (_) => contentNavigatorKey.currentState?.maybePop(),
+                      child: Navigator(
+                        key: contentNavigatorKey,
+                        pages: [
+                          _ShellPage(
+                            key: const ValueKey('shell-home'),
+                            child: MediaQuery(data: window, child: widget.home),
+                          ),
+                          if (open != null && page != null)
+                            _ShellPage(
+                              key: ValueKey('shell-${open.name}'),
+                              child: ShellScope(child: page),
+                            ),
+                        ],
+                        onDidRemovePage: (removed) {
+                          if (open != null && removed.key == ValueKey('shell-${open.name}') && _open == open) _leave();
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// LAY4: marks a destination's own screen in the shell (top level: no back
+/// arrow; the sidebar is the way out). Screens pushed above it are not
+/// inside the marker and keep theirs.
+class ShellScope extends InheritedWidget {
+  const ShellScope({super.key, required super.child});
+
+  /// True for a destination's first screen inside the shell.
+  static bool isTopLevel(BuildContext context) => context.dependOnInheritedWidgetOfExactType<ShellScope>() != null;
+
+  @override
+  bool updateShouldNotify(ShellScope oldWidget) => false;
+}
+
+/// A content page: a short fade in and out (no slide), kept alive under the
+/// page above it. The route reads the current page's child, so the caller's
+/// rebuilds (Home's figures) reach it.
+class _ShellPage extends Page<void> {
+  const _ShellPage({required LocalKey super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Route<void> createRoute(BuildContext context) => _ShellRoute(this);
+}
+
+class _ShellRoute extends PageRoute<void> {
+  _ShellRoute(_ShellPage page) : super(settings: page);
+
+  @override
+  bool get opaque => true;
+
+  @override
+  Color? get barrierColor => null;
+
+  @override
+  String? get barrierLabel => null;
+
+  @override
+  bool get maintainState => true;
+
+  @override
+  Duration get transitionDuration => AppMotion.fast;
+
+  @override
+  Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) =>
+      (settings as _ShellPage).child;
+
+  @override
+  Widget buildTransitions(
+          BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) =>
+      FadeTransition(opacity: animation, child: child);
+}
