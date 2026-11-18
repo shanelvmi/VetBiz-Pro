@@ -324,11 +324,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // LAY4c: the status text may wrap at every width (it was Flexible on a
+                    // phone only and overflowed Settings' 634 px side panel at text 1.3).
                     Row(
                       children: [
                         Icon(Icons.workspace_premium, color: statusColor),
                         const SizedBox(width: AppSpacing.s8),
-                        _flexibleOnPhone(Text(
+                        Flexible(child: Text(
                           sub.statusLabel,
                           style: TextStyle(
                             color: statusColor,
@@ -590,8 +592,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     );
     return _phone ? PhoneDiscardScope(kind: 'payment', isDirty: _isDirty, child: scaffold) : scaffold;
   }
-
-  Widget _flexibleOnPhone(Widget child) => _phone ? Flexible(child: child) : child;
 }
 
 /// POL1 (owner rule 2): a payment claim's state among the four: approved is
