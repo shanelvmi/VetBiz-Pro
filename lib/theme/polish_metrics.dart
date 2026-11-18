@@ -87,4 +87,8 @@ class DetailsLayoutMetrics {
   /// The search field's narrowest width while the filters share its line;
   /// below it the search takes its own line and the filters wrap under it.
   static const double searchMinWidth = 240;
+
+  /// A record list's header (figures, toolbar) takes at most this share of
+  /// the list's height; taller, it scrolls inside it.
+  static const double headerMaxShare = 0.35;
 }

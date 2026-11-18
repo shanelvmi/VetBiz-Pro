@@ -282,8 +282,15 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   label: context.l10n.debtors_detailsTitle,
                   onClose: () => setState(() => _selectedClientId = null),
                   details: selectedDebtor == null ? null : _buildDebtorDetailsPanel(selectedDebtor),
-                  list: Column(
+                  // LAY6a: the header (figures, toolbar, new-records banner) takes at
+                  // most 35 % of the list's height and scrolls inside it when taller
+                  // (a narrow list beside the panel, large text, the shell's height).
+                  list: LayoutBuilder(builder: (context, box) => Column(
                         children: [
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxHeight: box.maxHeight * DetailsLayoutMetrics.headerMaxShare),
+                            child: SingleChildScrollView(
+                              child: Column(children: [
                           Padding(
                             padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
                             child: _buildMetricsRow(),
@@ -295,6 +302,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                           if (controller.newRecordsAvailable > 0)
                             _buildNewRecordsBanner(controller,
                                 margin: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0)),
+                              ]),
+                            ),
+                          ),
                           Expanded(
                             child: controller.error != null && debtors.isEmpty
                                 ? Center(child: FirestoreErrorView(error: controller.error))
@@ -332,7 +342,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                             onNext: controller.goToNextPage,
                           ),
                         ],
-                      ),
+                      )),
                 );
         },
       ),
@@ -568,7 +578,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             _openDebtorsListSession();
           },
         ),
-        Container(
+        // LAY6a: as wide as its label, never wider than the toolbar.
+        IntrinsicWidth(child:         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
           height: 44,
           decoration: BoxDecoration(
@@ -579,6 +590,15 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: _overdueRangeFilter,
+              isExpanded: true,
+              selectedItemBuilder: (context) => [
+                for (final key in _overdueRangeOptions)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(context.l10n.common_filterValue(context.l10n.debtors_colOverdue, _overdueRangeLabel(key, overdueDays)),
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
+              ],
               icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
               style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
               items: _overdueRangeOptions
@@ -594,7 +614,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               },
             ),
           ),
-        ),
+        )),
         if (hasActiveFilters)
           TextButton(
             onPressed: () {
@@ -630,7 +650,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     required String Function(T value) display,
     required ValueChanged<T> onChanged,
   }) {
-    return Container(
+    // LAY6a: as wide as its label, never wider than the toolbar (the label
+    // then ends in an ellipsis instead of overflowing: Kiswahili, large text).
+    return IntrinsicWidth(child: Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
@@ -641,6 +663,14 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
+          isExpanded: true,
+          selectedItemBuilder: (context) => [
+            for (final v in items)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(context.l10n.common_filterValue(label, display(v)), maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+          ],
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: items.map((v) => DropdownMenuItem(value: v, child: Text(context.l10n.common_filterValue(label, display(v))))).toList(),
@@ -649,7 +679,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
           },
         ),
       ),
-    );
+    ));
   }
 
   // ==================== TABLE ====================
@@ -1112,17 +1142,36 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
               },
             ),
             const SizedBox(height: AppSpacing.s20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _wrapOnPhone(Text(context.l10n.common_notes, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5))),
-                TextButton.icon(
-                  onPressed: () => _addNote(debtor),
-                  icon: const Icon(Icons.add, size: AppIconSize.i16),
-                  label: Text(context.l10n.debtors_addNote),
-                ),
-              ],
-            ),
+            // LAY6a: beside the list the title and Add note wrap onto two lines
+            // when they do not fit (large text, Kiswahili); the phone page keeps
+            // its row.
+            if (onPage)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _wrapOnPhone(Text(context.l10n.common_notes, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5))),
+                  TextButton.icon(
+                    onPressed: () => _addNote(debtor),
+                    icon: const Icon(Icons.add, size: AppIconSize.i16),
+                    label: Text(context.l10n.debtors_addNote),
+                  ),
+                ],
+              )
+            else
+              SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(context.l10n.common_notes, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                  TextButton.icon(
+                    onPressed: () => _addNote(debtor),
+                    icon: const Icon(Icons.add, size: AppIconSize.i16),
+                    label: Text(context.l10n.debtors_addNote),
+                  ),
+                ],
+              )),
             FutureBuilder<List<Map<String, dynamic>>>(
               future: _getNotesFuture(debtor.clientId),
               builder: (context, snapshot) {
