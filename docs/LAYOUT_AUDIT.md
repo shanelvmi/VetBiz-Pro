@@ -221,6 +221,19 @@ Store" (`store_title`); the registry keeps the sidebar's word. Today's sidebar d
 the FILLED icon at rest; to stay pixel-identical LAY2 draws `selectedIcon`
 until the owner chooses outlined-at-rest.
 
+**LAY2 done** (owner answers 2026-11-18). `AppSidebar` (lib/widgets/shell)
+is the sidebar on a computer (250, or 72 when collapsed; the saved choice
+and Layout Fixed Mode as before) and the permanent rail on a tablet
+(600-1023, always 72, icons with tooltips). Owner order: Home, Insights,
+Sales, Services, Clients, Debtors, Payments, Transactions, Products, Stock,
+Reports, Settings. The selected place: filled icon, a sidebarPress pill,
+semibold label, Semantics selected; the others outlined. The tablet lost its
+AppBar, slide-in drawer and hamburger and shares `WideTopBar` with the
+computer (no collapse button on the rail; the search shrinks, and below
+720 it is an icon opening it in a dialog). Home is the only place shown
+selected until LAY4 (the others are still pushed full screens). Deferred to
+LAY2b: LAYOUT_DEFECTS 20-22.
+
 **Risks.**
 
 - go_router ShellRoute vs 84 `Navigator.push` / 80 `MaterialPageRoute`:

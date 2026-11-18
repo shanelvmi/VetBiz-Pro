@@ -75,3 +75,14 @@ with the details open only because the list no longer overflows first.
 | 17 | Transactions | details open, every wide size | the time cell 4.2 (1024), 55 (768); toolbar 77; a day header 45 and 6.8; a details row 59 (150 at 1.3); at 1.3 the app bar title 104, details date row 65, toolbar 197, day header 99 | transactions_screen.dart time cell :488, toolbar :323, day header :448, details :678 / :699, app bar :247 | the same | none |
 | 18 | Home, All details (phone): the Sales revenue chart | 390 and 360, text 1.3 | the header row 383 / 413 px; the totals row 197 / 227 (both older than POL7). The legend row overflowed too (402 / 432); POL7 made it a Wrap, so it no longer does | sales_revenue_chart.dart header Row :85, totals Row :126 | pol7_sales_chart_test (phone) | none |
 | 19 | Report Summary tab (wide): the Debt and Expenses preview cards | 768 | the card header row 88 px and 42 px (older than POL7; in the ph7b fingerprints). At text 1.3 the same row also overflows in View Reports at 1024 and 1200 (3 times): before POL7 the taller tiles left the preview cards no room, so it was not laid out; the old status-row overflow there is gone (pol7_reports_matrix_test pins the counts) | report_tabbed_content.dart `_previewCardShell` Row :319 | ph7b_wide_unchanged_test | none |
+
+## The wide shell (found in LAY2, deferred to LAY2b)
+
+Not overflows: shell behaviour noted while LAY2 moved the sidebar onto the
+registry. Line numbers at LAY2 (8).
+
+| # | Where | What | Why it waits |
+|---|---|---|---|
+| 20 | dashboard_screen.dart `_buildDrawerContent` facility tagline | The `StreamBuilder` gets a new `snapshots()` stream on every build (the "resets to waiting" pitfall in CLAUDE.md); harmless today, a flicker risk when the shell rebuilds more often (LAY4) | cache it once (LAY2b), not mixed into a block that must only move the planned pixels |
+| 21 | dashboard_screen.dart `platformAdminItem` | The `FutureBuilder` calls `_isPlatformAdmin()` on every build, so the amber item can blink out and back while it answers | the same (LAY2b) |
+| 22 | dashboard_screen.dart `isSmallScreen` | A window 1024 wide or more but under 600 high shows the expanded sidebar, which never collapses there, while the top bar still shows the collapse button (it does nothing) | owner: rail at that height, or hide the button (LAY2b) |
