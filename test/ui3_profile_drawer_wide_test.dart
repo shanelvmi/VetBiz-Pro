@@ -14,7 +14,8 @@ const _sizes = [Size(768, 1024), Size(1024, 768), Size(1200, 800)];
 
 /// The rows the dashboard gives the drawer (dashboard_screen.dart
 /// _buildEndDrawerContent): admins see Team Members, View Facilities and
-/// Activity log too.
+/// Activity log too. LAY3: the wide panel's Language row after Change
+/// Password (its Settings and Help rows were never in this stand-in).
 List<ProfileDrawerAction> _actions({required bool admin}) => [
       ProfileDrawerAction(icon: Icons.edit_outlined, label: 'Edit Profile', onTap: () {}),
       if (admin) ...[
@@ -22,6 +23,7 @@ List<ProfileDrawerAction> _actions({required bool admin}) => [
         ProfileDrawerAction(icon: Icons.store_outlined, label: 'View Facilities', onTap: () {}),
       ],
       ProfileDrawerAction(icon: Icons.lock_outline, label: 'Change Password', onTap: () {}),
+      ProfileDrawerAction(icon: Icons.language_outlined, label: 'Language / Lugha', onTap: () {}),
       if (admin) ProfileDrawerAction(icon: Icons.history, label: 'Activity Log', onTap: () {}),
       ProfileDrawerAction(icon: Icons.power_settings_new, label: 'Sign out', onTap: () {}, destructive: true),
     ];
