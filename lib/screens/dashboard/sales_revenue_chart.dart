@@ -7,7 +7,9 @@ import '../../config/money.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
+import '../../ui/polish/chart_palette.dart';
 import '../../widgets/reveal/late_slot.dart';
 
 /// The dashboard's Sales & Revenue Overview card: the period's total
@@ -46,6 +48,9 @@ class SalesRevenueChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // POL7: one hue, told apart by line style: Sales solid, Collections
+    // dashed, Services dotted (owner); the legend draws the same styles.
+    final palette = ChartPalette.of(context);
     final salesByDay = this.salesByDay;
     final collectionsByDay = this.collectionsByDay;
     final servicesByDay = this.servicesByDay;
@@ -221,43 +226,46 @@ class SalesRevenueChart extends StatelessWidget {
                             spots: [for (int i = 0; i < salesByDay.length; i++) FlSpot(i.toDouble(), salesByDay[i])],
                             isCurved: true,
                             preventCurveOverShooting: true,
-                            color: context.colors.primary,
+                            color: palette.step(0),
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: true, color: context.colors.primary.withValues(alpha: AppAlpha.a10)),
+                            belowBarData: BarAreaData(show: true, color: palette.step(0).withValues(alpha: AppAlpha.a10)),
                           ),
                           LineChartBarData(
                             spots: [for (int i = 0; i < collectionsByDay.length; i++) FlSpot(i.toDouble(), collectionsByDay[i])],
                             isCurved: true,
                             preventCurveOverShooting: true,
-                            color: context.colors.accent,
+                            color: palette.step(1),
+                            dashArray: PolishMetrics.chartDash,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: true, color: context.colors.accent.withValues(alpha: AppAlpha.a10)),
                           ),
                           LineChartBarData(
                             spots: [for (int i = 0; i < servicesByDay.length; i++) FlSpot(i.toDouble(), servicesByDay[i])],
                             isCurved: true,
                             preventCurveOverShooting: true,
-                            color: context.colors.chartService1,
+                            color: palette.step(2),
+                            dashArray: PolishMetrics.chartDot,
                             barWidth: 3,
                             dotData: const FlDotData(show: false),
-                            belowBarData: BarAreaData(show: true, color: context.colors.chartService1.withValues(alpha: AppAlpha.a10)),
                           ),
                         ],
                       ),
                     ),
             ),
             const SizedBox(height: AppSpacing.s12),
-            Row(
+            // POL7: a Wrap, so the three entries (wider now their swatches
+            // show the line style) go to a second line on a narrow phone
+            // instead of overflowing; one line at tablet and computer.
+            Wrap(
+              spacing: AppSpacing.s20,
+              runSpacing: AppSpacing.s6,
               children: [
-                _legendItem(context, context.colors.primary,
+                _legendItem(context, palette.step(0), null,
                     context.l10n.dashboard_seriesWithCurrency(context.l10n.dashboard_sales, AppDefaults.currencySymbol)),
-                const SizedBox(width: AppSpacing.s20),
-                _legendItem(context, context.colors.accent,
+                _legendItem(context, palette.step(1), PolishMetrics.chartDash,
                     context.l10n.dashboard_seriesWithCurrency(context.l10n.dashboard_collections, AppDefaults.currencySymbol)),
-                const SizedBox(width: AppSpacing.s20),
-                _legendItem(context, context.colors.chartService1,
+                _legendItem(context, palette.step(2), PolishMetrics.chartDot,
                     context.l10n.dashboard_seriesWithCurrency(context.l10n.dashboard_services, AppDefaults.currencySymbol)),
               ],
             ),
@@ -267,11 +275,11 @@ class SalesRevenueChart extends StatelessWidget {
     );
   }
 
-  Widget _legendItem(BuildContext context, Color color, String label) {
+  Widget _legendItem(BuildContext context, Color color, List<int>? dash, String label) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        ChartLineSwatch(color: color, dash: dash),
         const SizedBox(width: AppSpacing.s6),
         Text(label, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft)),
       ],
