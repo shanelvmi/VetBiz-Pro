@@ -273,19 +273,20 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s14),
       decoration: BoxDecoration(
-        color: context.colors.primary.withValues(alpha: AppAlpha.a05),
+        // POL7: a flat note, the surface and a hairline (it was primary-tinted).
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.primary.withValues(alpha: AppAlpha.a15)),
+        border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline, size: AppIconSize.i18, color: context.colors.primary),
+          Icon(Icons.info_outline, size: AppIconSize.i18, color: context.colors.textSecondary),
           const SizedBox(width: AppSpacing.s10),
           Expanded(
             child: Text(
               context.l10n.reports_reviewIntro,
-              style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.primaryNote.withValues(alpha: AppAlpha.a85)),
+              style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSecondary),
             ),
           ),
         ],

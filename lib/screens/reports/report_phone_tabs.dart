@@ -174,7 +174,7 @@ class ReportPhoneTabs {
               title: p.name,
               // The tablet's star: a shape, not colour alone.
               icon: p.isWatchlisted ? Icons.star : null,
-              iconColor: colors.accent,
+              iconColor: colors.primary,
               amount: '${p.expectedClosing} ${p.unit.isEmpty ? '' : l10n.productUnitLabel(p.unit)}'.trim(),
               tooltip: p.adjustmentDetail,
               details: [
@@ -301,7 +301,6 @@ class ReportPhoneTabs {
 
   Widget transactions(BuildContext context) {
     final l10n = context.l10n;
-    final colors = context.colors;
     final combined = [
       ...report.expenseLineItems.map((e) => (item: e, isExpense: true)),
       ...report.otherIncomeLineItems.map((e) => (item: e, isExpense: false)),
@@ -318,10 +317,9 @@ class ReportPhoneTabs {
             PhoneReportRow(
               title: entry.item.description,
               amount: '${entry.isExpense ? '-' : '+'}${Money.plain(entry.item.amount)}',
-              amountColor: entry.isExpense ? colors.dangerStrong : colors.successStrong,
+              // POL7: income or expense by the sign and the word, not colour.
               details: [
-                ReportPart(entry.isExpense ? l10n.transactionType_expense : l10n.payments_typeOtherIncome,
-                    entry.isExpense ? colors.dangerStrong : colors.successStrong),
+                ReportPart(entry.isExpense ? l10n.transactionType_expense : l10n.payments_typeOtherIncome),
                 ReportPart(l10n.transactionCategoryLabel(entry.item.category)),
                 ReportPart(AppDateFormat.time24.format(entry.item.time)),
               ],

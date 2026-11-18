@@ -581,12 +581,8 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
               for (final p in report.productMovement)
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
-                  decoration: p.isWatchlisted
-                      ? BoxDecoration(
-                          color: context.colors.accent.withValues(alpha: AppAlpha.a05),
-                          borderRadius: BorderRadius.circular(AppRadius.r6),
-                        )
-                      : null,
+                  // POL7: a watchlisted product is marked by its star in the one
+                  // accent (primary); the accent row tint, a second hue, is gone.
                   child: Row(
                     children: [
                       Expanded(
@@ -594,7 +590,7 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                         child: Row(
                           children: [
                             if (p.isWatchlisted) ...[
-                              Icon(Icons.star, size: AppIconSize.i14, color: context.colors.accent.withValues(alpha: AppAlpha.a85)),
+                              Icon(Icons.star, size: AppIconSize.i14, color: context.colors.primary),
                               const SizedBox(width: AppSpacing.s4),
                             ],
                             Flexible(child: Text(p.name, style: const TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.medium))),
@@ -845,13 +841,15 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
                       Expanded(flex: 2, child: Text(context.l10n.transactionCategoryLabel(entry.item.category), style: const TextStyle(fontSize: AppFontSize.f12_5))),
                       Expanded(
                         flex: 2,
+                      // POL7: income or expense by the word and the sign (-/+), in
+                      // plain text; it was red or green, a colour per kind.
                         child: Text(entry.isExpense ? context.l10n.transactionType_expense : context.l10n.payments_typeOtherIncome,
-                            style: TextStyle(fontSize: AppFontSize.f12, color: entry.isExpense ? context.colors.dangerStrong : context.colors.successStrong)),
+                            style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
                       ),
                       Expanded(
                         flex: 2,
                         child: Text('${entry.isExpense ? '-' : '+'}${Money.plain(entry.item.amount)}',
-                            style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold, color: entry.isExpense ? context.colors.dangerStrong : context.colors.successStrong)),
+                            style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold)),
                       ),
                     ],
                   ),
