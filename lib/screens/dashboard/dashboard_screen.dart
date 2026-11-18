@@ -25,6 +25,9 @@ import '../../services/announcement_service.dart';
 import '../../widgets/summary_card.dart';
 import '../../widgets/support_contact_dialog.dart';
 import '../../widgets/shell/sidebar_item.dart';
+import '../../widgets/shell/app_sidebar.dart';
+import '../../navigation/app_destinations.dart';
+import 'insights_screen.dart';
 import '../../widgets/profile/profile_drawer.dart';
 import '../../widgets/profile/profile_menu_button.dart';
 import '../../widgets/reveal/reveal.dart';
@@ -89,7 +92,6 @@ import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
-import '../../config/app_info.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
@@ -2402,6 +2404,34 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }
 
 // DRAWER CONTENTS
+/// LAY2: what a sidebar or rail tap does: the same screens the sidebar
+/// pushed before, and Home refreshed after the return only where the
+/// registry says (refreshHomeOnReturn, copied from the old sidebar).
+/// Insights opens as the hub opens it. Home is this screen.
+Future<void> _openDestination(AppDestination d) async {
+  final Widget? screen = switch (d) {
+    AppDestination.home || AppDestination.insights => null,
+    AppDestination.sales => SalesScreen(),
+    AppDestination.services => ServicesScreen(),
+    AppDestination.clients => ClientsScreen(),
+    AppDestination.debtors => DebtorsScreen(),
+    AppDestination.payments => const PaymentsScreen(),
+    AppDestination.transactions => TransactionScreen(),
+    AppDestination.products => ProductsScreen(),
+    AppDestination.stockStore => StockStoreScreen(),
+    AppDestination.reports => const ViewReportsScreen(),
+    AppDestination.settings => SettingsScreen(),
+  };
+  if (d == AppDestination.insights) {
+    await showInsightsScreen(context);
+  } else if (screen != null) {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+  } else {
+    return;
+  }
+  if (mounted && d.refreshHomeOnReturn) _refreshDashboardData();
+}
+
 Widget _buildDrawerContent() {
   final facilityProvider = Provider.of<FacilityProvider>(context);
   final selectedFacility = facilityProvider.selectedFacility;
@@ -2486,125 +2516,6 @@ Widget _buildDrawerContent() {
     ),
   );
 
-  // ---------- DRAWER ITEMS ----------
-  Widget items = Column(
-    children: [
-      DrawerHoverItem(
-        icon: AppIcons.stockStore.filled,
-        title: context.l10n.nav_stock,
-        isCollapsed: effectivelyCollapsed,
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => StockStoreScreen()),
-          );
-          _refreshDashboardData();
-        },
-      ),
-      DrawerHoverItem(
-        icon: AppIcons.products.filled,
-        title: context.l10n.nav_products,
-        isCollapsed: effectivelyCollapsed,
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => ProductsScreen()),
-          );
-          _refreshDashboardData();
-        },
-      ),
-      DrawerHoverItem(
-        icon: AppIcons.sales.filled,
-        title: context.l10n.nav_sales,
-        isCollapsed: effectivelyCollapsed,
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => SalesScreen()),
-          );
-          _refreshDashboardData();
-        },
-      ),
-      DrawerHoverItem(
-        icon: AppIcons.services.filled,
-        title: context.l10n.nav_services,
-        isCollapsed: effectivelyCollapsed,
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => ServicesScreen()),
-          );
-          _refreshDashboardData();
-        },
-      ),
-      DrawerHoverItem(
-        icon: AppIcons.clients.filled,
-        title: context.l10n.clients_title,
-        isCollapsed: effectivelyCollapsed,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ClientsScreen()),
-        ),
-      ),
-      DrawerHoverItem(
-        icon: AppIcons.payments.filled,
-        title: context.l10n.payments_title,
-        isCollapsed: effectivelyCollapsed,
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const PaymentsScreen()),
-          );
-          _refreshDashboardData();
-        },
-      ),
-      DrawerHoverItem(
-        icon: AppIcons.debtors.filled,
-        title: context.l10n.nav_debtors,
-        isCollapsed: effectivelyCollapsed,
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => DebtorsScreen()),
-          );
-          _refreshDashboardData();
-        },
-      ),
-      DrawerHoverItem(
-        icon: AppIcons.transactions.filled,
-        title: context.l10n.transactions_title,
-        isCollapsed: effectivelyCollapsed,
-        onTap: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => TransactionScreen()),
-          );
-          _refreshDashboardData();
-        },
-      ),
-      DrawerHoverItem(
-        icon: AppIcons.reports.filled,
-        title: context.l10n.nav_reports,
-        isCollapsed: effectivelyCollapsed,
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const ViewReportsScreen()),
-        ),
-      ),
-    ],
-  );
-
-  // ---------- SETTINGS ----------
-  Widget settings = DrawerHoverItem(
-    icon: AppIcons.settings.filled,
-    title: context.l10n.settings_title,
-    isCollapsed: effectivelyCollapsed,
-    onTap: () => Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => SettingsScreen()),
-    ),
-  );
-
   // Same amber-tinted recipe as "Go to Facility" in Platform Admin's
   // own sidebar - reused here since this drawer has no "currently
   // selected tab" using that same color, so there's no risk of the
@@ -2654,17 +2565,6 @@ Widget _buildDrawerContent() {
     },
   );
 
-  // ---------- FOOTER ----------
-  Widget footer = Padding(
-    padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
-    child: effectivelyCollapsed
-        ? const SizedBox.shrink()
-        : Text(
-            '@${AppInfo.name}',
-            style: TextStyle(fontSize: AppFontSize.f12, color: onBrandInk(context)),
-          ),
-  );
-
   // ---------- FACILITY NAME ----------
   // Text label for the facility, shown below the logo - the old AppBar
   // title moved here when it was restyled. The name as typed, never with
@@ -2707,36 +2607,15 @@ Widget _buildDrawerContent() {
         );
 
   // ---------- FINAL LAYOUT ----------
-  Widget content = Column(
-    children: [
-      logoSection,
-      facilityNameSection,
-      Divider(thickness: 1.2, color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a50)),
-      items,
-      Divider(thickness: 1.2, color: context.colors.onBrandSurface.withValues(alpha: AppAlpha.a50)),
-      settings,
-      platformAdminItem,
-    ],
-  );
-
-  return AnimatedContainer(
-    // Was 200ms/easeInOut - reported as too quick/abrupt for a panel
-    // this size sliding this far (72 to 250). Slower, and
-    // easeInOutCubic eases in and out more gradually at both ends than
-    // easeInOut (which is close to linear through its middle), reading
-    // as a deliberate glide rather than a snap.
-    duration: AppMotion.slower,
-    curve: Curves.easeInOutCubic,
-    width: effectivelyCollapsed ? 72 : 250,
-    color: context.colors.brandSurface,
-    child: Column(
-      children: [
-        Expanded(
-          child: SingleChildScrollView(child: content),
-        ),
-        footer,
-      ],
-    ),
+  // LAY2: the places come from the registry (AppSidebar); this screen keeps
+  // the facility header, the Platform Admin item and what a tap does.
+  return AppSidebar(
+    selected: AppDestination.home,
+    onSelect: _openDestination,
+    collapsed: effectivelyCollapsed,
+    destinations: shellDestinationsFor(isAdmin: Provider.of<UserRoleProvider>(context).isAdmin),
+    header: (_) => Column(children: [logoSection, facilityNameSection]),
+    platformAdminItem: platformAdminItem,
   );
 }
 
