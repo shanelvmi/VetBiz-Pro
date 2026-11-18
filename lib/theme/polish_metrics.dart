@@ -75,3 +75,16 @@ class PolishMetrics {
   static const double unreadTintAlpha = AppAlpha.a10;
   static const double unreadDot = AppSizes.statusDot;
 }
+
+/// LAY6a: the record screens' details panel (DetailsLayout) and the toolbar
+/// of search plus filters (ToolbarLayout).
+class DetailsLayoutMetrics {
+  DetailsLayoutMetrics._();
+
+  /// A slide-over panel is at most this share of the width it covers.
+  static const double slideOverMaxFactor = 0.9;
+
+  /// The search field's narrowest width while the filters share its line;
+  /// below it the search takes its own line and the filters wrap under it.
+  static const double searchMinWidth = 240;
+}
