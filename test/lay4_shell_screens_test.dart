@@ -58,13 +58,6 @@ Future<void> _open(WidgetTester tester, AppDestination d) async {
   await tester.pumpAndSettle();
 }
 
-// Known before LAY4 (open item in the LAY4 ledger row): on Settings' side-panel
-// layout (content 900 or wider) the embedded SubscriptionScreen's status row
-// ("Trial - no subscription set up yet": icon and text, no Flexible) overflows
-// its 634 px pane at text 1.3, outside the shell too. Not fixed here.
-const _knownSubscriptionRowOverflow =
-    'pre-existing: SubscriptionScreen status row overflows at text 1.3 in Settings\x27 side panel';
-
 Type _typeOf(AppDestination d) => d == AppDestination.settings ? SettingsScreen : ViewReportsScreen;
 
 void main() {
@@ -73,18 +66,22 @@ void main() {
     for (final theme in AppColorTheme.all) {
       for (final look in const [MatrixLook.light, MatrixLook.dark]) {
         for (final d in const [AppDestination.settings, AppDestination.reports]) {
-          final knownOverflow = d == AppDestination.settings && size.width - _sidebarFor(size) >= 900;
-          ph5TestWidgets('${d.name} in the shell, $at ${theme.id} ${look.name} text 1.3${knownOverflow ? ' (skipped, $_knownSubscriptionRowOverflow)' : ''}', (tester) async {
+          ph5TestWidgets('${d.name} in the shell, $at ${theme.id} ${look.name} text 1.3', (tester) async {
             await pumpPh5(tester, (fs) => _harness(fs, _sidebarFor(size)),
                 size: size, look: look, colorTheme: theme, textScale: 1.3);
             await _open(tester, d);
             expect(tester.takeException(), isNull);
             expect(find.byType(_typeOf(d)), findsOneWidget);
             expect(find.byKey(ValueKey('sb-${d.name}-selected')), findsOneWidget, reason: 'the place is selected');
-            expect(find.byType(BackButton), findsNothing, reason: 'top level: no back arrow');
+            // The place itself has no back arrow. Open item (LAY4c): Settings' side
+            // panel embeds Subscription, whose own AppBar still shows one (it closes
+            // Settings, as before LAY4); only that one is allowed here.
+            final embedded = find.descendant(of: find.byType(SubscriptionScreen), matching: find.byType(BackButton));
+            expect(find.byType(BackButton).evaluate().length, embedded.evaluate().length,
+                reason: 'top level: no back arrow outside the embedded pane');
             final left = tester.getTopLeft(find.byType(_typeOf(d))).dx;
             expect(left, _sidebarFor(size), reason: 'beside the sidebar, not over it');
-          }, skip: knownOverflow ? true : null);
+          });
         }
       }
     }
@@ -100,7 +97,6 @@ void main() {
       ph5TestWidgets('${size.width.toInt()} ${collapsed ? 'collapsed' : 'open'}: side panel $panel', (tester) async {
         await pumpPh5(tester, (fs) => _harness(fs, _sidebarFor(size, collapsed: collapsed)), size: size);
         await _open(tester, AppDestination.settings);
-        tester.takeException(); // the known SubscriptionScreen row overflow on the side panel
         // The side panel embeds the first section (Subscription, for an admin).
         expect(find.byType(SubscriptionScreen), panel ? findsOneWidget : findsNothing);
       });
@@ -125,7 +121,6 @@ void main() {
     ph5TestWidgets('a snack bar from inside the shell at ${size.width.toInt()} stays off the sidebar', (tester) async {
       await pumpPh5(tester, (fs) => _harness(fs, _sidebarFor(size)), size: size);
       await _open(tester, AppDestination.settings);
-      tester.takeException(); // the known SubscriptionScreen row overflow on the side panel
       AppFeedback.info('saved');
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
