@@ -265,11 +265,11 @@ void main() {
       expect(phone, isNot(contains('AppShell')));
       expect(RegExp(r'child: AppShell\(').allMatches(dash).length, 1);
     });
-    test('only Insights, Products, Stock Store, Settings and Reports live in the shell; Home is refreshed per the registry', () {
+    test('only Insights, Products, Stock Store, Clients, Debtors, Settings and Reports live in the shell; Home is refreshed per the registry', () {
       final pages = dash.substring(dash.indexOf('Widget? _shellPageFor('));
       final body = pages.substring(0, pages.indexOf('};'));
       expect(RegExp(r'AppDestination\.\w+ =>').allMatches(body).map((m) => m.group(0)).toList(),
-          ['AppDestination.insights =>', 'AppDestination.products =>', 'AppDestination.stockStore =>', 'AppDestination.settings =>', 'AppDestination.reports =>']);
+          ['AppDestination.insights =>', 'AppDestination.products =>', 'AppDestination.stockStore =>', 'AppDestination.clients =>', 'AppDestination.debtors =>', 'AppDestination.settings =>', 'AppDestination.reports =>']);
       expect(dash, contains('if (left.refreshHomeOnReturn) _refreshDashboardData();'));
       expect(dash, contains('onOpenFullScreen: _openDestination,'));
       expect(AppDestination.insights.refreshHomeOnReturn || AppDestination.settings.refreshHomeOnReturn || AppDestination.reports.refreshHomeOnReturn, isFalse);

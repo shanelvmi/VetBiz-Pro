@@ -191,7 +191,8 @@ void main() {
       expect(dash, contains('return (page) => shell.openInContent(page, highlight: AppDestination.settings);'));
     });
     test('the bell and Home\'s Insights button go through the shell', () {
-      expect(dash, contains('await openNotifications(context, anchorKey: _bellKey, openPage: _openInShellAsSettings());'));
+      // LAY6a added openPlace (a notification's client opens in the shell).
+      expect(dash, contains('anchorKey: _bellKey, openPage: _openInShellAsSettings(), openPlace: _openInShellAs());'));
       expect(dash, contains('onInsights: () => _shellKey.currentState?.select(AppDestination.insights),'));
       expect(AppDestination.insights.refreshHomeOnReturn, isFalse, reason: 'Home is not refreshed after Insights');
     });

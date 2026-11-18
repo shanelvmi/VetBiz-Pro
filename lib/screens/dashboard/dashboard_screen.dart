@@ -2014,8 +2014,16 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
               title: c.name,
               subtitle: context.l10n.dashboard_searchClient(c.phone),
               icon: Icons.person_outline,
-              onTap: () =>
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientsScreen())),
+              // LAY6a: in the shell's content on a wide window (Clients highlighted,
+              // Back returns where you were); pushed when there is no shell.
+              onTap: () {
+                final shell = _shellKey.currentState;
+                if (shell != null) {
+                  shell.openInContent(const ClientsScreen(), highlight: AppDestination.clients);
+                } else {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientsScreen()));
+                }
+              },
             ));
           }
         }
@@ -2359,7 +2367,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   tooltip: context.l10n.common_notifications,
                   onPressed: () async {
                     // PH8a: the page on a phone, the dropdown on a wide window.
-                    await openNotifications(context, anchorKey: _bellKey, openPage: _openInShellAsSettings());
+                    await openNotifications(context,
+                        anchorKey: _bellKey, openPage: _openInShellAsSettings(), openPlace: _openInShellAs());
                     // Notifications marks itself "viewed" on open - re-check
                     // here so the blink stops immediately on return, rather
                     // than waiting for some other reason to rebuild.
@@ -2418,6 +2427,9 @@ Widget? _shellPageFor(AppDestination d) => switch (d) {
       // LAY5: the two catalogue places; the filter panel follows the content width.
       AppDestination.products => ProductsScreen(),
       AppDestination.stockStore => StockStoreScreen(),
+      // LAY6a: the details inline from 900 of the content, a slide-over below.
+      AppDestination.clients => ClientsScreen(),
+      AppDestination.debtors => DebtorsScreen(),
       AppDestination.settings => SettingsScreen(),
       AppDestination.reports => const ViewReportsScreen(),
       _ => null,
@@ -2713,6 +2725,14 @@ Widget _buildDrawerContent({
   /// LAY4b: opens a screen in the wide shell's content with Settings
   /// highlighted (Activity Log, Notifications), or null when there is no
   /// shell (a phone): the caller then pushes as before.
+  /// LAY6a: opens a screen in the wide shell's content with the place it
+  /// names highlighted (a notification's client), or null with no shell.
+  Future<void> Function(Widget page, AppDestination highlight)? _openInShellAs() {
+    final shell = _shellKey.currentState;
+    if (shell == null) return null;
+    return (page, highlight) => shell.openInContent(page, highlight: highlight);
+  }
+
   Future<void> Function(Widget page)? _openInShellAsSettings() {
     final shell = _shellKey.currentState;
     if (shell == null) return null;
