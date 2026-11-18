@@ -205,7 +205,9 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
       appBar: AppBar(
         backgroundColor: context.colors.surface,
         foregroundColor: context.colors.textPrimary,
-        elevation: AppElevation.e1,
+        elevation: AppElevation.e0,
+        // POL7: flat, a hairline instead of the shadow (as POL2 to POL6).
+        shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
         centerTitle: true,
         toolbarHeight: 72,
         title: Column(

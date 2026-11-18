@@ -11,6 +11,7 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_layout.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
 
 /// Read-only view of a past, already-generated report - the AppBar
@@ -41,7 +42,9 @@ class ReportDetailScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: context.colors.surface,
         foregroundColor: context.colors.textPrimary,
-        elevation: AppElevation.e1,
+        elevation: AppElevation.e0,
+        // POL7: flat, a hairline instead of the shadow (as POL2 to POL6).
+        shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
         centerTitle: true,
         toolbarHeight: 72,
         title: Column(
@@ -88,7 +91,9 @@ class ReportDetailScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: colors.surface,
         foregroundColor: colors.textPrimary,
-        elevation: AppElevation.e1,
+        elevation: AppElevation.e0,
+        // POL7: flat, a hairline instead of the shadow (as POL2 to POL6).
+        shape: Border(bottom: BorderSide(color: colors.divider, width: PolishMetrics.hairline)),
         title: Text(
           AppDateFormat.dateLong.format(report.reportDate),
           maxLines: 2,

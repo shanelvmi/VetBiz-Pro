@@ -4,6 +4,7 @@ import '../../config/app_limits.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
 import '../app_safe_area.dart';
 
@@ -149,7 +150,9 @@ class PhoneReportSeeAllPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: colors.surface,
         foregroundColor: colors.textPrimary,
-        elevation: AppElevation.e1,
+        elevation: AppElevation.e0,
+        // POL7: flat, a hairline instead of the shadow (as POL2 to POL6).
+        shape: Border(bottom: BorderSide(color: colors.divider, width: PolishMetrics.hairline)),
         title: Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold)),
       ),
       body: ListView.separated(

@@ -25,6 +25,7 @@ import '../../data/activity_type.dart';
 import '../../config/app_date_format.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_layout.dart';
@@ -264,7 +265,9 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
       appBar: AppBar(
         backgroundColor: context.colors.surface,
         foregroundColor: context.colors.textPrimary,
-        elevation: AppElevation.e1,
+        elevation: AppElevation.e0,
+        // POL7: flat, a hairline instead of the shadow (as POL2 to POL6).
+        shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
         centerTitle: true,
         toolbarHeight: 72,
         title: Column(
@@ -731,7 +734,9 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
       appBar: AppBar(
         backgroundColor: colors.surface,
         foregroundColor: colors.textPrimary,
-        elevation: AppElevation.e1,
+        elevation: AppElevation.e0,
+        // POL7: flat, a hairline instead of the shadow (as POL2 to POL6).
+        shape: Border(bottom: BorderSide(color: colors.divider, width: PolishMetrics.hairline)),
         title: Text(l10n.reports_viewTitle, style: const TextStyle(fontWeight: AppFontWeight.bold)),
         actions: [
           PopupMenuButton<int>(
