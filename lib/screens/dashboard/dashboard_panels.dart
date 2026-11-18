@@ -289,8 +289,13 @@ class TodayGlanceStrip extends StatelessWidget {
   final bool isLoading;
   final int debtorCount;
 
+  /// LAY4b: what the Insights button does (the wide dashboard opens Insights
+  /// in the shell); null: showInsightsScreen, as before.
+  final VoidCallback? onInsights;
+
   const TodayGlanceStrip(
       {super.key,
+      this.onInsights,
       required this.saleCount,
       required this.serviceCount,
       required this.collected,
@@ -320,7 +325,7 @@ class TodayGlanceStrip extends StatelessWidget {
           _glanceStat(context, AppIcons.payments.outlined, Money.format(collected ?? (loading ? AppDefaults.glanceAmountPlaceholder : 0)), context.l10n.sales_collected, hideValue: loading),
           _glanceStat(context, AppIcons.debtors.outlined, '$debtorCount', context.l10n.dashboard_outstandingDebts(debtorCount)),
           OutlinedButton.icon(
-            onPressed: () => showInsightsScreen(context),
+            onPressed: onInsights ?? () => showInsightsScreen(context),
             icon: Icon(AppIcons.insights.filled, size: AppIconSize.i16, color: context.colors.primary),
             label: Text(context.l10n.insights_title, style: TextStyle(color: context.colors.primary)),
             style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.primary)),

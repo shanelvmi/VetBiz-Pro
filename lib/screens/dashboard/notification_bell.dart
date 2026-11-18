@@ -25,17 +25,20 @@ bool notificationsOpenAsPage(BuildContext context) =>
 /// PH8a: what every notifications bell does when tapped: the full page
 /// pushed over everything on a phone (Back returns to the same tab and
 /// scroll), the dropdown under [anchorKey] on a wide window. [controller]
-/// is for tests; the screen builds its own from the providers otherwise.
+/// is for tests; the screen builds its own from the providers otherwise. LAY4b:
+/// [openPage], when given (the wide shell), opens the full page instead of a push.
 Future<void> openNotifications(
   BuildContext context, {
   required GlobalKey anchorKey,
   NotificationFeedController? controller,
+  Future<void> Function(Widget page)? openPage,
 }) async {
   if (notificationsOpenAsPage(context)) {
+    if (openPage != null) return openPage(NotificationsScreen(controller: controller));
     await Navigator.push(context, MaterialPageRoute<void>(builder: (_) => NotificationsScreen(controller: controller)));
   } else {
     await showAnchoredDropdown(context,
-        anchorKey: anchorKey, child: NotificationsScreen(isDropdown: true, controller: controller));
+        anchorKey: anchorKey, child: NotificationsScreen(isDropdown: true, controller: controller, openPage: openPage));
   }
 }
 

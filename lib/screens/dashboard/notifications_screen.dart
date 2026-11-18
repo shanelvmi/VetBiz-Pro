@@ -60,6 +60,10 @@ bool notificationNeedsAction(NotificationType type) => const {
 class NotificationsScreen extends StatefulWidget {
   final bool isDropdown;
 
+  /// LAY4b: how the dropdown's "see all" opens the full page (the wide
+  /// dashboard opens it in the shell's content); null: pushed, as before.
+  final Future<void> Function(Widget page)? openPage;
+
   /// The data behind the screen; built from the providers when null (tests
   /// pass one on a fake Firestore). NOTIF-2c.
   final NotificationFeedController? controller;
@@ -68,7 +72,7 @@ class NotificationsScreen extends StatefulWidget {
   /// in tests.
   final PosterImageFor? imageFor;
 
-  const NotificationsScreen({super.key, this.isDropdown = false, this.controller, this.imageFor});
+  const NotificationsScreen({super.key, this.isDropdown = false, this.controller, this.imageFor, this.openPage});
 
 
   @override
@@ -1335,7 +1339,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               onPressed: () {
                 final navigator = Navigator.of(context);
                 navigator.pop();
-                navigator.push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+                final open = widget.openPage;
+                if (open != null) {
+                  open(const NotificationsScreen());
+                } else {
+                  navigator.push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+                }
               },
               style: TextButton.styleFrom(foregroundColor: context.colors.primary),
               child: Row(

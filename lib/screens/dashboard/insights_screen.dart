@@ -9,6 +9,7 @@ import '../../services/dashboard_summary_service.dart';
 import '../../services/insights_data_loader.dart';
 import '../../services/service_breakdown.dart';
 import '../../widgets/summary_card.dart' show KpiTrend;
+import '../../widgets/shell/app_shell.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
@@ -414,7 +415,8 @@ class _InsightsScreenState extends State<InsightsScreen> {
         centerTitle: true,
         backgroundColor: context.colors.brandSurface,
         foregroundColor: context.colors.onBrandSurface,
-        automaticallyImplyLeading: !widget.isModal,
+        // LAY4b: opened from the sidebar it is a top-level place (no back arrow).
+        automaticallyImplyLeading: !widget.isModal && !ShellScope.isTopLevel(context),
         leading: widget.isModal
             ? IconButton(
                 icon: const Icon(Icons.close),
