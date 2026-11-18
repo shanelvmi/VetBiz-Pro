@@ -13,6 +13,7 @@ import '../../services/home_chart_data.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../ui/polish/chart_palette.dart';
 import '../../utils/app_clock.dart';
 import '../../widgets/reveal/reveal.dart';
 import 'home_chart_page.dart';
@@ -140,6 +141,7 @@ class _HomeChartSalesPageState extends State<HomeChartSalesPage> {
   /// [days] null: the empty page's faint frame (guides and days only).
   Widget _chart(BuildContext context, HomeChartDays? days, List<double> values, int span) {
     final colors = context.colors;
+    final palette = ChartPalette(colors);
     final locale = Localizations.localeOf(context).toLanguageTag();
     final previous = days?.previousSales ?? const <double>[];
     final top = homeChartNiceMax([...values, ...previous].reduce(math.max));
@@ -154,18 +156,18 @@ class _HomeChartSalesPageState extends State<HomeChartSalesPage> {
       isCurved: true,
       curveSmoothness: HomeChartMetrics.curveSmoothness,
       preventCurveOverShooting: true,
-      color: colors.primary,
+      color: palette.series,
       barWidth: HomeChartMetrics.line,
       dotData: FlDotData(
         checkToShowDot: (spot, _) => spot.y > 0,
         getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
           radius: HomeChartMetrics.marker,
-          color: colors.primary,
+          color: palette.series,
           strokeWidth: HomeChartMetrics.guideLine,
           strokeColor: colors.surface,
         ),
       ),
-      belowBarData: BarAreaData(show: true, color: colors.primary.withValues(alpha: HomeChartMetrics.areaAlpha)),
+      belowBarData: BarAreaData(show: true, color: palette.series.withValues(alpha: HomeChartMetrics.areaAlpha)),
     );
     final bars = [
       if (previous.isNotEmpty)
@@ -174,7 +176,7 @@ class _HomeChartSalesPageState extends State<HomeChartSalesPage> {
           isCurved: true,
           curveSmoothness: HomeChartMetrics.curveSmoothness,
           preventCurveOverShooting: true,
-          color: colors.textMuted,
+          color: palette.comparison,
           barWidth: HomeChartMetrics.previousLine,
           dashArray: HomeChartMetrics.dash,
           dotData: const FlDotData(show: false),

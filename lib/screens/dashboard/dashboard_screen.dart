@@ -1601,7 +1601,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                         title: context.l10n.dashboard_completedServices(_periodLabel(selectedFilter)),
                                         value: '${_periodTotals.completedServicesCount}',
                                         icon: AppIcons.services.filled,
-                                        color: context.colors.chart1,
+                                        color: context.colors.accent,
                                         shadow: true,
                                         isLoading: _isPeriodLoading,
                                         trend: KpiTrend(

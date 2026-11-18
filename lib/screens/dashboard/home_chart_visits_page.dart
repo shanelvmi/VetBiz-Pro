@@ -11,24 +11,41 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../ui/polish/chart_palette.dart';
 import '../../widgets/reveal/reveal.dart';
 import 'home_chart_page.dart';
 
 /// Counts in tabular figures, so digits do not shift as they change.
 const _tabular = [FontFeature.tabularFigures()];
 
-/// HUB4: a slice's colour: the chart roles in order (each at least 3:1 on
-/// the page in every theme, Light and Dark), the rest muted. Colour is
-/// never the only signal: every slice has its legend row in words.
-Color homeSliceColor(AppColors colors, ServiceSlice slice, int index) {
-  if (slice.tail) return colors.textMuted;
-  final roles = [colors.chart1, colors.chart2, colors.chart3, colors.chart4, colors.chart5];
-  return roles[index % roles.length];
-}
+/// POL7: a slice's colour: the ONE chart palette's primary ramp by place
+/// (the slices are drawn largest first, so the largest is the deepest),
+/// Other grey; each at least 3:1 on the card in every theme, Light and
+/// Dark. Colour is never the only signal: every slice has its legend row
+/// in words with its value.
+Color homeSliceColor(AppColors colors, ServiceSlice slice, int index) =>
+    slice.tail ? ChartPalette(colors).other : ChartPalette(colors).step(index);
+
+/// POL7: the slices as drawn: the top three types by visits (the donut is
+/// sized by visits), largest first, then one Other with the rest (owner:
+/// three ramp steps, then Other). Display only; the breakdown is unchanged.
+List<ServiceSlice> homeDrawnSlices(List<ServiceSlice> slices) => chartSlicesByValue<ServiceSlice>(
+      slices,
+      value: (s) => s.count,
+      isOther: (s) => s.tail || s.key == ServiceSlice.otherKey,
+      keep: ChartPalette.maxSteps,
+      fold: (rest) => ServiceSlice(
+        ServiceSlice.otherKey,
+        rest.fold(0, (n, s) => n + s.count),
+        rest.fold(0.0, (n, s) => n + s.revenue),
+        tail: true,
+      ),
+    );
 
 /// HUB4 (1): the Visit activity page (it was Vet services): the services
 /// provided in the period by type as a donut (serviceBreakdownOf, the ONE
-/// breakdown Insights' donut uses too: at most 5 types and "Other"), sized
+/// breakdown Insights' donut uses too), drawn as the top three types and
+/// Other (POL7, homeDrawnSlices), sized
 /// by visits, the total visits in its centre; a legend row per type with
 /// its visits and share. A tap on a slice or a legend row shows its visits
 /// and revenue (no revenue while [hidden]); the centre then shows its
@@ -64,7 +81,7 @@ class _HomeChartVisitsPageState extends State<HomeChartVisitsPage> {
       (s) {
         if (mounted) {
           setState(() {
-            _slices = s;
+            _slices = homeDrawnSlices(s);
             _answered = true;
           });
         }
