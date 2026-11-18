@@ -163,6 +163,15 @@ only, give it a `wide` flag (or a layout argument) that drops items 9, 10,
 12, 13, 14 on wide; the phone list stays byte-identical. Nothing changes for
 the phone.
 
+**Status (LAY3, 2026-11-18, owner's decisions).** Done on wide: items 13
+(Settings) and 14 (Help) removed; Language added after Change password. It
+opens the Settings rows' own sheet (`showLanguagePicker`, settings_screen.dart,
+lifted unchanged) and stores the same code through `UiSettingsProvider.setLocale`.
+Items 9, 10 and 12 stay in the panel until LAY7 moves them into Settings
+sections. Wide list: admin Edit Profile, Team Members, View Facilities, Change
+password, Language, Activity Log, Sign out; assistant Edit Profile, Change
+password, Language, Sign out. The phone list is unchanged (`wide: false`).
+
 **Proposed Settings sections (wide).**
 
 | Section | Filled by |
