@@ -151,7 +151,8 @@ void main() {
     final src = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync();
     expect(src, isNot(contains('Drawer(child: _buildDrawerContent())')));
     expect(src, isNot(contains('appBar: appBar')));
-    expect(src, contains('_buildDrawerContent(rail: !isLargeScreen),'));
+    // LAY4: the sidebar is built by AppShell with the place it highlights.
+    expect(src, contains('_buildDrawerContent(rail: !isLargeScreen, selected: selected, onSelect: onSelect),'));
     expect(src, contains('_buildTopBar(context, rail: !isLargeScreen),'));
   });
 

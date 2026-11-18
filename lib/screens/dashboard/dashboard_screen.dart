@@ -25,6 +25,7 @@ import '../../services/announcement_service.dart';
 import '../../widgets/summary_card.dart';
 import '../../widgets/support_contact_dialog.dart';
 import '../../widgets/shell/sidebar_item.dart';
+import '../../widgets/shell/app_shell.dart';
 import '../../widgets/shell/app_sidebar.dart';
 import '../../widgets/shell/wide_top_bar.dart';
 import '../../navigation/app_destinations.dart';
@@ -1185,15 +1186,19 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                 child: Stack(
                   children: [
                     RepaintBoundary(
-                      child: Row(
-                      children: [
-                        _buildDrawerContent(rail: !isLargeScreen),
-                        Expanded(
-                          child: Column(
-                            children: [
-                              _buildTopBar(context, rail: !isLargeScreen),
-                              Expanded(
-                                child: Container(
+                      // LAY4: the shell keeps the sidebar; Settings and Reports open in
+                      // the content area (AppShell), the other places full screen.
+                      child: AppShell(
+                        sidebar: (selected, onSelect) =>
+                            _buildDrawerContent(rail: !isLargeScreen, selected: selected, onSelect: onSelect),
+                        topBar: _buildTopBar(context, rail: !isLargeScreen),
+                        pageFor: _shellPageFor,
+                        onOpenFullScreen: _openDestination,
+                        // Home is refreshed on the way back only where the registry says.
+                        onReturnedHome: (left) {
+                          if (left.refreshHomeOnReturn) _refreshDashboardData();
+                        },
+                        home: Container(
                                   color: context.colors.background,
                                   child: Padding(
                                   padding: const EdgeInsets.all(AppSpacing.s16),
@@ -1509,12 +1514,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 ),
                               ),
                             ),
-                          ),
-                            ],
-                            ),
-                        ),
-                      ],
-                    ),
+                      ),
                     ),
                 Positioned(
                       top: 56,
@@ -2398,10 +2398,22 @@ Future<void> _openDestination(AppDestination d) async {
   if (mounted && d.refreshHomeOnReturn) _refreshDashboardData();
 }
 
+/// LAY4: the places that live in the shell's content area (AppShell); the
+/// others still open full screen through _openDestination.
+Widget? _shellPageFor(AppDestination d) => switch (d) {
+      AppDestination.settings => SettingsScreen(),
+      AppDestination.reports => const ViewReportsScreen(),
+      _ => null,
+    };
+
 /// The sidebar (computer) or, with [rail], the permanent icon rail (tablet,
 /// LAY2): the same AppSidebar, always collapsed. Layout Fixed Mode and the
 /// saved collapse choice apply on a computer only.
-Widget _buildDrawerContent({bool rail = false}) {
+Widget _buildDrawerContent({
+  bool rail = false,
+  AppDestination selected = AppDestination.home,
+  ValueChanged<AppDestination>? onSelect,
+}) {
   final facilityProvider = Provider.of<FacilityProvider>(context);
   final selectedFacility = facilityProvider.selectedFacility;
   // Layout Fixed Mode (UI Settings) holds the sidebar open. The person's own
@@ -2579,8 +2591,8 @@ Widget _buildDrawerContent({bool rail = false}) {
   // LAY2: the places come from the registry (AppSidebar); this screen keeps
   // the facility header, the Platform Admin item and what a tap does.
   return AppSidebar(
-    selected: AppDestination.home,
-    onSelect: _openDestination,
+    selected: selected,
+    onSelect: onSelect ?? _openDestination,
     collapsed: effectivelyCollapsed,
     destinations: shellDestinationsFor(isAdmin: Provider.of<UserRoleProvider>(context).isAdmin),
     header: (_) => Column(children: [logoSection, facilityNameSection]),
