@@ -26,6 +26,7 @@ import '../../widgets/summary_card.dart';
 import '../../widgets/support_contact_dialog.dart';
 import '../../widgets/shell/sidebar_item.dart';
 import '../../widgets/shell/app_sidebar.dart';
+import '../../widgets/shell/wide_top_bar.dart';
 import '../../navigation/app_destinations.dart';
 import 'insights_screen.dart';
 import '../../widgets/profile/profile_drawer.dart';
@@ -93,7 +94,6 @@ import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/app_dimens.dart';
-import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_tap_target.dart';
@@ -1172,63 +1172,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isLargeScreen = constraints.maxWidth >= AppBreakpoints.expanded;
-
-        // A phone's width is always below `expanded`, so the phone shell gets
-        // this same top bar (without the drawer, so without the hamburger).
-        final PreferredSizeWidget? appBar = isLargeScreen ? null : AppBar(
-            backgroundColor: context.colors.surface,
-            // POL2 (owner rule 4): no shadow under the bar; a hairline.
-            elevation: AppElevation.e0,
-            shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-            centerTitle: false,
-            iconTheme: IconThemeData(color: context.colors.textPrimary),
-            leading: isLargeScreen
-                ? IconButton(
-                    icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: context.colors.textPrimary, size: AppIconSize.i22),
-                    tooltip: _isDrawerCollapsed ? context.l10n.dashboard_expandMenu : context.l10n.dashboard_collapseMenu,
-                    onPressed: _toggleDrawerCollapsed,
-                  )
-                : null,
-            title: null,
-            actions: [
-              // Visual only for now - there's no global search feature
-              // built yet, so this doesn't actually search anything.
-              if (isLargeScreen)
-                Container(
-                  width: 260,
-                  height: 38,
-                  margin: const EdgeInsets.only(right: AppSpacing.s12),
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
-                  decoration: BoxDecoration(
-                    color: context.colors.background,
-                    borderRadius: BorderRadius.circular(AppRadius.r8),
-                    border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.search, size: AppIconSize.i18, color: context.colors.textHint),
-                      const SizedBox(width: AppSpacing.s8),
-                      Expanded(
-                        child: Text(context.l10n.dashboard_searchAnything,
-                            style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint)),
-                      ),
-                      Text(context.l10n.dashboard_searchShortcut, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textDisabled)),
-                    ],
-                  ),
-                ),
-              _buildAlertsBell(context),
-              // Reads whatever Platform Admin has set under Branding >
-              // Contact Details, falling back to a generic message if
-              // nothing's configured yet.
-              IconButton(
-                icon: Icon(AppIcons.help.outlined, color: context.colors.textPrimary, size: AppIconSize.i22),
-                tooltip: context.l10n.dashboard_help,
-                onPressed: () => showSupportContactDialog(context),
-              ),
-              const SizedBox(width: AppSpacing.s4),
-              _buildProfileButton(),
-            ],
-          );
+        // LAY2 (owner): a tablet (600-1023) takes the computer's structure: the
+        // permanent rail (AppSidebar collapsed) and the shared top bar. The
+        // tablet AppBar, its drawer and the automatic hamburger are gone, and
+        // with them the AppBar's dead collapse button (it only ran when
+        // isLargeScreen, where there was no AppBar).
         final Widget endDrawer = Drawer(child: _buildEndDrawerContent());
         final Widget body = Column(
             children: [
@@ -1239,11 +1187,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                     RepaintBoundary(
                       child: Row(
                       children: [
-                        if (isLargeScreen) _buildDrawerContent(),
+                        _buildDrawerContent(rail: !isLargeScreen),
                         Expanded(
                           child: Column(
                             children: [
-                              if (isLargeScreen) _buildTopBar(context),
+                              _buildTopBar(context, rail: !isLargeScreen),
                               Expanded(
                                 child: Container(
                                   color: context.colors.background,
@@ -1667,8 +1615,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           ),
           wide: (_) => Scaffold(
             backgroundColor: context.colors.background,
-            appBar: appBar,
-            drawer: isLargeScreen ? null : Drawer(child: _buildDrawerContent()),
+            // LAY2: no AppBar and no slide-in drawer on a tablet either: the
+            // rail and the shared top bar are in the body, as on a computer.
             endDrawer: endDrawer,
             body: body,
           ),
@@ -1988,137 +1936,155 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     );
   }
 
-  Widget _buildTopBar(BuildContext context) {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.only(left: AppSpacing.s16, right: AppSpacing.s16),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20))),
-      ),
-      child: Row(
-        children: [
-          // Hidden in Layout Fixed Mode: the sidebar is held open, so a button
-          // for collapsing it would only do nothing.
-          if (!Provider.of<UiSettingsProvider>(context).layoutFixed)
-            IconButton(
+  /// The wide top bar, on a computer and (LAY2) a tablet. With [rail] there
+  /// is nothing to collapse, so no collapse button.
+  Widget _buildTopBar(BuildContext context, {bool rail = false}) {
+    return WideTopBar(
+      // Hidden in Layout Fixed Mode: the sidebar is held open, so a button
+      // for collapsing it would only do nothing. None on the rail (LAY2).
+      leading: rail || Provider.of<UiSettingsProvider>(context).layoutFixed
+          ? null
+          : IconButton(
               padding: EdgeInsets.zero,
               constraints: AppTapTarget.iconConstraints(context),
               icon: Icon(_isDrawerCollapsed ? Icons.menu_open : Icons.menu, color: context.colors.textPrimary, size: AppIconSize.i22),
               tooltip: _isDrawerCollapsed ? context.l10n.dashboard_expandMenu : context.l10n.dashboard_collapseMenu,
               onPressed: _toggleDrawerCollapsed,
             ),
-          const Spacer(),
-          Container(
-            width: 260,
-            margin: const EdgeInsets.only(right: AppSpacing.s12),
-            child: Autocomplete<_DashboardSearchResult>(
-              displayStringForOption: (r) => r.title,
-              optionsBuilder: (textEditingValue) {
-                final query = textEditingValue.text.trim().toLowerCase();
-                if (query.isEmpty) return const Iterable<_DashboardSearchResult>.empty();
+      search: _buildSearchField(context),
+      onSearchIcon: () => _openSearchDialog(context),
+      trailing: [
+        _buildAlertsBell(context),
+        // Reads whatever Platform Admin has set under Branding >
+        // Contact Details, falling back to a generic message if
+        // nothing's configured yet.
+        IconButton(
+          icon: Icon(AppIcons.help.outlined, color: context.colors.textPrimary, size: AppIconSize.i22),
+          tooltip: context.l10n.dashboard_help,
+          onPressed: () => showSupportContactDialog(context),
+        ),
+        const SizedBox(width: AppSpacing.s4),
+        _buildProfileButton(),
+      ],
+    );
+  }
 
-                final productProvider = Provider.of<ProductProvider>(context, listen: false);
-                final clientProvider = Provider.of<ClientProvider>(context, listen: false);
-                final results = <_DashboardSearchResult>[];
+  /// The top bar's product and client search (moved out of _buildTopBar in
+  /// LAY2 so the narrow bar can open it in a dialog). [onPicked] runs before
+  /// a result opens (the dialog closes itself).
+  Widget _buildSearchField(BuildContext context, {VoidCallback? onPicked}) {
+    return Autocomplete<_DashboardSearchResult>(
+      displayStringForOption: (r) => r.title,
+      optionsBuilder: (textEditingValue) {
+        final query = textEditingValue.text.trim().toLowerCase();
+        if (query.isEmpty) return const Iterable<_DashboardSearchResult>.empty();
 
-                for (final p in productProvider.products) {
-                  if (p.name.toLowerCase().contains(query)) {
-                    results.add(_DashboardSearchResult(
-                      title: p.name,
-                      subtitle: context.l10n.reports_colProduct,
-                      icon: AppIcons.products.outlined,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => ProductsScreen(initialSearchQuery: p.name)),
-                      ),
-                    ));
-                  }
-                }
-                for (final c in clientProvider.clients) {
-                  if (c.name.toLowerCase().contains(query) || c.phone.contains(query)) {
-                    results.add(_DashboardSearchResult(
-                      title: c.name,
-                      subtitle: context.l10n.dashboard_searchClient(c.phone),
-                      icon: Icons.person_outline,
-                      onTap: () =>
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientsScreen())),
-                    ));
-                  }
-                }
-                return results.take(8);
-              },
-              onSelected: (r) => r.onTap(),
-              fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                return Container(
-                  height: 38,
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
-                  decoration: BoxDecoration(
-                    color: context.colors.background,
-                    borderRadius: BorderRadius.circular(AppRadius.r8),
-                    border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
+        final productProvider = Provider.of<ProductProvider>(context, listen: false);
+        final clientProvider = Provider.of<ClientProvider>(context, listen: false);
+        final results = <_DashboardSearchResult>[];
+
+        for (final p in productProvider.products) {
+          if (p.name.toLowerCase().contains(query)) {
+            results.add(_DashboardSearchResult(
+              title: p.name,
+              subtitle: context.l10n.reports_colProduct,
+              icon: AppIcons.products.outlined,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ProductsScreen(initialSearchQuery: p.name)),
+              ),
+            ));
+          }
+        }
+        for (final c in clientProvider.clients) {
+          if (c.name.toLowerCase().contains(query) || c.phone.contains(query)) {
+            results.add(_DashboardSearchResult(
+              title: c.name,
+              subtitle: context.l10n.dashboard_searchClient(c.phone),
+              icon: Icons.person_outline,
+              onTap: () =>
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const ClientsScreen())),
+            ));
+          }
+        }
+        return results.take(8);
+      },
+      onSelected: (r) {
+        onPicked?.call();
+        r.onTap();
+      },
+      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+        return Container(
+          height: 38,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
+          decoration: BoxDecoration(
+            color: context.colors.background,
+            borderRadius: BorderRadius.circular(AppRadius.r8),
+            border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.search, size: AppIconSize.i18, color: context.colors.textHint),
+              const SizedBox(width: AppSpacing.s8),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  style: const TextStyle(fontSize: AppFontSize.f13),
+                  decoration: InputDecoration.collapsed(
+                    hintText: context.l10n.dashboard_searchProductsOrClients,
+                    hintStyle: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.search, size: AppIconSize.i18, color: context.colors.textHint),
-                      const SizedBox(width: AppSpacing.s8),
-                      Expanded(
-                        child: TextField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          style: const TextStyle(fontSize: AppFontSize.f13),
-                          decoration: InputDecoration.collapsed(
-                            hintText: context.l10n.dashboard_searchProductsOrClients,
-                            hintStyle: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textHint),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              optionsViewBuilder: (context, onSelected, options) {
-                final list = options.toList();
-                return Align(
-                  alignment: Alignment.topLeft,
-                  child: Material(
-                    elevation: AppElevation.e2,
-                    borderRadius: BorderRadius.circular(AppRadius.r8),
-                    child: SizedBox(
-                      width: 300,
-                      child: ListView.builder(
-                        padding: EdgeInsets.zero,
-                        shrinkWrap: true,
-                        itemCount: list.length,
-                        itemBuilder: (context, index) {
-                          final r = list[index];
-                          return ListTile(
-                            dense: true,
-                            leading: Icon(r.icon, size: AppIconSize.i18, color: context.colors.primary),
-                            title: Text(r.title, style: const TextStyle(fontSize: AppFontSize.f13)),
-                            subtitle: Text(r.subtitle, style: const TextStyle(fontSize: AppFontSize.f11)),
-                            onTap: () => onSelected(r),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                );
-              },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        final list = options.toList();
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            elevation: AppElevation.e2,
+            borderRadius: BorderRadius.circular(AppRadius.r8),
+            child: SizedBox(
+              width: 300,
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemCount: list.length,
+                itemBuilder: (context, index) {
+                  final r = list[index];
+                  return ListTile(
+                    dense: true,
+                    leading: Icon(r.icon, size: AppIconSize.i18, color: context.colors.primary),
+                    title: Text(r.title, style: const TextStyle(fontSize: AppFontSize.f13)),
+                    subtitle: Text(r.subtitle, style: const TextStyle(fontSize: AppFontSize.f11)),
+                    onTap: () => onSelected(r),
+                  );
+                },
+              ),
             ),
           ),
-          _buildAlertsBell(context),
-          // Reads whatever Platform Admin has set under Branding >
-          // Contact Details, falling back to a generic message if
-          // nothing's configured yet.
-          IconButton(
-            icon: Icon(AppIcons.help.outlined, color: context.colors.textPrimary, size: AppIconSize.i22),
-            tooltip: context.l10n.dashboard_help,
-            onPressed: () => showSupportContactDialog(context),
+        );
+      },
+    );
+  }
+
+  /// Below topBarSearchIcon: the same search in a narrow dialog.
+  void _openSearchDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.s16),
+            child: _buildSearchField(context, onPicked: () => Navigator.pop(dialogContext)),
           ),
-          const SizedBox(width: AppSpacing.s4),
-          _buildProfileButton(),
-        ],
+        ),
       ),
     );
   }
@@ -2432,7 +2398,10 @@ Future<void> _openDestination(AppDestination d) async {
   if (mounted && d.refreshHomeOnReturn) _refreshDashboardData();
 }
 
-Widget _buildDrawerContent() {
+/// The sidebar (computer) or, with [rail], the permanent icon rail (tablet,
+/// LAY2): the same AppSidebar, always collapsed. Layout Fixed Mode and the
+/// saved collapse choice apply on a computer only.
+Widget _buildDrawerContent({bool rail = false}) {
   final facilityProvider = Provider.of<FacilityProvider>(context);
   final selectedFacility = facilityProvider.selectedFacility;
   // Layout Fixed Mode (UI Settings) holds the sidebar open. The person's own
@@ -2447,7 +2416,7 @@ Widget _buildDrawerContent() {
   // Never collapse on a small screen - the drawer there is already a
   // slide-in overlay, not a permanent column, so there's no space to
   // reclaim by shrinking it.
-  final bool effectivelyCollapsed = collapsed && !isSmallScreen;
+  final bool effectivelyCollapsed = rail || (collapsed && !isSmallScreen);
 
   // ---------- LOGO ----------
   // Display only here - logo management now lives in View Facilities
