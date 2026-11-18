@@ -86,3 +86,9 @@ registry. Line numbers at LAY2 (8).
 | 20 | dashboard_screen.dart `_buildDrawerContent` facility tagline | The `StreamBuilder` gets a new `snapshots()` stream on every build (the "resets to waiting" pitfall in CLAUDE.md); harmless today, a flicker risk when the shell rebuilds more often (LAY4) | cache it once (LAY2b), not mixed into a block that must only move the planned pixels |
 | 21 | dashboard_screen.dart `platformAdminItem` | The `FutureBuilder` calls `_isPlatformAdmin()` on every build, so the amber item can blink out and back while it answers | the same (LAY2b) |
 | 22 | dashboard_screen.dart `isSmallScreen` | A window 1024 wide or more but under 600 high shows the expanded sidebar, which never collapses there, while the top bar still shows the collapse button (it does nothing) | owner: rail at that height, or hide the button (LAY2b) |
+
+## The wide shell (found in LAY4c, for LAY7)
+
+| # | Where | What | Why it waits |
+|---|---|---|---|
+| 23 | Settings side panel (content 900 or wider) embedding `SubscriptionScreen` | The embedded pane keeps its own AppBar with the implied back arrow (`automaticallyImplyLeading: !widget.isModal`); tapping it closes Settings (as before LAY4, now back to Home in the shell). Pinned by lay4_shell_screens_test (only that one arrow allowed) | owner: leave it; LAY7 reworks Settings sections |
