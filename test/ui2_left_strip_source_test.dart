@@ -14,6 +14,9 @@ const _kept = <String, (int, String)>{
   // The operator console's four figures: the accent matches each card's icon
   // and carries no status; the console has no test seam to fingerprint it.
   'lib/screens/platform_admin/overview_tab.dart': (1, 'operator KPI card accent, no status'),
+  // LAY6a: the slide-over details panel's edge: a 1 px divider-coloured
+  // hairline in place of a shadow (R14), not a coloured accent strip.
+  'lib/widgets/details_layout.dart': (1, 'slide-over edge hairline, divider colour'),
 };
 
 final _strip = RegExp(r'\bBorder\(\s*left:|\bBorderDirectional\(\s*start:');
