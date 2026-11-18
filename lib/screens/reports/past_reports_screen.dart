@@ -16,6 +16,8 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_layout.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/flat_stat_card.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
@@ -338,54 +340,19 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
     return (period: periodLabel, latest: latestDate == null ? '-' : AppDateFormat.dateNoPad.format(latestDate));
   }
 
+  /// POL7: three flat stat cards (FlatStatCard) in place of the tinted
+  /// panel with primary icon tiles and dividers; the same figures, words
+  /// and order. None repeats a filter: they describe what is loaded.
   Widget _summaryRow() {
     final figures = _summaryFigures();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s14),
-      decoration: BoxDecoration(
-        color: context.colors.primary.withValues(alpha: AppAlpha.a05),
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.primary.withValues(alpha: AppAlpha.a15)),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: _summaryStat(Icons.assignment_outlined, '$_totalCount', context.l10n.reports_generatedCount)),
-          _summaryDivider(),
-          Expanded(child: _summaryStat(Icons.event_note_outlined, figures.period, context.l10n.reports_loadedPeriod)),
-          _summaryDivider(),
-          Expanded(
-            child: _summaryStat(
-              Icons.access_time,
-              figures.latest,
-              context.l10n.reports_latest,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryDivider() => Container(width: 1, height: 34, color: context.colors.textHint.withValues(alpha: AppAlpha.a30));
-
-  Widget _summaryStat(IconData icon, String value, String label) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.s8),
-          decoration: BoxDecoration(color: context.colors.primary.withValues(alpha: AppAlpha.a10), borderRadius: BorderRadius.circular(AppRadius.r8)),
-          child: Icon(icon, size: AppIconSize.i16, color: context.colors.primary),
-        ),
-        const SizedBox(width: AppSpacing.s10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(value, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14), overflow: TextOverflow.ellipsis),
-              Text(label, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted)),
-            ],
-          ),
-        ),
+        Expanded(child: FlatStatCard(label: context.l10n.reports_generatedCount, value: '$_totalCount', labelLines: 2)),
+        const SizedBox(width: PolishMetrics.gapInGroup),
+        Expanded(child: FlatStatCard(label: context.l10n.reports_loadedPeriod, value: figures.period, labelLines: 2)),
+        const SizedBox(width: PolishMetrics.gapInGroup),
+        Expanded(child: FlatStatCard(label: context.l10n.reports_latest, value: figures.latest, labelLines: 2)),
       ],
     );
   }

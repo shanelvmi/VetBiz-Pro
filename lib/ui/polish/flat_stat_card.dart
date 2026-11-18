@@ -24,6 +24,11 @@ class FlatStatCard extends StatelessWidget {
   /// the trend as a StatusDot). Null by default: no other card changes.
   final Widget? footer;
 
+  /// POL7: how many lines the label may take before it is cut short. 1 by
+  /// default (no other card changes); the report summary tiles, five to a
+  /// row, take 2 so a long label wraps as it did, never cut.
+  final int labelLines;
+
   const FlatStatCard({
     super.key,
     required this.label,
@@ -33,6 +38,7 @@ class FlatStatCard extends StatelessWidget {
     this.selected = false,
     this.loading = false,
     this.footer,
+    this.labelLines = 1,
   });
 
   @override
@@ -55,7 +61,7 @@ class FlatStatCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: secondary),
+              Text(label, maxLines: labelLines, overflow: TextOverflow.ellipsis, style: secondary),
               const SizedBox(height: PolishMetrics.statLineGap),
               if (loading)
                 const SizedBox.square(

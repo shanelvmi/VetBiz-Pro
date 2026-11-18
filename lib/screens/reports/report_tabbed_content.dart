@@ -14,6 +14,7 @@ import '../../theme/theme_context.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_report/phone_report_tab_bar.dart';
+import '../../ui/polish/flat_stat_card.dart';
 import 'report_activity_log_loader.dart';
 import 'report_phone_tabs.dart';
 
@@ -210,18 +211,18 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
     // plain Row/Expanded instead, same as the count is fixed and
     // known ahead of time.
     final row1 = [
-      _summaryTile(context.l10n.reports_totalSales, Money.format(report.salesTotalValue), Icons.shopping_cart_outlined, context.colors.info),
-      _summaryTile(context.l10n.reports_serviceRevenue, Money.format(report.servicesTotalValue), Icons.medical_services_outlined, context.colors.success),
-      _summaryTile(context.l10n.payments_typeDebtRepayments, Money.format(report.repaymentsValue), Icons.people_alt_outlined, context.colors.chart4),
-      _summaryTile(context.l10n.transactions_expenses, Money.format(report.totalExpenses), Icons.receipt_long_outlined, context.colors.danger),
-      _summaryTile(context.l10n.payments_typeOtherIncome, Money.format(report.totalOtherIncome), Icons.savings_outlined, context.colors.primary),
+      _summaryTile(context.l10n.reports_totalSales, Money.format(report.salesTotalValue)),
+      _summaryTile(context.l10n.reports_serviceRevenue, Money.format(report.servicesTotalValue)),
+      _summaryTile(context.l10n.payments_typeDebtRepayments, Money.format(report.repaymentsValue)),
+      _summaryTile(context.l10n.transactions_expenses, Money.format(report.totalExpenses)),
+      _summaryTile(context.l10n.payments_typeOtherIncome, Money.format(report.totalOtherIncome)),
     ];
     final row2 = [
-      _summaryTile(context.l10n.reports_outstandingNewDebt, Money.format(report.newDebtValue), Icons.warning_amber_outlined, context.colors.warning),
-      _summaryTile(context.l10n.transactions_title, '$transactionsCount', Icons.sync_alt_outlined, context.colors.chart5),
-      _summaryTile(context.l10n.reports_servicesPerformed, '${report.servicesCount}', Icons.build_outlined, context.colors.chart6),
-      _summaryTile(context.l10n.reports_productsSold, context.l10n.reports_unitsCount(productsSoldUnits), Icons.inventory_2_outlined, context.colors.accent.withValues(alpha: AppAlpha.a85)),
-      _summaryTile(context.l10n.reports_totalRevenueToday, Money.format(revenue), Icons.trending_up_outlined, context.colors.primary),
+      _summaryTile(context.l10n.reports_outstandingNewDebt, Money.format(report.newDebtValue)),
+      _summaryTile(context.l10n.transactions_title, '$transactionsCount'),
+      _summaryTile(context.l10n.reports_servicesPerformed, '${report.servicesCount}'),
+      _summaryTile(context.l10n.reports_productsSold, context.l10n.reports_unitsCount(productsSoldUnits)),
+      _summaryTile(context.l10n.reports_totalRevenueToday, Money.format(revenue)),
     ];
 
     return Padding(
@@ -436,32 +437,10 @@ class _ReportTabbedContentState extends State<ReportTabbedContent> with SingleTi
     );
   }
 
-  Widget _summaryTile(String label, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.s12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: AppAlpha.a05),
-        borderRadius: BorderRadius.circular(AppRadius.r10),
-        border: Border.all(color: color.withValues(alpha: AppAlpha.a20)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: AppIconSize.i20, color: color),
-          const SizedBox(width: AppSpacing.s10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textSoft)),
-                const SizedBox(height: AppSpacing.s2),
-                Text(value, style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.bold)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  /// POL7: a flat stat card (FlatStatCard). It was a tile tinted by a
+  /// colour per figure (info, success, chart4, danger, chart5, chart6...)
+  /// with a coloured icon; the label and the figure carry the meaning.
+  Widget _summaryTile(String label, String value) => FlatStatCard(label: label, value: value, labelLines: 2);
 
   // ---------- Sales ----------
 
