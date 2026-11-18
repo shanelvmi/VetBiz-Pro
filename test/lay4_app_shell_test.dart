@@ -4,6 +4,8 @@
 // Home is kept alive; unmigrated places still open full screen; Home is told
 // which place was left; the content's MediaQuery width (never under 600,
 // window height).
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/navigation/app_destinations.dart';
@@ -205,5 +207,23 @@ void main() {
         expect(log.widths['settings-inner'], expected, reason: 'screens pushed inside measure the content too');
       });
     }
+  });
+
+  group('the dashboard', () {
+    final dash = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync().replaceAll('\r\n', '\n');
+    test('the phone branch has no shell; the wide one has exactly one', () {
+      final phone = dash.substring(dash.indexOf('phone: (_) => PhoneHub('), dash.indexOf('wide: (_) => Scaffold('));
+      expect(phone, isNot(contains('AppShell')));
+      expect(RegExp(r'child: AppShell\(').allMatches(dash).length, 1);
+    });
+    test('only Settings and Reports live in the shell; Home is refreshed per the registry', () {
+      final pages = dash.substring(dash.indexOf('Widget? _shellPageFor('));
+      final body = pages.substring(0, pages.indexOf('};'));
+      expect(RegExp(r'AppDestination\.\w+ =>').allMatches(body).map((m) => m.group(0)).toList(),
+          ['AppDestination.settings =>', 'AppDestination.reports =>']);
+      expect(dash, contains('if (left.refreshHomeOnReturn) _refreshDashboardData();'));
+      expect(dash, contains('onOpenFullScreen: _openDestination,'));
+      expect(AppDestination.settings.refreshHomeOnReturn || AppDestination.reports.refreshHomeOnReturn, isFalse);
+    });
   });
 }
