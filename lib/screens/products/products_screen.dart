@@ -8,6 +8,7 @@ import '../../models/product.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../widgets/product_catalog_side_panel.dart';
+import '../../widgets/shell/app_shell.dart';
 import '../../widgets/product_thumbnail.dart';
 import '../../services/product_catalog_service.dart';
 import '../../services/usage_calculator_service.dart';
@@ -712,6 +713,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
     return AppBar(
+      // LAY5: no back arrow at the shell's top level; below medium the drawer
+      // (the filter panel) keeps its automatic button, which wins over a back arrow.
+      automaticallyImplyLeading: !ShellScope.isTopLevel(context) || MediaQuery.of(context).size.width < AppBreakpoints.medium,
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e0,

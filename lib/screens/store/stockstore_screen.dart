@@ -6,6 +6,7 @@ import '../../providers/product_provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../widgets/product_catalog_side_panel.dart';
+import '../../widgets/shell/app_shell.dart';
 import '../../widgets/product_thumbnail.dart';
 import '../../services/product_catalog_service.dart';
 import '../products/add_edit_product_screen.dart';
@@ -614,6 +615,9 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     final hasStockAlerts = StockAlertsScreen.hasAnyAlert(Provider.of<ProductProvider>(context).products);
 
     return AppBar(
+      // LAY5: no back arrow at the shell's top level; below medium the drawer
+      // (the filter panel) keeps its automatic button, which wins over a back arrow.
+      automaticallyImplyLeading: !ShellScope.isTopLevel(context) || context.screenWidth < AppBreakpoints.medium,
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e0,
