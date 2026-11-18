@@ -222,7 +222,9 @@ class AppColors extends ThemeExtension<AppColors> {
   // brand-linked ones (sidebar fills, quick-action tints, the login teal and
   // glow) are derived per theme in fromTheme; the others are the same in
   // every theme.
-  // Drawer item hover and the platform-admin button press (dashboard).
+  // The sidebar: an item's hover fill, and (sidebarPress, LAY2c) the
+  // SELECTED item's pill, at least dE 12 from the sidebar with the ink at
+  // 4.5:1 on it (theme_derivation.dart). The name is kept from before.
   final Color sidebarHover;
   final Color sidebarPress;
 
@@ -406,7 +408,7 @@ class AppColors extends ThemeExtension<AppColors> {
       brightness == Brightness.dark ? _dark(theme) : _light(theme);
 
   static AppColors _light(AppColorTheme theme) {
-    final (hover, press) = ThemeDerivation.sidebarFills(theme.primary);
+    final (hover, press) = ThemeDerivation.sidebarFills(theme.primary, inks: [theme.background, Colors.white]);
     return AppColors(
         primary: theme.primary,
         accent: theme.accent,

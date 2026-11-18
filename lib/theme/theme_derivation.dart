@@ -23,9 +23,19 @@ class ThemeDerivation {
   static const double _warmMaxSaturation = 0.55;
 
   // The sidebar hover must be visibly different from the sidebar itself:
-  // below this distance both hover and press get the same extra lightness,
+  // below this distance both fills start from the same extra lightness,
   // in steps, until it is reached (Harvest +0.08, Ledger +0.05).
   static const double _minHoverDeltaE = 8;
+
+  // LAY2c (owner): sidebarPress is the SELECTED sidebar item's colour (the
+  // pill; the name is kept from when it was a press fill), so it must stand
+  // out more than hover: at least this far from the sidebar.
+  // Below it, only its lightness moves (same hue and saturation), one step
+  // at a time in both directions; the first that reaches the distance AND
+  // keeps every on-brand ink at 4.5:1 on it wins, darker first on a tie.
+  // The smallest move keeps the pill in its theme's colour (going darker
+  // only took Harvest and Ledger to near black). lay2_sidebar_test pins it.
+  static const double _minPressDeltaE = 12;
   static const double _floorStep = 0.01;
 
   static const _Rule _sidebarHover = _Rule(hue: -12.82, sDelta: 0.648, lDelta: -0.047);
@@ -36,8 +46,10 @@ class ThemeDerivation {
   static const _Rule _quickActionTintAccent = _Rule(hue: -4.2, sAbs: 0.85, lAbs: 0.92);
   static const _Rule _brandGradientEnd = _Rule(hue: -15, sDelta: 0, lDelta: -0.08);
 
-  /// The sidebar hover and press fills: (hover, press).
-  static (Color, Color) sidebarFills(Color primary) {
+  /// The sidebar fills: (hover, selected). [inks]: the colours drawn on them
+  /// (the on-brand ink, Light and Dark); the selected fill keeps 4.5:1 with
+  /// each.
+  static (Color, Color) sidebarFills(Color primary, {List<Color> inks = const []}) {
     // Counted in whole steps so the extra lightness is exact (0.08, not a
     // sum of eight 0.01s).
     final steps = (1 / _floorStep).round();
@@ -45,7 +57,17 @@ class ThemeDerivation {
       final extra = k * _floorStep;
       final hover = _sidebarHover.apply(primary, warmGuard: true, extraL: extra);
       if (ColorMath.deltaE(hover, primary) >= _minHoverDeltaE || k >= steps) {
-        return (hover, _sidebarPress.apply(primary, warmGuard: true, extraL: extra));
+        Color pressAt(int n) => _sidebarPress.apply(primary, warmGuard: true, extraL: n * _floorStep);
+        bool ok(Color c) =>
+            ColorMath.deltaE(c, primary) >= _minPressDeltaE && inks.every((i) => ColorMath.contrast(i, c) >= 4.5);
+        final press = pressAt(k);
+        if (ok(press)) return (hover, press);
+        for (var j = 1; j <= steps; j++) {
+          for (final n in [k - j, k + j]) {
+            if (ok(pressAt(n))) return (hover, pressAt(n));
+          }
+        }
+        return (hover, press);
       }
     }
   }
