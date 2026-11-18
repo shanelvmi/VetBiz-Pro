@@ -24,6 +24,7 @@ import '../../services/announcement_service.dart';
 
 import '../../widgets/summary_card.dart';
 import '../../widgets/support_contact_dialog.dart';
+import '../../widgets/shell/sidebar_item.dart';
 import '../../widgets/profile/profile_drawer.dart';
 import '../../widgets/profile/profile_menu_button.dart';
 import '../../widgets/reveal/reveal.dart';
@@ -97,115 +98,13 @@ import '../../theme/app_tap_target.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_motion.dart';
+
+// DrawerHoverItem moved to lib/widgets/shell (LAY2); kept reachable from here
+// for the tests that import it with the dashboard.
+export '../../widgets/shell/sidebar_item.dart' show DrawerHoverItem;
 import '../../l10n/l10n.dart';
 import '../../utils/facility_display.dart';
 import '../../utils/app_clock.dart';
-
-// The light ink on the brand areas (sidebar items and labels, the logo
-// plate, the profile drawer buttons). In light it stays `background`, value
-// for value as before; in dark `background` is the dark page colour, which
-// would vanish on brandSurface, so it is onBrandSurface (white) there
-// (dark_mode.md section 4, K2).
-Color _onBrandInk(BuildContext context) =>
-    Theme.of(context).brightness == Brightness.dark ? context.colors.onBrandSurface : context.colors.background;
-
-class DrawerHoverItem extends StatefulWidget {
-  final IconData icon;
-  final String title;
-  final VoidCallback onTap;
-  final bool isCollapsed;
-
-  const DrawerHoverItem({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.isCollapsed = false,
-  });
-
-  @override
-  State<DrawerHoverItem> createState() => _DrawerHoverItemState();
-}
-
-class _DrawerHoverItemState extends State<DrawerHoverItem> {
-  bool _hovered = false;
-  // The hover fill's fade (was 200 ms) and the collapsed-label tooltip wait
-  // (300 ms), snapped to the nearest motion step (parked_values.md C1, C2).
-  static const Duration _hoverFade = AppMotion.normal;
-  static const Duration _tooltipWait = AppMotion.slow;
-
-  @override
-  Widget build(BuildContext context) {
-    final row = LayoutBuilder(
-      builder: (context, constraints) {
-        // Ramps from fully transparent to fully opaque over the same
-        // width range the sidebar itself passes through mid-animation -
-        // constraints.maxWidth updates every frame as the parent
-        // AnimatedContainer's width transitions, so this fade is
-        // genuinely synchronized with that motion rather than the
-        // label instantly popping in/out the moment isCollapsed flips,
-        // which is what made the toggle feel abrupt.
-        final labelOpacity = ((constraints.maxWidth - 100) / 60).clamp(0.0, 1.0);
-        final canShowLabel = labelOpacity > 0.01;
-        return Row(
-          mainAxisAlignment: canShowLabel ? MainAxisAlignment.start : MainAxisAlignment.center,
-          children: [
-            Icon(widget.icon, color: _onBrandInk(context)),
-            if (canShowLabel) ...[
-              const SizedBox(width: AppSpacing.s16),
-              Expanded(
-                child: Opacity(
-                  opacity: labelOpacity,
-                  child: Text(
-                    widget.title,
-                    style: TextStyle(
-                      color: _onBrandInk(context),
-                      fontWeight: AppFontWeight.medium,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        );
-      },
-    );
-
-    final content = Padding(
-      padding: EdgeInsets.symmetric(horizontal: widget.isCollapsed ? AppSpacing.s4 : AppSpacing.s8),
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppRadius.r8),
-          onTap: widget.onTap,
-          child: AnimatedContainer(
-            duration: _hoverFade,
-            curve: Curves.easeInOut,
-            padding: EdgeInsets.symmetric(vertical: AppSpacing.s10, horizontal: widget.isCollapsed ? AppSpacing.s12 : AppSpacing.s16),
-            decoration: BoxDecoration(
-              color: _hovered ? context.colors.sidebarHover : Colors.transparent,
-              borderRadius: BorderRadius.circular(AppRadius.r8),
-            ),
-            child: row,
-          ),
-        ),
-      ),
-    );
-
-    // Tooltip only when collapsed - the label is already visible
-    // otherwise, so a tooltip on top of visible text would be
-    // redundant.
-    if (!widget.isCollapsed) return content;
-    return Tooltip(
-      message: widget.title,
-      waitDuration: _tooltipWait,
-      child: content,
-    );
-  }
-}
 
 /// A small pulsing dot - used on the notifications bell specifically for
 /// something genuinely new since it was last opened (a fresh urgent
@@ -2543,7 +2442,7 @@ Widget _buildDrawerContent() {
       height: logoSize,
       padding: const EdgeInsets.all(AppSpacing.s4),
       decoration: BoxDecoration(
-        color: _onBrandInk(context),
+        color: onBrandInk(context),
         borderRadius: BorderRadius.circular(AppRadius.r10),
       ),
       // BoxFit.contain rather than a forced circular crop, so a
@@ -2751,7 +2650,7 @@ Widget _buildDrawerContent() {
         ),
       );
       if (!effectivelyCollapsed) return content;
-      return Tooltip(message: context.l10n.nav_platformAdmin, waitDuration: _DrawerHoverItemState._tooltipWait, child: content);
+      return Tooltip(message: context.l10n.nav_platformAdmin, waitDuration: DrawerHoverItem.tooltipWait, child: content);
     },
   );
 
@@ -2762,7 +2661,7 @@ Widget _buildDrawerContent() {
         ? const SizedBox.shrink()
         : Text(
             '@${AppInfo.name}',
-            style: TextStyle(fontSize: AppFontSize.f12, color: _onBrandInk(context)),
+            style: TextStyle(fontSize: AppFontSize.f12, color: onBrandInk(context)),
           ),
   );
 
@@ -2783,7 +2682,7 @@ Widget _buildDrawerContent() {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold, color: _onBrandInk(context)),
+                style: TextStyle(fontSize: AppFontSize.f15, fontWeight: AppFontWeight.bold, color: onBrandInk(context)),
               ),
               if (facilityIdForTagline != null)
                 StreamBuilder<DocumentSnapshot>(
@@ -2798,7 +2697,7 @@ Widget _buildDrawerContent() {
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: AppFontSize.f11, color: _onBrandInk(context).withValues(alpha: AppAlpha.a70)),
+                        style: TextStyle(fontSize: AppFontSize.f11, color: onBrandInk(context).withValues(alpha: AppAlpha.a70)),
                       ),
                     );
                   },
