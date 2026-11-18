@@ -47,6 +47,9 @@ class ListPageBar extends StatelessWidget {
     final pageEnd = (currentPage - 1) * pageSize + itemCount;
 
     return Container(
+      // Full width, as the Row was (the top border spans the list; the Wrap
+      // needs the width to space the range and the controls apart).
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
       child: Wrap(

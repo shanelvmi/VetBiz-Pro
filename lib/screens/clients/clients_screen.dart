@@ -36,6 +36,9 @@ import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/printable_theme.dart';
+import '../../widgets/details_layout.dart';
+import '../../widgets/list_page_bar.dart';
+import '../../widgets/toolbar_layout.dart';
 import '../../utils/app_clock.dart';
 import '../../ui/polish/app_status.dart';
 import '../../ui/polish/flat_stat_card.dart';
@@ -215,11 +218,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
       borderRadius: BorderRadius.circular(AppRadius.r10),
       borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: TextField(
+    // LAY6a (#14): search and filters on one line while they fit, else the
+    // search on its own line and the filters under it (ToolbarLayout).
+    return ToolbarLayout(
+      search: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: context.l10n.clients_searchHint,
@@ -243,8 +245,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ),
             onChanged: _onSearchChanged,
           ),
-        ),
-        const SizedBox(width: AppSpacing.s10),
+      filters: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
           height: 44,
@@ -267,7 +268,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
             ),
           ),
         ),
-        const SizedBox(width: AppSpacing.s10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
           height: 44,
@@ -484,7 +484,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.l10n.clients_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                // LAY6a (#14): the title wraps beside the close button at large text.
+                Expanded(child: Text(context.l10n.clients_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16))),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedClient = null),
@@ -659,11 +660,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Consumer<ClientProvider>(
+      // LAY6a (owner mockups): the details inline from 900 of the width this
+      // list is given, a slide-over below it (DetailsLayout, auto).
+      body: DetailsLayout(
+        mode: DetailsMode.auto,
+        detailsWidth: 340,
+        label: context.l10n.clients_detailsTitle,
+        onClose: () => setState(() => _selectedClient = null),
+        details: _selectedClient == null ? null : _buildDetailsPanel(_selectedClient!),
+        list: Consumer<ClientProvider>(
         builder: (context, provider, _) {
           final isSearching = _searchQuery.isNotEmpty;
 
@@ -715,7 +720,19 @@ class _ClientsScreenState extends State<ClientsScreen> {
                                         )
                                       : _buildClientsTable(clients),
                         ),
-                        _buildPaginationBar(controller),
+                        // LAY6a (#13): the shared page bar; it wraps on a narrow list.
+                        ListPageBar(
+                          emptyText: context.l10n.clients_none,
+                          itemCount: controller.items.length,
+                          pageSize: controller.pageSize,
+                          currentPage: controller.currentPage,
+                          hasPreviousPage: controller.hasPreviousPage,
+                          hasNextPage: controller.hasNextPage,
+                          isLoading: controller.isLoading,
+                          onPageSize: controller.setPageSize,
+                          onPrevious: controller.goToPreviousPage,
+                          onNext: controller.goToNextPage,
+                        ),
                       ],
                     );
                   },
@@ -725,15 +742,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
           );
         },
       ),
-          ),
-          if (_selectedClient != null) ...[
-            const VerticalDivider(width: 1),
-            SizedBox(
-              width: 340,
-              child: _buildDetailsPanel(_selectedClient!),
-            ),
-          ],
-        ],
       ),
     );
   }
@@ -1119,56 +1127,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
           ),
         ],
       ],
-    );
-  }
-
-  Widget _buildPaginationBar(CursorPaginatedListController<Client> controller) {
-    final pageSize = controller.pageSize;
-    final itemCount = controller.items.length;
-    final pageStart = itemCount == 0 ? 0 : (controller.currentPage - 1) * pageSize + 1;
-    final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            itemCount == 0 ? context.l10n.clients_none : context.l10n.common_showingRange(pageStart, pageEnd),
-            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-          ),
-          Row(
-            children: [
-              DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: pageSize,
-                  items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) controller.setPageSize(val);
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s16),
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
-              ),
-              Text(context.l10n.common_page(controller.currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
-              IconButton(
-                icon: controller.isLoading
-                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.chevron_right),
-                onPressed: controller.hasNextPage && !controller.isLoading
-                    ? () => controller.goToNextPage()
-                    : null,
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
