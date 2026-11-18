@@ -53,13 +53,17 @@ const _before = {
   'showAddBatchScreen',
 };
 
+// LAY3 (owner, 2026-11-18): the wide profile panel's Language row is a
+// deliberate shortcut to the Settings rows' own picker; Settings keeps its row.
+const _sharedOnPurpose = {'showLanguagePicker'};
+
 void main() {
   test('no destination is in two of the panel, the profile menu and the Settings screen', () {
     final parts = {'panel': _panel(), 'profile menu': _profileMenu(), 'Settings screen': _settingsScreen()};
     final names = parts.keys.toList();
     for (var i = 0; i < names.length; i++) {
       for (var j = i + 1; j < names.length; j++) {
-        expect(parts[names[i]]!.intersection(parts[names[j]]!), isEmpty, reason: '${names[i]} and ${names[j]}');
+        expect(parts[names[i]]!.intersection(parts[names[j]]!).difference(_sharedOnPurpose), isEmpty, reason: '${names[i]} and ${names[j]}');
       }
     }
   });
