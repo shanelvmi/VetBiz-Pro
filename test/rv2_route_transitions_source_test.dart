@@ -11,6 +11,9 @@ import 'package:flutter_test/flutter_test.dart';
 const _kept = <String, (int, String)>{
   // Facility activation replaces the whole app with a fade (RV1 section 5).
   'lib/utils/facility_activation.dart': (2, 'activation replaces the app: its own fade'),
+  // LAY4 (owner, 2026-11-18): the shell switches its content places with a
+  // short fade, no slide; pages pushed inside keep the app transition.
+  'lib/widgets/shell/app_shell.dart': (1, 'shell content places: a short fade'),
 };
 
 final _ownTransition = RegExp(r'\bPageRouteBuilder\b|\bCupertinoPageRoute\b|\btransitionsBuilder\s*:|\bPageRoute<\w*>\s*\{');
