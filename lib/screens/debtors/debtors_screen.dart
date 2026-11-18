@@ -18,6 +18,7 @@ import '../../providers/client_provider.dart';
 import '../../services/cursor_paginated_list_controller.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../widgets/details_layout.dart';
+import '../../widgets/shell/app_shell.dart';
 import '../../widgets/list_page_bar.dart';
 import '../../widgets/toolbar_layout.dart';
 import 'add_payment_screen.dart';
@@ -445,6 +446,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      // LAY6a: no back arrow when opened from the shell's sidebar.
+      automaticallyImplyLeading: !ShellScope.isTopLevel(context),
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e0,

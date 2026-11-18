@@ -37,6 +37,7 @@ import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/printable_theme.dart';
 import '../../widgets/details_layout.dart';
+import '../../widgets/shell/app_shell.dart';
 import '../../widgets/list_page_bar.dart';
 import '../../widgets/toolbar_layout.dart';
 import '../../utils/app_clock.dart';
@@ -748,6 +749,8 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      // LAY6a: no back arrow when opened from the shell's sidebar.
+      automaticallyImplyLeading: !ShellScope.isTopLevel(context),
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e0,

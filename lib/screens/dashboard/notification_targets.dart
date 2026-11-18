@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/notification_model.dart';
+import '../../navigation/app_destinations.dart';
 import '../admin/manage_assistants_screen.dart';
 import '../clients/clients_screen.dart';
 import '../payments/payments_screen.dart';
@@ -27,4 +28,12 @@ Widget? notificationTargetScreen(FacilityNotification n) {
     default:
       return null;
   }
+}
+
+/// LAY6a: the shell place a notification's target is, when it has one (the
+/// wide shell opens it there, that place highlighted). Only the places that
+/// live in the shell; the others open as before.
+AppDestination? notificationTargetPlace(FacilityNotification n) {
+  if (n.relatedEntityId == null) return null;
+  return n.relatedEntityType == 'client' ? AppDestination.clients : null;
 }

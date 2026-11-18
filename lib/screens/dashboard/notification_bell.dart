@@ -8,6 +8,7 @@ import '../../theme/app_layout.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/theme_context.dart';
 import 'notifications_screen.dart';
+import '../../navigation/app_destinations.dart';
 
 /// PH8a: the number a bell shows for [count] unread items (NOTIF-2d,
 /// docs/design/notifications.md section 3): none at 0, 1 to 9, then "9+".
@@ -27,18 +28,20 @@ bool notificationsOpenAsPage(BuildContext context) =>
 /// scroll), the dropdown under [anchorKey] on a wide window. [controller]
 /// is for tests; the screen builds its own from the providers otherwise. LAY4b:
 /// [openPage], when given (the wide shell), opens the full page instead of a push.
+/// LAY6a: [openPlace] opens a target that is a shell place inside the shell.
 Future<void> openNotifications(
   BuildContext context, {
   required GlobalKey anchorKey,
   NotificationFeedController? controller,
   Future<void> Function(Widget page)? openPage,
+  Future<void> Function(Widget page, AppDestination highlight)? openPlace,
 }) async {
   if (notificationsOpenAsPage(context)) {
-    if (openPage != null) return openPage(NotificationsScreen(controller: controller));
+    if (openPage != null) return openPage(NotificationsScreen(controller: controller, openPlace: openPlace));
     await Navigator.push(context, MaterialPageRoute<void>(builder: (_) => NotificationsScreen(controller: controller)));
   } else {
     await showAnchoredDropdown(context,
-        anchorKey: anchorKey, child: NotificationsScreen(isDropdown: true, controller: controller, openPage: openPage));
+        anchorKey: anchorKey, child: NotificationsScreen(isDropdown: true, controller: controller, openPage: openPage, openPlace: openPlace));
   }
 }
 

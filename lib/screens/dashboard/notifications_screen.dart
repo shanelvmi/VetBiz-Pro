@@ -24,6 +24,7 @@ import '../../widgets/phone_list/phone_list_skeleton.dart';
 import '../../widgets/reveal/reveal.dart';
 import '../../ui/feedback/app_feedback.dart';
 import 'notification_targets.dart';
+import '../../navigation/app_destinations.dart';
 import '../../config/app_limits.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
@@ -64,6 +65,10 @@ class NotificationsScreen extends StatefulWidget {
   /// dashboard opens it in the shell's content); null: pushed, as before.
   final Future<void> Function(Widget page)? openPage;
 
+  /// LAY6a: opens a target that is a shell place (a client: Clients) in the
+  /// shell's content with that place highlighted; null: pushed, as before.
+  final Future<void> Function(Widget page, AppDestination highlight)? openPlace;
+
   /// The data behind the screen; built from the providers when null (tests
   /// pass one on a fake Firestore). NOTIF-2c.
   final NotificationFeedController? controller;
@@ -72,7 +77,7 @@ class NotificationsScreen extends StatefulWidget {
   /// in tests.
   final PosterImageFor? imageFor;
 
-  const NotificationsScreen({super.key, this.isDropdown = false, this.controller, this.imageFor, this.openPage});
+  const NotificationsScreen({super.key, this.isDropdown = false, this.controller, this.imageFor, this.openPage, this.openPlace});
 
 
   @override
@@ -218,6 +223,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (!item.isRead) _run(() => _feed!.markRead([item]));
     final navigator = Navigator.of(context);
     if (widget.isDropdown) navigator.pop();
+    final place = notificationTargetPlace(item.notification);
+    final openPlace = widget.openPlace;
+    if (place != null && openPlace != null) {
+      openPlace(target, place);
+      return;
+    }
     navigator.push(MaterialPageRoute(builder: (_) => target));
   }
 
@@ -1341,7 +1352,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 navigator.pop();
                 final open = widget.openPage;
                 if (open != null) {
-                  open(const NotificationsScreen());
+                  open(NotificationsScreen(openPlace: widget.openPlace));
                 } else {
                   navigator.push(MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                 }
