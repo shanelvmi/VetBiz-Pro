@@ -19,22 +19,22 @@ void main() {
   group('the derived roles (section 4 table and section 7 greys, exact)', () {
     const table = <String, Map<String, int>>{
       'pasture': {
-        'sidebarHover': 0xFF00796B, 'sidebarPress': 0xFF00695C, 'brandTeal': 0xFF3E8E82,
+        'sidebarHover': 0xFF00796B, 'sidebarPress': 0xFF007365, 'brandTeal': 0xFF3E8E82,
         'brandTealGlow': 0xFF7EE8CB, 'quickActionTintPrimary': 0xFFE3F0EC,
         'quickActionTintAccent': 0xFFFCEFD9, 'textMuted': 0xFF757575,
       },
       'clinic': {
-        'sidebarHover': 0xFF005A78, 'sidebarPress': 0xFF004F68, 'brandTeal': 0xFF1195BA,
+        'sidebarHover': 0xFF005A78, 'sidebarPress': 0xFF00384A, 'brandTeal': 0xFF1195BA,
         'brandTealGlow': 0xFF7EDEE8, 'quickActionTintPrimary': 0xFFE3EFF0,
         'quickActionTintAccent': 0xFFD9F4FC, 'textMuted': 0xFF727272,
       },
       'harvest': {
-        'sidebarHover': 0xFF64391D, 'sidebarPress': 0xFF583219, 'brandTeal': 0xFF754F37,
+        'sidebarHover': 0xFF64391D, 'sidebarPress': 0xFF774423, 'brandTeal': 0xFF754F37,
         'brandTealGlow': 0xFFDDAA89, 'quickActionTintPrimary': 0xFFF0E8E3,
         'quickActionTintAccent': 0xFFFCEED9, 'textMuted': 0xFF727272,
       },
       'ledger': {
-        'sidebarHover': 0xFF013559, 'sidebarPress': 0xFF012D4A, 'brandTeal': 0xFF2F5165,
+        'sidebarHover': 0xFF013559, 'sidebarPress': 0xFF01426D, 'brandTeal': 0xFF2F5165,
         'brandTealGlow': 0xFF7ECEE8, 'quickActionTintPrimary': 0xFFE3EDF0,
         'quickActionTintAccent': 0xFFD9E1FC, 'textMuted': 0xFF737373,
       },
@@ -104,10 +104,23 @@ void main() {
         const Color(0xFF000000), const Color(0xFF101418), const Color(0xFF0B1630),
       ];
       for (final p in primaries) {
-        final (hover, press) = ThemeDerivation.sidebarFills(p);
+        final (hover, _) = ThemeDerivation.sidebarFills(p);
         expect(ColorMath.deltaE(hover, p), greaterThanOrEqualTo(8), reason: '$p');
-        // The press stays the darker of the two, as in Pasture.
-        expect(ColorMath.luminance(press), lessThanOrEqualTo(ColorMath.luminance(hover)), reason: '$p');
+      }
+    });
+
+    // LAY2c (owner): sidebarPress is the selected sidebar item's colour (it
+    // replaced "the press stays the darker of the two"): at least dE 12 from
+    // the sidebar and the ink at least 4.5:1 on it, each theme, Light and Dark.
+    test('the selected colour: at least dE 12 from the sidebar, ink at 4.5:1', () {
+      for (final theme in AppColorTheme.all) {
+        for (final b in Brightness.values) {
+          final c = AppColors.fromTheme(theme, brightness: b);
+          final ink = b == Brightness.dark ? c.onBrandSurface : c.background;
+          final at = '${theme.name} ${b.name}';
+          expect(ColorMath.deltaE(c.sidebarPress, c.brandSurface), greaterThanOrEqualTo(12), reason: at);
+          expect(ColorMath.contrast(ink, c.sidebarPress), greaterThanOrEqualTo(4.5), reason: at);
+        }
       }
     });
 

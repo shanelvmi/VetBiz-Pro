@@ -219,7 +219,7 @@ void main() {
     });
   }
 
-  test('8. the pill against the sidebar, every theme, Light and Dark', () {
+  test('8. the pill against the sidebar, every theme, Light and Dark (LAY2c floor)', () {
     var lowest = double.infinity;
     var lowestAt = '';
     final rows = <String>[];
@@ -228,24 +228,28 @@ void main() {
         final c = AppColors.fromTheme(theme, brightness: b);
         final ratio = ColorMath.contrast(c.sidebarPress, c.brandSurface);
         final dE = ColorMath.deltaE(c.sidebarPress, c.brandSurface);
-        rows.add('${theme.name} ${b.name}: ${ratio.toStringAsFixed(2)}:1, dE ${dE.toStringAsFixed(1)}');
+        // The item's ink (sidebar_item.dart onBrandInk): background in
+        // Light, onBrandSurface in Dark.
+        final ink = b == Brightness.dark ? c.onBrandSurface : c.background;
+        final inkOnPill = ColorMath.contrast(ink, c.sidebarPress);
+        rows.add('${theme.name} ${b.name}: ${ratio.toStringAsFixed(2)}:1, dE ${dE.toStringAsFixed(1)}, '
+            'ink ${inkOnPill.toStringAsFixed(2)}:1');
         if (ratio < lowest) {
           lowest = ratio;
           lowestAt = '${theme.name} ${b.name}';
         }
-        // Measured at LAY2: the pill differs in hue and saturation, hardly
-        // in lightness (1.02 to 1.11:1); by colour distance 6.4 (Ledger) to
-        // 11.0 (Pasture). Pinned as measured so it cannot get fainter; the
-        // filled icon, the semibold label and Semantics carry the meaning.
-        // Whether to raise it (theme_derivation's hover floor, dE 8, applied
-        // to press too) is the owner's call (LAY2 report).
-        expect(c.sidebarPress.toARGB32(), isNot(c.brandSurface.toARGB32()), reason: '${theme.name} ${b.name}');
-        expect(dE, greaterThanOrEqualTo(6.3), reason: '${theme.name} ${b.name}');
-        expect(ratio, greaterThanOrEqualTo(1.02), reason: '${theme.name} ${b.name}');
+        // LAY2c (owner): at least dE 12 from the sidebar (hover keeps 8),
+        // and the label and icon at least 4.5:1 on the pill.
+        expect(dE, greaterThanOrEqualTo(12), reason: '${theme.name} ${b.name}');
+        expect(inkOnPill, greaterThanOrEqualTo(4.5), reason: '${theme.name} ${b.name}');
+        // Lightness only: the pill keeps the rule's hue and saturation.
+        final pill = HSLColor.fromColor(c.sidebarPress);
+        final hover = HSLColor.fromColor(c.sidebarHover);
+        expect((pill.hue - hover.hue).abs(), lessThan(1.5), reason: '${theme.name} ${b.name}');
       }
     }
     // ignore: avoid_print
-    print('LAY2 pill on the sidebar: ${rows.join('; ')}. Lowest contrast $lowestAt ${lowest.toStringAsFixed(2)}');
+    print('LAY2c pill on the sidebar: ${rows.join('; ')}. Lowest contrast $lowestAt ${lowest.toStringAsFixed(2)}');
   });
 
   testWidgets('8b. Light and Dark, every theme: the sidebar draws without error', (tester) async {

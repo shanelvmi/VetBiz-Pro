@@ -68,25 +68,25 @@ void main() {
       'pasture': {
         'background': 0xFF0E1718, 'surface': 0xFF162325, 'surfaceMuted': 0xFF1E2F31, 'primary': 0xFF509EA7,
         'accent': 0xFFFFB200, 'onPrimary': 0xFF0E1718, 'onAccent': 0xFF0E1718, 'brandSurface': 0xFF2F5D62,
-        'sidebarHover': 0xFF00796B, 'sidebarPress': 0xFF00695C, 'brandTealGlow': 0xFF7EE8CB,
+        'sidebarHover': 0xFF00796B, 'sidebarPress': 0xFF007365, 'brandTealGlow': 0xFF7EE8CB,
         'brandTeal': 0xFF419588, 'quickActionTintPrimary': 0xFF1B2F32, 'quickActionTintAccent': 0xFF3B3016,
       },
       'clinic': {
         'background': 0xFF0E1318, 'surface': 0xFF161E25, 'surfaceMuted': 0xFF1E2831, 'primary': 0xFF4992D1,
         'accent': 0xFF5BC0EB, 'onPrimary': 0xFF0E1318, 'onAccent': 0xFF0E1318, 'brandSurface': 0xFF0F4C81,
-        'sidebarHover': 0xFF005A78, 'sidebarPress': 0xFF004F68, 'brandTealGlow': 0xFF7EDEE8,
+        'sidebarHover': 0xFF005A78, 'sidebarPress': 0xFF00384A, 'brandTealGlow': 0xFF7EDEE8,
         'brandTeal': 0xFF1195BA, 'quickActionTintPrimary': 0xFF1B2732, 'quickActionTintAccent': 0xFF16303B,
       },
       'harvest': {
         'background': 0xFF18120E, 'surface': 0xFF251C16, 'surfaceMuted': 0xFF31251E, 'primary': 0xFFB58463,
         'accent': 0xFFE3A72F, 'onPrimary': 0xFF18120E, 'onAccent': 0xFF18120E, 'brandSurface': 0xFF4A3426,
-        'sidebarHover': 0xFF64391D, 'sidebarPress': 0xFF583219, 'brandTealGlow': 0xFFDDAA89,
+        'sidebarHover': 0xFF64391D, 'sidebarPress': 0xFF774423, 'brandTealGlow': 0xFFDDAA89,
         'brandTeal': 0xFFB07A58, 'quickActionTintPrimary': 0xFF32241B, 'quickActionTintAccent': 0xFF3B2F16,
       },
       'ledger': {
         'background': 0xFF0E1218, 'surface': 0xFF161C25, 'surfaceMuted': 0xFF1E2531, 'primary': 0xFF708DBA,
         'accent': 0xFF8B9CFF, 'onPrimary': 0xFF0E1218, 'onAccent': 0xFF0E1218, 'brandSurface': 0xFF1E293B,
-        'sidebarHover': 0xFF013559, 'sidebarPress': 0xFF012D4A, 'brandTealGlow': 0xFF7ECEE8,
+        'sidebarHover': 0xFF013559, 'sidebarPress': 0xFF01426D, 'brandTealGlow': 0xFF7ECEE8,
         'brandTeal': 0xFF518CAE, 'quickActionTintPrimary': 0xFF1B2332, 'quickActionTintAccent': 0xFF161C3B,
       },
     };

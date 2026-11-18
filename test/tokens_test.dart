@@ -106,7 +106,7 @@ void main() {
   group('R2 roles hold the exact parked values', () {
     const pinned = <String, int>{
       'sidebarHover': 0xFF00796B, // teal 700
-      'sidebarPress': 0xFF00695C, // teal 800
+      'sidebarPress': 0xFF007365, // LAY2c: the selected pill (was teal 800, 0xFF00695C)
       'warningBannerText': 0xFFC77800,
       'warningBannerFill': 0xFFFFF6E7,
       'quickActionTintPrimary': 0xFFE3F0EC,
