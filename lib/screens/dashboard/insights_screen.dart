@@ -19,6 +19,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/polish_metrics.dart';
 import '../../ui/feedback/friendly_error.dart';
+import '../../ui/polish/chart_palette.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
 import '../../utils/app_clock.dart';
@@ -39,18 +40,6 @@ class InsightsScreen extends StatefulWidget {
 }
 
 class _InsightsScreenState extends State<InsightsScreen> {
-  // The service breakdown slices. The two brand slices follow the colour
-  // theme (docs/design/themes.md section 6); the four muted colours are
-  // the chartService roles (parked_values.md A12-A15).
-  List<Color> get _servicePalette => [
-        context.colors.primary, // the theme's primary (the brand teal in Pasture)
-        context.colors.chartService1, // same muted steel blue used for Services on the main dashboard chart
-        context.colors.accent, // the theme's accent (the brand amber in Pasture)
-        context.colors.chartService2, // muted sage green
-        context.colors.chartService3, // muted terracotta
-        context.colors.chartService4, // muted lavender - reserved for the "Other" slice
-      ];
-
   /// POL2: the cards' hairline border, drawn outside the edge so each card
   /// keeps its size and place (it replaced a shadow).
   Border get _hairline =>
@@ -596,10 +585,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
             // below zero when a high day is immediately followed by a
             // much lower one.
             preventCurveOverShooting: true,
-            color: context.colors.primary,
+            color: ChartPalette.of(context).series,
             barWidth: 3,
             dotData: const FlDotData(show: false),
-            belowBarData: BarAreaData(show: true, color: context.colors.primary.withValues(alpha: AppAlpha.a10)),
+            belowBarData: BarAreaData(show: true, color: ChartPalette.of(context).series.withValues(alpha: AppAlpha.a10)),
           ),
         ],
       ),
@@ -687,7 +676,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             BarChartGroupData(x: i, barRods: [
               BarChartRodData(
                 toY: _topProducts[i].value,
-                color: context.colors.accent,
+                color: ChartPalette.of(context).series,
                 width: 22,
                 borderRadius: BorderRadius.circular(AppRadius.r4),
               ),
@@ -702,10 +691,14 @@ class _InsightsScreenState extends State<InsightsScreen> {
       return Center(child: Text(context.l10n.insights_noServices30, style: TextStyle(color: context.colors.textMuted)));
     }
 
-    final total = _serviceBreakdown.fold<double>(0.0, (runningTotal, e) => runningTotal + e.value);
+    // POL7: drawn as the top three by revenue, largest first (the deepest
+    // tone), then one Other (owner: three ramp steps, then Other).
+    final slices = insightsDrawnSlices(_serviceBreakdown);
+    final palette = ChartPalette.of(context);
+    final total = slices.fold<double>(0.0, (runningTotal, e) => runningTotal + e.value);
     final touched = _touchedServiceIndex;
-    final centerLabel = (touched != null && touched >= 0 && touched < _serviceBreakdown.length)
-        ? _serviceBreakdown[touched]
+    final centerLabel = (touched != null && touched >= 0 && touched < slices.length)
+        ? slices[touched]
         : null;
     final centerPercent =
         centerLabel != null && total > 0 ? (centerLabel.value / total * 100) : null;
@@ -722,10 +715,10 @@ class _InsightsScreenState extends State<InsightsScreen> {
                   sectionsSpace: 2,
                   centerSpaceRadius: 44,
                   sections: [
-                    for (int i = 0; i < _serviceBreakdown.length; i++)
+                    for (int i = 0; i < slices.length; i++)
                       PieChartSectionData(
-                        value: _serviceBreakdown[i].value,
-                        color: _servicePalette[i % _servicePalette.length],
+                        value: slices[i].value,
+                        color: _sliceColor(palette, slices[i], i),
                         radius: i == touched ? 60 : 54,
                         showTitle: false,
                       ),
@@ -778,7 +771,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              for (int i = 0; i < _serviceBreakdown.length; i++)
+              for (int i = 0; i < slices.length; i++)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.s3),
                   child: Row(
@@ -787,17 +780,24 @@ class _InsightsScreenState extends State<InsightsScreen> {
                         width: 10,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: _servicePalette[i % _servicePalette.length],
+                          color: _sliceColor(palette, slices[i], i),
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.s6),
                       Expanded(
                         child: Text(
-                          _serviceName(_serviceBreakdown[i].key),
+                          _serviceName(slices[i].key),
                           style: const TextStyle(fontSize: AppFontSize.f11),
                           overflow: TextOverflow.ellipsis,
                         ),
+                      ),
+                      // POL7: every slice shows its value, so colour is
+                      // never the only link between a slice and its share.
+                      const SizedBox(width: AppSpacing.s4),
+                      Text(
+                        Money.format(slices[i].value),
+                        style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textMuted),
                       ),
                     ],
                   ),
@@ -825,3 +825,19 @@ Future<void> showInsightsScreen(BuildContext context) async {
     builder: (isModal) => InsightsScreen(isModal: isModal),
   );
 }
+
+/// POL7: the services donut as drawn: the top three types by revenue,
+/// largest first, then one Other with the rest and any Other given.
+/// Display only; the breakdown (serviceBreakdownOf) is unchanged.
+List<MapEntry<String, double>> insightsDrawnSlices(List<MapEntry<String, double>> slices) =>
+    chartSlicesByValue<MapEntry<String, double>>(
+      slices,
+      value: (e) => e.value,
+      isOther: (e) => e.key == ServiceSlice.otherKey,
+      keep: ChartPalette.maxSteps,
+      fold: (rest) => MapEntry(ServiceSlice.otherKey, rest.fold(0.0, (n, e) => n + e.value)),
+    );
+
+/// POL7: a slice's colour: the primary ramp by place, Other grey.
+Color _sliceColor(ChartPalette palette, MapEntry<String, double> slice, int index) =>
+    slice.key == ServiceSlice.otherKey ? palette.other : palette.step(index);
