@@ -35,6 +35,7 @@ ProfileHandlers _handlers(List<String> tapped) => ProfileHandlers(
       team: () => tapped.add('team'),
       facilities: () => tapped.add('facilities'),
       changePassword: () => tapped.add('changePassword'),
+      language: () => tapped.add('language'),
       activityLog: () => tapped.add('activityLog'),
       settings: () => tapped.add('settings'),
       help: () => tapped.add('help'),

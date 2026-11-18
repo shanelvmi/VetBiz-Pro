@@ -2675,7 +2675,7 @@ Widget _buildDrawerContent({bool rail = false}) {
           facilityType: facilities.selectedFacilityType ?? '',
           facilityTypeDetail: facilities.selectedFacilityTypeDetail,
           onClose: () => Navigator.of(context).pop(),
-          actions: profileActionsFor(context.l10n, isAdmin: isAdmin, on: _profileHandlers(context)),
+          actions: profileActionsFor(context.l10n, isAdmin: isAdmin, wide: true, on: _profileHandlers(context)),
         );
       },
     );
@@ -2704,6 +2704,8 @@ Widget _buildDrawerContent({bool rail = false}) {
           final email = FirebaseAuth.instance.currentUser?.email;
           if (email != null) _showChangePasswordDialog(email);
         },
+        // LAY3: the Settings rows' own sheet, over the panel (it stays open).
+        language: () => showLanguagePicker(context, context.read<UiSettingsProvider>()),
         // Full screen, like the other drawer items (Manage Assistants,
         // View Facilities).
         activityLog: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityLogScreen())),

@@ -233,7 +233,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       label: context.l10n.settings_languageBoth,
                       trailingText: currentLanguageName,
                       isLast: true,
-                      onTap: () => _showLanguageSelection(context, uiSettings),
+                      onTap: () => showLanguagePicker(context, uiSettings),
                     ),
                   ],
                 ),
@@ -374,7 +374,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: Icons.language_outlined,
                           label: context.l10n.settings_languageBoth,
                           trailingText: currentLanguageName,
-                          onTapDialog: () => _showLanguageSelection(context, uiSettings),
+                          onTapDialog: () => showLanguagePicker(context, uiSettings),
                         ),
                         const SizedBox(height: AppSpacing.s20),
                       ],
@@ -487,61 +487,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- Dynamic Bottom Sheets for Data Scalability ---
-
-  void _showLanguageSelection(BuildContext context, UiSettingsProvider uiSettings) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: context.colors.raisedSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r16)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(AppSpacing.s20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.settings_selectLanguageBoth,
-                style: TextStyle(
-                    // PH8a: 12 on a phone, the smallest text there.
-                    fontSize: AppLayout.isPhone(context) ? AppFontSize.f12 : AppFontSize.f11,
-                    fontWeight: AppFontWeight.bold,
-                    color: context.colors.primary,
-                    letterSpacing: 1.1),
-              ),
-              const SizedBox(height: AppSpacing.s10),
-              Flexible(
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: AppDefaults.supportedLanguages.length,
-                  separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.divider),
-                  itemBuilder: (context, index) {
-                    final code = AppDefaults.supportedLanguages[index];
-                    final bool isSelected = code == uiSettings.languageCode;
-
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(AppDefaults.languageNames[code] ?? code),
-                      trailing: Icon(
-                        isSelected ? Icons.check_circle : Icons.circle_outlined,
-                        color: isSelected ? context.colors.primary : context.colors.border,
-                      ),
-                      onTap: () {
-                        uiSettings.setLocale(code);
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   // --- Layout Helper Builders ---
 
@@ -657,4 +602,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+}
+
+/// The language sheet the Settings rows open (LAY3: also the wide profile
+/// panel's Language row). Lifted unchanged from the Settings screen so both
+/// set the same stored code through [UiSettingsProvider.setLocale].
+void showLanguagePicker(BuildContext context, UiSettingsProvider uiSettings) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: context.colors.raisedSurface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r16)),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.s20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.settings_selectLanguageBoth,
+              style: TextStyle(
+                  // PH8a: 12 on a phone, the smallest text there.
+                  fontSize: AppLayout.isPhone(context) ? AppFontSize.f12 : AppFontSize.f11,
+                  fontWeight: AppFontWeight.bold,
+                  color: context.colors.primary,
+                  letterSpacing: 1.1),
+            ),
+            const SizedBox(height: AppSpacing.s10),
+            Flexible(
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: AppDefaults.supportedLanguages.length,
+                separatorBuilder: (_, __) => Divider(height: 1, color: context.colors.divider),
+                itemBuilder: (context, index) {
+                  final code = AppDefaults.supportedLanguages[index];
+                  final bool isSelected = code == uiSettings.languageCode;
+
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(AppDefaults.languageNames[code] ?? code),
+                    trailing: Icon(
+                      isSelected ? Icons.check_circle : Icons.circle_outlined,
+                      color: isSelected ? context.colors.primary : context.colors.border,
+                    ),
+                    onTap: () {
+                      uiSettings.setLocale(code);
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }

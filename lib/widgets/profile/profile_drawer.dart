@@ -10,7 +10,7 @@ import 'profile_avatar.dart';
 /// HUB4b: what a profile action is. The phone's full-screen profile page
 /// groups the drawer's own list by it, so both show the same items with the
 /// same gates and there is no second copy to drift.
-enum ProfileItem { editProfile, team, facilities, changePassword, activityLog, settings, help, signOut }
+enum ProfileItem { editProfile, team, facilities, changePassword, language, activityLog, settings, help, signOut }
 
 /// One action in the profile drawer.
 class ProfileDrawerAction {
