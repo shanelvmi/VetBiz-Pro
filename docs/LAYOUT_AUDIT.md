@@ -200,6 +200,27 @@ the phone.
 8. LAY8 Forms/modals: decide dialog vs pushed page inside the shell. (1 block)
    Platform Admin keeps its own shell (operator console), out of scope.
 
+**LAY1 done** (registry, data only; no pixel moved). Not an extension of
+hub_destinations, as item 1 first said: a separate `AppDestination` enum in
+`lib/navigation/app_destinations.dart`, because the phone hub keeps its own
+`HubTile` (record actions, Platform Admin) and must not change. Each place
+holds its label (the sidebar's key today; Home `shell_tabHome`, Insights
+`insights_title`), outlined and filled icon, section (Settings bottom),
+`adminOnly` (false for all: today's sidebar gates nothing but Platform
+Admin), `refreshHomeOnReturn` (where the sidebar calls
+`_refreshDashboardData`) and an unused `webPath`. `shellDestinationsFor`
+gives Home, Insights, today's nine in today's order, Settings;
+`destinationForHubTile` links the phone tiles. Not members: Platform Admin
+(outside the shell), Team, Facilities, Activity log, Notifications
+(Settings sections, LAY7). Tests: `test/lay1_destinations_test.dart`.
+LAY2 builds the sidebar and the tablet rail (same list, icons only) from it
+and adds each place's screen. **Open for LAY2 (owner):** keep today's order
+(Stock first) or lead with Sales, as on the phone and in the mockups. Also:
+the sidebar says "Stock" (`nav_stock`) where the phone hub says "Stock
+Store" (`store_title`); the registry keeps the sidebar's word. Today's sidebar draws every item with
+the FILLED icon at rest; to stay pixel-identical LAY2 draws `selectedIcon`
+until the owner chooses outlined-at-rest.
+
 **Risks.**
 
 - go_router ShellRoute vs 84 `Navigator.push` / 80 `MaterialPageRoute`:
