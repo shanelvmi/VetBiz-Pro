@@ -56,6 +56,10 @@ class AppBreakpoints {
   /// notifications_screen.dart:614).
   static const double twoPane = 820;
 
+  /// Below this window width the wide top bar's search becomes an icon that
+  /// opens it in a dialog (LAY2: the tablet rail leaves too little room).
+  static const double topBarSearchIcon = 720;
+
   /// Five category cards in a row instead of three
   /// (notifications_screen.dart:477, stock_alerts_screen.dart:629).
   static const double fiveColumnCards = 720;
