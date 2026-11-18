@@ -17,6 +17,9 @@ import '../../providers/facility_provider.dart';
 import '../../providers/client_provider.dart';
 import '../../services/cursor_paginated_list_controller.dart';
 import '../../widgets/firestore_error_view.dart';
+import '../../widgets/details_layout.dart';
+import '../../widgets/list_page_bar.dart';
+import '../../widgets/toolbar_layout.dart';
 import 'add_payment_screen.dart';
 import '../payments/payments_screen.dart';
 import '../../data/collections.dart';
@@ -270,11 +273,15 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                   }
                 }
 
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: Column(
+                // LAY6a (owner mockups): the details inline from 900 of the width
+                // this list is given, a slide-over below it (DetailsLayout, auto).
+                return DetailsLayout(
+                  mode: DetailsMode.auto,
+                  detailsWidth: 380,
+                  label: context.l10n.debtors_detailsTitle,
+                  onClose: () => setState(() => _selectedClientId = null),
+                  details: selectedDebtor == null ? null : _buildDebtorDetailsPanel(selectedDebtor),
+                  list: Column(
                         children: [
                           Padding(
                             padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
@@ -310,18 +317,21 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
                                       )
                                     : _buildDebtorsTable(debtors),
                           ),
-                          _buildPaginationBar(controller),
+                          // LAY6a (#15): the shared page bar; it wraps on a narrow list.
+                          ListPageBar(
+                            emptyText: context.l10n.debtors_none,
+                            itemCount: controller.items.length,
+                            pageSize: controller.pageSize,
+                            currentPage: controller.currentPage,
+                            hasPreviousPage: controller.hasPreviousPage,
+                            hasNextPage: controller.hasNextPage,
+                            isLoading: controller.isLoading,
+                            onPageSize: controller.setPageSize,
+                            onPrevious: controller.goToPreviousPage,
+                            onNext: controller.goToNextPage,
+                          ),
                         ],
                       ),
-                    ),
-                    if (selectedDebtor != null) ...[
-                      const VerticalDivider(width: 1),
-                      SizedBox(
-                        width: 380,
-                        child: _buildDebtorDetailsPanel(selectedDebtor),
-                      ),
-                    ],
-                  ],
                 );
         },
       ),
@@ -520,11 +530,10 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
     final hasActiveFilters = _searchQuery.isNotEmpty || _statusFilter != 'All' || _overdueRangeFilter != 'All';
     final overdueDays = Provider.of<FacilityProvider>(context, listen: false).debtOverdueDays;
 
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: TextField(
+    // LAY6a (#15): search and filters on one line while they fit, else the
+    // search on its own line and the filters under it (ToolbarLayout).
+    return ToolbarLayout(
+      search: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: context.l10n.debtors_searchHint,
@@ -545,8 +554,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             ),
             onChanged: _onSearchChanged,
           ),
-        ),
-        const SizedBox(width: AppSpacing.s10),
+      filters: [
         _toolbarDropdown<String>(
           value: _statusFilter,
           items: _statusFilterOptions,
@@ -557,7 +565,6 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             _openDebtorsListSession();
           },
         ),
-        const SizedBox(width: AppSpacing.s10),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
           height: 44,
@@ -585,8 +592,7 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             ),
           ),
         ),
-        if (hasActiveFilters) ...[
-          const SizedBox(width: AppSpacing.s10),
+        if (hasActiveFilters)
           TextButton(
             onPressed: () {
               _searchDebounce?.cancel();
@@ -600,8 +606,6 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             },
             child: Text(context.l10n.common_reset),
           ),
-        ],
-        const SizedBox(width: AppSpacing.s10),
         OutlinedButton.icon(
           onPressed: () => _exportDebtors(),
           icon: const Icon(Icons.download_outlined, size: AppIconSize.i16),
@@ -758,8 +762,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             ),
             Expanded(
               flex: 2,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+              // LAY6a (#15): the three actions wrap in a narrow cell (each
+              // keeps its 48 px target) instead of overflowing it.
+              child: Wrap(
                 children: [
                   IconButton(
                     icon: Icon(Icons.notifications_active_outlined, size: AppIconSize.i18, color: context.colors.warningStrong),
@@ -801,55 +806,6 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   }
 
   // ==================== PAGINATION ====================
-
-  Widget _buildPaginationBar(CursorPaginatedListController<Client> controller) {
-    final pageSize = controller.pageSize;
-    final itemCount = controller.items.length;
-    final pageStart = itemCount == 0 ? 0 : (controller.currentPage - 1) * pageSize + 1;
-    final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            itemCount == 0 ? context.l10n.debtors_none : context.l10n.common_showingRange(pageStart, pageEnd),
-            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-          ),
-          Row(
-            children: [
-              DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: pageSize,
-                  items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) controller.setPageSize(val);
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s16),
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
-              ),
-              Text(context.l10n.common_page(controller.currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
-              IconButton(
-                icon: controller.isLoading
-                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.chevron_right),
-                onPressed:
-                    controller.hasNextPage && !controller.isLoading ? () => controller.goToNextPage() : null,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   // ==================== PHONE (PH5b) ====================
 
@@ -1054,7 +1010,8 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.l10n.debtors_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                // LAY6a (#15): the title wraps beside the close button at large text.
+                Expanded(child: Text(context.l10n.debtors_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16))),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedClientId = null),
@@ -1507,7 +1464,9 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _wrapOnPhone(Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
+          // LAY6a (#15): the label wraps beside a long amount at every width (it
+          // did on a phone only); the amount keeps its line.
+          Flexible(child: Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
           Text(
             value,
             style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color),
