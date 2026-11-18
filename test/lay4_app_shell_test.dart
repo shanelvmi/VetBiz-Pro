@@ -72,9 +72,12 @@ class _Dest extends StatelessWidget {
   }
 }
 
+final _shellKey = GlobalKey<AppShellState>();
+
 Widget _app(_Log log) => MaterialApp(
       home: Scaffold(
         body: AppShell(
+          key: _shellKey,
           sidebar: (selected, onSelect) => SizedBox(
             width: _sidebarWidth,
             child: Column(children: [
@@ -191,6 +194,52 @@ void main() {
     expect(log.full, [AppDestination.sales]);
     expect(find.text('page settings'), findsOneWidget);
     expect(find.text('*settings'), findsOneWidget);
+  });
+
+  group('LAY4b: openInContent', () {
+    Widget log() => const Scaffold(body: Text('activity log'));
+    testWidgets('over Home: shows in the content, highlights Settings; Back returns to Home', (tester) async {
+      final l = _Log();
+      await _pump(tester, l);
+      _shellKey.currentState!.openInContent(log(), highlight: AppDestination.settings);
+      await tester.pumpAndSettle();
+      expect(find.text('activity log'), findsOneWidget);
+      expect(find.text('*settings'), findsOneWidget);
+      expect(find.text('top bar'), findsOneWidget);
+      await _back(tester);
+      expect(find.text('home 0'), findsOneWidget);
+      expect(find.text('*home'), findsOneWidget);
+      expect(l.returned, isEmpty, reason: 'not a place: no Home refresh');
+    });
+
+    testWidgets('over Reports: highlights Settings, Back returns to Reports', (tester) async {
+      final l = _Log();
+      await _pump(tester, l);
+      await _tap(tester, 'sb-reports');
+      _shellKey.currentState!.openInContent(log(), highlight: AppDestination.settings);
+      await tester.pumpAndSettle();
+      expect(find.text('*settings'), findsOneWidget);
+      await _back(tester);
+      expect(find.text('page reports'), findsOneWidget);
+      expect(find.text('*reports'), findsOneWidget);
+    });
+
+    testWidgets('choosing a place or Home closes it; nothing is left between Home and the place', (tester) async {
+      final l = _Log();
+      await _pump(tester, l);
+      _shellKey.currentState!.openInContent(log(), highlight: AppDestination.settings);
+      await tester.pumpAndSettle();
+      await _tap(tester, 'sb-reports');
+      expect(find.text('page reports'), findsOneWidget);
+      expect(find.text('*reports'), findsOneWidget);
+      await _back(tester);
+      expect(find.text('home 0'), findsOneWidget, reason: 'straight back to Home');
+      _shellKey.currentState!.openInContent(log(), highlight: AppDestination.settings);
+      await tester.pumpAndSettle();
+      await _tap(tester, 'sb-home');
+      expect(find.text('activity log'), findsNothing);
+      expect(find.text('*home'), findsOneWidget);
+    });
   });
 
   group('the content width', () {

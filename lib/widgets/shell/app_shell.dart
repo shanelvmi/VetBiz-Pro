@@ -61,13 +61,40 @@ class AppShellState extends State<AppShell> {
   /// The destination on top of Home, or null when Home shows.
   AppDestination? _open;
 
-  /// The place the sidebar highlights: the open destination (a screen pushed
-  /// above it keeps it), else Home.
-  AppDestination get selected => _open ?? AppDestination.home;
+  /// LAY4b: screens opened with [openInContent] (not places of their own) and
+  /// the place each highlights while it shows, newest last.
+  final List<(Route<void>, AppDestination)> _shown = [];
+
+  /// The place the sidebar highlights: the newest [openInContent] screen's,
+  /// else the open destination (a screen pushed above it keeps it), else Home.
+  AppDestination get selected => _shown.isNotEmpty ? _shown.last.$2 : (_open ?? AppDestination.home);
+
+  /// LAY4b: shows [page] in the content area, on top of what is there, with
+  /// [highlight] selected in the sidebar while it shows (Activity Log and
+  /// Notifications highlight Settings). Back returns where you were.
+  Future<void> openInContent(Widget page, {required AppDestination highlight}) async {
+    final navigator = contentNavigatorKey.currentState;
+    if (navigator == null) return;
+    final route = MaterialPageRoute<void>(builder: (_) => page);
+    setState(() => _shown.add((route, highlight)));
+    await navigator.push(route);
+    if (mounted) setState(() => _shown.removeWhere((e) => e.$1 == route));
+  }
+
+  /// Back to the first screen of what is open (a place, or Home): screens
+  /// pushed above it, [openInContent] ones included, are closed.
+  void _toFirstScreen() {
+    contentNavigatorKey.currentState?.popUntil((r) => r.settings is _ShellPage);
+    _shown.clear();
+  }
 
   void select(AppDestination d) {
     if (d == AppDestination.home) {
-      if (_open != null) _leave();
+      if (_open != null) {
+        _leave();
+      } else {
+        setState(_toFirstScreen);
+      }
       return;
     }
     if (widget.pageFor(d) == null) {
@@ -76,15 +103,23 @@ class AppShellState extends State<AppShell> {
     }
     if (d == _open) {
       // The place already open: back to its own first screen.
-      contentNavigatorKey.currentState?.popUntil((r) => r.settings is _ShellPage);
+      setState(_toFirstScreen);
       return;
     }
-    setState(() => _open = d);
+    // Close what was shown above Home or the old place first, so nothing is
+    // left between Home and the new place.
+    setState(() {
+      _toFirstScreen();
+      _open = d;
+    });
   }
 
   void _leave() {
     final left = _open!;
-    setState(() => _open = null);
+    setState(() {
+      _shown.clear();
+      _open = null;
+    });
     widget.onReturnedHome(left);
   }
 
