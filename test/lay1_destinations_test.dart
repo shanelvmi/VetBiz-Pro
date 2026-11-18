@@ -1,8 +1,8 @@
 // LAY1 (3): the wide shell's destination registry (lib/navigation/
-// app_destinations.dart). Plain data: the order, parity with today's sidebar
-// (dashboard_screen.dart _buildDrawerContent), the icons, the link to the
-// phone hub's tiles, labels in every locale, the web paths, and that the file
-// stays free of screens and navigation. The phone hub's own tests (hub1_*,
+// app_destinations.dart). Plain data: the order (the owner's, LAY2), the
+// labels the sidebar used before LAY2, the icons, the link to the phone hub's
+// tiles, labels in every locale, the web paths, and that the file stays free
+// of screens and navigation. The phone hub's own tests (hub1_*,
 // ui5_*, ui6_*) are unchanged.
 import 'dart:io';
 
@@ -15,11 +15,10 @@ import 'package:vetbiz_pro/screens/dashboard/hub_destinations.dart';
 final _en = lookupAppLocalizations(const Locale('en'));
 
 const _registryPath = 'lib/navigation/app_destinations.dart';
-const _sidebarPath = 'lib/screens/dashboard/dashboard_screen.dart';
 
-/// Today's sidebar, top to bottom (75cda9b, dashboard_screen.dart
-/// :2594-2701): the nine places, then Settings.
-const _todaySidebar = [
+/// The sidebar before LAY2, top to bottom (75cda9b, dashboard_screen.dart
+/// :2594-2701): the nine places and their English labels.
+const _oldSidebar = [
   (AppDestination.stockStore, 'Stock'),
   (AppDestination.products, 'Products'),
   (AppDestination.sales, 'Sales'),
@@ -32,50 +31,41 @@ const _todaySidebar = [
 ];
 
 void main() {
+  // Owner order, LAY2 (2026-11-18).
   const expected = [
     AppDestination.home,
     AppDestination.insights,
-    AppDestination.stockStore,
-    AppDestination.products,
     AppDestination.sales,
     AppDestination.services,
     AppDestination.clients,
-    AppDestination.payments,
     AppDestination.debtors,
+    AppDestination.payments,
     AppDestination.transactions,
+    AppDestination.products,
+    AppDestination.stockStore,
     AppDestination.reports,
     AppDestination.settings,
   ];
 
-  test('1. order: Home, Insights, today\'s nine, Settings, for both roles', () {
+  test('1. order: the owner\'s (LAY2), Settings last, for both roles', () {
     expect(shellDestinationsFor(isAdmin: true), expected);
     expect(shellDestinationsFor(isAdmin: false), expected);
     expect(AppDestination.values.where((d) => d.section == DestinationSection.bottom), [AppDestination.settings]);
   });
 
-  test('2. parity with today\'s sidebar: labels and order', () {
-    final shell = shellDestinationsFor(isAdmin: true);
-    final nine = shell.sublist(2, 11);
-    expect(nine, _todaySidebar.map((e) => e.$1).toList());
-    for (final (d, label) in _todaySidebar) {
+  test('2. the labels the sidebar used before LAY2', () {
+    for (final (d, label) in _oldSidebar) {
       expect(d.label(_en), label, reason: d.name);
     }
     expect(AppDestination.settings.label(_en), 'Settings');
     expect(AppDestination.home.label(_en), 'Home');
     expect(AppDestination.insights.label(_en), 'Insights');
 
-    // The sidebar's own text: the same keys, in the same order.
-    final src = File(_sidebarPath).readAsStringSync();
-    final start = src.indexOf('Widget _buildDrawerContent()');
-    final end = src.indexOf('Widget platformAdminItem', start);
-    final keys = RegExp(r'title: context\.l10n\.(\w+)')
-        .allMatches(src.substring(start, end))
-        .map((m) => m.group(1))
-        .toList();
-    expect(keys, [
+    // The keys the sidebar used before LAY2 (75cda9b), kept.
+    const keys = [
       'nav_stock', 'nav_products', 'nav_sales', 'nav_services', 'clients_title', //
       'payments_title', 'nav_debtors', 'transactions_title', 'nav_reports', 'settings_title',
-    ]);
+    ];
     final registry = File(_registryPath).readAsStringSync();
     for (final k in keys) {
       expect(registry, contains('l.$k;'), reason: k);
@@ -92,8 +82,8 @@ void main() {
     }
     final filled = AppDestination.values.map((d) => d.selectedIcon).toSet();
     expect(filled.length, AppDestination.values.length);
-    // The sidebar draws the filled one today; the phone hub the outlined.
-    for (final (d, _) in _todaySidebar) {
+    // The outlined icon is the phone hub's.
+    for (final (d, _) in _oldSidebar) {
       final tile = HubTile.values.firstWhere((t) => destinationForHubTile(t) == d);
       expect(d.icon, hubTileIcon(tile), reason: d.name);
     }
@@ -155,13 +145,13 @@ void main() {
 
   test('refreshHomeOnReturn matches the sidebar\'s _refreshDashboardData', () {
     expect(AppDestination.values.where((d) => d.refreshHomeOnReturn).toList(), [
-      AppDestination.stockStore,
-      AppDestination.products,
       AppDestination.sales,
       AppDestination.services,
-      AppDestination.payments,
       AppDestination.debtors,
+      AppDestination.payments,
       AppDestination.transactions,
+      AppDestination.products,
+      AppDestination.stockStore,
     ]);
   });
 }

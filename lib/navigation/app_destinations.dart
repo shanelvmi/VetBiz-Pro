@@ -5,31 +5,33 @@ import '../screens/dashboard/hub_destinations.dart' show HubTile;
 import '../theme/app_icons.dart';
 
 /// LAY1: the places of the PC/tablet shell, one registry (docs/LAYOUT_AUDIT.md
-/// Part 4). Plain data: no screens, no BuildContext, no Navigator. LAY2 reads
-/// it to build the sidebar and adds the screen for each place; the tablet
-/// rail shows the same list, icons only (there is no separate rail flag).
+/// Part 4). Plain data: no screens, no BuildContext, no Navigator.
+/// AppSidebar (LAY2) is built from it; the tablet rail shows the same list,
+/// icons only (there is no separate rail flag).
 ///
 /// Not members, on purpose:
 /// - Platform Admin stays outside the shell (owner, 2026-11-18).
 /// - Team, Facilities, Activity log and Notifications become sections of
 ///   Settings in LAY7, not shell places.
 ///
-/// Labels are the keys the sidebar uses today (dashboard_screen.dart
-/// _buildDrawerContent); Home and Insights take the phone's keys. The phone
-/// hub keeps its own HubTile enum; [destinationForHubTile] links the two.
+/// Labels are the keys the sidebar used before LAY2 (dashboard_screen.dart
+/// _buildDrawerContent at 75cda9b); Home and Insights take the phone's keys.
+/// The phone hub keeps its own HubTile enum; [destinationForHubTile] links
+/// the two.
 enum AppDestination {
   // (label, icon, section, adminOnly, refreshHomeOnReturn, webPath)
+  // Declared in sidebar order: shellDestinationsFor follows it.
   home(_home, AppIcons.home, DestinationSection.main, false, false, '/home'),
   insights(_insights, AppIcons.insights, DestinationSection.main, false, false, '/insights'),
-  stockStore(_stockStore, AppIcons.stockStore, DestinationSection.main, false, true, '/stock-store'),
-  products(_products, AppIcons.products, DestinationSection.main, false, true, '/products'),
   sales(_sales, AppIcons.sales, DestinationSection.main, false, true, '/sales'),
   services(_services, AppIcons.services, DestinationSection.main, false, true, '/services'),
-  // The sidebar does not refresh Home after Clients or Reports today.
+  // Home is not refreshed after Clients or Reports (as before LAY2).
   clients(_clients, AppIcons.clients, DestinationSection.main, false, false, '/clients'),
-  payments(_payments, AppIcons.payments, DestinationSection.main, false, true, '/payments'),
   debtors(_debtors, AppIcons.debtors, DestinationSection.main, false, true, '/debtors'),
+  payments(_payments, AppIcons.payments, DestinationSection.main, false, true, '/payments'),
   transactions(_transactions, AppIcons.transactions, DestinationSection.main, false, true, '/transactions'),
+  products(_products, AppIcons.products, DestinationSection.main, false, true, '/products'),
+  stockStore(_stockStore, AppIcons.stockStore, DestinationSection.main, false, true, '/stock-store'),
   reports(_reports, AppIcons.reports, DestinationSection.main, false, false, '/reports'),
   settings(_settings, AppIcons.settings, DestinationSection.bottom, false, false, '/settings');
 
@@ -72,9 +74,9 @@ String _transactions(AppLocalizations l) => l.transactions_title;
 String _reports(AppLocalizations l) => l.nav_reports;
 String _settings(AppLocalizations l) => l.settings_title;
 
-/// The shell's places in sidebar order: Home, Insights, today's nine in
-/// today's order, then Settings (bottom). Whether Sales should lead, as on
-/// the phone, is the owner's call at LAY2, not here.
+/// The shell's places in sidebar order (owner, LAY2, 2026-11-18): Home,
+/// Insights, Sales, Services, Clients, Debtors, Payments, Transactions,
+/// Products, Stock, Reports, then Settings (bottom).
 List<AppDestination> shellDestinationsFor({required bool isAdmin}) => [
       for (final d in AppDestination.values)
         if (isAdmin || !d.adminOnly) d,
