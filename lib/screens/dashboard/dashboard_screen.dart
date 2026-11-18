@@ -294,6 +294,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // (AppBar leading on wide screens, actions on narrow ones), so a
   // fixed/assumed position wouldn't anchor correctly in both.
   final GlobalKey _bellKey = GlobalKey();
+  // LAY4: the wide shell (null on a phone, where the screens push as before).
+  final GlobalKey<AppShellState> _shellKey = GlobalKey<AppShellState>();
 
   // The bell reads the same feed as the Notifications dropdown (NOTIF-2c), so
   // its red dot follows MY read state and a promotion I removed stops its
@@ -1189,6 +1191,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                       // LAY4: the shell keeps the sidebar; Settings and Reports open in
                       // the content area (AppShell), the other places full screen.
                       child: AppShell(
+                        key: _shellKey,
                         sidebar: (selected, onSelect) =>
                             _buildDrawerContent(rail: !isLargeScreen, selected: selected, onSelect: onSelect),
                         topBar: _buildTopBar(context, rail: !isLargeScreen),
@@ -1493,6 +1496,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                                 collected: _glanceCollected,
                                 isLoading: _isGlanceLoading,
                                 debtorCount: glanceDebtorCount,
+                                // LAY4b: Insights in the shell, as from the sidebar.
+                                onInsights: () => _shellKey.currentState?.select(AppDestination.insights),
                               ),
                               ),
                               wide: isLargeScreen,
@@ -2347,7 +2352,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   tooltip: context.l10n.common_notifications,
                   onPressed: () async {
                     // PH8a: the page on a phone, the dropdown on a wide window.
-                    await openNotifications(context, anchorKey: _bellKey);
+                    await openNotifications(context, anchorKey: _bellKey, openPage: _openInShellAsSettings());
                     // Notifications marks itself "viewed" on open - re-check
                     // here so the blink stops immediately on return, rather
                     // than waiting for some other reason to rebuild.
@@ -2401,6 +2406,8 @@ Future<void> _openDestination(AppDestination d) async {
 /// LAY4: the places that live in the shell's content area (AppShell); the
 /// others still open full screen through _openDestination.
 Widget? _shellPageFor(AppDestination d) => switch (d) {
+      // LAY4b (owner): a page at every wide width, no longer the 900+ modal.
+      AppDestination.insights => const InsightsScreen(),
       AppDestination.settings => SettingsScreen(),
       AppDestination.reports => const ViewReportsScreen(),
       _ => null,
@@ -2693,6 +2700,15 @@ Widget _buildDrawerContent({
     );
   }
 
+  /// LAY4b: opens a screen in the wide shell's content with Settings
+  /// highlighted (Activity Log, Notifications), or null when there is no
+  /// shell (a phone): the caller then pushes as before.
+  Future<void> Function(Widget page)? _openInShellAsSettings() {
+    final shell = _shellKey.currentState;
+    if (shell == null) return null;
+    return (page) => shell.openInContent(page, highlight: AppDestination.settings);
+  }
+
   /// What the profile actions do, from [context] (the drawer's, or the phone
   /// profile page's: a screen opened from either is pushed above it, and
   /// Back returns to it).
@@ -2720,7 +2736,17 @@ Widget _buildDrawerContent({
         language: () => showLanguagePicker(context, context.read<UiSettingsProvider>()),
         // Full screen, like the other drawer items (Manage Assistants,
         // View Facilities).
-        activityLog: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityLogScreen())),
+        // LAY4b: on a wide window the panel closes first, then the log opens in
+        // the shell's content (highlighting Settings); on a phone, as before.
+        activityLog: () {
+          final inShell = _openInShellAsSettings();
+          if (inShell == null) {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityLogScreen()));
+            return;
+          }
+          Scaffold.maybeOf(context)?.closeEndDrawer();
+          inShell(const ActivityLogScreen());
+        },
         settings: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsScreen())),
         // The platform-set contact (app_config/support_contact), as the
         // wide top bar's Help.
