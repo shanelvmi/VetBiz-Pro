@@ -21,6 +21,7 @@ import '../../config/app_info.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
+import '../../widgets/shell/app_shell.dart';
 import '../../theme/app_breakpoints.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -70,6 +71,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        // LAY4: a place opened from the sidebar has no back arrow (the sidebar
+        // is the way out); pushed above it, or outside the shell, as before.
+        automaticallyImplyLeading: !ShellScope.isTopLevel(context),
         title: Text(
           context.l10n.settings_title,
           style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20),
@@ -610,6 +614,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 void showLanguagePicker(BuildContext context, UiSettingsProvider uiSettings) {
   showModalBottomSheet(
     context: context,
+    // LAY4: over the whole window, also from inside the shell's content.
+    useRootNavigator: true,
     backgroundColor: context.colors.raisedSurface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r16)),
