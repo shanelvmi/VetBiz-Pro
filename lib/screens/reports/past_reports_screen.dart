@@ -17,6 +17,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_layout.dart';
 import '../../theme/polish_metrics.dart';
+import '../../ui/polish/app_status.dart';
 import '../../ui/polish/flat_stat_card.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
@@ -398,32 +399,12 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
                 ),
               ),
               const SizedBox(width: AppSpacing.s8),
-              if (isDraft)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
-                  decoration: BoxDecoration(
-                    color: context.colors.warning.withValues(alpha: AppAlpha.a10),
-                    borderRadius: BorderRadius.circular(AppRadius.r20),
-                  ),
-                  child: Text(context.l10n.reports_notSubmitted,
-                      style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: context.colors.warningStrong)),
-                )
-              else
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
-                  decoration: BoxDecoration(
-                    color: context.colors.success.withValues(alpha: AppAlpha.a10),
-                    borderRadius: BorderRadius.circular(AppRadius.r20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.check_circle, size: AppIconSize.i14, color: context.colors.successStrong),
-                      const SizedBox(width: AppSpacing.s4),
-                      Text(context.l10n.reports_completed, style: TextStyle(fontSize: AppFontSize.f10_5, fontWeight: AppFontWeight.semibold, color: context.colors.successStrong)),
-                    ],
-                  ),
-                ),
+              // POL7: the one status style, a dot and the word (it was a
+              // warning or success pill), through reportAppStatus.
+              StatusDot(
+                status: reportAppStatus(report.status),
+                label: isDraft ? context.l10n.reports_notSubmitted : context.l10n.reports_completed,
+              ),
               const SizedBox(width: AppSpacing.s8),
               Icon(Icons.chevron_right, color: context.colors.textDisabled),
             ],
@@ -442,7 +423,6 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
   // and Load more. The same two queries as the layout above.
   Widget _buildPhone() {
     final l10n = context.l10n;
-    final colors = context.colors;
     final figures = _summaryFigures();
     return PhoneListScaffold<DailyReport>(
       title: l10n.reports_pastTitle,
@@ -482,8 +462,7 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
         final isDraft = r.status == 'draft';
         final date = AppDateFormat.dateLong.format(r.reportDate);
         final amount = Money.format(r.salesTotalValue + r.servicesTotalValue);
-        final status = RecordStatus(isDraft ? l10n.reports_notSubmitted : l10n.reports_completed,
-            isDraft ? colors.warningStrong : colors.successStrong);
+        final status = RecordStatus.state(isDraft ? l10n.reports_notSubmitted : l10n.reports_completed, reportAppStatus(r.status));
         return RecordTile(
           title: date,
           amount: amount,

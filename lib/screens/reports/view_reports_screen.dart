@@ -35,6 +35,7 @@ import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/phone_report/phone_report_row.dart';
 import '../../widgets/phone_report/phone_report_section.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../ui/polish/app_status.dart';
 import '../../utils/app_clock.dart';
 
 /// The main View Reports screen - shows today's own report directly,
@@ -583,17 +584,11 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
             AppDateFormat.dateNoPadTime12Short.format(report.submittedAt ?? report.generatedAt),
           ),
           const SizedBox(height: AppSpacing.s10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.circle, size: AppSizes.statusDot, color: isSubmitted ? context.colors.success : context.colors.warning),
-              const SizedBox(width: AppSpacing.s10),
-              Text(isSubmitted ? context.l10n.subscription_colSubmitted : context.l10n.reports_draftNotSubmitted,
-                  style: TextStyle(
-                      fontSize: AppFontSize.f12_5,
-                      fontWeight: AppFontWeight.semibold,
-                      color: isSubmitted ? context.colors.successStrong : context.colors.warningStrong)),
-            ],
+          // POL7: the one status style (StatusDot through reportAppStatus);
+          // the same words.
+          StatusDot(
+            status: reportAppStatus(report.status),
+            label: isSubmitted ? context.l10n.subscription_colSubmitted : context.l10n.reports_draftNotSubmitted,
           ),
         ],
       ),
@@ -843,9 +838,9 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
             ),
             PhoneReportRow(
               title: l10n.common_status,
-              status: RecordStatus(
+              status: RecordStatus.state(
                 isSubmitted ? l10n.subscription_colSubmitted : l10n.reports_draftNotSubmitted,
-                isSubmitted ? colors.successStrong : colors.warningStrong,
+                reportAppStatus(report.status),
               ),
             ),
           ],

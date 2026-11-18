@@ -13,6 +13,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/app_layout.dart';
 import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
+import '../../ui/polish/app_status.dart';
 
 /// Read-only view of a past, already-generated report - the AppBar
 /// (date, submission status, PDF action) plus the shared tabbed
@@ -52,12 +53,15 @@ class ReportDetailScreen extends StatelessWidget {
           children: [
             Text(AppDateFormat.dateLong.format(report.reportDate),
                 style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18, color: context.colors.textPrimary)),
-            Text(
-              report.status == 'submitted'
-                  ? context.l10n.reports_submittedBy(report.generatedByName)
-                  : context.l10n.reports_draftNotSubmitted,
-              style: TextStyle(fontSize: AppFontSize.f12, color: report.status == 'submitted' ? context.colors.textSecondary : context.colors.warningStrong),
-            ),
+            // POL7: a draft shows the one status style (a dot and the word,
+            // reportAppStatus); "Submitted by ..." stays a plain byline.
+            if (report.status == 'submitted')
+              Text(
+                context.l10n.reports_submittedBy(report.generatedByName),
+                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary),
+              )
+            else
+              StatusDot(status: reportAppStatus(report.status), label: context.l10n.reports_draftNotSubmitted),
           ],
         ),
         actions: [
@@ -115,10 +119,16 @@ class ReportDetailScreen extends StatelessWidget {
             color: colors.surface,
             padding: const EdgeInsets.fromLTRB(
                 PhoneReportMetrics.pagePadding, PhoneReportMetrics.headerGap, PhoneReportMetrics.pagePadding, 0),
-            child: Text(
-              submitted ? context.l10n.reports_submittedBy(report.generatedByName) : context.l10n.reports_draftNotSubmitted,
-              style: TextStyle(fontSize: PhoneReportMetrics.title, color: submitted ? colors.textSecondary : colors.warningStrong),
-            ),
+            // POL7: a draft as a dot and the word (reportAppStatus).
+            child: submitted
+                ? Text(
+                    context.l10n.reports_submittedBy(report.generatedByName),
+                    style: TextStyle(fontSize: PhoneReportMetrics.title, color: colors.textSecondary),
+                  )
+                : Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: StatusDot(status: reportAppStatus(report.status), label: context.l10n.reports_draftNotSubmitted),
+                  ),
           ),
           Expanded(child: ReportTabbedContent(report: report, firestore: firestore)),
         ],

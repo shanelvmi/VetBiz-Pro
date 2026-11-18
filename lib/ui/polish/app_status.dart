@@ -32,6 +32,17 @@ AppStatus paymentAppStatus(String status) => switch (status) {
       _ => AppStatus.neutral,
     };
 
+/// POL7: a daily report's STORED status ('draft' | 'submitted', DailyReport)
+/// as one of the four states: the one mapping Past Reports, View Reports,
+/// the detail and the full view use (each had its own pill or coloured
+/// text). Submitted is done (success); a draft still waits (warning); an
+/// unknown value is neutral. The words shown are unchanged.
+AppStatus reportAppStatus(String status) => switch (status) {
+      'submitted' => AppStatus.success,
+      'draft' => AppStatus.warning,
+      _ => AppStatus.neutral,
+    };
+
 /// POL1, owner rule 3: the one status style, a small dot plus the word, in
 /// one size and one gap. The word is always shown, so the state never rests
 /// on colour alone; it is in textPrimary, which reads on every surface.
