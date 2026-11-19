@@ -24,6 +24,8 @@ class ListPageBar extends StatelessWidget {
     required this.onPageSize,
     required this.onPrevious,
     required this.onNext,
+    this.rangeText,
+    this.pageText,
   });
 
   /// Shown when the page holds nothing.
@@ -37,6 +39,12 @@ class ListPageBar extends StatelessWidget {
   final ValueChanged<int> onPageSize;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+
+  /// LAY6c: a screen's own range and page wording (the Sales archive says
+  /// "of N+" and "Page 1 of 3"); null: the common "Showing a to b" and
+  /// "Page n", as before.
+  final String? rangeText;
+  final String? pageText;
 
   /// The page sizes offered (as the screens offered them).
   static const pageSizes = [10, 25, 50];
@@ -58,7 +66,7 @@ class ListPageBar extends StatelessWidget {
         runSpacing: AppSpacing.s8,
         children: [
           Text(
-            itemCount == 0 ? emptyText : context.l10n.common_showingRange(pageStart, pageEnd),
+            itemCount == 0 ? emptyText : rangeText ?? context.l10n.common_showingRange(pageStart, pageEnd),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
           // The controls wrap too (the page size above the arrows) on the
@@ -81,7 +89,7 @@ class ListPageBar extends StatelessWidget {
                 icon: const Icon(Icons.chevron_left),
                 onPressed: hasPreviousPage ? onPrevious : null,
               ),
-              Text(context.l10n.common_page(currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
+              Text(pageText ?? context.l10n.common_page(currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
                 icon: isLoading
                     ? const SizedBox(width: AppSpacing.s16, height: AppSpacing.s16, child: CircularProgressIndicator(strokeWidth: 2))
