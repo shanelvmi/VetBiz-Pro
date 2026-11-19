@@ -14,6 +14,9 @@ import '../../models/service.dart';
 import '../../models/ledger_entry.dart';
 import '../../services/snapshot_ledger_controller.dart';
 import '../../widgets/firestore_error_view.dart';
+import '../../widgets/details_layout.dart';
+import '../../widgets/shell/app_shell.dart';
+import '../../widgets/toolbar_layout.dart';
 import '../../widgets/date_range_dialog.dart';
 import '../sales/receipt_preview_screen.dart';
 import '../services/service_receipt_preview_screen.dart';
@@ -484,11 +487,15 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: ListenableBuilder(
+      // LAY6b (owner mockups, as LAY6a): the details inline from 900 of the
+      // width this list is given, a slide-over below it (DetailsLayout, auto).
+      body: DetailsLayout(
+        mode: DetailsMode.auto,
+        detailsWidth: 340,
+        label: context.l10n.payments_detailsTitle,
+        onClose: () => setState(() => _selectedEntry = null),
+        details: _selectedEntry == null ? null : _buildDetailsPanel(_selectedEntry!),
+        list: ListenableBuilder(
               listenable: paymentProvider.ledgerController,
               builder: (context, _) {
                 final controller = paymentProvider.ledgerController;
@@ -561,15 +568,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                       );
               },
             ),
-          ),
-          if (_selectedEntry != null) ...[
-            const VerticalDivider(width: 1),
-            SizedBox(
-              width: 340,
-              child: _buildDetailsPanel(_selectedEntry!),
-            ),
-          ],
-        ],
       ),
     );
   }
@@ -659,7 +657,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.l10n.payments_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                // LAY6b (#16): the title wraps beside the close button at large text.
+                Expanded(child: Text(context.l10n.payments_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16))),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedEntry = null),
@@ -679,10 +678,11 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               children: [
                 Icon(Icons.calendar_today_outlined, size: AppIconSize.i12, color: context.colors.textMuted),
                 const SizedBox(width: AppSpacing.s4),
-                Text(
+                // LAY6b (#16): beside the list the date wraps (the phone page as before).
+                _flexibleBesideList(onPage,                 Text(
                   '${AppDateFormat.date.format(e.timestamp)}, ${AppDateFormat.time12.format(e.timestamp)}',
                   style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-                ),
+                ),)
               ],
             ),
             const Divider(height: 32),
@@ -765,6 +765,10 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
+  /// LAY6b: Flexible beside the list; on the phone's details page [child] as
+  /// it was (its tree stays the same).
+  Widget _flexibleBesideList(bool onPage, Widget child) => onPage ? child : Flexible(child: child);
+
   Widget _detailLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s4),
@@ -779,11 +783,10 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       borderRadius: BorderRadius.circular(AppRadius.r10),
       borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: TextField(
+    // LAY6b (#16): search, filters and the total on one line while they fit,
+    // else the search on its own line and the rest under it (ToolbarLayout).
+    return ToolbarLayout(
+      search: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: context.l10n.payments_searchHint,
@@ -804,9 +807,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
             ),
             onChanged: _onSearchChanged,
           ),
-        ),
+      filters: [
         if (widget.initialClientId == null) ...[
-          const SizedBox(width: AppSpacing.s10),
           _toolbarDropdown<String>(
             value: _selectedTypeFilter,
             items: _typeTabs.map((t) => t.$1).toList(),
@@ -817,7 +819,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               _openLedgerSession();
             },
           ),
-          const SizedBox(width: AppSpacing.s10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
             height: 44,
@@ -844,8 +845,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ),
             ),
           ),
-          if (hasActiveFilters) ...[
-            const SizedBox(width: AppSpacing.s8),
+          if (hasActiveFilters)
             TextButton(
               onPressed: () {
                 setState(() {
@@ -856,9 +856,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               },
               child: Text(context.l10n.common_clear, style: const TextStyle(fontSize: AppFontSize.f13)),
             ),
-          ],
         ],
-        const SizedBox(width: AppSpacing.s16),
         Text(
           context.l10n.common_totalValue(Money.format(total)),
           style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold, color: context.colors.primary),
@@ -899,6 +897,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      // LAY6b: no back arrow when opened from the shell's sidebar.
+      automaticallyImplyLeading: !ShellScope.isTopLevel(context),
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e0,
@@ -1212,7 +1212,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   child: Icon(_iconFor(e.type), size: AppIconSize.i14, color: context.colors.primary),
                 ),
                 const SizedBox(width: AppSpacing.s8),
-                Text(AppDateFormat.time12.format(e.timestamp), style: const TextStyle(fontSize: AppFontSize.f13)),
+                // LAY6b (#16): the time shares its narrow cell with the icon.
+                Flexible(child: Text(AppDateFormat.time12.format(e.timestamp), style: const TextStyle(fontSize: AppFontSize.f13))),
               ],
             ),
           ),
