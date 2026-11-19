@@ -2430,6 +2430,9 @@ Widget? _shellPageFor(AppDestination d) => switch (d) {
       // LAY6a: the details inline from 900 of the content, a slide-over below.
       AppDestination.clients => ClientsScreen(),
       AppDestination.debtors => DebtorsScreen(),
+      // LAY6b: the two ledgers, the same details layout.
+      AppDestination.payments => const PaymentsScreen(),
+      AppDestination.transactions => TransactionScreen(),
       AppDestination.settings => SettingsScreen(),
       AppDestination.reports => const ViewReportsScreen(),
       _ => null,

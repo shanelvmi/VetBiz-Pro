@@ -35,5 +35,10 @@ Widget? notificationTargetScreen(FacilityNotification n) {
 /// live in the shell; the others open as before.
 AppDestination? notificationTargetPlace(FacilityNotification n) {
   if (n.relatedEntityId == null) return null;
-  return n.relatedEntityType == 'client' ? AppDestination.clients : null;
+  // LAY6b: a payment opens Payments.
+  return switch (n.relatedEntityType) {
+    'client' => AppDestination.clients,
+    'payment' => AppDestination.payments,
+    _ => null,
+  };
 }

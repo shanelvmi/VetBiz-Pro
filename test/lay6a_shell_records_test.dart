@@ -184,11 +184,12 @@ void main() {
     expect(find.text('HOME'), findsOneWidget, reason: 'Back returns where you were');
   });
 
-  test('a notification about a client names Clients; other kinds name no shell place', () {
+  test('a notification about a client names Clients, a payment Payments (LAY6b); others no shell place', () {
     FacilityNotification n(String type) => FacilityNotification(
         id: 'n1', type: NotificationType.general, title: 't', message: 'm', relatedEntityType: type, relatedEntityId: 'x1');
     expect(notificationTargetPlace(n('client')), AppDestination.clients);
-    for (final other in ['product', 'payment', 'service', 'assistant']) {
+    expect(notificationTargetPlace(n('payment')), AppDestination.payments);
+    for (final other in ['product', 'service', 'assistant']) {
       expect(notificationTargetPlace(n(other)), isNull, reason: other);
     }
   });
