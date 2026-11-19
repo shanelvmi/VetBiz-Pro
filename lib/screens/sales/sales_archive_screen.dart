@@ -18,6 +18,8 @@ import '../../data/payment_status.dart';
 import '../../utils/app_clock.dart';
 import '../../theme/polish_metrics.dart';
 import '../../ui/polish/app_status.dart';
+import '../../widgets/details_layout.dart';
+import '../../widgets/list_page_bar.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (POL4: the
@@ -245,11 +247,17 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
       appBar: _buildAppBar(),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: context.colors.primary))
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Column(
+          // LAY6c (owner mockups, as LAY6a): the details inline from 900 of the
+          // width this list is given, a slide-over below it (DetailsLayout, auto).
+          : DetailsLayout(
+              mode: DetailsMode.auto,
+              detailsWidth: 380,
+              label: context.l10n.sales_details,
+              onClose: () => setState(() => _selectedSale = null),
+              details: _selectedSale == null
+                  ? null
+                  : _buildDetailsPanel(_selectedSale!, dateOnlyFormatter, timeOnlyFormatter),
+              list: Column(
                     children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
@@ -281,7 +289,9 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                               )
                             : _buildArchiveTable(pageSales, dateFormatter),
                       ),
-                      _buildPaginationBar(
+                      // LAY6c (#8): the shared page bar (it wraps on a narrow list), with
+                      // the archive's own wording.
+                      _buildPageBar(
                         totalFiltered: filteredSales.length,
                         pageStart: pageStart,
                         pageEnd: pageEnd,
@@ -289,21 +299,14 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
                       ),
                     ],
                   ),
-                ),
-                if (_selectedSale != null) ...[
-                  const VerticalDivider(width: 1),
-                  SizedBox(
-                    width: 380,
-                    child: _buildDetailsPanel(_selectedSale!, dateOnlyFormatter, timeOnlyFormatter),
-                  ),
-                ],
-              ],
             ),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      // LAY6c: opened inside the shell it is pushed above Sales and keeps its
+      // back arrow (not a place of its own).
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       // POL4 (owner rule 4): no shadow under the bar; a hairline.
@@ -507,7 +510,7 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
 
   // ==================== PAGINATION ====================
 
-  Widget _buildPaginationBar({
+  Widget _buildPageBar({
     required int totalFiltered,
     required int pageStart,
     required int pageEnd,
@@ -515,60 +518,28 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   }) {
     final canGoNext = _currentPageIndex < totalPages - 1 || _hasMore;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            totalFiltered == 0
-                ? context.l10n.sales_none
-                : context.l10n.sales_archiveShowing(pageStart + 1, pageEnd, totalFiltered, _hasMore ? '+' : ''),
-            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-          ),
-          Row(
-            children: [
-              DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: _displayPageSize,
-                  items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() {
-                        _displayPageSize = val;
-                        _currentPageIndex = 0;
-                      });
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s16),
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: _currentPageIndex > 0 ? () => setState(() => _currentPageIndex--) : null,
-              ),
-              Text(context.l10n.services_pageOf(_currentPageIndex + 1, totalPages), style: const TextStyle(fontSize: AppFontSize.f13)),
-              IconButton(
-                icon: _isLoadingMore
-                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.chevron_right),
-                onPressed: canGoNext && !_isLoadingMore
-                    ? () async {
-                        final needed = (_currentPageIndex + 2) * _displayPageSize;
-                        if (needed > _archivedSales.length && _hasMore) {
-                          await _loadMoreArchivedSales();
-                        }
-                        if (mounted) setState(() => _currentPageIndex++);
-                      }
-                    : null,
-              ),
-            ],
-          ),
-        ],
-      ),
+    return ListPageBar(
+      emptyText: context.l10n.sales_none,
+      itemCount: totalFiltered,
+      pageSize: _displayPageSize,
+      currentPage: _currentPageIndex + 1,
+      hasPreviousPage: _currentPageIndex > 0,
+      hasNextPage: canGoNext,
+      isLoading: _isLoadingMore,
+      rangeText: context.l10n.sales_archiveShowing(pageStart + 1, pageEnd, totalFiltered, _hasMore ? '+' : ''),
+      pageText: context.l10n.services_pageOf(_currentPageIndex + 1, totalPages),
+      onPageSize: (val) => setState(() {
+        _displayPageSize = val;
+        _currentPageIndex = 0;
+      }),
+      onPrevious: () => setState(() => _currentPageIndex--),
+      onNext: () async {
+        final needed = (_currentPageIndex + 2) * _displayPageSize;
+        if (needed > _archivedSales.length && _hasMore) {
+          await _loadMoreArchivedSales();
+        }
+        if (mounted) setState(() => _currentPageIndex++);
+      },
     );
   }
 
@@ -596,7 +567,8 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.l10n.sales_details, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                // LAY6c: the title wraps beside the close button at large text.
+                Expanded(child: Text(context.l10n.sales_details, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16))),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedSale = null),
@@ -607,7 +579,8 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_invoiceNo(sale), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+                // LAY6c: the number wraps beside its status at large text.
+                Flexible(child: Text(_invoiceNo(sale), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18))),
                 _statusDot(status),
               ],
             ),
@@ -700,7 +673,8 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
+          // LAY6c (#9): the label wraps beside a long amount at large text.
+          Flexible(child: Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
           Text(
             value,
             style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color),
