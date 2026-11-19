@@ -2433,6 +2433,8 @@ Widget? _shellPageFor(AppDestination d) => switch (d) {
       // LAY6b: the two ledgers, the same details layout.
       AppDestination.payments => const PaymentsScreen(),
       AppDestination.transactions => TransactionScreen(),
+      // LAY6c: Sales; its Archive and receipts push inside the content.
+      AppDestination.sales => SalesScreen(),
       AppDestination.settings => SettingsScreen(),
       AppDestination.reports => const ViewReportsScreen(),
       _ => null,
