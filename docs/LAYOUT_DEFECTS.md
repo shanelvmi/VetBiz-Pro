@@ -28,10 +28,10 @@ that a fingerprint covers.
 
 | # | Screen | Size | Overflow | Widget | Shown by | Skip |
 |---|---|---|---|---|---|---|
-| 1 | Sales list | 768x1024 | 103 px right (310 at text 1.3) | the filter toolbar, sales_screen.dart `_buildFiltersToolbar` Row (:415) | pol4_sales_services_test (knownWideOverflowOnly), ph5a_wide_unchanged fingerprints | none |
-| 2 | Sales list, details open | 768x1024; 1024x768 at text 1.3 | 217 px right (345 at 1.3); 89 px at 1024 x1.3 | the page bar, `_buildPaginationBar` Row (:754) | the same | none |
-| 3 | Sales list, details open | 1024x768 / 1200x800 | 228 / 52 px right (259 at 1200 x1.3; at 1024 x1.3, 54 on the list alone) | the filter toolbar (:415): the details panel (380 px) narrows it. POL4's ledger said "the page bar" here: wrong | the same | none |
-| 4 | Sales details panel | every wide size, text 1.3 | 44 px right | `_totalsRow` (:1146): the label is flexible on phones only | pol4_archives_receipts_test (text 1.3) | none |
+| 1 | ~~Sales list~~ FIXED LAY6c (ToolbarLayout) | 768x1024 | 103 px right (310 at text 1.3) | the filter toolbar, sales_screen.dart `_buildFiltersToolbar` Row (:415) | pol4_sales_services_test (knownWideOverflowOnly), ph5a_wide_unchanged fingerprints | none |
+| 2 | ~~Sales list, details open~~ FIXED LAY6c (ListPageBar) | 768x1024; 1024x768 at text 1.3 | 217 px right (345 at 1.3); 89 px at 1024 x1.3 | the page bar, `_buildPaginationBar` Row (:754) | the same | none |
+| 3 | ~~Sales list, details open~~ FIXED LAY6c (ToolbarLayout) | 1024x768 / 1200x800 | 228 / 52 px right (259 at 1200 x1.3; at 1024 x1.3, 54 on the list alone) | the filter toolbar (:415): the details panel (380 px) narrows it. POL4's ledger said "the page bar" here: wrong | the same | none |
+| 4 | ~~Sales details panel~~ FIXED LAY6c (_totalsRow label Flexible at every width) | every wide size, text 1.3 | 44 px right | `_totalsRow` (:1146): the label is flexible on phones only | pol4_archives_receipts_test (text 1.3) | none |
 | 5 | Services list | 768x1024 | 129 px right (343 at 1.3) | the filter toolbar (services_screen.dart :454) | pol4_sales_services_test, ph5a_wide_unchanged | none |
 | 6 | Services list, details open | 768 / 1024 / 1200 | 217 (page bar :714) / 254 / 78 (toolbar :454); at 1.3: page bar 345 / 89 (768, 1024), toolbar 292 (1200) and 87 on the 1024 list alone | page bar and toolbar | the same | none |
 | 7 | Services details panel | every wide size, text 1.3 | 24 (title row :975), 26 (Payment information row :1009), 55 and 3.8 (`_totalsRow` :1086) px right | rows whose label is flexible on phones only | pol4_archives_receipts_test | none |

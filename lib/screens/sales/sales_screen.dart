@@ -11,6 +11,10 @@ import '../../providers/client_provider.dart';
 import '../../services/sales_summary_service.dart';
 import '../../services/cursor_paginated_list_controller.dart';
 import '../../widgets/firestore_error_view.dart';
+import '../../widgets/details_layout.dart';
+import '../../widgets/list_page_bar.dart';
+import '../../widgets/shell/app_shell.dart';
+import '../../widgets/toolbar_layout.dart';
 import 'add_sale_screen.dart';
 import 'receipt_preview_screen.dart';
 import 'sales_archive_screen.dart';
@@ -242,12 +246,24 @@ class _SalesScreenState extends State<SalesScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Column(
+      // LAY6c (owner mockups, as LAY6a): the details inline from 900 of the
+      // width this list is given, a slide-over below it (DetailsLayout, auto).
+      body: DetailsLayout(
+        mode: DetailsMode.auto,
+        detailsWidth: 380,
+        label: context.l10n.sales_details,
+        onClose: () => setState(() => _selectedSale = null),
+        details: _selectedSale == null
+            ? null
+            : _buildSaleDetailsPanel(_selectedSale!, dateOnlyFormatter, timeOnlyFormatter),
+        // LAY6c (as Debtors): the header (figures, Archive, toolbar) takes at most
+        // 35 % of the list's height and scrolls inside it when taller.
+        list: LayoutBuilder(builder: (context, box) => Column(
               children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: box.maxHeight * DetailsLayoutMetrics.headerMaxShare),
+                  child: SingleChildScrollView(
+                    child: Column(children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
                   child: Row(
@@ -262,6 +278,9 @@ class _SalesScreenState extends State<SalesScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
                   child: _buildFiltersToolbar(availableSellers),
+                ),
+                    ]),
+                  ),
                 ),
                 Expanded(
                   child: ListenableBuilder(
@@ -293,23 +312,26 @@ class _SalesScreenState extends State<SalesScreen> {
                                       )
                                     : _buildSalesTable(pageSales, dateFormatter),
                           ),
-                          _buildPaginationBar(saleProvider: saleProvider, controller: controller),
+                          // LAY6c (#2): the shared page bar; it wraps on a narrow list.
+                          ListPageBar(
+                            emptyText: context.l10n.sales_none,
+                            itemCount: controller.items.length,
+                            pageSize: controller.pageSize,
+                            currentPage: controller.currentPage,
+                            hasPreviousPage: controller.hasPreviousPage,
+                            hasNextPage: controller.hasNextPage,
+                            isLoading: controller.isLoading,
+                            onPageSize: controller.setPageSize,
+                            onPrevious: controller.goToPreviousPage,
+                            onNext: controller.goToNextPage,
+                          ),
                         ],
                       );
                     },
                   ),
                 ),
               ],
-            ),
-          ),
-          if (_selectedSale != null) ...[
-            const VerticalDivider(width: 1),
-            SizedBox(
-              width: 380,
-              child: _buildSaleDetailsPanel(_selectedSale!, dateOnlyFormatter, timeOnlyFormatter),
-            ),
-          ],
-        ],
+            )),
       ),
     );
   }
@@ -412,11 +434,10 @@ class _SalesScreenState extends State<SalesScreen> {
     final hasActiveFilters =
         _searchQuery.isNotEmpty || _filterStatus != 'All' || _dateFilter != 'Last 30 days' || _sellerFilter != 'All';
 
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: TextField(
+    // LAY6c (#1, #3): search and filters on one line while they fit, else the
+    // search on its own line and the filters under it (ToolbarLayout).
+    return ToolbarLayout(
+      search: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: context.l10n.sales_searchHint,
@@ -437,8 +458,7 @@ class _SalesScreenState extends State<SalesScreen> {
             ),
             onChanged: _onSearchChanged,
           ),
-        ),
-        const SizedBox(width: AppSpacing.s10),
+      filters: [
         _toolbarDropdown<String>(
           value: _dateFilter,
           items: _dateFilterOptions,
@@ -449,7 +469,6 @@ class _SalesScreenState extends State<SalesScreen> {
             _openSalesListSession();
           },
         ),
-        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _filterStatus,
           items: _statusFilterOptions,
@@ -460,7 +479,6 @@ class _SalesScreenState extends State<SalesScreen> {
             _openSalesListSession();
           },
         ),
-        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _sellerFilter,
           items: ['All', ...availableSellers],
@@ -471,8 +489,7 @@ class _SalesScreenState extends State<SalesScreen> {
             _openSalesListSession();
           },
         ),
-        if (hasActiveFilters) ...[
-          const SizedBox(width: AppSpacing.s10),
+        if (hasActiveFilters)
           TextButton(
             onPressed: () {
               _searchDebounce?.cancel();
@@ -487,7 +504,6 @@ class _SalesScreenState extends State<SalesScreen> {
             },
             child: Text(context.l10n.common_reset),
           ),
-        ],
       ],
     );
   }
@@ -500,7 +516,9 @@ class _SalesScreenState extends State<SalesScreen> {
     // What an item shows; the dropdown still holds and returns the item.
     String Function(T value)? display,
   }) {
-    return Container(
+    // LAY6c (as Debtors): as wide as its label, never wider than the toolbar
+    // (the label then ends in an ellipsis: Kiswahili, large text).
+    return IntrinsicWidth(child: Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
@@ -511,6 +529,15 @@ class _SalesScreenState extends State<SalesScreen> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
+          isExpanded: true,
+          selectedItemBuilder: (context) => [
+            for (final v in items)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(context.l10n.common_filterValue(label, display?.call(v) ?? '$v'),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+          ],
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: items.map((v) => DropdownMenuItem(value: v, child: Text(context.l10n.common_filterValue(label, display?.call(v) ?? '$v')))).toList(),
@@ -519,11 +546,13 @@ class _SalesScreenState extends State<SalesScreen> {
           },
         ),
       ),
-    );
+    ));
   }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      // LAY6c: no back arrow when opened from the shell's sidebar.
+      automaticallyImplyLeading: !ShellScope.isTopLevel(context),
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       // POL4 (owner rule 4): no shadow under the bar; a hairline.
@@ -738,59 +767,6 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   // ==================== PAGINATION ====================
-
-  Widget _buildPaginationBar({
-    required SaleProvider saleProvider,
-    required CursorPaginatedListController<Sale> controller,
-  }) {
-    final pageSize = controller.pageSize;
-    final itemCount = controller.items.length;
-    final pageStart = itemCount == 0 ? 0 : (controller.currentPage - 1) * pageSize + 1;
-    final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            itemCount == 0 ? context.l10n.sales_none : context.l10n.common_showingRange(pageStart, pageEnd),
-            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-          ),
-          Row(
-            children: [
-              DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: pageSize,
-                  items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) saleProvider.salesListController.setPageSize(val);
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s16),
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
-              ),
-              Text(context.l10n.common_page(controller.currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
-              IconButton(
-                icon: controller.isLoading
-                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.chevron_right),
-                onPressed: controller.hasNextPage && !controller.isLoading
-                    ? () => controller.goToNextPage()
-                    : null,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   // ==================== PHONE (PH5a) ====================
 
@@ -1029,7 +1005,8 @@ class _SalesScreenState extends State<SalesScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.l10n.sales_details, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                // LAY6c: the title wraps beside the close button at large text.
+                Expanded(child: Text(context.l10n.sales_details, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16))),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedSale = null),
@@ -1040,7 +1017,9 @@ class _SalesScreenState extends State<SalesScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _wrapOnPhone(Text(_invoiceNo(sale), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18))),
+                // LAY6c: the number wraps beside its status at every width (it did
+                // on a phone only; the phone is unchanged).
+                Flexible(child: Text(_invoiceNo(sale), style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18))),
                 _statusDot(status),
               ],
             ),
@@ -1138,15 +1117,15 @@ class _SalesScreenState extends State<SalesScreen> {
   /// On a phone (the details page, PH5a R7) the left text of a label and
   /// value row may wrap instead of pushing the value off the page; the
   /// side panel on wider windows is unchanged.
-  Widget _wrapOnPhone(Widget child) => AppLayout.isPhone(context) ? Flexible(child: child) : child;
-
   Widget _totalsRow(String label, String value, {bool bold = false, Color? color}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _wrapOnPhone(Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
+          // LAY6c (#4): the label wraps beside a long amount at every width (it did
+          // on a phone only; the phone is unchanged).
+          Flexible(child: Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
           Text(
             value,
             style: TextStyle(
