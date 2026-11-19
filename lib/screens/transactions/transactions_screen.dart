@@ -8,6 +8,9 @@ import '../../providers/facility_provider.dart';
 import '../../models/transaction.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../widgets/date_range_dialog.dart';
+import '../../widgets/details_layout.dart';
+import '../../widgets/shell/app_shell.dart';
+import '../../widgets/toolbar_layout.dart';
 import '../../providers/user_role_provider.dart';
 import '../../widgets/payment_method_selector.dart';
 import '../../services/receipt_printer_service.dart';
@@ -202,11 +205,15 @@ class _TransactionScreenState extends State<TransactionScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Padding(
+      // LAY6b (owner mockups, as LAY6a): the details inline from 900 of the
+      // width this list is given, a slide-over below it (DetailsLayout, auto).
+      body: DetailsLayout(
+        mode: DetailsMode.auto,
+        detailsWidth: 340,
+        label: context.l10n.transactions_detailsTitle,
+        onClose: () => setState(() => _selectedTransaction = null),
+        details: _selectedTransaction == null ? null : _buildDetailsPanel(_selectedTransaction!),
+        list: Padding(
               padding: const EdgeInsets.all(AppSpacing.s16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,21 +237,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 ],
               ),
             ),
-          ),
-          if (_selectedTransaction != null) ...[
-            const VerticalDivider(width: 1),
-            SizedBox(
-              width: 340,
-              child: _buildDetailsPanel(_selectedTransaction!),
-            ),
-          ],
-        ],
       ),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      // LAY6b: no back arrow when opened from the shell's sidebar.
+      automaticallyImplyLeading: !ShellScope.isTopLevel(context),
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e0,
@@ -254,12 +254,16 @@ class _TransactionScreenState extends State<TransactionScreen> {
       title: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(context.l10n.transactions_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text(context.l10n.transactions_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+          // LAY6b (#17): one line each, an ellipsis when the actions leave too little.
+          Text(context.l10n.transactions_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+          Text(context.l10n.transactions_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
         ],
       ),
       actions: [
-        Padding(
+        // LAY6b (#17): the range gives way first in a narrow bar (its label
+        // ends in an ellipsis); Record transaction keeps its size.
+        Flexible(
+          child: Padding(
           padding: const EdgeInsets.only(right: AppSpacing.s8),
           child: OutlinedButton.icon(
             onPressed: _showDateRangeDialog,
@@ -267,9 +271,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
             label: Text(
               '${AppDateFormat.date.format(_rangeStart)} - ${AppDateFormat.date.format(_rangeEnd)}',
               style: const TextStyle(fontSize: AppFontSize.f12_5),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-        ),
+        )),
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.s12),
           child: ElevatedButton.icon(
@@ -320,11 +326,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
       borderRadius: BorderRadius.circular(AppRadius.r10),
       borderSide: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
     );
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: TextField(
+    // LAY6b (#17): search, filter and the count on one line while they fit,
+    // else the search on its own line and the rest under it (ToolbarLayout).
+    return ToolbarLayout(
+      search: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: context.l10n.transactions_searchHint,
@@ -348,8 +353,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ),
             onChanged: (val) => setState(() => _searchQuery = val.trim()),
           ),
-        ),
-        const SizedBox(width: AppSpacing.s10),
+      filters: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
           height: 44,
@@ -374,14 +378,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
             ),
           ),
         ),
-        if (hasActiveFilter) ...[
-          const SizedBox(width: AppSpacing.s8),
+        if (hasActiveFilter)
           TextButton(
             onPressed: () => setState(() => _filterType = null),
             child: Text(context.l10n.common_clear, style: const TextStyle(fontSize: AppFontSize.f13)),
           ),
-        ],
-        const SizedBox(width: AppSpacing.s16),
         Text(context.l10n.transactions_count(count), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
       ],
     );
@@ -491,7 +492,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 // POL6: in or out as a neutral arrow (the amount's sign says it too).
                 Icon(isIncome ? Icons.arrow_downward : Icons.arrow_upward, size: AppIconSize.i14, color: context.colors.textSecondary),
                 const SizedBox(width: AppSpacing.s8),
-                Text(AppDateFormat.time12.format(tx.date), style: const TextStyle(fontSize: AppFontSize.f13)),
+                // LAY6b (#17): the time shares its narrow cell with the icon.
+                Flexible(child: Text(AppDateFormat.time12.format(tx.date), style: const TextStyle(fontSize: AppFontSize.f13))),
               ],
             ),
           ),
@@ -678,7 +680,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.l10n.transactions_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                // LAY6b (#17): the title wraps beside the close button at large text.
+                Expanded(child: Text(context.l10n.transactions_detailsTitle, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16))),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedTransaction = null),
@@ -700,10 +703,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
               children: [
                 Icon(Icons.calendar_today_outlined, size: AppIconSize.i12, color: context.colors.textMuted),
                 const SizedBox(width: AppSpacing.s4),
-                Text(
+                // LAY6b (#17): beside the list the date wraps (the phone page as before).
+                onPage ?                 Text(
                   '${AppDateFormat.date.format(tx.date)}, ${AppDateFormat.time12.format(tx.date)}',
                   style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-                ),
+                ) : Flexible(child:                 Text(
+                  '${AppDateFormat.date.format(tx.date)}, ${AppDateFormat.time12.format(tx.date)}',
+                  style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
+                )),
               ],
             ),
             const Divider(height: 32),
