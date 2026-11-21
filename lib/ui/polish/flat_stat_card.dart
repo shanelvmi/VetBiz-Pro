@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_colors.dart';
 import '../../theme/app_text.dart';
 import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
@@ -29,6 +30,11 @@ class FlatStatCard extends StatelessWidget {
   /// row, take 2 so a long label wraps as it did, never cut.
   final int labelLines;
 
+  /// UX2: a small widget to the right of the value, on its row (Payments:
+  /// the trend), so the card keeps three lines. Null by default: no other
+  /// card changes. The value gives way first (it scales down).
+  final Widget? valueTrailing;
+
   const FlatStatCard({
     super.key,
     required this.label,
@@ -38,6 +44,7 @@ class FlatStatCard extends StatelessWidget {
     this.selected = false,
     this.loading = false,
     this.footer,
+    this.valueTrailing,
     this.labelLines = 1,
   });
 
@@ -69,23 +76,19 @@ class FlatStatCard extends StatelessWidget {
                   dimension: PolishMetrics.statValue,
                   child: CircularProgressIndicator(strokeWidth: PolishMetrics.spinnerStroke),
                 )
+              else if (valueTrailing != null)
+                Row(
+                  children: [
+                    Flexible(child: _value(colors)),
+                    const SizedBox(width: PolishMetrics.statLineGap * 2),
+                    valueTrailing!,
+                  ],
+                )
               else
                 // POL4: a figure is never cut short ("Tsh 1,2..."): in a
                 // narrow card it scales down, as the Sales and Services
                 // cards did before (a FittedBox around the whole card).
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    value,
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: PolishMetrics.statValue,
-                      fontWeight: AppFontWeight.bold,
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                ),
+                _value(colors),
               if (hint != null) ...[
                 const SizedBox(height: PolishMetrics.statLineGap),
                 Text(hint!, maxLines: 1, overflow: TextOverflow.ellipsis, style: secondary),
@@ -100,4 +103,18 @@ class FlatStatCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _value(AppColors colors) => FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: AlignmentDirectional.centerStart,
+        child: Text(
+          value,
+          maxLines: 1,
+          style: TextStyle(
+            fontSize: PolishMetrics.statValue,
+            fontWeight: AppFontWeight.bold,
+            color: colors.textPrimary,
+          ),
+        ),
+      );
 }

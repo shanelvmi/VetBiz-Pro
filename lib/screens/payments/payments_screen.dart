@@ -597,7 +597,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       value: Money.format(metric?.amount ?? 0),
       hint: context.l10n.payments_paymentCount(metric?.count ?? 0),
       loading: _isMetricsLoading && metric == null,
-      footer: metric?.trendPercent == null ? null : _trend(metric!.trendPercent!),
+      // UX2: the trend to the right of the value (three rows, as the other cards).
+      valueTrailing: metric?.trendPercent == null ? null : _trend(metric!.trendPercent!),
     );
   }
 
@@ -611,7 +612,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       value: Money.format(_outstandingAmount ?? 0),
       hint: context.l10n.payments_debtCount(_outstandingCount ?? 0),
       loading: _isMetricsLoading && _outstandingAmount == null,
-      footer: trendPercent == null ? null : _trend(trendPercent, invertColors: true),
+      valueTrailing: trendPercent == null ? null : _trend(trendPercent, invertColors: true),
     );
   }
 
