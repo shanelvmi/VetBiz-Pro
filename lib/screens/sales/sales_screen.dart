@@ -359,7 +359,7 @@ class _SalesScreenState extends State<SalesScreen> {
     // (dailyCollections: every payments document, so services and other
     // income too) is not a Sales figure and left the cards; the three left
     // come from dailySummaries, written from sales alone. The phone's
-    // summary sheet still lists it (owner to decide).
+    // summary sheet has none either (UX2b).
     final metrics = [
       (context.l10n.reports_totalSales, '$count'),
       (context.l10n.reports_colRevenue, Money.format(total)),
@@ -794,13 +794,12 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   /// The cards' figures (_buildMetricsRow), for the line and the sheet.
-  ({int count, double total, double collected, double pending}) _summaryFigures() {
+  ({int count, double total, double pending}) _summaryFigures() {
     final s = _rangeSummary ?? const {};
     final total = s['totalAmount'] ?? 0.0;
     return (
       count: (s['saleCount'] ?? 0).toInt(),
       total: total,
-      collected: s['totalCollected'] ?? 0.0,
       pending: total - (s['totalPaid'] ?? 0.0),
     );
   }
@@ -811,7 +810,7 @@ class _SalesScreenState extends State<SalesScreen> {
     showPhoneSummarySheet(context, period: l10n.services_last30, rows: [
       (l10n.reports_totalSales, '${f.count}'),
       (l10n.reports_colRevenue, Money.format(f.total)),
-      (l10n.sales_collected, Money.format(f.collected)),
+      // UX2b (owner): no Collected here either (every payment, not only sales).
       (l10n.sales_pending, Money.format(f.pending)),
     ]);
   }

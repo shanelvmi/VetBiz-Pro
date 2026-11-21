@@ -176,7 +176,7 @@ void main() {
     ph5TestWidgets('one line and a Summary sheet with every card\'s figure, equal to the tablet\'s cards', (tester) async {
       await _sales(tester, size: _wide);
       // UX2: the tablet has no Collected card (not a Sales figure); the
-      // phone's sheet still lists it (unchanged; owner to decide).
+      // phone's sheet has none either (UX2b).
       const labels = ['Total Sales', 'Revenue', 'Pending'];
       final cards = {for (final l in labels) l: _valuesBeside(tester, find.text(l), FlatStatCard, skip: {'Last 30 days'})};
       expect(cards['Revenue'], [Money.format(97000)]);
@@ -189,7 +189,7 @@ void main() {
       for (final l in labels) {
         expect(_valuesBeside(tester, _inSheet(l), Row), cards[l], reason: l);
       }
-      expect(_inSheet('Collected'), findsOneWidget, reason: 'the phone sheet is unchanged');
+      expect(_inSheet('Collected'), findsNothing, reason: 'UX2b: no Collected in the sheet either');
     });
   });
 
