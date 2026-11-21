@@ -9,7 +9,7 @@ import '../../models/transaction.dart';
 import '../../services/dashboard_summary_service.dart';
 import '../../widgets/date_range_dialog.dart';
 import '../../widgets/details_layout.dart';
-import '../../widgets/shell/app_shell.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/toolbar_layout.dart';
 import '../../providers/user_role_provider.dart';
 import '../../widgets/payment_method_selector.dart';
@@ -35,7 +35,6 @@ import '../../widgets/phone_list/record_tile.dart';
 import '../../utils/app_clock.dart';
 import '../../ui/polish/app_status.dart';
 import '../../ui/polish/flat_stat_card.dart';
-import '../../theme/polish_metrics.dart';
 
 class TransactionScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH5b, as
@@ -242,23 +241,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      // LAY6b: no back arrow when opened from the shell's sidebar.
-      automaticallyImplyLeading: !ShellScope.isTopLevel(context),
-      backgroundColor: context.colors.surface,
-      foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e0,
-      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-      centerTitle: true,
-      toolbarHeight: 72,
-      title: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // LAY6b (#17): one line each, an ellipsis when the actions leave too little.
-          Text(context.l10n.transactions_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
-          Text(context.l10n.transactions_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary), maxLines: 1, overflow: TextOverflow.ellipsis),
-        ],
-      ),
+    // UX1a: the shared PC/tablet header (title left, actions right). It
+    // keeps LAY6b's rule (no back arrow when opened from the shell's
+    // sidebar) and #17 (title and subtitle one line each, an ellipsis when
+    // the actions leave too little: PageHeader does that for every screen).
+    return PageHeader(
+      title: context.l10n.transactions_title,
+      subtitle: context.l10n.transactions_subtitle,
       actions: [
         // LAY6b (#17): the range gives way first in a narrow bar (its label
         // ends in an ellipsis); Record transaction keeps its size.

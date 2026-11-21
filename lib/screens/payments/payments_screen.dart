@@ -15,7 +15,7 @@ import '../../models/ledger_entry.dart';
 import '../../services/snapshot_ledger_controller.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../widgets/details_layout.dart';
-import '../../widgets/shell/app_shell.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/toolbar_layout.dart';
 import '../../widgets/date_range_dialog.dart';
 import '../sales/receipt_preview_screen.dart';
@@ -41,7 +41,6 @@ import '../../widgets/phone_list/record_tile.dart';
 import '../../utils/app_clock.dart';
 import '../../ui/polish/app_status.dart';
 import '../../ui/polish/flat_stat_card.dart';
-import '../../theme/polish_metrics.dart';
 
 class _PaymentMetric {
   final double amount;
@@ -896,27 +895,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      // LAY6b: no back arrow when opened from the shell's sidebar.
-      automaticallyImplyLeading: !ShellScope.isTopLevel(context),
-      backgroundColor: context.colors.surface,
-      foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e0,
-      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-      centerTitle: true,
-      toolbarHeight: 72,
-      title: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            widget.initialClientName != null ? context.l10n.payments_titleForClient(widget.initialClientName!) : context.l10n.payments_title,
-            style: TextStyle(
-                fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary),
-          ),
-          Text(context.l10n.payments_subtitle,
-              style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
-        ],
-      ),
+    // UX1a: the shared PC/tablet header (title left, actions right). It
+    // keeps LAY6b's rule: no back arrow when opened from the shell's sidebar
+    // (one client's payments, pushed from Clients, keeps its arrow).
+    return PageHeader(
+      title: widget.initialClientName != null ? context.l10n.payments_titleForClient(widget.initialClientName!) : context.l10n.payments_title,
+      subtitle: context.l10n.payments_subtitle,
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.s12),

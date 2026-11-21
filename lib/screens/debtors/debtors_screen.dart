@@ -18,7 +18,7 @@ import '../../providers/client_provider.dart';
 import '../../services/cursor_paginated_list_controller.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../widgets/details_layout.dart';
-import '../../widgets/shell/app_shell.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/list_page_bar.dart';
 import '../../widgets/toolbar_layout.dart';
 import 'add_payment_screen.dart';
@@ -455,22 +455,11 @@ class _DebtorsScreenState extends State<DebtorsScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      // LAY6a: no back arrow when opened from the shell's sidebar.
-      automaticallyImplyLeading: !ShellScope.isTopLevel(context),
-      backgroundColor: context.colors.surface,
-      foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e0,
-      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-      centerTitle: true,
-      toolbarHeight: 72,
-      title: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(context.l10n.debtors_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text(context.l10n.debtors_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
-        ],
-      ),
+    // UX1a: the shared PC/tablet header (title left, actions right). It
+    // keeps LAY6a's rule: no back arrow when opened from the shell's sidebar.
+    return PageHeader(
+      title: context.l10n.debtors_title,
+      subtitle: context.l10n.debtors_subtitle,
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.s12),
