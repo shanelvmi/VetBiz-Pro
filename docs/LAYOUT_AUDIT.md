@@ -281,3 +281,34 @@ LAY2b: LAYOUT_DEFECTS 20-22.
    rather than full pages?
 9. Wire the orphaned Business profile screen into Settings > Business?
 10. Platform Admin console keeps its own sidebar and stays outside the shell?
+
+## Status after LAY6d (2026-11-21): what lives in the shell (PC and tablet)
+
+Every sidebar place now opens inside the shell (sidebar and top bar stay;
+the place is highlighted; Back pops inside the content, then Home). The
+phone is unchanged throughout.
+
+| Place | In the shell since | Notes |
+|---|---|---|
+| Home | LAY4 | base page, kept alive |
+| Insights | LAY4b | a page at every wide width (no 900+ modal) |
+| Sales (+ Archive, receipt) | LAY6c | details inline from 900, slide-over below |
+| Services (+ Archive, receipt) | LAY6d | as Sales |
+| Clients | LAY6a | as Sales |
+| Debtors (+ Payment history) | LAY6a | as Sales |
+| Payments | LAY6b | as Sales |
+| Transactions | LAY6b | as Sales |
+| Products | LAY5 | filter panel a column from 900, the drawer below |
+| Stock Store | LAY5 | as Products |
+| Reports | LAY4 | |
+| Settings | LAY4 | its rows push inside the content |
+| Activity Log, Notifications | LAY4b | openInContent, Settings highlighted |
+
+Still full screen (or a dialog) over everything:
+
+| Entry point | Why |
+|---|---|
+| Record forms (Add sale, service, payment, client, product, batch, transaction) | owner: forms stay as they are for now (dialogs later); under 900 content they push inside the content, from 900 a centred modal |
+| Platform Admin | owner: stays outside the shell |
+| Team Members, View Facilities (profile panel) | move into Settings sections in LAY7 |
+| Edit Profile, Change password (profile panel) | dialogs / modal, unchanged |
