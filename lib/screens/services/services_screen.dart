@@ -14,7 +14,7 @@ import '../../services/cursor_paginated_list_controller.dart';
 import '../../widgets/firestore_error_view.dart';
 import '../../widgets/details_layout.dart';
 import '../../widgets/list_page_bar.dart';
-import '../../widgets/shell/app_shell.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/toolbar_layout.dart';
 import 'add_edit_service_screen.dart';
 import 'services_archive_screen.dart';
@@ -351,23 +351,12 @@ class _ServicesScreenState extends State<ServicesScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      // LAY6d: no back arrow when opened from the shell's sidebar.
-      automaticallyImplyLeading: !ShellScope.isTopLevel(context),
-      backgroundColor: context.colors.surface,
-      foregroundColor: context.colors.textPrimary,
-      // POL4 (owner rule 4): no shadow under the bar; a hairline.
-      elevation: AppElevation.e0,
-      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-      centerTitle: true,
-      toolbarHeight: 72,
-      title: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(context.l10n.common_serviceRecords, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text(context.l10n.services_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
-        ],
-      ),
+    // UX1a: the shared PC/tablet header (title left, actions right). It
+    // keeps LAY6d's rule: no back arrow when opened from the shell's sidebar;
+    // POL4's hairline, no shadow.
+    return PageHeader(
+      title: context.l10n.common_serviceRecords,
+      subtitle: context.l10n.services_subtitle,
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.s12),
