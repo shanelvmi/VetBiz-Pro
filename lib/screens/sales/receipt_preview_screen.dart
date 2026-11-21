@@ -10,6 +10,8 @@ import 'package:printing/printing.dart';
 import '../../models/sale.dart';
 import '../../providers/facility_provider.dart';
 import '../../services/receipt_printer_service.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../services/receipt_pdf_service.dart';
 import '../settings/printer_settings_screen.dart';
 import '../../utils/web_download.dart';
@@ -238,12 +240,16 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.surfaceMuted,
-      appBar: AppBar(
-        title: Text(context.l10n.receipt_previewTitle),
-        centerTitle: true,
-        backgroundColor: context.colors.brandSurface,
-        foregroundColor: context.colors.onBrandSurface,
-      ),
+      // UX1b: PC and tablet: the shared page header (title left, the back
+      // arrow: pushed above Sales/Services); the phone keeps its bar.
+      appBar: !AppLayout.isPhone(context)
+          ? PageHeader(title: context.l10n.receipt_previewTitle)
+          : AppBar(
+              title: Text(context.l10n.receipt_previewTitle),
+              centerTitle: true,
+              backgroundColor: context.colors.brandSurface,
+              foregroundColor: context.colors.onBrandSurface,
+            ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= AppBreakpoints.medium;
