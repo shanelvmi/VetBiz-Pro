@@ -21,6 +21,8 @@ import '../../utils/app_clock.dart';
 import '../../theme/polish_metrics.dart';
 import '../../ui/polish/app_status.dart';
 import '../../ui/polish/filter_row.dart';
+import '../../widgets/details_layout.dart';
+import '../../widgets/list_page_bar.dart';
 
 class ServicesArchiveScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (POL4: the
@@ -244,12 +246,25 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
       appBar: _buildAppBar(),
       body: _isLoading
           ? Center(child: CircularProgressIndicator(color: context.colors.primary))
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Column(
+          // LAY6d (owner mockups, as the Sales archive): the details inline from
+          // 900 of the width this list is given, a slide-over below it.
+          : DetailsLayout(
+              mode: DetailsMode.auto,
+              detailsWidth: 380,
+              label: context.l10n.services_detailsTitle,
+              onClose: () => setState(() => _selectedService = null),
+              details: _selectedService == null
+                  ? null
+                  : _buildDetailsPanel(_selectedService!, dateOnlyFormatter, timeOnlyFormatter),
+              // LAY6d (#11, as Sales): the header (period, categories, search)
+              // takes at most 35 % of the list's height and scrolls inside it
+              // when taller, so the table keeps room for its rows.
+              list: LayoutBuilder(builder: (context, box) => Column(
                     children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxHeight: box.maxHeight * DetailsLayoutMetrics.headerMaxShare),
+                        child: SingleChildScrollView(
+                          child: Column(children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
                         child: _buildInfoBanner(filteredServices.length, totalAmount),
@@ -262,6 +277,9 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                       Padding(
                         padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
                         child: _buildSearchBar(),
+                      ),
+                          ]),
+                        ),
                       ),
                       Expanded(
                         child: filteredServices.isEmpty
@@ -285,23 +303,16 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                               )
                             : _buildArchiveTable(pageServices, dateFormatter),
                       ),
-                      _buildPaginationBar(
+                      // LAY6d (#10): the shared page bar (it wraps on a narrow list), with
+                      // the archive's own wording.
+                      _buildPageBar(
                         totalFiltered: filteredServices.length,
                         pageStart: pageStart,
                         pageEnd: pageEnd,
                         totalPages: totalPages,
                       ),
                     ],
-                  ),
-                ),
-                if (_selectedService != null) ...[
-                  const VerticalDivider(width: 1),
-                  SizedBox(
-                    width: 380,
-                    child: _buildDetailsPanel(_selectedService!, dateOnlyFormatter, timeOnlyFormatter),
-                  ),
-                ],
-              ],
+                  )),
             ),
     );
   }
@@ -543,7 +554,7 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
 
   // ==================== PAGINATION ====================
 
-  Widget _buildPaginationBar({
+  Widget _buildPageBar({
     required int totalFiltered,
     required int pageStart,
     required int pageEnd,
@@ -551,60 +562,28 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
   }) {
     final canGoNext = _currentPageIndex < totalPages - 1 || _hasMore;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            totalFiltered == 0
-                ? context.l10n.services_none
-                : context.l10n.services_archiveShowing(pageStart + 1, pageEnd, totalFiltered, _hasMore ? '+' : ''),
-            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-          ),
-          Row(
-            children: [
-              DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: _displayPageSize,
-                  items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      setState(() {
-                        _displayPageSize = val;
-                        _currentPageIndex = 0;
-                      });
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s16),
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: _currentPageIndex > 0 ? () => setState(() => _currentPageIndex--) : null,
-              ),
-              Text(context.l10n.services_pageOf(_currentPageIndex + 1, totalPages), style: const TextStyle(fontSize: AppFontSize.f13)),
-              IconButton(
-                icon: _isLoadingMore
-                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.chevron_right),
-                onPressed: canGoNext && !_isLoadingMore
-                    ? () async {
-                        final needed = (_currentPageIndex + 2) * _displayPageSize;
-                        if (needed > _archivedServices.length && _hasMore) {
-                          await _loadMoreArchivedServices();
-                        }
-                        if (mounted) setState(() => _currentPageIndex++);
-                      }
-                    : null,
-              ),
-            ],
-          ),
-        ],
-      ),
+    return ListPageBar(
+      emptyText: context.l10n.services_none,
+      itemCount: totalFiltered,
+      pageSize: _displayPageSize,
+      currentPage: _currentPageIndex + 1,
+      hasPreviousPage: _currentPageIndex > 0,
+      hasNextPage: canGoNext,
+      isLoading: _isLoadingMore,
+      rangeText: context.l10n.services_archiveShowing(pageStart + 1, pageEnd, totalFiltered, _hasMore ? '+' : ''),
+      pageText: context.l10n.services_pageOf(_currentPageIndex + 1, totalPages),
+      onPageSize: (val) => setState(() {
+        _displayPageSize = val;
+        _currentPageIndex = 0;
+      }),
+      onPrevious: () => setState(() => _currentPageIndex--),
+      onNext: () async {
+        final needed = (_currentPageIndex + 2) * _displayPageSize;
+        if (needed > _archivedServices.length && _hasMore) {
+          await _loadMoreArchivedServices();
+        }
+        if (mounted) setState(() => _currentPageIndex++);
+      },
     );
   }
 
@@ -630,7 +609,8 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.l10n.services_detailsTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                // LAY6d (#11): the title wraps beside the close button at large text.
+                Expanded(child: Text(context.l10n.services_detailsTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16))),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedService = null),
@@ -664,7 +644,8 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(context.l10n.services_paymentInfo, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5)),
+                      // LAY6d (#11): wraps beside its status at large text.
+                      Flexible(child: Text(context.l10n.services_paymentInfo, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5))),
                       Flexible(child: _statusDot(status)),
                     ],
                   ),
@@ -715,7 +696,8 @@ class _ServicesArchiveScreenState extends State<ServicesArchiveScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
+          // LAY6d (#11): the label wraps beside a long amount at large text.
+          Flexible(child: Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
           Text(
             value,
             style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color),
