@@ -16,6 +16,7 @@ import 'package:vetbiz_pro/screens/dashboard/insights_screen.dart';
 import 'package:vetbiz_pro/screens/dashboard/notifications_screen.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/widgets/shell/app_shell.dart';
+import 'package:vetbiz_pro/widgets/shell/page_header.dart';
 
 import 'helpers/fake_firestore.dart' show testUserId;
 import 'helpers/notification_harness.dart' show Clock, newFeed;
@@ -128,6 +129,9 @@ void main() {
             // Insights is a top-level place (no back arrow); the other two
             // are screens opened above where you were (theirs stays).
             expect(find.byType(BackButton), p == _Place.insights ? findsNothing : findsOneWidget);
+            // UX1b: the shared page header on all three, no AppBar.
+            expect(find.byType(PageHeader), findsOneWidget);
+            expect(find.byType(AppBar), findsNothing);
             if (p == _Place.insights) {
               final page = tester.widget<InsightsScreen>(screen);
               expect(page.isModal, isFalse, reason: 'a page, not the 900+ modal');
