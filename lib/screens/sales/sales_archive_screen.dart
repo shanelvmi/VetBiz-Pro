@@ -20,6 +20,8 @@ import '../../theme/polish_metrics.dart';
 import '../../ui/polish/app_status.dart';
 import '../../widgets/details_layout.dart';
 import '../../widgets/list_page_bar.dart';
+import '../../widgets/shell/page_header.dart';
+import '../../theme/app_layout.dart';
 
 class SalesArchiveScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (POL4: the
@@ -304,6 +306,15 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    // UX1b: PC and tablet: the shared page header (title left, the back
+    // arrow: pushed above Sales). The phone keeps the bar below.
+    if (!AppLayout.isPhone(context)) {
+      return PageHeader(
+        title: context.l10n.sales_archiveTitle,
+        subtitle: context.l10n.sales_archiveSubtitle(_archiveCutoffDays),
+        actions: [_dateRangeButton()],
+      );
+    }
     return AppBar(
       // LAY6c: opened inside the shell it is pushed above Sales and keeps its
       // back arrow (not a place of its own).
@@ -321,18 +332,18 @@ class _SalesArchiveScreenState extends State<SalesArchiveScreen> {
           Text(context.l10n.sales_archiveSubtitle(_archiveCutoffDays), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
         ],
       ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: AppSpacing.s12),
-          child: OutlinedButton.icon(
-            onPressed: _showSearchDialog,
-            icon: const Icon(Icons.date_range_outlined, size: AppIconSize.i16),
-            label: Text(context.l10n.export_dateRange),
-          ),
-        ),
-      ],
+      actions: [_dateRangeButton()],
     );
   }
+
+  Widget _dateRangeButton() => Padding(
+        padding: const EdgeInsets.only(right: AppSpacing.s12),
+        child: OutlinedButton.icon(
+          onPressed: _showSearchDialog,
+          icon: const Icon(Icons.date_range_outlined, size: AppIconSize.i16),
+          label: Text(context.l10n.export_dateRange),
+        ),
+      );
 
   Widget _buildInfoBanner(int foundCount, double totalAmount) {
     return Container(
