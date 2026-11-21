@@ -191,7 +191,8 @@ void main() {
     expect(notificationTargetPlace(n('payment')), AppDestination.payments);
     expect(notificationTargetPlace(n('service')), AppDestination.services); // LAY6d
     expect(notificationTargetPlace(n('assistant')), AppDestination.settings); // LAY7: Settings > Business > Team
-    for (final other in ['product']) {
+    expect(notificationTargetPlace(n('product')), AppDestination.products); // UX1b: Product Alerts in the shell
+    for (final other in ['stockMovement', 'unknown']) {
       expect(notificationTargetPlace(n(other)), isNull, reason: other);
     }
   });

@@ -54,11 +54,21 @@ class FilterRow extends StatelessWidget {
     final colors = context.colors;
     final fixed = pinned.clamp(0, values.length);
     if (wrap) {
-      return DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: colors.divider, width: PolishMetrics.hairline)),
+      // UX1b: one left-aligned row that wraps, the hairline the full width.
+      // A segment centres its label (Container alignment), which made it as
+      // wide as the Wrap: one segment per line, centred. IntrinsicWidth keeps
+      // each to its label's width; the full width keeps the row left.
+      return SizedBox(
+        width: double.infinity,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: colors.divider, width: PolishMetrics.hairline)),
+          ),
+          child: Padding(
+            padding: padding,
+            child: Wrap(children: [for (final v in values) IntrinsicWidth(child: _segment(context, v))]),
+          ),
         ),
-        child: Padding(padding: padding, child: Wrap(children: [for (final v in values) _segment(context, v)])),
       );
     }
     return DecoratedBox(

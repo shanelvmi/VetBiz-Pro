@@ -31,6 +31,8 @@ import '../../theme/app_layout.dart';
 import '../../utils/app_clock.dart';
 import '../../ui/polish/app_status.dart';
 import '../../ui/polish/filter_row.dart';
+import '../../widgets/list_page_bar.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../theme/polish_metrics.dart';
 
 /// What kind of thing needs attention. Declared in the order they're
@@ -219,21 +221,9 @@ class StockAlertsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
-        backgroundColor: context.colors.surface,
-        foregroundColor: context.colors.textPrimary,
-        elevation: AppElevation.e0,
-        shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-        centerTitle: true,
-        toolbarHeight: 72,
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(context.l10n.alerts_title, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-            Text(context.l10n.alerts_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
-          ],
-        ),
-      ),
+      // UX1b: the shared page header (title left, the back arrow as it is
+      // pushed above Products or Home).
+      appBar: PageHeader(title: context.l10n.alerts_title, subtitle: context.l10n.alerts_subtitle),
       body: _AlertsBody(initialKind: initialKind),
     );
   }
@@ -636,7 +626,7 @@ class _AlertsBodyState extends State<_AlertsBody> {
                   ? _buildNoMatches()
                   : _buildResults(pageItems, isAdmin),
         ),
-        if (all.isNotEmpty) _buildPaginationBar(total: total, page: page, totalPages: totalPages),
+        if (all.isNotEmpty) _buildPaginationBar(total: total, page: page, totalPages: totalPages, shown: pageItems.length),
       ],
     );
   }
@@ -1158,57 +1148,28 @@ class _AlertsBodyState extends State<_AlertsBody> {
 
   // ==================== PAGINATION ====================
 
-  Widget _buildPaginationBar({required int total, required int page, required int totalPages}) {
+  // UX1b: the shared ListPageBar (LAY6a/c) in place of this screen's own
+  // copy, whose Wrap had no width: "Showing 1 to 2 of 2 alerts" ran into
+  // "10 per page". The same range wording, page sizes and paging. Only the
+  // wide layout has it (the phone list pages as it scrolls).
+  Widget _buildPaginationBar({required int total, required int page, required int totalPages, required int shown}) {
     final start = total == 0 ? 0 : (page - 1) * _pageSize + 1;
     final end = (page * _pageSize) > total ? total : page * _pageSize;
-
-    final controls = <Widget>[
-      DropdownButtonHideUnderline(
-        child: DropdownButton<int>(
-          value: _pageSize,
-          items: const [10, 25, 50].map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n)))).toList(),
-          onChanged: (val) {
-            if (val != null) {
-              setState(() {
-                _pageSize = val;
-                _page = 1;
-              });
-            }
-          },
-        ),
-      ),
-      const SizedBox(width: AppSpacing.s16),
-      IconButton(
-        icon: const Icon(Icons.chevron_left),
-        onPressed: page > 1 ? () => setState(() => _page = page - 1) : null,
-      ),
-      Text(context.l10n.common_page(page), style: const TextStyle(fontSize: AppFontSize.f13)),
-      IconButton(
-        icon: const Icon(Icons.chevron_right),
-        onPressed: page < totalPages ? () => setState(() => _page = page + 1) : null,
-      ),
-    ];
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
-      child: Wrap(
-        alignment: WrapAlignment.spaceBetween,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        runSpacing: 4,
-        children: [
-          Text(
-            total == 0 ? context.l10n.alerts_none : context.l10n.alerts_showingRange(start, end, total),
-            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-          ),
-          // PH7a: on a phone the rows-per-page and the page buttons wrap (one
-          // row overflowed a 360 to 390 window); elsewhere one row as before.
-          if (AppLayout.isPhone(context))
-            Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: controls)
-          else
-            Row(mainAxisSize: MainAxisSize.min, children: controls),
-        ],
-      ),
+    return ListPageBar(
+      emptyText: context.l10n.alerts_none,
+      rangeText: context.l10n.alerts_showingRange(start, end, total),
+      itemCount: shown,
+      pageSize: _pageSize,
+      currentPage: page,
+      hasPreviousPage: page > 1,
+      hasNextPage: page < totalPages,
+      isLoading: false,
+      onPageSize: (val) => setState(() {
+        _pageSize = val;
+        _page = 1;
+      }),
+      onPrevious: () => setState(() => _page = page - 1),
+      onNext: () => setState(() => _page = page + 1),
     );
   }
 }

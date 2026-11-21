@@ -1825,6 +1825,15 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
         _openSettingsItem(SettingsRequest(SettingsRequest.team, teamStatus: UserStatus.pending.key))) {
       return;
     }
+    // UX1b: on a wide window Product Alerts opens in the shell's content with
+    // Products highlighted (as a search result's product does); Back returns
+    // to Home. Pushed as before when there is no shell (a phone).
+    final shell = _shellKey.currentState;
+    if (attentionItemTarget(item.kind) == AttentionTarget.stockAlerts && shell != null) {
+      await shell.openInContent(StockAlertsScreen(initialKind: attentionStockKind(item.kind)), highlight: AppDestination.products);
+      _returnToHome();
+      return;
+    }
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => switch (attentionItemTarget(item.kind)) {
         AttentionTarget.debtors => const DebtorsScreen(initialStatus: DebtorsScreen.statusOverdue),

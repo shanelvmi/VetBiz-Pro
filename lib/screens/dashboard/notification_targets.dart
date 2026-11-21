@@ -43,6 +43,8 @@ AppDestination? notificationTargetPlace(FacilityNotification n) {
     'service' => AppDestination.services,
     // LAY7: an assistant opens Settings > Business > Team Members.
     'assistant' => AppDestination.settings,
+    // UX1b: a product opens Product Alerts with Products highlighted.
+    'product' => AppDestination.products,
     _ => null,
   };
 }
