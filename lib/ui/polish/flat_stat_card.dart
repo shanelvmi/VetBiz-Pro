@@ -77,11 +77,18 @@ class FlatStatCard extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: PolishMetrics.spinnerStroke),
                 )
               else if (valueTrailing != null)
+                // One row: in a card too narrow for both (four cards at 696,
+                // text 1.3) the value and then the trend scale down, as the
+                // value alone does; never cut, wrapped or overflowing.
                 Row(
                   children: [
-                    Flexible(child: _value(colors)),
+                    // The value has the larger share; each keeps its natural
+                    // size while it fits.
+                    Flexible(flex: 2, child: _value(colors)),
                     const SizedBox(width: PolishMetrics.statLineGap * 2),
-                    valueTrailing!,
+                    Flexible(
+                      child: FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: valueTrailing),
+                    ),
                   ],
                 )
               else
