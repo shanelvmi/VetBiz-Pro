@@ -43,20 +43,27 @@ class WideTopBar extends StatelessWidget {
       child: Row(
         children: [
           if (leading != null) leading!,
-          const Spacer(),
-          if (narrow)
+          if (narrow) ...[
+            const Spacer(),
             IconButton(
               key: const ValueKey('top-bar-search-icon'),
               icon: Icon(Icons.search, color: context.colors.textPrimary, size: AppIconSize.i22),
               tooltip: context.l10n.dashboard_searchProductsOrClients,
               onPressed: onSearchIcon,
-            )
-          else
-            Flexible(
-              child: Container(
-                constraints: const BoxConstraints(maxWidth: searchMaxWidth),
-                margin: const EdgeInsets.only(right: AppSpacing.s12),
-                child: search,
+            ),
+          ] else
+            // UX1a: the search takes all the free space and sits at its right
+            // end. It was a Flexible beside a Spacer: the two split the free
+            // space in half and the search's unused share was lost, so on a
+            // wide window the bell, Help and the profile stopped mid-bar.
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: searchMaxWidth),
+                  margin: const EdgeInsets.only(right: AppSpacing.s12),
+                  child: search,
+                ),
               ),
             ),
           ...trailing,
