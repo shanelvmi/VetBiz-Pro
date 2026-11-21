@@ -796,7 +796,8 @@ class _ReceiptPreviewScreenState extends State<ReceiptPreviewScreen> {
               children: [
                 Icon(Icons.bolt, size: AppIconSize.i16, color: context.colors.primary),
                 const SizedBox(width: AppSpacing.s6),
-                Text(context.l10n.receipt_quickActions, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold)),
+                // #26 (UX2): the heading wraps in a narrow panel (Kiswahili at 1.3).
+                Flexible(child: Text(context.l10n.receipt_quickActions, style: const TextStyle(fontSize: AppFontSize.f13_5, fontWeight: AppFontWeight.bold))),
               ],
             ),
             const SizedBox(height: AppSpacing.s12),

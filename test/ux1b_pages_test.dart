@@ -87,10 +87,10 @@ void main() {
           final title = find.descendant(of: header, matching: find.byType(Text)).first;
           expect(tester.getTopLeft(title).dx, lessThan(tester.getRect(back).right + 16), reason: 'left, not centred');
           expect(find.byKey(const ValueKey('sb-sales-selected')), findsOneWidget, reason: 'the place stays highlighted');
-          // Known overflows from the body, before UX1b, aside: the archives'
-          // (POL4) and the receipts' 40 px in Kiswahili at 1.3 (#26).
+          // The archives' known overflow from the body (POL4) aside; the
+          // receipts' (#26) is fixed in UX2 and must not come back.
           for (var e = tester.takeException(); e != null; e = tester.takeException()) {
-            final known = name.contains('archive') || (name.contains('receipt') && look == MatrixLook.kiswahili);
+            final known = name.contains('archive');
             expect(known && e.toString().contains('overflowed'), isTrue, reason: '$name: $e');
           }
         });
