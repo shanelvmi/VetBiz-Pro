@@ -10020,6 +10020,12 @@ abstract class AppLocalizations {
   /// **'No services in the last 30 days.'**
   String get insights_noServices30;
 
+  /// Insights services chart when every service in the period earned nothing (free visits).
+  ///
+  /// In en, this message translates to:
+  /// **'No service revenue in the last 30 days.'**
+  String get insights_noServiceRevenue30;
+
   /// Notifications screen subtitle.
   ///
   /// In en, this message translates to:

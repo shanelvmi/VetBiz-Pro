@@ -3300,6 +3300,8 @@
   "@insights_noSales30": {"description":"Insights products chart when empty."},
   "insights_noServices30": "No services in the last 30 days.",
   "@insights_noServices30": {"description":"Insights services chart when empty."},
+  "insights_noServiceRevenue30": "No service revenue in the last 30 days.",
+  "@insights_noServiceRevenue30": {"description":"Insights services chart when every service in the period earned nothing (free visits)."},
   "notifications_subtitle": "All updates and alerts from your facility",
   "@notifications_subtitle": {"description":"Notifications screen subtitle."},
   "notifications_loadFailed": "Couldn't load alerts: {error}",

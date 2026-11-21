@@ -10,6 +10,9 @@ import '../../services/insights_data_loader.dart';
 import '../../services/service_breakdown.dart';
 import '../../widgets/summary_card.dart' show KpiTrend;
 import '../../widgets/shell/app_shell.dart';
+import '../../widgets/shell/page_header.dart';
+import '../../theme/app_breakpoints.dart';
+import '../../theme/app_layout.dart';
 import '../../data/collections.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
@@ -88,18 +91,22 @@ class _InsightsScreenState extends State<InsightsScreen> {
     final now = AppClock.now();
     final today = DateTime(now.year, now.month, now.day);
     _trendStart = today.subtract(AppRanges.insightsTrendBack);
-    // Matches exactly what's displayed - the trend chart and the
-    // top-products/services figures below both only ever use this
-    // same 14-day window, so there's nothing gained from querying
-    // further back than what's actually shown (the loader's windowStart is
-    // this same _trendStart).
+    // UX1b: the trend chart shows 14 days, but Top 5 products and the
+    // services donut are titled "Last 30 Days" and read only 14 before (a
+    // service 15 to 30 days old was missing). Both reads are now the 30-day
+    // window, the same one Home's 30d Product movement and Visit activity
+    // pages read (shared, kept for the session); the trend still counts only
+    // its 14 days from _trendStart.
 
     try {
       // HUB2: the same two reads, through the loader Home's Product movement
       // page shares: kept for the session, so a second visit (or Home
       // first) costs nothing.
       Future<List<List<Map<String, dynamic>>>> read(InsightsDataLoader loader) =>
-          Future.wait([loader.sales(facilityId, now: now), loader.services(facilityId, now: now)]);
+          Future.wait([
+            loader.sales(facilityId, now: now, days: AppRanges.month.inDays),
+            loader.services(facilityId, now: now, days: AppRanges.month.inDays),
+          ]);
       final loader = InsightsDataLoader.shared;
       // POL2: a test's fake Firestore gets its own loader; the app always
       // reads through the shared one.
@@ -408,6 +415,7 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!AppLayout.isPhone(context)) return _buildWide();
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
@@ -436,29 +444,91 @@ class _InsightsScreenState extends State<InsightsScreen> {
                       padding: const EdgeInsets.all(AppSpacing.s16),
                       children: [
                         _buildBusinessPulseCard(),
-                        const SizedBox(height: AppSpacing.s20),
-                        _buildChartCard(
-                          title: context.l10n.insights_salesLast14,
-                          summary: _trendSummary(),
-                          chartHeight: 220,
-                          chart: _buildTrendChart(),
-                        ),
-                        const SizedBox(height: AppSpacing.s20),
-                        _buildChartCard(
-                          title: context.l10n.insights_topProductsLast30,
-                          summary: _topProductSummary(),
-                          chartHeight: 260,
-                          chart: _buildTopProductsChart(),
-                        ),
-                        const SizedBox(height: AppSpacing.s20),
-                        _buildChartCard(
-                          title: context.l10n.insights_servicesByTypeLast30,
-                          summary: _serviceBreakdownSummary(),
-                          chartHeight: 220,
-                          chart: _buildServicesDonutChart(),
-                        ),
+                        for (final card in _chartCards()) ...[
+                          const SizedBox(height: AppSpacing.s20),
+                          card,
+                        ],
                       ],
                     ),
+                  ),
+                ),
+    );
+  }
+
+  /// The three chart cards in order (sales trend, top products, services),
+  /// for both layouts.
+  List<Widget> _chartCards() => [
+        _buildChartCard(
+          title: context.l10n.insights_salesLast14,
+          summary: _trendSummary(),
+          chartHeight: 220,
+          chart: _buildTrendChart(),
+        ),
+        _buildChartCard(
+          title: context.l10n.insights_topProductsLast30,
+          summary: _topProductSummary(),
+          chartHeight: 260,
+          chart: _buildTopProductsChart(),
+        ),
+        _buildChartCard(
+          title: context.l10n.insights_servicesByTypeLast30,
+          summary: _serviceBreakdownSummary(),
+          chartHeight: 220,
+          chart: _buildServicesDonutChart(),
+        ),
+      ];
+
+  // UX1b (owner, 2026-11-21): PC and tablet. The shared PageHeader (title on
+  // the left; the close button when opened as a modal, the back arrow only
+  // when pushed above another page) and the full content width instead of
+  // the 800 px centred column: Business Pulse full width, then the three
+  // chart cards two to a row from a content width of 900 (one below), and
+  // the page scrolls as one. The phone keeps the build above.
+  Widget _buildWide() {
+    final l10n = context.l10n;
+    return Scaffold(
+      backgroundColor: context.colors.background,
+      appBar: PageHeader(
+        title: l10n.insights_title,
+        leading: widget.isModal
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: l10n.common_close,
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text(l10n.insights_loadFailed(FriendlyError.messageFor(_error!)))))
+              : SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.s16),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final cards = _chartCards();
+                      final columns = constraints.maxWidth >= AppBreakpoints.medium ? 2 : 1;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _buildBusinessPulseCard(),
+                          for (var i = 0; i < cards.length; i += columns) ...[
+                            const SizedBox(height: AppSpacing.s20),
+                            if (columns == 1)
+                              cards[i]
+                            else
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(child: cards[i]),
+                                  const SizedBox(width: AppSpacing.s20),
+                                  Expanded(child: i + 1 < cards.length ? cards[i + 1] : const SizedBox.shrink()),
+                                ],
+                              ),
+                          ],
+                        ],
+                      );
+                    },
                   ),
                 ),
     );
@@ -691,6 +761,11 @@ class _InsightsScreenState extends State<InsightsScreen> {
   Widget _buildServicesDonutChart() {
     if (_serviceBreakdown.isEmpty) {
       return Center(child: Text(context.l10n.insights_noServices30, style: TextStyle(color: context.colors.textMuted)));
+    }
+    // UX1b: services given but all free (every total 0): the pie had nothing
+    // to share out and drew a blank ring; a line says so instead.
+    if (_serviceBreakdown.every((e) => e.value <= 0)) {
+      return Center(child: Text(context.l10n.insights_noServiceRevenue30, style: TextStyle(color: context.colors.textMuted)));
     }
 
     // POL7: drawn as the top three by revenue, largest first (the deepest

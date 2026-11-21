@@ -5880,6 +5880,10 @@ class AppLocalizationsSw extends AppLocalizations {
       'Hakuna huduma katika siku 30 zilizopita.';
 
   @override
+  String get insights_noServiceRevenue30 =>
+      'Hakuna mapato ya huduma katika siku 30 zilizopita.';
+
+  @override
   String get notifications_subtitle =>
       'Taarifa na tahadhari zote kutoka kituo chako';
 

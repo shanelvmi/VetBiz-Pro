@@ -5847,6 +5847,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get insights_noServices30 => 'No services in the last 30 days.';
 
   @override
+  String get insights_noServiceRevenue30 =>
+      'No service revenue in the last 30 days.';
+
+  @override
   String get notifications_subtitle =>
       'All updates and alerts from your facility';
 

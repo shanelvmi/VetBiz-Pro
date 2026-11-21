@@ -58,7 +58,8 @@ void main() {
     test('the donut reads its services through the shared loader, as Insights does (no second read)', () {
       expect(dash, contains('InsightsDataLoader.shared\n          .services(facilityId, days: r.days)'));
       final insights = File('lib/screens/dashboard/insights_screen.dart').readAsStringSync();
-      expect(insights, contains('loader.services(facilityId, now: now)'));
+      // UX1b: Insights reads the 30-day window, Home's 30d one (one cache key).
+      expect(insights, contains('loader.services(facilityId, now: now, days: AppRanges.month.inDays)'));
       expect(insights, contains('final loader = InsightsDataLoader.shared;'));
     });
   });

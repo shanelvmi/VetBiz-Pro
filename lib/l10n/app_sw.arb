@@ -3300,6 +3300,8 @@
   "@insights_noSales30": {"x-review":"draft"},
   "insights_noServices30": "Hakuna huduma katika siku 30 zilizopita.",
   "@insights_noServices30": {"x-review":"draft"},
+  "insights_noServiceRevenue30": "Hakuna mapato ya huduma katika siku 30 zilizopita.",
+  "@insights_noServiceRevenue30": {"x-review":"draft"},
   "notifications_subtitle": "Taarifa na tahadhari zote kutoka kituo chako",
   "@notifications_subtitle": {"x-review":"draft"},
   "notifications_loadFailed": "Imeshindwa kupakia arifa: {error}",

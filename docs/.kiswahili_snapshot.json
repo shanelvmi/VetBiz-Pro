@@ -1649,6 +1649,7 @@
   "insights_noSales14": ["Hakuna mauzo katika siku 14 zilizopita.","Insights sales chart when empty.","draft"],
   "insights_noSales30": ["Hakuna mauzo katika siku 30 zilizopita.","Insights products chart when empty.","draft"],
   "insights_noServices30": ["Hakuna huduma katika siku 30 zilizopita.","Insights services chart when empty.","draft"],
+  "insights_noServiceRevenue30": ["Hakuna mapato ya huduma katika siku 30 zilizopita.","Insights services chart when every service in the period earned nothing (free visits).","draft"],
   "notifications_subtitle": ["Taarifa na tahadhari zote kutoka kituo chako","Notifications screen subtitle.","draft"],
   "notifications_loadFailed": ["Imeshindwa kupakia arifa: {error}","Notifications when loading failed.","draft"],
   "notifications_catCritical": ["Muhimu Sana","Notifications category card.","draft"],
