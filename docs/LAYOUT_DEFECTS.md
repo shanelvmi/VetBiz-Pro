@@ -92,3 +92,9 @@ registry. Line numbers at LAY2 (8).
 | # | Where | What | Why it waits |
 |---|---|---|---|
 | 23 | ~~Settings side panel (content 900 or wider) embedding `SubscriptionScreen`~~ | The embedded pane keeps its own AppBar with the implied back arrow (`automaticallyImplyLeading: !widget.isModal`); tapping it closes Settings (as before LAY4, now back to Home in the shell). Pinned by lay4_shell_screens_test (only that one arrow allowed) | FIXED LAY7: SettingsPaneScope; no pane implies a back arrow (lay4_shell_screens_test, lay7_settings_test) |
+
+## Found in LAY7
+
+| # | Where | What | Why it waits |
+|---|---|---|---|
+| 24 | business_hours_screen.dart, the wide day card (`Row` spaceBetween at :242: the day title and the "Closed all day" label with its Switch, neither flexible) | Overflows 222 px on the right in Kiswahili at text 1.3, at every wide width (the card is capped at 700); standalone too, so before LAY7. Pinned in lay7_settings_test | fixing it (title and label Flexible) moves the ph8a-hours wide fingerprints, outside LAY7's planned diff: owner |

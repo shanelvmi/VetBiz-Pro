@@ -506,11 +506,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return isAdmin ? TrashScreen(firestore: widget.firestore) : _buildEmptyPane();
       case 'export':
         return isAdmin ? ExportDataScreen(firestore: widget.firestore) : _buildEmptyPane();
-      case 'business_hours':
-        return isAdmin ? BusinessHoursScreen(firestore: widget.firestore) : _buildEmptyPane();
       case 'manage_account':
         return ManageAccountScreen(firestore: widget.firestore, auth: widget.auth);
-      case 'business_profile' || 'facilities' || 'team' || 'activity_log':
+      case 'business_profile' || 'business_hours' || 'facilities' || 'team' || 'activity_log':
         return isAdmin
             ? _paneWidth(KeyedSubtree(
                 key: ValueKey('$_selectedKey-$_requestCount'),
