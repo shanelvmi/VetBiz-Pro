@@ -41,7 +41,10 @@ List<ProfileDrawerAction> profileActionsFor(AppLocalizations l10n, {required boo
         label: l10n.common_editProfile,
         onTap: on.editProfile,
       ),
-      if (isAdmin) ...[
+      // LAY7 (owner, 2026-11-18): on PC and tablet Team Members, View Facilities
+      // and the Activity Log moved into Settings > Business; the panel keeps
+      // personal items only. The phone list (wide: false) is unchanged.
+      if (isAdmin && !wide) ...[
         ProfileDrawerAction(
           item: ProfileItem.team,
           icon: AppIcons.team.outlined,
@@ -72,7 +75,7 @@ List<ProfileDrawerAction> profileActionsFor(AppLocalizations l10n, {required boo
           label: l10n.settings_languageBoth,
           onTap: on.language,
         ),
-      if (isAdmin)
+      if (isAdmin && !wide)
         ProfileDrawerAction(
           item: ProfileItem.activityLog,
           icon: AppIcons.activityLog.filled,

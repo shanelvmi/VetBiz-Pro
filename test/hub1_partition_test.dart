@@ -57,13 +57,18 @@ const _before = {
 // deliberate shortcut to the Settings rows' own picker; Settings keeps its row.
 const _sharedOnPurpose = {'showLanguagePicker'};
 
+// LAY7 (owner, 2026-11-18): Team Members, View Facilities and the Activity Log
+// are in the profile menu on a phone and in Settings > Business on PC and
+// tablet (the wide panel drops them): one place per width.
+const _sharedByWidth = {'ManageAssistantsScreen', 'FacilityScreen', 'ActivityLogScreen'};
+
 void main() {
   test('no destination is in two of the panel, the profile menu and the Settings screen', () {
     final parts = {'panel': _panel(), 'profile menu': _profileMenu(), 'Settings screen': _settingsScreen()};
     final names = parts.keys.toList();
     for (var i = 0; i < names.length; i++) {
       for (var j = i + 1; j < names.length; j++) {
-        expect(parts[names[i]]!.intersection(parts[names[j]]!).difference(_sharedOnPurpose), isEmpty, reason: '${names[i]} and ${names[j]}');
+        expect(parts[names[i]]!.intersection(parts[names[j]]!).difference({..._sharedOnPurpose, ..._sharedByWidth}), isEmpty, reason: '${names[i]} and ${names[j]}');
       }
     }
   });
@@ -71,7 +76,7 @@ void main() {
   test('everything the old navigation offered is reachable from exactly one of them', () {
     final parts = [_panel(), _profileMenu(), _settingsScreen()];
     for (final d in _before) {
-      expect(parts.where((p) => p.contains(d)), hasLength(1), reason: d);
+      expect(parts.where((p) => p.contains(d)), hasLength(_sharedByWidth.contains(d) ? 2 : 1), reason: d);
     }
   });
 

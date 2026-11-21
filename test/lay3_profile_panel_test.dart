@@ -115,15 +115,13 @@ void main() {
       ]);
     });
 
-    test('wide, admin: Edit Profile, Team, Facilities, Change password, Language, Activity Log, Sign out', () {
+    // LAY7: Team, Facilities and the Activity Log moved into Settings > Business.
+    test('wide, admin: Edit Profile, Change password, Language, Sign out', () {
       final actions = profileActionsFor(_en, isAdmin: true, wide: true, on: _handlers([]));
       expect(actions.map((a) => a.label), [
         _en.common_editProfile,
-        _en.team_title,
-        _en.dashboard_viewFacilities,
         _en.dashboard_changePassword,
         _en.settings_languageBoth,
-        _en.export_activityLog,
         _en.common_logout,
       ]);
       expect(actions.last.destructive, isTrue);
