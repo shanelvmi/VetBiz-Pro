@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +16,10 @@ import 'export_data_screen.dart';
 import 'business_hours_screen.dart';
 import 'trash_screen.dart';
 import 'settings_pane_scope.dart';
+import 'business_profile_screen.dart';
+import '../facilities/facility_screen.dart';
+import '../admin/manage_assistants_screen.dart';
+import '../activity/activity_log_screen.dart';
 import '../subscription/subscription_screen.dart';
 import '../dashboard/notifications_screen.dart';
 import '../../config/app_defaults.dart';
@@ -67,6 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildMobileLayout(BuildContext context) {
     final uiSettings = Provider.of<UiSettingsProvider>(context);
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
+    final phone = AppLayout.isPhone(context);
 
     final currentLanguageName = AppDefaults.languageNames[uiSettings.languageCode];
 
@@ -114,6 +121,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ],
+              // LAY7: on a tablet (not a phone) the Business items live here,
+              // pushed inside the content; the phone keeps them in its profile page.
+              if (isAdmin && !phone) ...[
+                const SizedBox(height: AppSpacing.s20),
+                _buildSectionTitle(context.l10n.expenseGroup_business),
+                const SizedBox(height: AppSpacing.s6),
+                Card(
+                  elevation: cardElevation,
+                  margin: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      for (final (i, item) in _businessItems(context).indexed)
+                        _buildSettingsItem(
+                          icon: item.icon,
+                          label: item.label,
+                          isLast: i == _businessItems(context).length - 1,
+                          onTap: () => _pushItem(context, item.key),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.s20),
               _buildSectionTitle(context.l10n.settings_accountData),
               const SizedBox(height: AppSpacing.s6),
@@ -146,7 +175,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           );
                         },
                       ),
-                    if (isAdmin)
+                    if (isAdmin && phone)
                       _buildSettingsItem(
                         icon: AppIcons.businessHours.outlined,
                         label: context.l10n.hours_title,
@@ -281,120 +310,126 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     final currentLanguageName = AppDefaults.languageNames[uiSettings.languageCode];
 
-    return Scaffold(
-      backgroundColor: context.colors.background,
-      body: Row(
-        children: [
-          SizedBox(
-            width: 300,
-            child: Container(
-              color: context.colors.surface,
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(AppSpacing.s20, AppSpacing.s24, AppSpacing.s20, AppSpacing.s16),
-                    child: Text(
-                      context.l10n.settings_title,
-                      style: TextStyle(
-                        fontWeight: AppFontWeight.bold,
-                        fontSize: AppFontSize.f22,
-                        color: context.colors.primary,
+    return PopScope(
+      canPop: _history.isEmpty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _history.isNotEmpty) setState(() => _selectedKey = _history.removeLast());
+      },
+      child: Scaffold(
+        backgroundColor: context.colors.background,
+        body: Row(
+          children: [
+            SizedBox(
+              width: 300,
+              child: Container(
+                color: context.colors.surface,
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(AppSpacing.s20, AppSpacing.s24, AppSpacing.s20, AppSpacing.s16),
+                      child: Text(
+                        context.l10n.settings_title,
+                        style: TextStyle(
+                          fontWeight: AppFontWeight.bold,
+                          fontSize: AppFontSize.f22,
+                          color: context.colors.primary,
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
-                      children: [
-                        if (isAdmin) ...[
-                          _buildSectionTitle(context.l10n.subscription_title),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
+                        children: [
+                          if (isAdmin) ...[
+                            _buildSectionTitle(context.l10n.subscription_title),
+                            const SizedBox(height: AppSpacing.s4),
+                            _buildSidebarItem(
+                              icon: AppIcons.subscription.outlined,
+                              label: context.l10n.settings_subscriptionBilling,
+                              navigateKey: 'subscription',
+                            ),
+                            const SizedBox(height: AppSpacing.s16),
+                            // LAY7: the Business items, panes like the others.
+                            _buildSectionTitle(context.l10n.expenseGroup_business),
+                            const SizedBox(height: AppSpacing.s4),
+                            for (final item in _businessItems(context))
+                              _buildSidebarItem(icon: item.icon, label: item.label, navigateKey: item.key),
+                            const SizedBox(height: AppSpacing.s16),
+                          ],
+                          _buildSectionTitle(context.l10n.settings_accountData),
                           const SizedBox(height: AppSpacing.s4),
+                          if (isAdmin)
+                            _buildSidebarItem(
+                              icon: AppIcons.trash.outlined,
+                              label: context.l10n.activityType_trash,
+                              navigateKey: 'trash',
+                            ),
+                          if (isAdmin)
+                            _buildSidebarItem(
+                              icon: AppIcons.export.outlined,
+                              label: context.l10n.settings_exportData,
+                              navigateKey: 'export',
+                            ),
                           _buildSidebarItem(
-                            icon: AppIcons.subscription.outlined,
-                            label: context.l10n.settings_subscriptionBilling,
-                            navigateKey: 'subscription',
+                            icon: Icons.manage_accounts_outlined,
+                            label: context.l10n.account_title,
+                            navigateKey: 'manage_account',
                           ),
                           const SizedBox(height: AppSpacing.s16),
+                          _buildSectionTitle(context.l10n.settings_general),
+                          const SizedBox(height: AppSpacing.s4),
+                          _buildSidebarItem(
+                            icon: Icons.notifications_none,
+                            label: context.l10n.common_notifications,
+                            navigateKey: 'notifications',
+                          ),
+                          _buildSidebarItem(
+                            icon: AppIcons.printer.outlined,
+                            label: context.l10n.printer_title,
+                            navigateKey: 'printer',
+                          ),
+                          _buildSidebarItem(
+                            icon: Icons.info_outline,
+                            label: context.l10n.settings_appInfo,
+                            onTapDialog: () => _showAppInfoDialog(context),
+                          ),
+                          const SizedBox(height: AppSpacing.s16),
+                          _buildSectionTitle(context.l10n.settings_preferences),
+                          const SizedBox(height: AppSpacing.s4),
+                          _buildSidebarItem(
+                            icon: Icons.color_lens_outlined,
+                            label: context.l10n.uiSettings_title,
+                            trailingText: context.l10n.settings_themeLayout,
+                            onTapDialog: () => showUiSettingsDialog(context),
+                          ),
+                          _buildSidebarItem(
+                            icon: AppIcons.currency.outlined,
+                            label: context.l10n.settings_currency,
+                            trailingText: AppDefaults.currencySymbol,
+                            onTapDialog: () {}, // not a real choice - no picker to open
+                          ),
+                          _buildSidebarItem(
+                            icon: Icons.language_outlined,
+                            label: context.l10n.settings_languageBoth,
+                            trailingText: currentLanguageName,
+                            onTapDialog: () => showLanguagePicker(context, uiSettings),
+                          ),
+                          const SizedBox(height: AppSpacing.s20),
                         ],
-                        _buildSectionTitle(context.l10n.settings_accountData),
-                        const SizedBox(height: AppSpacing.s4),
-                        if (isAdmin)
-                          _buildSidebarItem(
-                            icon: AppIcons.trash.outlined,
-                            label: context.l10n.activityType_trash,
-                            navigateKey: 'trash',
-                          ),
-                        if (isAdmin)
-                          _buildSidebarItem(
-                            icon: AppIcons.export.outlined,
-                            label: context.l10n.settings_exportData,
-                            navigateKey: 'export',
-                          ),
-                        if (isAdmin)
-                          _buildSidebarItem(
-                            icon: AppIcons.businessHours.outlined,
-                            label: context.l10n.hours_title,
-                            navigateKey: 'business_hours',
-                          ),
-                        _buildSidebarItem(
-                          icon: Icons.manage_accounts_outlined,
-                          label: context.l10n.account_title,
-                          navigateKey: 'manage_account',
-                        ),
-                        const SizedBox(height: AppSpacing.s16),
-                        _buildSectionTitle(context.l10n.settings_general),
-                        const SizedBox(height: AppSpacing.s4),
-                        _buildSidebarItem(
-                          icon: Icons.notifications_none,
-                          label: context.l10n.common_notifications,
-                          navigateKey: 'notifications',
-                        ),
-                        _buildSidebarItem(
-                          icon: AppIcons.printer.outlined,
-                          label: context.l10n.printer_title,
-                          navigateKey: 'printer',
-                        ),
-                        _buildSidebarItem(
-                          icon: Icons.info_outline,
-                          label: context.l10n.settings_appInfo,
-                          onTapDialog: () => _showAppInfoDialog(context),
-                        ),
-                        const SizedBox(height: AppSpacing.s16),
-                        _buildSectionTitle(context.l10n.settings_preferences),
-                        const SizedBox(height: AppSpacing.s4),
-                        _buildSidebarItem(
-                          icon: Icons.color_lens_outlined,
-                          label: context.l10n.uiSettings_title,
-                          trailingText: context.l10n.settings_themeLayout,
-                          onTapDialog: () => showUiSettingsDialog(context),
-                        ),
-                        _buildSidebarItem(
-                          icon: AppIcons.currency.outlined,
-                          label: context.l10n.settings_currency,
-                          trailingText: AppDefaults.currencySymbol,
-                          onTapDialog: () {}, // not a real choice - no picker to open
-                        ),
-                        _buildSidebarItem(
-                          icon: Icons.language_outlined,
-                          label: context.l10n.settings_languageBoth,
-                          trailingText: currentLanguageName,
-                          onTapDialog: () => showLanguagePicker(context, uiSettings),
-                        ),
-                        const SizedBox(height: AppSpacing.s20),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          const VerticalDivider(width: 1),
-          Expanded(
-            // LAY7 (#23): a pane is not a page; its AppBar shows no back arrow.
-            child: SettingsPaneScope(child: _buildContentPane(isAdmin)),
-          ),
-        ],
+            const VerticalDivider(width: 1),
+            Expanded(
+              // LAY7 (#23): a pane is not a page; its AppBar shows no back arrow.
+              child: SettingsPaneScope(child: _buildContentPane(isAdmin)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -415,9 +450,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return isAdmin ? BusinessHoursScreen(firestore: widget.firestore) : _buildEmptyPane();
       case 'manage_account':
         return ManageAccountScreen(firestore: widget.firestore, auth: widget.auth);
+      case 'business_profile' || 'facilities' || 'team' || 'activity_log':
+        return isAdmin ? _paneWidth(_itemScreen(_selectedKey!)) : _buildEmptyPane();
       default:
         return _buildEmptyPane();
     }
+  }
+
+  /// LAY7: the Business items (PC and tablet only), all admin-only (a
+  /// Co-admin included), as their gates were in the profile panel: Team
+  /// Members, View Facilities, Activity Log; Business Hours as in Settings;
+  /// Business Profile, never opened before, with the facility settings it
+  /// writes (an admin's, firestore.rules isEditingFacilitySettingsOnly).
+  /// The caller shows them only to an admin.
+  List<({String key, IconData icon, String label})> _businessItems(BuildContext context) => [
+        (key: 'business_profile', icon: Icons.business_outlined, label: context.l10n.profile_title),
+        (key: 'business_hours', icon: AppIcons.businessHours.outlined, label: context.l10n.hours_title),
+        (key: 'facilities', icon: AppIcons.facilities.outlined, label: context.l10n.dashboard_viewFacilities),
+        (key: 'team', icon: AppIcons.team.outlined, label: context.l10n.team_title),
+        (key: 'activity_log', icon: AppIcons.activityLog.outlined, label: context.l10n.export_activityLog),
+      ];
+
+  /// The screen of a Business item, as a pane or pushed (tablet list).
+  Widget _itemScreen(String key, {String? teamStatus}) => switch (key) {
+        'business_profile' => BusinessProfileScreen(firestore: widget.firestore),
+        'business_hours' => BusinessHoursScreen(firestore: widget.firestore),
+        'facilities' => FacilityScreen(firestore: widget.firestore, auth: widget.auth),
+        'team' => ManageAssistantsScreen(firestore: widget.firestore, auth: widget.auth, initialStatus: teamStatus),
+        _ => ActivityLogScreen(firestore: widget.firestore, auth: widget.auth),
+      };
+
+  /// Tablet list (content under 900): the item pushed inside the content;
+  /// Back returns to the list.
+  void _pushItem(BuildContext context, String key, {String? teamStatus}) =>
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => _itemScreen(key, teamStatus: teamStatus)));
+
+  /// LAY7: the new panes measure the pane, not the content (never below the
+  /// phone breakpoint, as the shell does): Team's details panel needs 1100
+  /// and a pane never has it, so a member's details open as its sheet.
+  Widget _paneWidth(Widget child) => LayoutBuilder(
+        builder: (context, constraints) {
+          final mq = MediaQuery.of(context);
+          return MediaQuery(
+            data: mq.copyWith(size: Size(math.max(constraints.maxWidth, AppBreakpoints.compact), mq.size.height)),
+            child: child,
+          );
+        },
+      );
+
+  /// LAY7 (6): the panes chosen before, newest last. Back shows the previous
+  /// one, then leaves Settings (Home).
+  final List<String> _history = [];
+
+  void _select(String key) {
+    if (key == _selectedKey) return;
+    setState(() {
+      if (_selectedKey != null) _history.add(_selectedKey!);
+      _selectedKey = key;
+    });
   }
 
   Widget _buildEmptyPane() {
@@ -457,7 +547,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(AppRadius.r8),
           onTap: navigateKey != null
-              ? () => setState(() => _selectedKey = navigateKey)
+              ? () => _select(navigateKey)
               : onTapDialog,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
