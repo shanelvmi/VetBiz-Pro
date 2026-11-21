@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 import '../../providers/transaction_provider.dart';
 import '../../providers/facility_provider.dart';
@@ -19,7 +18,6 @@ import 'add_transaction_screen.dart';
 import '../../config/money.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
-import '../../data/data_keys.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_layout.dart';
@@ -379,12 +377,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   Widget _buildTransactionsTable(List<TransactionModel> transactions,
       TransactionProvider transactionProvider) {
-    final Map<String, List<TransactionModel>> grouped = {};
-    for (final tx in transactions) {
-      final key = DateFormat(DataKeys.isoDay).format(tx.date);
-      grouped.putIfAbsent(key, () => []).add(tx);
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -405,11 +397,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
         ),
         Expanded(
           child: ListView(
+            // UX2 (owner, 2026-11-21): one row per transaction with its date
+            // and time in the Date column, as the other lists; no day header
+            // rows or day totals (those are in Reports). The provider's order.
             children: [
-              ...grouped.entries.map((dayEntry) {
-                final dayTotal = dayEntry.value.fold<double>(0.0, (sum, tx) => sum + tx.amount);
-                return _buildDayGroup(dayEntry.key, dayEntry.value, dayTotal);
-              }),
+              for (final tx in transactions) _buildTransactionRow(tx, transactionProvider: transactionProvider),
               _buildLoadMoreFooter(transactionProvider),
             ],
           ),
@@ -422,39 +414,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
     return Expanded(
       flex: flex,
       child: Text(label, style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textMuted)),
-    );
-  }
-
-  Widget _buildDayGroup(String dayKey, List<TransactionModel> transactions, double dayTotal) {
-    final date = DateFormat(DataKeys.isoDay).parse(dayKey);
-    final isProfit = dayTotal >= 0;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
-          color: context.colors.primary.withValues(alpha: AppAlpha.a05),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppDateFormat.date.format(date),
-                style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.primary),
-              ),
-              Text(
-                context.l10n.common_totalValue(Money.format(dayTotal)),
-                style: TextStyle(
-                  fontSize: AppFontSize.f12_5,
-                  fontWeight: AppFontWeight.bold,
-                  color: isProfit ? context.colors.successStrong : context.colors.dangerSoft,
-                ),
-              ),
-            ],
-          ),
-        ),
-        ...transactions.map((tx) => _buildTransactionRow(tx, transactionProvider: Provider.of<TransactionProvider>(context, listen: false))),
-      ],
     );
   }
 
@@ -478,11 +437,18 @@ class _TransactionScreenState extends State<TransactionScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // POL6: in or out as a neutral arrow (the amount's sign says it too).
-                Icon(isIncome ? Icons.arrow_downward : Icons.arrow_upward, size: AppIconSize.i14, color: context.colors.textSecondary),
+                // UX2 (owner): in or out as the arrow, income in the success
+                // colour, an expense neutral (not red). The amount's sign and
+                // the type read out say it too: colour is never the only cue.
+                Semantics(
+                  label: _typeLabel(tx.type),
+                  child: Icon(isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                      size: AppIconSize.i14, color: (isIncome ? AppStatus.success : AppStatus.neutral).roleIn(context.colors)),
+                ),
                 const SizedBox(width: AppSpacing.s8),
-                // LAY6b (#17): the time shares its narrow cell with the icon.
-                Flexible(child: Text(AppDateFormat.time12.format(tx.date), style: const TextStyle(fontSize: AppFontSize.f13))),
+                // LAY6b (#17): the date and time share their narrow cell with
+                // the icon (UX2: the date too, the day headers are gone).
+                Flexible(child: Text(AppDateFormat.dateTime12.format(tx.date), style: const TextStyle(fontSize: AppFontSize.f13))),
               ],
             ),
           ),
