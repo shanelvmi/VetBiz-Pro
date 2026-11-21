@@ -30,7 +30,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
-import '../../widgets/shell/app_shell.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/phone_list/phone_list_parts.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/phone_report/phone_report_row.dart';
@@ -264,25 +264,12 @@ class _ViewReportsScreenState extends State<ViewReportsScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
-        // LAY4: a place opened from the sidebar has no back arrow (the sidebar
-        // is the way out); pushed above it, or outside the shell, as before.
-        automaticallyImplyLeading: !ShellScope.isTopLevel(context),
-        backgroundColor: context.colors.surface,
-        foregroundColor: context.colors.textPrimary,
-        elevation: AppElevation.e0,
-        // POL7: flat, a hairline instead of the shadow (as POL2 to POL6).
-        shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-        centerTitle: true,
-        toolbarHeight: 72,
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(context.l10n.reports_viewTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-            Text(context.l10n.reports_viewSubtitle,
-                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
-          ],
-        ),
+      // UX1a: the shared PC/tablet header (title left, actions right). It
+      // keeps LAY4's rule (a place opened from the sidebar has no back arrow;
+      // pushed above it, or outside the shell, as before) and POL7's hairline.
+      appBar: PageHeader(
+        title: context.l10n.reports_viewTitle,
+        subtitle: context.l10n.reports_viewSubtitle,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.s12),

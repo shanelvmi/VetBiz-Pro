@@ -8,7 +8,7 @@ import '../../models/product.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../widgets/product_catalog_side_panel.dart';
-import '../../widgets/shell/app_shell.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/product_thumbnail.dart';
 import '../../services/product_catalog_service.dart';
 import '../../services/usage_calculator_service.dart';
@@ -712,25 +712,13 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final hasStockAlerts = StockAlertsScreen.hasAnyAlert(Provider.of<ProductProvider>(context).products);
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
 
-    return AppBar(
-      // LAY5: no back arrow at the shell's top level; below medium the drawer
-      // (the filter panel) keeps its automatic button, which wins over a back arrow.
-      automaticallyImplyLeading: !ShellScope.isTopLevel(context) || MediaQuery.of(context).size.width < AppBreakpoints.medium,
-      backgroundColor: context.colors.surface,
-      foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e0,
-      shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-      centerTitle: true,
-      toolbarHeight: 72,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(context.l10n.products_sellableTitle,
-              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text(context.l10n.products_sellableSubtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
-        ],
-      ),
+    // UX1a: the shared PC/tablet header (title left, actions right). LAY5's
+    // rule holds through PageHeader: no back arrow at the shell's top level;
+    // below medium the drawer (the filter panel) gets its menu button, which
+    // wins over a back arrow.
+    return PageHeader(
+      title: context.l10n.products_sellableTitle,
+      subtitle: context.l10n.products_sellableSubtitle,
       actions: [
         if (isAdmin)
           IconButton(

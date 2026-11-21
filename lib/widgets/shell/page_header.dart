@@ -49,13 +49,8 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
   Widget? _leading(BuildContext context) {
     if (leading != null) return leading;
     final scaffold = Scaffold.maybeOf(context);
-    if (scaffold != null && scaffold.hasDrawer) {
-      return IconButton(
-        icon: const Icon(Icons.menu),
-        tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
-        onPressed: scaffold.openDrawer,
-      );
-    }
+    // The same DrawerButton (and tooltip) AppBar adds for a drawer.
+    if (scaffold != null && scaffold.hasDrawer) return const DrawerButton();
     final back = showBack ?? (!ShellScope.isTopLevel(context) && (ModalRoute.of(context)?.canPop ?? false));
     return back ? const BackButton() : null;
   }
@@ -70,7 +65,10 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
         child: Container(
           height: height,
           padding: EdgeInsets.only(left: lead == null ? PolishMetrics.pagePadding : AppSpacing.s4, right: AppSpacing.s4),
-          decoration: BoxDecoration(
+          // Painted over, not laid out: the row is centred in the full 72 as
+          // in the AppBar it replaced (a laid-out border took 1 and moved the
+          // bell, and the stock-alerts panel anchored to it, up by 0.5).
+          foregroundDecoration: BoxDecoration(
             border: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
           ),
           child: IconTheme.merge(

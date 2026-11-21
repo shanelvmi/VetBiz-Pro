@@ -75,6 +75,9 @@ void main() {
           expect(titleText.textAlign, anyOf(isNull, TextAlign.start));
           // The primary button ends 16 from the right edge (4 + its 12).
           expect(tester.getTopRight(find.byKey(_record)).dx, content - AppSpacing.s4 - AppSpacing.s12);
+          // Centred in the full 72, as in the AppBar it replaced (the
+          // hairline is painted over, not laid out).
+          expect(tester.getCenter(find.byKey(_record)).dy, PageHeader.height / 2);
           expect(tester.getTopLeft(find.byKey(_range)).dx, greaterThan(tester.getTopLeft(title).dx));
           expect(find.byType(BackButton), findsNothing);
           // Colours from the roles: surface, the divider hairline, the text roles.
@@ -82,10 +85,10 @@ void main() {
           final material = tester.widget<Material>(find.descendant(of: header, matching: find.byType(Material)).first);
           expect(material.color, ctx.colors.surface);
           final box = tester.widget<Container>(find.descendant(of: header, matching: find.byType(Container)).first);
-          final side = ((box.decoration! as BoxDecoration).border! as Border).bottom;
+          final side = ((box.foregroundDecoration! as BoxDecoration).border! as Border).bottom;
           expect(side.color, ctx.colors.divider);
           expect(side.width, PolishMetrics.hairline);
-          expect((box.decoration! as BoxDecoration).boxShadow, isNull);
+          expect((box.foregroundDecoration! as BoxDecoration).boxShadow, isNull);
           expect(titleText.style?.color, ctx.colors.textPrimary);
           final sub = tester.widget<Text>(find.descendant(of: header, matching: find.byType(Text)).at(1));
           expect(sub.data, ctx.l10n.transactions_subtitle);
