@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../providers/facility_provider.dart';
@@ -30,7 +29,6 @@ import '../../config/money.dart';
 import '../../config/app_timeouts.dart';
 import '../../config/app_ranges.dart';
 import '../../config/app_date_format.dart';
-import '../../data/data_keys.dart';
 import '../../config/app_links.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/phone_list/phone_filter_sheet.dart';
@@ -501,13 +499,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                 final filtered = controller.entries;
                 final total = filtered.fold<double>(0.0, (runningTotal, e) => runningTotal + e.amount);
 
-                // Group by calendar day, preserving descending order.
-                final Map<String, List<LedgerEntry>> grouped = {};
-                for (final e in filtered) {
-                  final key = DateFormat(DataKeys.isoDay).format(e.timestamp);
-                  grouped.putIfAbsent(key, () => []).add(e);
-                }
-
                 if (controller.error != null && filtered.isEmpty) {
                   return Center(child: FirestoreErrorView(error: controller.error));
                 }
@@ -551,12 +542,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                                           ),
                                         ),
                                         Expanded(
+                                          // UX2 (owner, 2026-11-21): one row per payment with its
+                                          // date and time in the Date column, as the other lists;
+                                          // no day header rows or day totals (those are in
+                                          // Reports). The order is the ledger's, newest first.
                                           child: ListView(
-                                            children: grouped.entries.map((dayEntry) {
-                                              final dayTotal =
-                                                  dayEntry.value.fold<double>(0.0, (total, e) => total + e.amount);
-                                              return _buildDayGroup(dayEntry.key, dayEntry.value, dayTotal);
-                                            }).toList(),
+                                            children: [for (final e in filtered) _buildEntryTile(e)],
                                           ),
                                         ),
                                       ],
@@ -1128,50 +1119,6 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
-  Widget _buildDayGroup(String dayKey, List<LedgerEntry> entries, double dayTotal) {
-    final date = DateTime.parse(dayKey);
-    final now = AppClock.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(AppRanges.day);
-
-    String label;
-    if (date == today) {
-      label = context.l10n.common_today;
-    } else if (date == yesterday) {
-      label = context.l10n.common_yesterday;
-    } else {
-      label = AppDateFormat.dateLongPadded.format(date);
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.s12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s8),
-            color: context.colors.primary.withValues(alpha: AppAlpha.a05),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$label - ${AppDateFormat.date.format(date)}',
-                  style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f12_5, color: context.colors.primary),
-                ),
-                Text(
-                  Money.format(dayTotal),
-                  style: TextStyle(fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.bold, color: context.colors.primary),
-                ),
-              ],
-            ),
-          ),
-          ...entries.map(_buildEntryTile),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEntryTile(LedgerEntry e) {
     final recordedBy = e.paidById != null ? _userNames[e.paidById] : null;
     final isSelected = _selectedEntry == e;
@@ -1197,8 +1144,9 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
                   child: Icon(_iconFor(e.type), size: AppIconSize.i14, color: context.colors.primary),
                 ),
                 const SizedBox(width: AppSpacing.s8),
-                // LAY6b (#16): the time shares its narrow cell with the icon.
-                Flexible(child: Text(AppDateFormat.time12.format(e.timestamp), style: const TextStyle(fontSize: AppFontSize.f13))),
+                // LAY6b (#16): the date and time share their narrow cell with
+                // the icon (UX2: the date too, the day headers are gone).
+                Flexible(child: Text(AppDateFormat.dateTime12.format(e.timestamp), style: const TextStyle(fontSize: AppFontSize.f13))),
               ],
             ),
           ),

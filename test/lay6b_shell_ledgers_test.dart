@@ -87,6 +87,11 @@ Future<void> _open(WidgetTester tester, AppDestination d) async {
 }
 
 Future<void> _openRow(WidgetTester tester, String row) async {
+  // UX2: the Date column holds the date and the time (two lines at 1.3),
+  // so a row can start below the part of the list that is built.
+  if (find.text(row).evaluate().isEmpty) {
+    await tester.dragUntilVisible(find.text(row), find.byType(ListView).first, const Offset(0, -200));
+  }
   await tester.ensureVisible(find.text(row).last);
   await tester.pumpAndSettle();
   await tester.tap(find.text(row).last);
