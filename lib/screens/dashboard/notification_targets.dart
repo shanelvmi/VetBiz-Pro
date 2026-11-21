@@ -39,6 +39,8 @@ AppDestination? notificationTargetPlace(FacilityNotification n) {
   return switch (n.relatedEntityType) {
     'client' => AppDestination.clients,
     'payment' => AppDestination.payments,
+    // LAY6d: a service opens Services.
+    'service' => AppDestination.services,
     _ => null,
   };
 }

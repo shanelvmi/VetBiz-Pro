@@ -189,7 +189,8 @@ void main() {
         id: 'n1', type: NotificationType.general, title: 't', message: 'm', relatedEntityType: type, relatedEntityId: 'x1');
     expect(notificationTargetPlace(n('client')), AppDestination.clients);
     expect(notificationTargetPlace(n('payment')), AppDestination.payments);
-    for (final other in ['product', 'service', 'assistant']) {
+    expect(notificationTargetPlace(n('service')), AppDestination.services); // LAY6d
+    for (final other in ['product', 'assistant']) {
       expect(notificationTargetPlace(n(other)), isNull, reason: other);
     }
   });

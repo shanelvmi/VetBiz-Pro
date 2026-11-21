@@ -2435,6 +2435,8 @@ Widget? _shellPageFor(AppDestination d) => switch (d) {
       AppDestination.transactions => TransactionScreen(),
       // LAY6c: Sales; its Archive and receipts push inside the content.
       AppDestination.sales => SalesScreen(),
+      // LAY6d: Services; its Archive and receipts push inside the content.
+      AppDestination.services => ServicesScreen(),
       AppDestination.settings => SettingsScreen(),
       AppDestination.reports => const ViewReportsScreen(),
       _ => null,
