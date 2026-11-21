@@ -59,11 +59,9 @@ void _expectDots(WidgetTester tester, Finder scope, AppColors c, {required Strin
     final dot = e.widget as StatusDot;
     expect(dot.label, isNotEmpty, reason: where);
     if (dot.label == 'Overdue') expect(dot.status, AppStatus.danger, reason: where);
-    // UX2: a client's Active is success in the list rows; the client card
-    // (the details panel, also the shared image and the phone page) keeps
-    // the neutral dot. Inactive and Current stay neutral.
-    final inCard = dot.key == const ValueKey('clientCard-status');
-    if (dot.label == 'Active') expect(dot.status, inCard ? AppStatus.neutral : AppStatus.success, reason: '$where: ${dot.label}');
+    // UX2, UX2b: a client's Active is success, in the list rows and on the
+    // client card; Inactive and Current stay neutral.
+    if (dot.label == 'Active') expect(dot.status, AppStatus.success, reason: '$where: ${dot.label}');
     if (dot.label == 'Current' || dot.label == 'Inactive') {
       expect(dot.status, AppStatus.neutral, reason: '$where: ${dot.label}');
     }
