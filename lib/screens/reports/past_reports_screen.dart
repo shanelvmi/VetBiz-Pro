@@ -20,6 +20,7 @@ import '../../theme/polish_metrics.dart';
 import '../../ui/polish/app_status.dart';
 import '../../ui/polish/flat_stat_card.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
@@ -203,23 +204,9 @@ class _PastReportsScreenState extends State<PastReportsScreen> {
     if (AppLayout.isPhone(context)) return _buildPhone();
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
-        backgroundColor: context.colors.surface,
-        foregroundColor: context.colors.textPrimary,
-        elevation: AppElevation.e0,
-        // POL7: flat, a hairline instead of the shadow (as POL2 to POL6).
-        shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-        centerTitle: true,
-        toolbarHeight: 72,
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(context.l10n.reports_pastTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-            Text(context.l10n.reports_pastSubtitle,
-                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
-          ],
-        ),
-      ),
+      // UX1b: the shared page header (title left, back arrow: pushed above
+      // Reports).
+      appBar: PageHeader(title: context.l10n.reports_pastTitle, subtitle: context.l10n.reports_pastSubtitle),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(

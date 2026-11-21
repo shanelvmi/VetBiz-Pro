@@ -11,6 +11,7 @@ import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/polish/app_status.dart';
@@ -40,30 +41,16 @@ class ReportDetailScreen extends StatelessWidget {
     if (AppLayout.isPhone(context)) return _buildPhone(context);
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
-        backgroundColor: context.colors.surface,
-        foregroundColor: context.colors.textPrimary,
-        elevation: AppElevation.e0,
-        // POL7: flat, a hairline instead of the shadow (as POL2 to POL6).
-        shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-        centerTitle: true,
-        toolbarHeight: 72,
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(AppDateFormat.dateLong.format(report.reportDate),
-                style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18, color: context.colors.textPrimary)),
-            // POL7: a draft shows the one status style (a dot and the word,
-            // reportAppStatus); "Submitted by ..." stays a plain byline.
-            if (report.status == 'submitted')
-              Text(
-                context.l10n.reports_submittedBy(report.generatedByName),
-                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary),
-              )
-            else
-              StatusDot(status: reportAppStatus(report.status), label: context.l10n.reports_draftNotSubmitted),
-          ],
-        ),
+      // UX1b: the shared page header (title left, back arrow: pushed above
+      // Past Reports or Reports).
+      appBar: PageHeader(
+        title: AppDateFormat.dateLong.format(report.reportDate),
+        // POL7: a draft shows the one status style (a dot and the word,
+        // reportAppStatus); "Submitted by ..." stays a plain byline.
+        subtitle: report.status == 'submitted' ? context.l10n.reports_submittedBy(report.generatedByName) : null,
+        subtitleWidget: report.status == 'submitted'
+            ? null
+            : StatusDot(status: reportAppStatus(report.status), label: context.l10n.reports_draftNotSubmitted),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.s12),

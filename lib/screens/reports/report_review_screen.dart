@@ -18,6 +18,7 @@ import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../widgets/app_sheet.dart';
 import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
 import '../../widgets/phone_report/phone_report_row.dart';
@@ -200,14 +201,11 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
     if (AppLayout.isPhone(context)) return _buildPhone();
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
-        backgroundColor: context.colors.surface,
-        foregroundColor: context.colors.textPrimary,
-        elevation: AppElevation.e0,
-        // POL7: flat, a hairline instead of the shadow (as POL2 to POL6).
-        shape: Border(bottom: BorderSide(color: context.colors.divider, width: PolishMetrics.hairline)),
-        centerTitle: true,
-        toolbarHeight: 72,
+      // UX1b: the shared page header (title left; the close button as a
+      // modal, else the back arrow: pushed above Reports).
+      appBar: PageHeader(
+        title: context.l10n.reports_reviewSubmit,
+        subtitle: AppDateFormat.dateLong.format(widget.report.reportDate),
         leading: widget.isModal
             ? IconButton(
                 icon: const Icon(Icons.close),
@@ -215,14 +213,6 @@ class _ReportReviewScreenState extends State<ReportReviewScreen> {
                 onPressed: () => Navigator.of(context).pop(),
               )
             : null,
-        title: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(context.l10n.reports_reviewSubmit, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18, color: context.colors.textPrimary)),
-            Text(AppDateFormat.dateLong.format(widget.report.reportDate),
-                style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
-          ],
-        ),
       ),
       body: Center(
         child: ConstrainedBox(

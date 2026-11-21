@@ -26,6 +26,7 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     required this.title,
     this.subtitle,
+    this.subtitleWidget,
     this.actions = const [],
     this.leading,
     this.showBack,
@@ -35,6 +36,10 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
 
   final String title;
   final String? subtitle;
+
+  /// UX1b: a line under the title that is not plain text (a report draft's
+  /// status dot); used when [subtitle] is null.
+  final Widget? subtitleWidget;
 
   /// The screen's actions, right-aligned, in order. They keep their size; the
   /// title gives way first (an ellipsis). An action wrapped in a Flexible
@@ -96,7 +101,9 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary),
-                        ),
+                        )
+                      else if (subtitleWidget != null)
+                        subtitleWidget!,
                     ],
                   ),
                 ),
