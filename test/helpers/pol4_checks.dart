@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:vetbiz_pro/widgets/shell/page_header.dart';
 import 'package:vetbiz_pro/data/payment_status.dart';
 import 'package:vetbiz_pro/l10n/l10n.dart';
 import 'package:vetbiz_pro/theme/app_colors.dart';
@@ -64,6 +65,16 @@ void expectNoShadowOrGradient(WidgetTester tester, Finder scope, {required Strin
 
 /// The bar: no shadow, a hairline in the divider role.
 void expectFlatBar(WidgetTester tester, Finder scope, AppColors c, {required String where}) {
+  // UX1a: on PC and tablet the top-level screens use PageHeader; the same
+  // rule (no shadow, the divider hairline).
+  final header = find.descendant(of: scope, matching: find.byType(PageHeader));
+  if (header.evaluate().isNotEmpty) {
+    final box = tester.widget<Container>(find.descendant(of: header.first, matching: find.byType(Container)).first);
+    final d = box.foregroundDecoration! as BoxDecoration;
+    expect(d.boxShadow, isNull, reason: where);
+    expect((d.border! as Border).bottom.color, c.divider, reason: where);
+    return;
+  }
   final bar = tester.widget<AppBar>(find.descendant(of: scope, matching: find.byType(AppBar)).first);
   expect(bar.elevation, 0, reason: where);
   expect((bar.shape! as Border).bottom.color, c.divider, reason: where);
