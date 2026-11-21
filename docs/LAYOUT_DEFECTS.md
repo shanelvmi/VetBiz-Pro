@@ -97,4 +97,4 @@ registry. Line numbers at LAY2 (8).
 
 | # | Where | What | Why it waits |
 |---|---|---|---|
-| 24 | business_hours_screen.dart, the wide day card (`Row` spaceBetween at :242: the day title and the "Closed all day" label with its Switch, neither flexible) | Overflows 222 px on the right in Kiswahili at text 1.3, at every wide width (the card is capped at 700); standalone too, so before LAY7. Pinned in lay7_settings_test | fixing it (title and label Flexible) moves the ph8a-hours wide fingerprints, outside LAY7's planned diff: owner |
+| 24 | ~~business_hours_screen.dart, the wide day card (`Row` spaceBetween at :242: the day title and the "Closed all day" label with its Switch, neither flexible)~~ | Overflows 222 px on the right in Kiswahili at text 1.3, at every wide width (the card is capped at 700); standalone too, so before LAY7. Pinned in lay7_settings_test | FIXED LAY7b: title, the label group and the label Flexible (wrap); ph8a-business-hours-* re-recorded (+9 Flexible, no size moved); lay7_settings_test asserts no overflow |

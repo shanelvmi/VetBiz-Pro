@@ -242,12 +242,20 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
-              Row(
-                children: [
-                  Text(context.l10n.hours_closedAllDay, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
-                  Switch(value: closed, activeThumbColor: context.colors.primary, onChanged: onClosedChanged),
-                ],
+              // LAY7b (#24): neither side could shrink, so a long day name and
+              // "Closed all day" (Kiswahili at large text) overflowed the 700
+              // card; now both wrap and the switch keeps its place.
+              Flexible(child: Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14))),
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(context.l10n.hours_closedAllDay, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
+                    ),
+                    Switch(value: closed, activeThumbColor: context.colors.primary, onChanged: onClosedChanged),
+                  ],
+                ),
               ),
             ],
           ),

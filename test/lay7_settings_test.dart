@@ -261,19 +261,23 @@ void main() {
             final l = lookupAppLocalizations(Locale(look == MatrixLook.kiswahili ? 'sw' : 'en'));
             for (final label in _business(l)) {
               await _tapItem(tester, label);
-              final error = tester.takeException();
-              // Defect #24 (docs/LAYOUT_DEFECTS.md, found here): Business Hours'
-              // wide day card overflows 222 px in Kiswahili at 1.3, on its own
-              // too (before LAY7); left for the owner. Pinned so a change shows.
-              if (look == MatrixLook.kiswahili && label == l.hours_title) {
-                expect('$error', contains('overflowed by 222'), reason: 'defect #24 as found');
-                continue;
-              }
-              expect(error, isNull, reason: label);
+              // LAY7b: Business Hours included (defect #24 fixed).
+              expect(tester.takeException(), isNull, reason: label);
             }
           });
         }
       }
     }
   });
+
+  // LAY7b (#24): Business Hours on its own, every wide width, Kiswahili and
+  // English at text 1.3: no overflow.
+  for (final size in const [Size(768, 1024), Size(1024, 768), Size(1200, 800)]) {
+    for (final look in const [MatrixLook.kiswahili, MatrixLook.light]) {
+      ph5TestWidgets('Business Hours alone ${size.width.toInt()} ${look.name} text 1.3: no overflow (#24)', (tester) async {
+        await pumpPh5(tester, (fs) => BusinessHoursScreen(firestore: fs), size: size, look: look, textScale: 1.3, pushed: true);
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
 }
