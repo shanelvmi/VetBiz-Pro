@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'settings_pane_scope.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
 import '../../services/receipt_printer_service.dart';
@@ -176,6 +177,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
+        automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         title: Text(context.l10n.printer_title),
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,

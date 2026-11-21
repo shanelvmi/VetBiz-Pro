@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../settings/settings_pane_scope.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -299,7 +300,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         centerTitle: true,
         backgroundColor: colors.brandSurface,
         foregroundColor: colors.onBrandSurface,
-        automaticallyImplyLeading: !widget.isModal,
+        automaticallyImplyLeading: !widget.isModal && !SettingsPaneScope.isPane(context),
         leading: widget.isModal
             ? IconButton(
                 icon: const Icon(Icons.close),

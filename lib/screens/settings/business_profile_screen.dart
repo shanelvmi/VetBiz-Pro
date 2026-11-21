@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'settings_pane_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -122,6 +123,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
+        automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         title: Text(context.l10n.profile_title),
         centerTitle: true,
         backgroundColor: context.colors.primary,

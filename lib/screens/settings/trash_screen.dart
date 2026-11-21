@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'settings_pane_scope.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -58,6 +59,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
+        automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         title: Text(context.l10n.activityType_trash),
         centerTitle: true,
         backgroundColor: context.colors.brandSurface,

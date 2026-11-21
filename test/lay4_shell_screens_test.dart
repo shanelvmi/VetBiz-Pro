@@ -73,12 +73,9 @@ void main() {
             expect(tester.takeException(), isNull);
             expect(find.byType(_typeOf(d)), findsOneWidget);
             expect(find.byKey(ValueKey('sb-${d.name}-selected')), findsOneWidget, reason: 'the place is selected');
-            // The place itself has no back arrow. Open item (LAY4c): Settings' side
-            // panel embeds Subscription, whose own AppBar still shows one (it closes
-            // Settings, as before LAY4); only that one is allowed here.
-            final embedded = find.descendant(of: find.byType(SubscriptionScreen), matching: find.byType(BackButton));
-            expect(find.byType(BackButton).evaluate().length, embedded.evaluate().length,
-                reason: 'top level: no back arrow outside the embedded pane');
+            // The place itself has no back arrow, and since LAY7 (#23) neither has
+            // a pane embedded in Settings' side panel (Subscription, for an admin).
+            expect(find.byType(BackButton), findsNothing, reason: 'top level and panes: no back arrow');
             final left = tester.getTopLeft(find.byType(_typeOf(d))).dx;
             expect(left, _sidebarFor(size), reason: 'beside the sidebar, not over it');
           });

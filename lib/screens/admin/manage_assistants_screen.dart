@@ -1,4 +1,5 @@
 import 'dart:async';
+import '../settings/settings_pane_scope.dart';
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -995,6 +996,7 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   PreferredSizeWidget _buildAppBar() {
     final narrow = context.screenWidth < AppBreakpoints.compact;
     return AppBar(
+      automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e1,

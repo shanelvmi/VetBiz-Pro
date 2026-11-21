@@ -13,6 +13,7 @@ import 'printer_settings_screen.dart';
 import 'export_data_screen.dart';
 import 'business_hours_screen.dart';
 import 'trash_screen.dart';
+import 'settings_pane_scope.dart';
 import '../subscription/subscription_screen.dart';
 import '../dashboard/notifications_screen.dart';
 import '../../config/app_defaults.dart';
@@ -390,7 +391,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const VerticalDivider(width: 1),
           Expanded(
-            child: _buildContentPane(isAdmin),
+            // LAY7 (#23): a pane is not a page; its AppBar shows no back arrow.
+            child: SettingsPaneScope(child: _buildContentPane(isAdmin)),
           ),
         ],
       ),

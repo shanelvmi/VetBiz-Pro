@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'settings_pane_scope.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -851,6 +852,7 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
+        automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         centerTitle: true,
         title: Text(context.l10n.export_title, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20)),
         backgroundColor: context.colors.brandSurface,

@@ -91,4 +91,4 @@ registry. Line numbers at LAY2 (8).
 
 | # | Where | What | Why it waits |
 |---|---|---|---|
-| 23 | Settings side panel (content 900 or wider) embedding `SubscriptionScreen` | The embedded pane keeps its own AppBar with the implied back arrow (`automaticallyImplyLeading: !widget.isModal`); tapping it closes Settings (as before LAY4, now back to Home in the shell). Pinned by lay4_shell_screens_test (only that one arrow allowed) | owner: leave it; LAY7 reworks Settings sections |
+| 23 | ~~Settings side panel (content 900 or wider) embedding `SubscriptionScreen`~~ | The embedded pane keeps its own AppBar with the implied back arrow (`automaticallyImplyLeading: !widget.isModal`); tapping it closes Settings (as before LAY4, now back to Home in the shell). Pinned by lay4_shell_screens_test (only that one arrow allowed) | FIXED LAY7: SettingsPaneScope; no pane implies a back arrow (lay4_shell_screens_test, lay7_settings_test) |

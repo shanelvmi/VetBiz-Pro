@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../settings/settings_pane_scope.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../services/activity_log_retention.dart';
@@ -425,7 +426,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           foregroundColor: context.colors.textPrimary,
           elevation: AppElevation.e1,
           centerTitle: true,
-          automaticallyImplyLeading: !widget.isModal,
+          automaticallyImplyLeading: !widget.isModal && !SettingsPaneScope.isPane(context),
           leading: widget.isModal
               ? IconButton(
                   icon: Icon(Icons.close, color: context.colors.textPrimary),
@@ -686,7 +687,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       elevation: AppElevation.e1,
       centerTitle: true,
       toolbarHeight: 72,
-      automaticallyImplyLeading: !widget.isModal,
+      automaticallyImplyLeading: !widget.isModal && !SettingsPaneScope.isPane(context),
       leading: widget.isModal
           ? IconButton(
               icon: const Icon(Icons.close),

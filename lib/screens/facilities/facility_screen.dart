@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../settings/settings_pane_scope.dart';
 import '../../services/activity_log_retention.dart';
 import '../../services/membership_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -1437,6 +1438,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e1,
