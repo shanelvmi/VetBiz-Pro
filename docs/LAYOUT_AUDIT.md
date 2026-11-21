@@ -301,8 +301,8 @@ phone is unchanged throughout.
 | Products | LAY5 | filter panel a column from 900, the drawer below |
 | Stock Store | LAY5 | as Products |
 | Reports | LAY4 | |
-| Settings | LAY4 | its rows push inside the content |
-| Activity Log, Notifications | LAY4b | openInContent, Settings highlighted |
+| Settings | LAY4 | its rows push inside the content; LAY7: a Business group (Business Profile, Business Hours, View Facilities, Team Members, Activity Log; admins) as panes from 900, rows pushed inside the content below; no back arrow in a pane (#23) |
+| Activity Log, Notifications | LAY4b | Notifications: openInContent, Settings highlighted. Activity Log: Settings > Business since LAY7 |
 
 Still full screen (or a dialog) over everything:
 
@@ -310,5 +310,4 @@ Still full screen (or a dialog) over everything:
 |---|---|
 | Record forms (Add sale, service, payment, client, product, batch, transaction) | owner: forms stay as they are for now (dialogs later); under 900 content they push inside the content, from 900 a centred modal |
 | Platform Admin | owner: stays outside the shell |
-| Team Members, View Facilities (profile panel) | move into Settings sections in LAY7 |
 | Edit Profile, Change password (profile panel) | dialogs / modal, unchanged |
