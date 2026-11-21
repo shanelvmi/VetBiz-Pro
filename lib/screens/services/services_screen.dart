@@ -12,6 +12,10 @@ import '../../providers/user_role_provider.dart';
 import '../../providers/client_provider.dart';
 import '../../services/cursor_paginated_list_controller.dart';
 import '../../widgets/firestore_error_view.dart';
+import '../../widgets/details_layout.dart';
+import '../../widgets/list_page_bar.dart';
+import '../../widgets/shell/app_shell.dart';
+import '../../widgets/toolbar_layout.dart';
 import 'add_edit_service_screen.dart';
 import 'services_archive_screen.dart';
 import 'service_receipt_preview_screen.dart';
@@ -208,12 +212,24 @@ class _ServicesScreenState extends State<ServicesScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Column(
+      // LAY6d (owner mockups, as Sales): the details inline from 900 of the
+      // width this list is given, a slide-over below it (DetailsLayout, auto).
+      body: DetailsLayout(
+        mode: DetailsMode.auto,
+        detailsWidth: 380,
+        label: context.l10n.services_detailsTitle,
+        onClose: () => setState(() => _selectedService = null),
+        details: _selectedService == null
+            ? null
+            : _buildServiceDetailsPanel(_selectedService!, dateOnlyFormatter, timeOnlyFormatter),
+        // LAY6d (as Sales): the header (figures, Archive, toolbar) takes at most
+        // 35 % of the list's height and scrolls inside it when taller.
+        list: LayoutBuilder(builder: (context, box) => Column(
               children: [
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: box.maxHeight * DetailsLayoutMetrics.headerMaxShare),
+                  child: SingleChildScrollView(
+                    child: Column(children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s16, AppSpacing.s16, 0),
                   child: Row(
@@ -228,6 +244,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s12, AppSpacing.s16, 0),
                   child: _buildFiltersToolbar(),
+                ),
+                    ]),
+                  ),
                 ),
                 Expanded(
                   child: ListenableBuilder(
@@ -259,23 +278,26 @@ class _ServicesScreenState extends State<ServicesScreen> {
                                       )
                                     : _buildServicesTable(pageServices, dateFormatter),
                           ),
-                          _buildPaginationBar(serviceProvider: serviceProvider, controller: controller),
+                          // LAY6d (#6): the shared page bar; it wraps on a narrow list.
+                          ListPageBar(
+                            emptyText: context.l10n.services_none,
+                            itemCount: controller.items.length,
+                            pageSize: controller.pageSize,
+                            currentPage: controller.currentPage,
+                            hasPreviousPage: controller.hasPreviousPage,
+                            hasNextPage: controller.hasNextPage,
+                            isLoading: controller.isLoading,
+                            onPageSize: controller.setPageSize,
+                            onPrevious: controller.goToPreviousPage,
+                            onNext: controller.goToNextPage,
+                          ),
                         ],
                       );
                     },
                   ),
                 ),
               ],
-            ),
-          ),
-          if (_selectedService != null) ...[
-            const VerticalDivider(width: 1),
-            SizedBox(
-              width: 380,
-              child: _buildServiceDetailsPanel(_selectedService!, dateOnlyFormatter, timeOnlyFormatter),
-            ),
-          ],
-        ],
+            )),
       ),
     );
   }
@@ -330,6 +352,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
+      // LAY6d: no back arrow when opened from the shell's sidebar.
+      automaticallyImplyLeading: !ShellScope.isTopLevel(context),
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       // POL4 (owner rule 4): no shadow under the bar; a hairline.
@@ -451,11 +475,10 @@ class _ServicesScreenState extends State<ServicesScreen> {
     final hasActiveFilters =
         _searchQuery.isNotEmpty || _selectedCategory != 'All' || _dateFilter != 'Last 30 days' || _statusFilter != 'All';
 
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: TextField(
+    // LAY6d (#5, #6): search and filters on one line while they fit, else the
+    // search on its own line and the filters under it (ToolbarLayout).
+    return ToolbarLayout(
+      search: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: context.l10n.services_searchHint,
@@ -476,8 +499,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             ),
             onChanged: _onSearchChanged,
           ),
-        ),
-        const SizedBox(width: AppSpacing.s10),
+      filters: [
         _toolbarDropdown<String>(
           value: _dateFilter,
           items: _dateFilterOptions,
@@ -488,7 +510,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
             _openServicesListSession();
           },
         ),
-        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _selectedCategory,
           items: ['All', ...kServiceCategories],
@@ -499,7 +520,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
             _openServicesListSession();
           },
         ),
-        const SizedBox(width: AppSpacing.s10),
         _toolbarDropdown<String>(
           value: _statusFilter,
           items: _statusFilterOptions,
@@ -510,8 +530,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
             _openServicesListSession();
           },
         ),
-        if (hasActiveFilters) ...[
-          const SizedBox(width: AppSpacing.s10),
+        if (hasActiveFilters)
           TextButton(
             onPressed: () {
               _searchDebounce?.cancel();
@@ -526,7 +545,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
             },
             child: Text(context.l10n.common_reset),
           ),
-        ],
       ],
     );
   }
@@ -539,7 +557,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
     // What an item shows; the dropdown still holds and returns the item.
     String Function(T value)? display,
   }) {
-    return Container(
+    // LAY6d (as Sales): as wide as its label, never wider than the toolbar
+    // (the label then ends in an ellipsis: Kiswahili, large text).
+    return IntrinsicWidth(child: Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
       height: 44,
       decoration: BoxDecoration(
@@ -550,6 +570,15 @@ class _ServicesScreenState extends State<ServicesScreen> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
+          isExpanded: true,
+          selectedItemBuilder: (context) => [
+            for (final v in items)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(context.l10n.common_filterValue(label, display?.call(v) ?? '$v'),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+              ),
+          ],
           icon: Icon(Icons.arrow_drop_down, size: AppIconSize.i18, color: context.colors.primary),
           style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f13),
           items: items
@@ -560,7 +589,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
           },
         ),
       ),
-    );
+    ));
   }
 
   // ==================== TABLE ====================
@@ -698,59 +727,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
   }
 
   // ==================== PAGINATION ====================
-
-  Widget _buildPaginationBar({
-    required ServiceProvider serviceProvider,
-    required CursorPaginatedListController<Service> controller,
-  }) {
-    final pageSize = controller.pageSize;
-    final itemCount = controller.items.length;
-    final pageStart = itemCount == 0 ? 0 : (controller.currentPage - 1) * pageSize + 1;
-    final pageEnd = (controller.currentPage - 1) * pageSize + itemCount;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-      decoration: BoxDecoration(border: Border(top: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            itemCount == 0 ? context.l10n.services_none : context.l10n.common_showingRange(pageStart, pageEnd),
-            style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-          ),
-          Row(
-            children: [
-              DropdownButtonHideUnderline(
-                child: DropdownButton<int>(
-                  value: pageSize,
-                  items: const [10, 25, 50]
-                      .map((n) => DropdownMenuItem(value: n, child: Text(context.l10n.common_perPage(n))))
-                      .toList(),
-                  onChanged: (val) {
-                    if (val != null) serviceProvider.servicesListController.setPageSize(val);
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s16),
-              IconButton(
-                icon: const Icon(Icons.chevron_left),
-                onPressed: controller.hasPreviousPage ? () => controller.goToPreviousPage() : null,
-              ),
-              Text(context.l10n.common_page(controller.currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
-              IconButton(
-                icon: controller.isLoading
-                    ? const SizedBox(width: AppSpacing.s16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Icon(Icons.chevron_right),
-                onPressed: controller.hasNextPage && !controller.isLoading
-                    ? () => controller.goToNextPage()
-                    : null,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   // ==================== PHONE (PH5a) ====================
 
@@ -975,7 +951,8 @@ class _ServicesScreenState extends State<ServicesScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(context.l10n.services_detailsTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16)),
+                // LAY6d (#7): the title wraps beside the close button at large text.
+                Expanded(child: Text(context.l10n.services_detailsTitle, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f16))),
                 IconButton(
                   icon: const Icon(Icons.close, size: AppIconSize.i20),
                   onPressed: () => setState(() => _selectedService = null),
@@ -1009,7 +986,7 @@ class _ServicesScreenState extends State<ServicesScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _wrapOnPhone(Text(context.l10n.services_paymentInfo, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5))),
+                      Flexible(child: Text(context.l10n.services_paymentInfo, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f13_5))),
                       Flexible(child: _statusDot(status)),
                     ],
                   ),
@@ -1078,7 +1055,6 @@ class _ServicesScreenState extends State<ServicesScreen> {
   /// On a phone (the details page, PH5a R7) the left text of a label and
   /// value row may wrap instead of pushing the value off the page; the
   /// side panel on wider windows is unchanged.
-  Widget _wrapOnPhone(Widget child) => AppLayout.isPhone(context) ? Flexible(child: child) : child;
 
   Widget _totalsRow(String label, String value, {bool bold = false, Color? color}) {
     return Padding(
@@ -1086,7 +1062,9 @@ class _ServicesScreenState extends State<ServicesScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _wrapOnPhone(Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
+          // LAY6d (#7): the label wraps beside a long amount at every width (it did
+          // on a phone only; the phone is unchanged).
+          Flexible(child: Text(label, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted))),
           Text(
             value,
             style: TextStyle(fontSize: AppFontSize.f13_5, fontWeight: bold ? AppFontWeight.bold : AppFontWeight.regular, color: color),
