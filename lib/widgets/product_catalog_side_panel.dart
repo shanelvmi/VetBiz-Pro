@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import '../l10n/l10n.dart';
-import '../providers/facility_provider.dart';
-import '../utils/facility_display.dart';
 import '../constants/product_categories.dart';
 import '../theme/app_dimens.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 import '../ui/polish/app_status.dart';
-import 'reveal/reveal_image.dart';
 
 /// The light filter panel shared by Products and Stock Store.
 /// Deliberately NOT a copy of the Dashboard's own sidebar: that one is
@@ -77,14 +73,7 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
 
   // ---------------- Light filter panel ----------------
   Widget _buildFilterPanel(BuildContext context) {
-    final facilityProvider = Provider.of<FacilityProvider>(context);
-    final selectedFacility = facilityProvider.selectedFacility;
     final l10n = context.l10n;
-    // FN1: the name as typed; the type is shown only in the facility picker,
-    // the Facilities cards and the business profile.
-    final facilityName = FacilityDisplay.name(selectedFacility?['name'], fallback: l10n.common_facility);
-    final logoUrl = selectedFacility != null ? selectedFacility['logoUrl'] : null;
-
     return Container(
       width: 260,
       color: context.colors.background,
@@ -93,48 +82,9 @@ class _ProductCatalogSidePanelState extends State<ProductCatalogSidePanel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ---- Facility identity - left-aligned, not a
-            // back-navigation control (the AppBar already provides
-            // its own automatic back button, since this screen is
-            // reached via a push). ----
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  padding: const EdgeInsets.all(AppSpacing.s4),
-                  decoration: BoxDecoration(
-                    color: widget.primaryColor.withValues(alpha: AppAlpha.a10),
-                    borderRadius: BorderRadius.circular(AppRadius.r8),
-                  ),
-                  child: (logoUrl != null && logoUrl.isNotEmpty)
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(AppRadius.r6),
-                          child: RevealImage.fill(
-                            url: logoUrl,
-                            placeholder: Icon(Icons.storefront, color: widget.primaryColor, size: AppIconSize.i18),
-                          ),
-                        )
-                      : Icon(Icons.storefront, color: widget.primaryColor, size: AppIconSize.i18),
-                ),
-                const SizedBox(width: AppSpacing.s10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        facilityName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 28),
+            // UX2 (owner, 2026-11-21): no facility logo and name here: the
+            // sidebar already shows the facility. The panel starts with the
+            // categories (in the side panel and in the drawer below 900).
 
             // ---- Categories ----
             Text(context.l10n.products_categoriesHeading,
