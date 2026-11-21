@@ -13,8 +13,9 @@ void main() {
     expect(debtAppStatus(isOverdue: false), AppStatus.neutral);
   });
 
-  test('clientAppStatus: the stored Active and Inactive are neutral; so is anything else', () {
-    for (final stored in ['Active', 'Inactive', '', 'active', 'Archived']) {
+  test('clientAppStatus (UX2): the stored Active is success; Inactive and anything else neutral', () {
+    expect(clientAppStatus('Active'), AppStatus.success);
+    for (final stored in ['Inactive', '', 'active', 'Archived']) {
       expect(clientAppStatus(stored), AppStatus.neutral, reason: stored);
     }
   });

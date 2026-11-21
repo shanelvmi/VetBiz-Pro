@@ -594,7 +594,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
             const SizedBox(height: AppSpacing.s16),
             _detailLabel(context, context.l10n.common_status),
             // POL6: the stored status as the dot plus the word (clientAppStatus).
-            StatusDot(status: clientAppStatus(client.status), label: context.l10n.clientStatusLabel(client.status)),
+            // UX2: this card is also the shared client-card image and the
+            // phone's details page, so it keeps its neutral dot (both
+            // unchanged; the owner decides); the list rows show the colour.
+            StatusDot(key: const ValueKey('clientCard-status'), status: AppStatus.neutral, label: context.l10n.clientStatusLabel(client.status)),
             const SizedBox(height: AppSpacing.s16),
             FutureBuilder<(int, double)>(
               future: _getClientStatsFuture(client),

@@ -103,5 +103,8 @@ AppStatus stockAppStatus(String storedStatus) => switch (storedStatus) {
 AppStatus debtAppStatus({required bool isOverdue}) => isOverdue ? AppStatus.danger : AppStatus.neutral;
 
 /// POL6: a client's STORED status (Active, Inactive) as one of the four
-/// states: neutral either way, the word tells them apart (owner answer 1).
-AppStatus clientAppStatus(String storedStatus) => AppStatus.neutral;
+/// states. UX2 (owner, 2026-11-21): the stored 'Active' (Client's default,
+/// written by the add-client chips) is success; 'Inactive' and anything
+/// else is neutral. The word is shown with the dot, so colour is never the
+/// only cue. Display only: the stored value never changes.
+AppStatus clientAppStatus(String storedStatus) => storedStatus == 'Active' ? AppStatus.success : AppStatus.neutral;
