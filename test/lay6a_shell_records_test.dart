@@ -190,7 +190,8 @@ void main() {
     expect(notificationTargetPlace(n('client')), AppDestination.clients);
     expect(notificationTargetPlace(n('payment')), AppDestination.payments);
     expect(notificationTargetPlace(n('service')), AppDestination.services); // LAY6d
-    for (final other in ['product', 'assistant']) {
+    expect(notificationTargetPlace(n('assistant')), AppDestination.settings); // LAY7: Settings > Business > Team
+    for (final other in ['product']) {
       expect(notificationTargetPlace(n(other)), isNull, reason: other);
     }
   });

@@ -296,6 +296,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   final GlobalKey _bellKey = GlobalKey();
   // LAY4: the wide shell (null on a phone, where the screens push as before).
   final GlobalKey<AppShellState> _shellKey = GlobalKey<AppShellState>();
+  // LAY7: the Business item Settings is asked to show (wide shell only).
+  final ValueNotifier<SettingsRequest?> _settingsRequest = ValueNotifier(null);
 
   // The bell reads the same feed as the Notifications dropdown (NOTIF-2c), so
   // its red dot follows MY read state and a promotion I removed stops its
@@ -493,6 +495,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
 
   @override
   void dispose() {
+    _settingsRequest.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _sessionCheckTimer?.cancel();
     _urgentWatchSub?.cancel();
@@ -1817,6 +1820,11 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   /// chip chosen: Product Alerts with the item's kind, Debtors with Overdue,
   /// Team Members with Pending.
   Future<void> _openAttention(BuildContext context, AttentionItem item) async {
+    // LAY7: on a wide window Team Members is Settings > Business (Pending).
+    if (attentionItemTarget(item.kind) == AttentionTarget.team &&
+        _openSettingsItem(SettingsRequest(SettingsRequest.team, teamStatus: UserStatus.pending.key))) {
+      return;
+    }
     await Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => switch (attentionItemTarget(item.kind)) {
         AttentionTarget.debtors => const DebtorsScreen(initialStatus: DebtorsScreen.statusOverdue),
@@ -2437,7 +2445,8 @@ Widget? _shellPageFor(AppDestination d) => switch (d) {
       AppDestination.sales => SalesScreen(),
       // LAY6d: Services; its Archive and receipts push inside the content.
       AppDestination.services => ServicesScreen(),
-      AppDestination.settings => SettingsScreen(),
+      // LAY7: Settings shows a Business item when asked (_openSettingsItem).
+      AppDestination.settings => SettingsScreen(request: _settingsRequest),
       AppDestination.reports => const ViewReportsScreen(),
       _ => null,
     };
@@ -2737,7 +2746,21 @@ Widget _buildDrawerContent({
   Future<void> Function(Widget page, AppDestination highlight)? _openInShellAs() {
     final shell = _shellKey.currentState;
     if (shell == null) return null;
-    return (page, highlight) => shell.openInContent(page, highlight: highlight);
+    // LAY7: Team Members lives in Settings > Business (an assistant's
+    // notification); the other places open as before.
+    return (page, highlight) async => highlight == AppDestination.settings
+        ? _openSettingsItem(const SettingsRequest(SettingsRequest.team))
+        : shell.openInContent(page, highlight: highlight);
+  }
+
+  /// LAY7: opens Settings (selected in the sidebar) at a Business item. False
+  /// with no shell (a phone): the caller then pushes as before.
+  bool _openSettingsItem(SettingsRequest request) {
+    final shell = _shellKey.currentState;
+    if (shell == null) return false;
+    shell.select(AppDestination.settings);
+    _settingsRequest.value = request;
+    return true;
   }
 
   Future<void> Function(Widget page)? _openInShellAsSettings() {
@@ -2775,14 +2798,15 @@ Widget _buildDrawerContent({
         // View Facilities).
         // LAY4b: on a wide window the panel closes first, then the log opens in
         // the shell's content (highlighting Settings); on a phone, as before.
+        // LAY7: the wide panel no longer lists it; should a wide window reach
+        // it, it opens Settings > Business > Activity Log.
         activityLog: () {
-          final inShell = _openInShellAsSettings();
-          if (inShell == null) {
+          if (_shellKey.currentState == null) {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityLogScreen()));
             return;
           }
           Scaffold.maybeOf(context)?.closeEndDrawer();
-          inShell(const ActivityLogScreen());
+          _openSettingsItem(const SettingsRequest(SettingsRequest.activityLog));
         },
         settings: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SettingsScreen())),
         // The platform-set contact (app_config/support_contact), as the

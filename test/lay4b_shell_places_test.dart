@@ -186,7 +186,9 @@ void main() {
     final dash = File('lib/screens/dashboard/dashboard_screen.dart').readAsStringSync().replaceAll('\r\n', '\n');
     test('the panel\'s Activity Log closes the panel before opening in the shell; a phone pushes as before', () {
       final handler = dash.substring(dash.indexOf('        activityLog: () {'), dash.indexOf('        settings: () =>'));
-      expect(handler.indexOf('closeEndDrawer()'), lessThan(handler.indexOf('inShell(const ActivityLogScreen())')));
+      // LAY7: in the shell it opens Settings > Business > Activity Log.
+      expect(handler.indexOf('closeEndDrawer()'), lessThan(handler.indexOf('_openSettingsItem(const SettingsRequest(SettingsRequest.activityLog))')));
+      expect(handler.indexOf('_openSettingsItem('), isNonNegative);
       expect(handler, contains('Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ActivityLogScreen()));'));
       expect(dash, contains('return (page) => shell.openInContent(page, highlight: AppDestination.settings);'));
     });

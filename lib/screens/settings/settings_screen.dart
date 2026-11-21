@@ -29,6 +29,7 @@ import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../widgets/shell/app_shell.dart';
+import '../../navigation/app_destinations.dart';
 import '../../theme/app_breakpoints.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -37,10 +38,26 @@ class SettingsScreen extends StatefulWidget {
   final FirebaseFirestore? firestore;
   final FirebaseAuth? auth;
 
-  const SettingsScreen({super.key, this.firestore, this.auth});
+  /// LAY7: a Business item another place asks Settings to show (a
+  /// notification, Needs attention). Settings shows it (a pane from 900 of
+  /// the content, else pushed inside the content) and clears the request.
+  final ValueNotifier<SettingsRequest?>? request;
+
+  const SettingsScreen({super.key, this.firestore, this.auth, this.request});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+/// LAY7: which Business item to show ([SettingsScreen.request]); [teamStatus]
+/// is the Team list's first status chip (Needs attention: Pending).
+class SettingsRequest {
+  final String item;
+  final String? teamStatus;
+  const SettingsRequest(this.item, {this.teamStatus});
+
+  static const team = 'team';
+  static const activityLog = 'activity_log';
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
@@ -56,6 +73,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // default (see _defaultSelection) as soon as role/platform-admin
   // status is known, so the pane is never blank on first load.
   String? _selectedKey;
+
+  /// The Team pane's first status chip, from the last request; the pane is
+  /// rebuilt fresh for each request ([_requestCount]).
+  String? _teamStatus;
+  int _requestCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.request?.addListener(_onRequest);
+    // A request made as Settings opens: shown once the first frame is laid out.
+    if (widget.request?.value != null) WidgetsBinding.instance.addPostFrameCallback((_) => _onRequest(fresh: true));
+  }
+
+  @override
+  void dispose() {
+    widget.request?.removeListener(_onRequest);
+    super.dispose();
+  }
+
+  void _onRequest({bool fresh = false}) {
+    final r = widget.request?.value;
+    if (r == null || !mounted) return;
+    widget.request!.value = null;
+    if (context.screenWidth < AppBreakpoints.medium) {
+      _pushItem(context, r.item, teamStatus: r.teamStatus);
+      return;
+    }
+    _teamStatus = r.teamStatus;
+    _requestCount++;
+    // Opened for this item: Back leaves Settings (no default pane behind it).
+    if (fresh) {
+      setState(() => _selectedKey = r.item);
+    } else {
+      _select(r.item, force: true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -439,7 +493,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case 'subscription':
         return isAdmin ? SubscriptionScreen(firestore: widget.firestore, auth: widget.auth) : _buildEmptyPane();
       case 'notifications':
-        return const NotificationsScreen();
+        // LAY7: an assistant's notification shows the Team pane here; the
+        // others push inside the content, as before.
+        return NotificationsScreen(
+          openPlace: (page, place) async => place == AppDestination.settings
+              ? _select(SettingsRequest.team)
+              : Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page)),
+        );
       case 'printer':
         return const PrinterSettingsScreen();
       case 'trash':
@@ -451,7 +511,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case 'manage_account':
         return ManageAccountScreen(firestore: widget.firestore, auth: widget.auth);
       case 'business_profile' || 'facilities' || 'team' || 'activity_log':
-        return isAdmin ? _paneWidth(_itemScreen(_selectedKey!)) : _buildEmptyPane();
+        return isAdmin
+            ? _paneWidth(KeyedSubtree(
+                key: ValueKey('$_selectedKey-$_requestCount'),
+                child: _itemScreen(_selectedKey!, teamStatus: _teamStatus),
+              ))
+            : _buildEmptyPane();
       default:
         return _buildEmptyPane();
     }
@@ -502,9 +567,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// one, then leaves Settings (Home).
   final List<String> _history = [];
 
-  void _select(String key) {
-    if (key == _selectedKey) return;
+  void _select(String key, {bool force = false}) {
+    if (key == _selectedKey && !force) return;
+    if (!force) _teamStatus = null;
     setState(() {
+      if (key == _selectedKey) return;
       if (_selectedKey != null) _history.add(_selectedKey!);
       _selectedKey = key;
     });

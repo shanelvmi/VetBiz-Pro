@@ -41,6 +41,8 @@ AppDestination? notificationTargetPlace(FacilityNotification n) {
     'payment' => AppDestination.payments,
     // LAY6d: a service opens Services.
     'service' => AppDestination.services,
+    // LAY7: an assistant opens Settings > Business > Team Members.
+    'assistant' => AppDestination.settings,
     _ => null,
   };
 }
