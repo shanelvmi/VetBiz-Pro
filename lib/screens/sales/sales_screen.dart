@@ -353,18 +353,16 @@ class _SalesScreenState extends State<SalesScreen> {
     // now" - this one legitimately stays tied to the sale's own record.
     final paidOnPeriodSales = summary?['totalPaid'] ?? 0.0;
     final pending = total - paidOnPeriodSales;
-    // "How much actual cash came in during this period" - sourced from
-    // dailyCollections, so a payment collected today on an old credit
-    // sale counts here today, not silently filed under the sale's
-    // original date.
-    final collected = summary?['totalCollected'] ?? 0.0;
 
     // POL4 (owner rule 4): flat cards, no coloured icon tile, no shadow.
-    // These four figures repeat no filter, so all four stay.
+    // UX2 (owner, 2026-11-21): Sales shows sales figures only. Collected
+    // (dailyCollections: every payments document, so services and other
+    // income too) is not a Sales figure and left the cards; the three left
+    // come from dailySummaries, written from sales alone. The phone's
+    // summary sheet still lists it (owner to decide).
     final metrics = [
       (context.l10n.reports_totalSales, '$count'),
       (context.l10n.reports_colRevenue, Money.format(total)),
-      (context.l10n.sales_collected, Money.format(collected)),
       (context.l10n.sales_pending, Money.format(pending)),
     ];
     final cards = [
@@ -374,7 +372,7 @@ class _SalesScreenState extends State<SalesScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final perRow = constraints.maxWidth < AppBreakpoints.compact ? 2 : 4;
+        final perRow = constraints.maxWidth < AppBreakpoints.compact ? 2 : cards.length;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -385,7 +383,8 @@ class _SalesScreenState extends State<SalesScreen> {
                 children: [
                   for (var j = i; j < i + perRow; j++) ...[
                     if (j > i) const SizedBox(width: PolishMetrics.gapInGroup),
-                    Expanded(child: cards[j]),
+                    // An odd last row keeps the card width of the others.
+                    Expanded(child: j < cards.length ? cards[j] : const SizedBox.shrink()),
                   ],
                 ],
               ),

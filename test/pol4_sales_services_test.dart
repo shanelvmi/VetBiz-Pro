@@ -77,7 +77,8 @@ void main() {
               expectNoShadowOrGradient(tester, screen, where: where);
               expectFlatBar(tester, screen, c, where: where);
               final cards = find.descendant(of: screen, matching: find.byType(FlatStatCard));
-              expect(cards, findsNWidgets(4), reason: where);
+              // UX2: Sales shows three (no Collected); Services its four.
+              expect(cards, findsNWidgets(type == SalesScreen ? 3 : 4), reason: where);
               final card = tester.widget<Material>(find.descendant(of: cards.first, matching: find.byType(Material)).first);
               expect((card.shape! as RoundedRectangleBorder).side.color, c.border, reason: where);
             });
