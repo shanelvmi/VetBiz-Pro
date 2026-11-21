@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/shell/page_header.dart';
 import '../settings/settings_pane_scope.dart';
 import '../../services/activity_log_retention.dart';
 import '../../services/membership_service.dart';
@@ -1436,7 +1437,16 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }
 
 
+  // UX1b: opened as a page (not a Settings pane, UX3): the shared page
+  // header with the same title, subtitle and actions, title left, back arrow
+  // (pushed). The pane keeps the bar.
   PreferredSizeWidget _buildAppBar() {
+    final bar = _buildBar();
+    if (SettingsPaneScope.isPane(context)) return bar;
+    return PageHeader(title: context.l10n.facilities_title, subtitle: context.l10n.facilities_subtitle, actions: bar.actions ?? const []);
+  }
+
+  AppBar _buildBar() {
     return AppBar(
       automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
       backgroundColor: context.colors.surface,

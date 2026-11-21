@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../settings/settings_pane_scope.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../services/activity_log_retention.dart';
 import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
@@ -681,6 +682,22 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    // UX1b: opened as a page (not a Settings pane, UX3): the shared page
+    // header, title left; the close button as a modal, else the back arrow
+    // (pushed). The pane keeps the bar below.
+    if (!SettingsPaneScope.isPane(context)) {
+      return PageHeader(
+        title: context.l10n.export_activityLog,
+        subtitle: context.l10n.activity_subtitle,
+        leading: widget.isModal
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                tooltip: context.l10n.common_close,
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+      );
+    }
     return AppBar(
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,

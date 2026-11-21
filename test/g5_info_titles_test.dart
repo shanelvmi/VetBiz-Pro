@@ -11,6 +11,7 @@ import 'package:vetbiz_pro/screens/info/how_to_use_screen.dart';
 import 'package:vetbiz_pro/screens/info/info_page.dart';
 import 'package:vetbiz_pro/theme/app_palette.dart';
 import 'package:vetbiz_pro/theme/app_theme.dart';
+import 'package:vetbiz_pro/widgets/shell/page_header.dart';
 
 final _en = lookupAppLocalizations(const Locale('en'));
 
@@ -44,6 +45,23 @@ void main() {
   for (final MapEntry(key: name, value: (page, title)) in pages.entries) {
     for (final width in [360.0, 1200.0]) {
       for (final brightness in Brightness.values) {
+        // UX1b (owner, 2026-11-21): on PC and tablet the shared PageHeader,
+        // the title on the left after the back arrow; the phone keeps G5.
+        if (width == 1200) {
+          testWidgets('$name, $width, ${brightness.name}: the PageHeader, the title left after the back arrow', (tester) async {
+            await open(tester, page, width: width, brightness: brightness);
+            expect(find.byType(AppBar), findsNothing, reason: 'no coloured bar');
+            final header = find.byType(PageHeader);
+            final bar = tester.getRect(header);
+            final text = tester.getRect(find.descendant(of: header, matching: find.text(title)));
+            final back = tester.getRect(find.descendant(of: header, matching: find.byType(BackButton)));
+            expect(back.left, lessThan(bar.left + 16));
+            expect(text.left, greaterThanOrEqualTo(back.right));
+            expect(text.left, lessThan(back.right + 16), reason: 'left, not centred');
+            expect(tester.takeException(), isNull);
+          });
+          continue;
+        }
         testWidgets('$name, $width, ${brightness.name}: the title is centred, the back arrow at the left', (tester) async {
           await open(tester, page, width: width, brightness: brightness);
           final bar = tester.getRect(find.byType(AppBar));

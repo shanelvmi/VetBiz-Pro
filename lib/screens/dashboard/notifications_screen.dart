@@ -1,6 +1,7 @@
 import 'dart:async';
 import '../settings/settings_pane_scope.dart';
 import 'package:flutter/material.dart';
+import '../../widgets/shell/page_header.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -347,7 +348,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
+      // UX1b: PC and tablet, opened as a page (not a Settings pane, UX3):
+      // the shared page header, title left, back arrow (pushed). The phone
+      // and the pane keep the bar below.
+      appBar: !_phone && !SettingsPaneScope.isPane(context)
+          ? PageHeader(title: context.l10n.common_notifications, subtitle: context.l10n.notifications_subtitle)
+          : AppBar(
         automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         backgroundColor: context.colors.surface,
         foregroundColor: context.colors.textPrimary,

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
 import '../../theme/theme_context.dart';
+import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 
 /// The frame of the About, How to use it and FAQs pages (G4): a top bar
 /// with the back arrow, and one readable column, centred and never wider
@@ -24,7 +26,9 @@ class InfoPage extends StatelessWidget {
       // G5: the title centred on every platform, here once so the three
       // pages agree. The toolbar keeps it clear of the back arrow; a long
       // one ends in an ellipsis.
-      appBar: AppBar(centerTitle: true, title: Text(title)),
+      // UX1b: PC and tablet: the shared page header (title left, the back
+      // arrow: pushed), not the theme's coloured bar. The phone keeps G5's.
+      appBar: AppLayout.isPhone(context) ? AppBar(centerTitle: true, title: Text(title)) : PageHeader(title: title),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(InfoPageMetrics.padding),
         child: Center(
