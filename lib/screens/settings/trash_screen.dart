@@ -18,6 +18,11 @@ import '../../theme/polish_metrics.dart';
 import '../../ui/polish/page_card.dart';
 import '../../ui/polish/page_layout.dart';
 import '../../ui/polish/filter_row.dart';
+import '../../services/cursor_paginated_list_controller.dart';
+import '../../widgets/paged_list_body.dart';
+import '../../utils/app_clock.dart';
+import '../../config/app_rules.dart';
+import '../../config/app_ranges.dart';
 
 class TrashScreen extends StatefulWidget {
   // Null: the app's own Firestore and signed-in person. Tests pass fakes
@@ -147,46 +152,91 @@ class _TrashList extends StatefulWidget {
 class _TrashListState extends State<_TrashList> {
   // PH8a (S9, the DASH-1 lesson): made once. A stream made in build() was a
   // new listener on every rebuild of the tab.
-  late final Stream<QuerySnapshot> _stream =
-      widget.firestore
-          .collection(Collections.facilities)
-          .doc(widget.facilityId)
-          .collection(widget.kind.trashCollection)
-          .orderBy('deletedAt', descending: true)
-          .snapshots();
+  // PAGE1: no stream of the whole trash any more: one cursor page at a time
+  // (pageSize + 1), newest deleted first, and the soon-to-expire count is
+  // one count() aggregate over the whole kind.
+  CollectionReference<Map<String, dynamic>> get _collection => widget.firestore
+      .collection(Collections.facilities)
+      .doc(widget.facilityId)
+      .collection(widget.kind.trashCollection);
 
-  Future<void> _restore(String id, Map<String, dynamic> data) => restoreTrashed(
-    firestore: widget.firestore,
-    currentUserInfo: widget.currentUserInfo,
-    facilityId: widget.facilityId,
-    kind: widget.kind,
-    id: id,
-    data: data,
+  late final CursorPaginatedListController<QueryDocumentSnapshot<Map<String, dynamic>>> _pager =
+      CursorPaginatedListController(
+    fetchPage: ({required snapshotAt, required pageSize, startAfterDocument}) async {
+      Query<Map<String, dynamic>> q = _collection.orderBy('deletedAt', descending: true);
+      if (startAfterDocument != null) q = q.startAfterDocument(startAfterDocument);
+      final snap = await q.limit(pageSize + 1).get();
+      return CursorPage.fromDocs(snap.docs, pageSize, (d) => d);
+    },
   );
 
-  Future<void> _deleteForever(BuildContext context, String id, String label) => deleteTrashedForever(
-    context,
-    firestore: widget.firestore,
-    currentUserInfo: widget.currentUserInfo,
-    facilityId: widget.facilityId,
-    trashCollection: widget.kind.trashCollection,
-    id: id,
-    label: label,
-  );
+  int _soonToExpireCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pager.openSession(widget.kind.trashCollection);
+    _loadSoonToExpire();
+  }
+
+  @override
+  void dispose() {
+    _pager.dispose();
+    super.dispose();
+  }
+
+  // trashDaysRemaining(deletedAt) <= trashWarningThresholdDays holds exactly
+  // for the records deleted before this moment (whole days, as inDays).
+  Future<void> _loadSoonToExpire() async {
+    final cutoff = AppClock.now().subtract(AppRules.trashRetention).add(AppRanges.day * (trashWarningThresholdDays + 1));
+    try {
+      final agg = await _collection.where('deletedAt', isLessThan: Timestamp.fromDate(cutoff)).count().get();
+      if (mounted) setState(() => _soonToExpireCount = agg.count ?? 0);
+    } catch (e) {
+      debugPrint('Could not count the trash expiring soon: $e');
+    }
+  }
+
+  // The page and the count again after a restore or a delete (the stream
+  // used to drop the row by itself).
+  void _refresh() {
+    _pager.refreshSession();
+    _loadSoonToExpire();
+  }
+
+  Future<void> _restore(String id, Map<String, dynamic> data) async {
+    final done = await restoreTrashed(
+      firestore: widget.firestore,
+      currentUserInfo: widget.currentUserInfo,
+      facilityId: widget.facilityId,
+      kind: widget.kind,
+      id: id,
+      data: data,
+    );
+    if (done && mounted) _refresh();
+  }
+
+  Future<void> _deleteForever(BuildContext context, String id, String label) async {
+    final done = await deleteTrashedForever(
+      context,
+      firestore: widget.firestore,
+      currentUserInfo: widget.currentUserInfo,
+      facilityId: widget.facilityId,
+      trashCollection: widget.kind.trashCollection,
+      id: id,
+      label: label,
+    );
+    if (done && mounted) _refresh();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: _stream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator(color: context.colors.primary));
-        }
-
-        final docs = snapshot.data?.docs ?? [];
-
-        if (docs.isEmpty) {
-          return Center(
+    // PAGE1: the page, its bar, the skeleton, the error with Retry and the
+    // empty state from PagedListBody; the banner counts the whole kind.
+    return PagedListBody<QueryDocumentSnapshot<Map<String, dynamic>>>(
+      controller: _pager,
+      barEmptyText: context.l10n.trash_empty,
+      empty: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -195,16 +245,9 @@ class _TrashListState extends State<_TrashList> {
                 Text(context.l10n.trash_empty, style: TextStyle(color: context.colors.textMuted)),
               ],
             ),
-          );
-        }
-
-        final soonToExpireCount =
-            docs.where((doc) {
-              final data = doc.data() as Map<String, dynamic>;
-              final deletedAt = data['deletedAt'] is Timestamp ? (data['deletedAt'] as Timestamp).toDate() : null;
-              final remaining = trashDaysRemaining(deletedAt);
-              return remaining != null && remaining <= trashWarningThresholdDays;
-            }).length;
+          ),
+      list: (docs) {
+        final soonToExpireCount = _soonToExpireCount;
 
         // UX6: the PC/tablet card template: the full width, one flat card
         // holding a table (Name, Date, actions at the right), as the other
