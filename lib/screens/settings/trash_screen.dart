@@ -16,6 +16,8 @@ import 'trash_actions.dart';
 import 'trash_phone.dart';
 import '../../theme/polish_metrics.dart';
 import '../../ui/polish/page_card.dart';
+import '../../ui/polish/page_layout.dart';
+import '../../ui/polish/filter_row.dart';
 
 class TrashScreen extends StatefulWidget {
   // Null: the app's own Firestore and signed-in person. Tests pass fakes
@@ -30,8 +32,11 @@ class TrashScreen extends StatefulWidget {
 }
 
 class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStateMixin {
-
   late TabController _tabController;
+
+  // UX7: the kind chosen in the wide FilterRow, and the ones built so far.
+  int _kind = 0;
+  final Set<int> _built = {0};
 
   @override
   void initState() {
@@ -47,8 +52,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    final facilityId =
-        Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     final firestore = widget.firestore ?? FirebaseFirestore.instance;
     final currentUserInfo = widget.currentUserInfo ?? ActivityLogger.getCurrentUserInfo;
 
@@ -58,29 +62,49 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
       return TrashPhoneList(facilityId: facilityId, firestore: firestore, currentUserInfo: currentUserInfo);
     }
 
+    // UX7 (owner, 2026-11-22): PC and tablet: the page header, then the five
+    // kinds as the left-aligned FilterRow in the body (they were a TabBar
+    // spread across the header), then the kind's table. Each list is built
+    // the first time its kind is chosen, then kept (IndexedStack), as the
+    // tabs kept theirs. (UX3 had the TabBar under the header.)
+    if (!AppLayout.isPhone(context) && facilityId != null) {
+      return Scaffold(
+        backgroundColor: context.colors.background,
+        appBar: PageHeader(title: context.l10n.activityType_trash),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            FilterRow(
+              values: [for (final k in trashKinds) k.trashCollection],
+              selected: trashKinds[_kind].trashCollection,
+              label: (c) => trashKinds.firstWhere((k) => k.trashCollection == c).label(context.l10n),
+              keyPrefix: 'trashTab-',
+              onSelected:
+                  (c) => setState(() {
+                    _kind = trashKinds.indexWhere((k) => k.trashCollection == c);
+                    _built.add(_kind);
+                  }),
+            ),
+            Expanded(
+              child: IndexedStack(
+                index: _kind,
+                children: [
+                  for (final (i, kind) in trashKinds.indexed)
+                    _built.contains(i)
+                        ? _TrashList(facilityId: facilityId, firestore: firestore, currentUserInfo: currentUserInfo, kind: kind)
+                        : const SizedBox.shrink(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: context.colors.background,
-      // UX3: PC and tablet: the shared page header with the five tabs under
-      // it (the body is unchanged); the pane keeps the bar.
-      appBar: !AppLayout.isPhone(context)
-          ? PreferredSize(
-              preferredSize: const Size.fromHeight(PageHeader.height + kTextTabBarHeight),
-              child: Column(children: [
-                PageHeader(title: context.l10n.activityType_trash),
-                Material(
-                  color: context.colors.surface,
-                  child: TabBar(
-                    controller: _tabController,
-                    indicatorColor: context.colors.primary,
-                    labelColor: context.colors.primary,
-                    unselectedLabelColor: context.colors.textSecondary,
-                    dividerColor: context.colors.divider,
-                    tabs: [for (final kind in trashKinds) Tab(text: kind.label(context.l10n))],
-                  ),
-                ),
-              ]),
-            )
-          : AppBar(
+      // No facility selected: the bar and the tabs, as before.
+      appBar: AppBar(
         title: Text(context.l10n.activityType_trash),
         centerTitle: true,
         backgroundColor: context.colors.brandSurface,
@@ -93,21 +117,17 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
           tabs: [for (final kind in trashKinds) Tab(text: kind.label(context.l10n))],
         ),
       ),
-      body: facilityId == null
-          ? Center(child: Text(context.l10n.common_noFacilityDot))
-          // UX6: the full content width (it was a 700 px centred column).
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                for (final kind in trashKinds)
-                  _TrashList(
-                    facilityId: facilityId,
-                    firestore: firestore,
-                    currentUserInfo: currentUserInfo,
-                    kind: kind,
-                  ),
-              ],
-            ),
+      body:
+          facilityId == null
+              ? Center(child: Text(context.l10n.common_noFacilityDot))
+              // UX6: the full content width (it was a 700 px centred column).
+              : TabBarView(
+                controller: _tabController,
+                children: [
+                  for (final kind in trashKinds)
+                    _TrashList(facilityId: facilityId, firestore: firestore, currentUserInfo: currentUserInfo, kind: kind),
+                ],
+              ),
     );
   }
 }
@@ -118,12 +138,7 @@ class _TrashList extends StatefulWidget {
   final Future<Map<String, String>> Function() currentUserInfo;
   final TrashKind kind;
 
-  const _TrashList({
-    required this.facilityId,
-    required this.firestore,
-    required this.currentUserInfo,
-    required this.kind,
-  });
+  const _TrashList({required this.facilityId, required this.firestore, required this.currentUserInfo, required this.kind});
 
   @override
   State<_TrashList> createState() => _TrashListState();
@@ -132,31 +147,32 @@ class _TrashList extends StatefulWidget {
 class _TrashListState extends State<_TrashList> {
   // PH8a (S9, the DASH-1 lesson): made once. A stream made in build() was a
   // new listener on every rebuild of the tab.
-  late final Stream<QuerySnapshot> _stream = widget.firestore
-      .collection(Collections.facilities)
-      .doc(widget.facilityId)
-      .collection(widget.kind.trashCollection)
-      .orderBy('deletedAt', descending: true)
-      .snapshots();
+  late final Stream<QuerySnapshot> _stream =
+      widget.firestore
+          .collection(Collections.facilities)
+          .doc(widget.facilityId)
+          .collection(widget.kind.trashCollection)
+          .orderBy('deletedAt', descending: true)
+          .snapshots();
 
   Future<void> _restore(String id, Map<String, dynamic> data) => restoreTrashed(
-        firestore: widget.firestore,
-        currentUserInfo: widget.currentUserInfo,
-        facilityId: widget.facilityId,
-        kind: widget.kind,
-        id: id,
-        data: data,
-      );
+    firestore: widget.firestore,
+    currentUserInfo: widget.currentUserInfo,
+    facilityId: widget.facilityId,
+    kind: widget.kind,
+    id: id,
+    data: data,
+  );
 
   Future<void> _deleteForever(BuildContext context, String id, String label) => deleteTrashedForever(
-        context,
-        firestore: widget.firestore,
-        currentUserInfo: widget.currentUserInfo,
-        facilityId: widget.facilityId,
-        trashCollection: widget.kind.trashCollection,
-        id: id,
-        label: label,
-      );
+    context,
+    firestore: widget.firestore,
+    currentUserInfo: widget.currentUserInfo,
+    facilityId: widget.facilityId,
+    trashCollection: widget.kind.trashCollection,
+    id: id,
+    label: label,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -182,14 +198,13 @@ class _TrashListState extends State<_TrashList> {
           );
         }
 
-        final soonToExpireCount = docs.where((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          final deletedAt = data['deletedAt'] is Timestamp
-              ? (data['deletedAt'] as Timestamp).toDate()
-              : null;
-          final remaining = trashDaysRemaining(deletedAt);
-          return remaining != null && remaining <= trashWarningThresholdDays;
-        }).length;
+        final soonToExpireCount =
+            docs.where((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              final deletedAt = data['deletedAt'] is Timestamp ? (data['deletedAt'] as Timestamp).toDate() : null;
+              final remaining = trashDaysRemaining(deletedAt);
+              return remaining != null && remaining <= trashWarningThresholdDays;
+            }).length;
 
         // UX6: the PC/tablet card template: the full width, one flat card
         // holding a table (Name, Date, actions at the right), as the other
@@ -238,23 +253,10 @@ class _TrashListState extends State<_TrashList> {
     );
   }
 
-  Widget _headerCell(BuildContext context, String label) => Text(
-        label,
-        style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textSecondary),
-      );
-
-  Widget _headerRow(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: PolishMetrics.cardPadding, vertical: AppSpacing.s10),
-        child: Row(
-          children: [
-            Expanded(flex: 5, child: _headerCell(context, context.l10n.common_name)),
-            const SizedBox(width: AppSpacing.s12),
-            Expanded(flex: 3, child: _headerCell(context, context.l10n.common_date)),
-            const SizedBox(width: AppSpacing.s12),
-            _headerCell(context, context.l10n.common_actions),
-          ],
-        ),
-      );
+  // UX7: the template table: Date and the actions are fixed columns, so
+  // the date sits at one x on every row.
+  Widget _headerRow(BuildContext context) =>
+      PageTableRow.header(context, main: context.l10n.common_name, date: context.l10n.common_date, actions: context.l10n.common_actions);
 
   Widget _row(BuildContext context, QueryDocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -262,42 +264,34 @@ class _TrashListState extends State<_TrashList> {
     final deletedAt = data['deletedAt'] is Timestamp ? (data['deletedAt'] as Timestamp).toDate() : null;
     final deletedBy = (data['deletedBy'] as String?) ?? context.l10n.common_unknown;
     final (expiryText, expiryColor) = trashExpiry(context, deletedAt);
-    return Padding(
+    return PageTableRow(
       key: ValueKey('trash-row-${doc.id}'),
-      padding: const EdgeInsets.symmetric(horizontal: PolishMetrics.cardPadding, vertical: AppSpacing.s8),
-      child: Row(
+      main: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 5,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: AppFontWeight.semibold)),
-                Text(context.l10n.trash_deletedBy(deletedBy),
-                    style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
-              ],
+          Text(name, style: const TextStyle(fontWeight: AppFontWeight.semibold)),
+          Text(context.l10n.trash_deletedBy(deletedBy), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+        ],
+      ),
+      date: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(deletedAt != null ? AppDateFormat.dateTime24.format(deletedAt) : '-', style: const TextStyle(fontSize: AppFontSize.f13)),
+          if (expiryText.isNotEmpty)
+            Text(expiryText, style: TextStyle(fontSize: AppFontSize.f12, color: expiryColor, fontWeight: AppFontWeight.semibold)),
+        ],
+      ),
+      actions: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Flexible(
+            child: TextButton.icon(
+              key: ValueKey('trash-restore-${doc.id}'),
+              onPressed: () => _restore(doc.id, data),
+              icon: const Icon(Icons.restore, size: AppIconSize.i18),
+              label: Text(context.l10n.common_restore),
+              style: TextButton.styleFrom(minimumSize: const Size(0, AppSizes.minTapTarget)),
             ),
-          ),
-          const SizedBox(width: AppSpacing.s12),
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(deletedAt != null ? AppDateFormat.dateTime24.format(deletedAt) : '-',
-                    style: const TextStyle(fontSize: AppFontSize.f13)),
-                if (expiryText.isNotEmpty)
-                  Text(expiryText, style: TextStyle(fontSize: AppFontSize.f12, color: expiryColor, fontWeight: AppFontWeight.semibold)),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.s12),
-          TextButton.icon(
-            key: ValueKey('trash-restore-${doc.id}'),
-            onPressed: () => _restore(doc.id, data),
-            icon: const Icon(Icons.restore, size: AppIconSize.i18),
-            label: Text(context.l10n.common_restore),
-            style: TextButton.styleFrom(minimumSize: const Size(0, AppSizes.minTapTarget)),
           ),
           IconButton(
             icon: Icon(Icons.delete_forever, color: context.colors.dangerAccent),

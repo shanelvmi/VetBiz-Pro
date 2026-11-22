@@ -186,7 +186,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 700),
+          // UX7: the full content width on tablets (the page template); the
+          // phone keeps its 700 cap.
+          constraints: BoxConstraints(maxWidth: AppLayout.isPhone(context) ? 700 : double.infinity),
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.s16),
             children: [

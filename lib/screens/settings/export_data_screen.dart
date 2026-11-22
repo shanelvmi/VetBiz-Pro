@@ -27,6 +27,7 @@ import '../../theme/app_layout.dart';
 import '../../widgets/shell/page_header.dart';
 import '../../theme/polish_metrics.dart';
 import '../../ui/polish/page_card.dart';
+import '../../ui/polish/page_layout.dart';
 import '../../ui/polish/section_label.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
 import '../../data/payment_status.dart';
@@ -1020,6 +1021,10 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
       appBar: PageHeader(title: context.l10n.export_title),
       body: PageCardList(
         children: [
+          // UX7: two columns from 900 of the content (the options left, the
+          // data sets right), stacked below it.
+          PageColumns(
+            left: [
           PageCard(
             title: context.l10n.export_groupOptions,
             padding: null,
@@ -1052,11 +1057,16 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
               ],
             ),
           ),
-          SectionLabel(
+            ],
+            right: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+SectionLabel(
             context.l10n.export_groupDatasets,
             padding: const EdgeInsets.only(top: PolishMetrics.sectionLabelPaddingTop, bottom: PolishMetrics.sectionLabelPaddingBottom),
           ),
-          for (final (i, type) in _dataTypes.indexed) ...[
+for (final (i, type) in _dataTypes.indexed) ...[
             if (i > 0) const SizedBox(height: PolishMetrics.gapInGroup),
             PageCard(
               key: ValueKey('export-card-$type'),
@@ -1089,6 +1099,10 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
               ),
             ),
           ],
+                ],
+              ),
+            ],
+          ),
         ],
       ),
     );
