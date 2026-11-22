@@ -48,6 +48,12 @@ class AppTimeouts {
   /// after the rows answered; never past [revealGate] (RevealImage).
   static const Duration revealImageGrace = Duration(milliseconds: 300);
 
+  /// UX8: how long a list waits for the server to confirm its first rows
+  /// before showing the cached ones (offline). Before then: its skeleton,
+  /// never the few cached rows that the server answer then replaces
+  /// (holdCacheUntilServer).
+  static const Duration cacheFallback = Duration(seconds: 3);
+
   /// RV2b: at most this many images (the first visible rows) hold a reveal.
   static const int revealImageGraceSlots = 8;
 

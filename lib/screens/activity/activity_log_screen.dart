@@ -29,6 +29,8 @@ import '../../widgets/phone_form/sheet_or_dialog.dart';
 import '../../widgets/phone_list/phone_filter_sheet.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
+import '../../widgets/phone_list/phone_list_skeleton.dart';
+import '../../utils/server_first.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../theme/polish_metrics.dart';
 import '../../ui/polish/page_layout.dart';
@@ -233,11 +235,11 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
         q.where('timestamp', isGreaterThanOrEqualTo: cutoff).orderBy('timestamp', descending: true);
 
     if (isAdmin) {
-      _logStream = windowed(logs).limit(AppLimits.ledgerQueryCap).snapshots().map((s) => s.docs); // performance limit
+      _logStream = serverFirstSnapshots(windowed(logs).limit(AppLimits.ledgerQueryCap)).map((s) => s.docs); // performance limit
       // The type counts in the summary row cover only what's visible, and no
       // longer read every log ever stored.
       _actionSummaryStream =
-          logs.where('timestamp', isGreaterThanOrEqualTo: cutoff).snapshots().map((s) => s.docs);
+          serverFirstSnapshots(logs.where('timestamp', isGreaterThanOrEqualTo: cutoff)).map((s) => s.docs);
       return;
     }
 
@@ -512,14 +514,12 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   return Center(child: FirestoreErrorView(error: snapshot.error));
                 }
                 // 'none' = the stream doesn't exist yet (still loading the
-                // retention window) - show loading, not an empty list.
+                // retention window) - show loading, not an empty list. UX8: the shared
+                // skeleton rows until the server confirms the list (no spinner,
+                // no cached half-list first).
                 if (snapshot.connectionState == ConnectionState.waiting ||
                     snapshot.connectionState == ConnectionState.none) {
-                  return Center(
-                    child: CircularProgressIndicator(
-                      color: context.colors.primary,
-                    ),
-                  );
+                  return const SingleChildScrollView(child: PhoneListSkeleton());
                 }
 
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {

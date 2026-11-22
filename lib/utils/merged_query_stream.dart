@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'app_clock.dart';
+import 'server_first.dart';
 
 typedef LogDoc = QueryDocumentSnapshot<Map<String, dynamic>>;
 
@@ -14,7 +15,8 @@ typedef LogDoc = QueryDocumentSnapshot<Map<String, dynamic>>;
 /// answers here.
 ///
 /// Nothing is emitted until EVERY query has answered at least once, so the
-/// list never shows half of itself and then jumps.
+/// list never shows half of itself and then jumps. UX8: nor a cached half of
+/// itself: each question waits for the server (serverFirstSnapshots).
 ///
 /// Safe to listen to more than once (DASH-1): a cached stream is listened to
 /// again whenever its widget is rebuilt somewhere else (a resize moves the
@@ -45,7 +47,7 @@ Stream<List<LogDoc>> _mergeOnce(List<Query<Map<String, dynamic>>> queries, int? 
     onListen: () {
       for (var i = 0; i < queries.length; i++) {
         subscriptions.add(
-          queries[i].snapshots().listen(
+          serverFirstSnapshots(queries[i]).listen(
             (snapshot) {
               latest[i] = snapshot.docs;
               if (latest.length == queries.length) emit();

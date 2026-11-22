@@ -41,6 +41,8 @@ import '../../navigation/app_destinations.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
 import '../../utils/app_clock.dart';
+import '../../utils/server_first.dart';
+import '../../widgets/phone_list/phone_list_skeleton.dart';
 
 /// Who submitted a payment claim, as the claim stores it: submittedBy is
 /// for people to read (the email, which the review shows; the uid when
@@ -756,13 +758,14 @@ class _SubmissionHistoryState extends State<_SubmissionHistory> {
 
   // PH8a (S9, the DASH-1 lesson): made once. A stream made in build() was a
   // new listener on every rebuild of the screen (each plan tapped).
-  late final Stream<QuerySnapshot> _stream = widget.firestore
+  // UX8: the server's answer first (serverFirstSnapshots): the cached one
+  // alone was a row or two that the full list then pushed down.
+  late final Stream<QuerySnapshot> _stream = serverFirstSnapshots(widget.firestore
       .collection(Collections.facilities)
       .doc(widget.facilityId)
       .collection(Collections.paymentSubmissions)
       .orderBy('submittedAt', descending: true)
-      .limit(_recentLimit)
-      .snapshots();
+      .limit(_recentLimit));
 
   @override
   Widget build(BuildContext context) {
@@ -772,6 +775,9 @@ class _SubmissionHistoryState extends State<_SubmissionHistory> {
     return StreamBuilder<QuerySnapshot>(
       stream: _stream,
       builder: (context, snapshot) {
+        // UX8: the shared skeleton until the first whole answer (it said
+        // "no submissions yet" while loading).
+        if (!snapshot.hasData && !snapshot.hasError) return const PhoneListSkeleton();
         final docs = snapshot.data?.docs ?? [];
         if (docs.isEmpty) {
           return Text(context.l10n.subscription_noSubmissionsYetDot, style: TextStyle(color: context.colors.textMuted));

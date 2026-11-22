@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../utils/server_first.dart';
+import '../../widgets/phone_list/phone_list_skeleton.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../theme/app_layout.dart';
@@ -129,13 +131,13 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _stream = (widget.firestore ?? FirebaseFirestore.instance)
+    // UX8: the server's answer first, as Recent Submissions.
+    _stream = serverFirstSnapshots((widget.firestore ?? FirebaseFirestore.instance)
         .collection(Collections.facilities)
         .doc(widget.facilityId)
         .collection(Collections.paymentSubmissions)
         .orderBy('submittedAt', descending: true)
-        .limit(_historyLimit)
-        .snapshots();
+        .limit(_historyLimit));
   }
 
   @override
@@ -204,7 +206,7 @@ class _SubscriptionHistoryScreenState extends State<SubscriptionHistoryScreen> {
             );
           }
           if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return const SingleChildScrollView(child: PhoneListSkeleton()); // UX8: no spinner
           }
 
           final all = (snapshot.data?.docs ?? [])
