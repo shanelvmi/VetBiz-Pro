@@ -13,10 +13,12 @@ import 'printer_settings_screen.dart';
 import 'export_data_screen.dart';
 import 'business_hours_screen.dart';
 import 'trash_screen.dart';
-import 'business_profile_screen.dart';
+import 'business_profile_tabs.dart';
 import '../facilities/facility_screen.dart';
 import '../admin/manage_assistants_screen.dart';
-import '../activity/activity_log_screen.dart';
+import '../../providers/facility_provider.dart';
+import '../../utils/facility_display.dart';
+import '../../utils/printer_support.dart';
 import '../subscription/subscription_screen.dart';
 import '../dashboard/notifications_screen.dart';
 import '../../config/app_defaults.dart';
@@ -99,15 +101,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return _buildHub(context);
   }
 
-  // Unchanged from before this rewrite - full drill-down list, every
-  // item pushes a full screen. Mobile has no spare room for a
-  // sidebar+pane layout, so this stays exactly as it always worked.
+  // The phone keeps its drill-down list and look: every item pushes a full
+  // screen. UX5: its rows are grouped by scope as on the hub (this facility,
+  // then you and the app); the rows themselves are unchanged, and the
+  // facility-wide items (Facilities, Team Members, Business Profile, Activity
+  // Log) stay in the phone's profile page. The Printer row shows only where
+  // Bluetooth printing runs (PrinterSupport).
   Widget _buildMobileLayout(BuildContext context) {
     final uiSettings = Provider.of<UiSettingsProvider>(context);
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
-    final phone = AppLayout.isPhone(context);
+    final l10n = context.l10n;
+    void push(Widget page) => Navigator.push(context, MaterialPageRoute(builder: (_) => page));
 
-    final currentLanguageName = AppDefaults.languageNames[uiSettings.languageCode];
+    final groups = <(String, List<_HubRow>)>[
+      (l10n.settings_groupThisFacility(_facilityName(context)), [
+        if (isAdmin)
+          _HubRow('subscription', AppIcons.subscription.outlined, l10n.settings_subscriptionBilling,
+              () => push(const SubscriptionScreen())),
+        if (isAdmin) _HubRow('trash', AppIcons.trash.outlined, l10n.activityType_trash, () => push(const TrashScreen())),
+        if (isAdmin) _HubRow('export', AppIcons.export.outlined, l10n.settings_exportData, () => push(const ExportDataScreen())),
+        if (isAdmin)
+          _HubRow('business_hours', AppIcons.businessHours.outlined, l10n.hours_title, () => push(const BusinessHoursScreen())),
+        if (PrinterSupport.isSupported)
+          _HubRow('printer', AppIcons.printer.outlined, l10n.printer_title, () => push(const PrinterSettingsScreen())),
+      ]),
+      (l10n.settings_groupYouAndApp, [
+        _HubRow('manage_account', Icons.manage_accounts_outlined, l10n.account_title, () => push(const ManageAccountScreen())),
+        _HubRow('notifications', Icons.notifications_none, l10n.common_notifications, () => push(const NotificationsScreen())),
+        _HubRow('ui_settings', Icons.color_lens_outlined, l10n.uiSettings_title, () => showUiSettingsDialog(context),
+            trailing: l10n.settings_themeLayout),
+        // Not a real choice: no picker to open.
+        _HubRow('currency', AppIcons.currency.outlined, l10n.settings_currency, () {}, trailing: AppDefaults.currencySymbol),
+        _HubRow('language', Icons.language_outlined, l10n.settings_languageBoth, () => showLanguagePicker(context, uiSettings),
+            trailing: AppDefaults.languageNames[uiSettings.languageCode]),
+        _HubRow('app_info', Icons.info_outline, l10n.settings_appInfo, () => _showAppInfoDialog(context)),
+      ]),
+    ].where((g) => g.$2.isNotEmpty).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -115,7 +144,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // is the way out); pushed above it, or outside the shell, as before.
         automaticallyImplyLeading: !ShellScope.isTopLevel(context),
         title: Text(
-          context.l10n.settings_title,
+          l10n.settings_title,
           style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20),
         ),
         backgroundColor: context.colors.brandSurface,
@@ -130,184 +159,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.s16),
             children: [
-              if (isAdmin) ...[
-                _buildSectionTitle(context.l10n.subscription_title),
+              for (final (gi, (title, rows)) in groups.indexed) ...[
+                if (gi > 0) const SizedBox(height: AppSpacing.s20),
+                _buildSectionTitle(title),
                 const SizedBox(height: AppSpacing.s6),
                 Card(
                   elevation: cardElevation,
                   margin: EdgeInsets.zero,
                   child: Column(
                     children: [
-                      _buildSettingsItem(
-                        icon: AppIcons.subscription.outlined,
-                        label: context.l10n.settings_subscriptionBilling,
-                        isLast: true,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              // LAY7: on a tablet (not a phone) the Business items live here,
-              // pushed inside the content; the phone keeps them in its profile page.
-              if (isAdmin && !phone) ...[
-                const SizedBox(height: AppSpacing.s20),
-                _buildSectionTitle(context.l10n.expenseGroup_business),
-                const SizedBox(height: AppSpacing.s6),
-                Card(
-                  elevation: cardElevation,
-                  margin: EdgeInsets.zero,
-                  child: Column(
-                    children: [
-                      for (final (i, item) in _businessItems(context).indexed)
+                      for (final (i, row) in rows.indexed)
                         _buildSettingsItem(
-                          icon: item.icon,
-                          label: item.label,
-                          isLast: i == _businessItems(context).length - 1,
-                          onTap: () => _pushItem(context, item.key),
+                          icon: row.icon,
+                          label: row.label,
+                          trailingText: row.trailing,
+                          isLast: i == rows.length - 1,
+                          onTap: row.onTap,
                         ),
                     ],
                   ),
                 ),
               ],
-              const SizedBox(height: AppSpacing.s20),
-              _buildSectionTitle(context.l10n.settings_accountData),
-              const SizedBox(height: AppSpacing.s6),
-              Card(
-                elevation: cardElevation,
-                margin: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    if (isAdmin)
-                      _buildSettingsItem(
-                        icon: AppIcons.trash.outlined,
-                        label: context.l10n.activityType_trash,
-                        isLast: false,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const TrashScreen()),
-                          );
-                        },
-                      ),
-                    if (isAdmin)
-                      _buildSettingsItem(
-                        icon: AppIcons.export.outlined,
-                        label: context.l10n.settings_exportData,
-                        isLast: false,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const ExportDataScreen()),
-                          );
-                        },
-                      ),
-                    if (isAdmin && phone)
-                      _buildSettingsItem(
-                        icon: AppIcons.businessHours.outlined,
-                        label: context.l10n.hours_title,
-                        isLast: false,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const BusinessHoursScreen()),
-                          );
-                        },
-                      ),
-                    _buildSettingsItem(
-                      icon: Icons.manage_accounts_outlined,
-                      label: context.l10n.account_title,
-                      isLast: true,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ManageAccountScreen()),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.s16),
-              _buildSectionTitle(context.l10n.settings_general),
-              const SizedBox(height: AppSpacing.s6),
-              Card(
-                elevation: cardElevation,
-                margin: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    _buildSettingsItem(
-                      icon: Icons.notifications_none,
-                      label: context.l10n.common_notifications,
-                      isLast: false,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                        );
-                      },
-                    ),
-                    _buildSettingsItem(
-                      icon: AppIcons.printer.outlined,
-                      label: context.l10n.printer_title,
-                      isLast: false,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const PrinterSettingsScreen()),
-                        );
-                      },
-                    ),
-                    _buildSettingsItem(
-                      icon: Icons.info_outline,
-                      label: context.l10n.settings_appInfo,
-                      isLast: true,
-                      onTap: () => _showAppInfoDialog(context),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.s16),
-              _buildSectionTitle(context.l10n.settings_preferences),
-              const SizedBox(height: AppSpacing.s6),
-              Card(
-                elevation: cardElevation,
-                margin: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    _buildSettingsItem(
-                      icon: Icons.color_lens_outlined,
-                      label: context.l10n.uiSettings_title,
-                      trailingText: context.l10n.settings_themeLayout,
-                      isLast: false,
-                      onTap: () => showUiSettingsDialog(context),
-                    ),
-                    _buildSettingsItem(
-                      icon: AppIcons.currency.outlined,
-                      label: context.l10n.settings_currency,
-                      trailingText: AppDefaults.currencySymbol,
-                      isLast: false,
-                      onTap: () {}, // not a real choice - no picker to open
-                    ),
-                    _buildSettingsItem(
-                      icon: Icons.language_outlined,
-                      label: context.l10n.settings_languageBoth,
-                      trailingText: currentLanguageName,
-                      isLast: true,
-                      onTap: () => showLanguagePicker(context, uiSettings),
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: _footerGap),
               Center(
                 child: Text(
-                  context.l10n.settings_versionLine(AppInfo.name, context.l10n.common_versionWithBuild(AppInfo.version, AppInfo.buildStamp)),
+                  l10n.settings_versionLine(AppInfo.name, l10n.common_versionWithBuild(AppInfo.version, AppInfo.buildStamp)),
                   style: TextStyle(
                     fontSize: AppFontSize.f12,
                     color: context.colors.textHint,
@@ -323,6 +199,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  /// UX5: the selected facility's name as typed (FN1), for the first group's
+  /// title.
+  String _facilityName(BuildContext context) => FacilityDisplay.name(
+        Provider.of<FacilityProvider>(context).selectedFacilityName,
+        fallback: context.l10n.profile_yourFacility,
+      );
+
   // UX3 (owner, 2026-11-21): on PC and tablet Settings is one hub page: the
   // shared page header, then the groups (their titles as SectionLabels) of
   // bordered flat rows (icon, title, the trailing value some rows have, a
@@ -331,6 +214,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // Settings stays highlighted in the sidebar); the dialog and sheet rows
   // open them as before. The role gates are the phone list's and LAY7's.
   // (Before UX3: a 300 px section list beside a pane, or a plain list.)
+  // UX5 (owner, 2026-11-22): three groups by scope, one fixed layout whatever
+  // the number of facilities: this facility (titled with its name), all your
+  // facilities (admins only), you and the app. Business Hours and Activity
+  // Log are tabs of Business Profile now (BusinessProfileTabs), not rows.
   Widget _buildHub(BuildContext context) {
     final uiSettings = Provider.of<UiSettingsProvider>(context);
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
@@ -338,23 +225,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
     void open(Widget page) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
 
     final groups = <(String, List<_HubRow>)>[
-      if (isAdmin) ...[
-        (l10n.subscription_title, [
+      (l10n.settings_groupThisFacility(_facilityName(context)), [
+        if (isAdmin)
+          _HubRow('business_profile', Icons.business_outlined, l10n.profile_title, () => _pushItem(context, 'business_profile')),
+        if (isAdmin)
           _HubRow('subscription', AppIcons.subscription.outlined, l10n.settings_subscriptionBilling,
               () => open(SubscriptionScreen(firestore: widget.firestore, auth: widget.auth))),
-        ]),
-        (l10n.expenseGroup_business, [
-          for (final item in _businessItems(context)) _HubRow(item.key, item.icon, item.label, () => _pushItem(context, item.key)),
-        ]),
-      ],
-      (l10n.settings_accountData, [
         if (isAdmin) _HubRow('trash', AppIcons.trash.outlined, l10n.activityType_trash, () => open(TrashScreen(firestore: widget.firestore))),
         if (isAdmin)
           _HubRow('export', AppIcons.export.outlined, l10n.settings_exportData, () => open(ExportDataScreen(firestore: widget.firestore))),
+        if (PrinterSupport.isSupported)
+          _HubRow('printer', AppIcons.printer.outlined, l10n.printer_title, () => open(const PrinterSettingsScreen())),
+      ]),
+      if (isAdmin)
+        (l10n.settings_groupAllFacilities, [
+          _HubRow('facilities', AppIcons.facilities.outlined, l10n.facilities_title, () => _pushItem(context, 'facilities')),
+          _HubRow('team', AppIcons.team.outlined, l10n.team_title, () => _pushItem(context, SettingsRequest.team)),
+        ]),
+      (l10n.settings_groupYouAndApp, [
         _HubRow('manage_account', Icons.manage_accounts_outlined, l10n.account_title,
             () => open(ManageAccountScreen(firestore: widget.firestore, auth: widget.auth))),
-      ]),
-      (l10n.settings_general, [
         // LAY7: an assistant's notification opens Team Members above the hub.
         _HubRow('notifications', Icons.notifications_none, l10n.common_notifications,
             () => open(NotificationsScreen(
@@ -362,18 +252,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ? _pushItem(context, SettingsRequest.team)
                       : Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page)),
                 ))),
-        _HubRow('printer', AppIcons.printer.outlined, l10n.printer_title, () => open(const PrinterSettingsScreen())),
-        _HubRow('app_info', Icons.info_outline, l10n.settings_appInfo, () => _showAppInfoDialog(context)),
-      ]),
-      (l10n.settings_preferences, [
         _HubRow('ui_settings', Icons.color_lens_outlined, l10n.uiSettings_title, () => showUiSettingsDialog(context),
             trailing: l10n.settings_themeLayout),
-        // Not a real choice: no picker to open.
+        // Not a real choice: no picker to open. App-wide (AppDefaults), not a
+        // facility's setting (UX5 Step 0a), so it stays in this group.
         _HubRow('currency', AppIcons.currency.outlined, l10n.settings_currency, () {}, trailing: AppDefaults.currencySymbol),
         _HubRow('language', Icons.language_outlined, l10n.settings_languageBoth, () => showLanguagePicker(context, uiSettings),
             trailing: AppDefaults.languageNames[uiSettings.languageCode]),
+        _HubRow('app_info', Icons.info_outline, l10n.settings_appInfo, () => _showAppInfoDialog(context)),
       ]),
-    ];
+    ].where((g) => g.$2.isNotEmpty).toList();
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -461,27 +349,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// LAY7: the Business items (PC and tablet only), all admin-only (a
-  /// Co-admin included), as their gates were in the profile panel: Team
-  /// Members, View Facilities, Activity Log; Business Hours as in Settings;
-  /// Business Profile, never opened before, with the facility settings it
-  /// writes (an admin's, firestore.rules isEditingFacilitySettingsOnly).
-  /// The caller shows them only to an admin.
-  List<({String key, IconData icon, String label})> _businessItems(BuildContext context) => [
-        (key: 'business_profile', icon: Icons.business_outlined, label: context.l10n.profile_title),
-        (key: 'business_hours', icon: AppIcons.businessHours.outlined, label: context.l10n.hours_title),
-        (key: 'facilities', icon: AppIcons.facilities.outlined, label: context.l10n.dashboard_viewFacilities),
-        (key: 'team', icon: AppIcons.team.outlined, label: context.l10n.team_title),
-        (key: 'activity_log', icon: AppIcons.activityLog.outlined, label: context.l10n.export_activityLog),
-      ];
-
-  /// The screen of a Business item.
+  /// The screen of an item another place asks for ([SettingsRequest]) or a
+  /// hub row opens. UX5: Business Hours and Activity Log open as tabs of
+  /// Business Profile (their keys are kept for the requests).
   Widget _itemScreen(String key, {String? teamStatus}) => switch (key) {
-        'business_profile' => BusinessProfileScreen(firestore: widget.firestore),
-        'business_hours' => BusinessHoursScreen(firestore: widget.firestore),
+        'business_profile' => BusinessProfileTabs(firestore: widget.firestore, auth: widget.auth),
+        'business_hours' =>
+          BusinessProfileTabs(firestore: widget.firestore, auth: widget.auth, initialTab: BusinessProfileTabs.hours),
         'facilities' => FacilityScreen(firestore: widget.firestore, auth: widget.auth),
         'team' => ManageAssistantsScreen(firestore: widget.firestore, auth: widget.auth, initialStatus: teamStatus),
-        _ => ActivityLogScreen(firestore: widget.firestore, auth: widget.auth),
+        _ => BusinessProfileTabs(firestore: widget.firestore, auth: widget.auth, initialTab: BusinessProfileTabs.activityLog),
       };
 
   /// The item pushed inside the content (above the hub); Back returns to
