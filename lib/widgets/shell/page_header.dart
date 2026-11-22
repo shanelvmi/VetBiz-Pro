@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_dimens.dart';
@@ -43,7 +46,8 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
 
   /// The screen's actions, right-aligned, in order. They keep their size; the
   /// title gives way first (an ellipsis). An action wrapped in a Flexible
-  /// (Transactions' date range) shrinks with the title.
+  /// (Transactions' date range) shrinks with the title, and the actions still
+  /// end at the right padding (UX4).
   final List<Widget> actions;
   final Widget? leading;
   final bool? showBack;
@@ -81,33 +85,14 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
             child: Row(
               children: [
                 if (lead != null) ...[lead, const SizedBox(width: AppSpacing.s8)],
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Semantics(
-                        header: true,
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary),
-                        ),
-                      ),
-                      if (subtitle != null)
-                        Text(
-                          subtitle!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary),
-                        )
-                      else if (subtitleWidget != null)
-                        subtitleWidget!,
-                    ],
-                  ),
-                ),
-                ...actions,
+                // UX4: without a flex action the plain Row already ends the actions at the
+                // right padding (and keeps the tree every wide fingerprint recorded).
+                if (actions.any((a) => a is Flexible))
+                  Expanded(child: _TitleAndActions(title: _title(context), actions: actions))
+                else ...[
+                  Expanded(child: _title(context)),
+                  ...actions,
+                ],
               ],
             ),
           ),
@@ -115,4 +100,129 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
   }
+
+  Widget _title(BuildContext context) => Column(
+    mainAxisAlignment: MainAxisAlignment.center,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Semantics(
+        header: true,
+        child: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: AppFontWeight.bold,
+            fontSize: AppFontSize.f19,
+            color: context.colors.textPrimary,
+          ),
+        ),
+      ),
+      if (subtitle != null)
+        Text(
+          subtitle!,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary),
+        )
+      else if (subtitleWidget != null)
+        subtitleWidget!,
+    ],
+  );
+}
+
+/// UX4: the title and the actions, laid out as the Row of Expanded(title) +
+/// actions was (the same flex split: a Flexible action and the title share
+/// what the fixed actions leave, by flex), except that what a loose Flexible
+/// action does not use goes to the title, not to a gap after the actions. In
+/// the Row, Transactions' date range left its unused half there and the
+/// buttons sat left of the right edge. The actions now always end at the
+/// header's right padding; the range still gives way first in a narrow bar.
+class _TitleAndActions extends StatelessWidget {
+  const _TitleAndActions({required this.title, required this.actions});
+
+  final Widget title;
+  final List<Widget> actions;
+
+  static const Object _titleId = 'title';
+
+  @override
+  Widget build(BuildContext context) {
+    final flexes = <int?>[];
+    final fits = <FlexFit>[];
+    final children = <Widget>[LayoutId(id: _titleId, child: title)];
+    for (var i = 0; i < actions.length; i++) {
+      final a = actions[i];
+      flexes.add(a is Flexible ? a.flex : null);
+      fits.add(a is Flexible ? a.fit : FlexFit.loose);
+      children.add(LayoutId(id: i, child: a is Flexible ? a.child : a));
+    }
+    return CustomMultiChildLayout(
+      delegate: _TitleAndActionsDelegate(flexes, fits, Directionality.of(context)),
+      children: children,
+    );
+  }
+}
+
+class _TitleAndActionsDelegate extends MultiChildLayoutDelegate {
+  _TitleAndActionsDelegate(this.flexes, this.fits, this.direction);
+
+  /// Per action: its flex when it was a Flexible, else null (fixed size).
+  final List<int?> flexes;
+  final List<FlexFit> fits;
+  final TextDirection direction;
+
+  @override
+  void performLayout(Size size) {
+    final widths = List<double>.filled(flexes.length, 0);
+    final heights = List<double>.filled(flexes.length, 0);
+    final loose = BoxConstraints(maxHeight: size.height);
+    var fixed = 0.0;
+    var totalFlex = 1; // the title's (Expanded, flex 1)
+    for (var i = 0; i < flexes.length; i++) {
+      final flex = flexes[i];
+      if (flex == null) {
+        final s = layoutChild(i, loose);
+        widths[i] = s.width;
+        heights[i] = s.height;
+        fixed += s.width;
+      } else {
+        totalFlex += flex;
+      }
+    }
+    final free = math.max(0.0, size.width - fixed);
+    var used = fixed;
+    for (var i = 0; i < flexes.length; i++) {
+      final flex = flexes[i];
+      if (flex == null) continue;
+      final share = free * flex / totalFlex;
+      final s = layoutChild(
+        i,
+        fits[i] == FlexFit.tight ? loose.copyWith(minWidth: share, maxWidth: share) : loose.copyWith(maxWidth: share),
+      );
+      widths[i] = s.width;
+      heights[i] = s.height;
+      used += s.width;
+    }
+    final titleWidth = math.max(0.0, size.width - used);
+    final titleSize = layoutChild(
+      _TitleAndActions._titleId,
+      loose.copyWith(minWidth: titleWidth, maxWidth: titleWidth),
+    );
+    final rtl = direction == TextDirection.rtl;
+    positionChild(
+      _TitleAndActions._titleId,
+      Offset(rtl ? size.width - titleWidth : 0, (size.height - titleSize.height) / 2),
+    );
+    // The actions in order after the title, the last at the right edge.
+    var x = titleWidth;
+    for (var i = 0; i < flexes.length; i++) {
+      positionChild(i, Offset(rtl ? size.width - x - widths[i] : x, (size.height - heights[i]) / 2));
+      x += widths[i];
+    }
+  }
+
+  @override
+  bool shouldRelayout(_TitleAndActionsDelegate old) =>
+      !listEquals(old.flexes, flexes) || !listEquals(old.fits, fits) || old.direction != direction;
 }
