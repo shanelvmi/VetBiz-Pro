@@ -17,7 +17,6 @@ import 'package:vetbiz_pro/l10n/app_localizations.dart';
 import 'package:vetbiz_pro/navigation/app_destinations.dart';
 import 'package:vetbiz_pro/screens/activity/activity_log_screen.dart';
 import 'package:vetbiz_pro/screens/admin/manage_assistants_screen.dart';
-import 'package:vetbiz_pro/screens/dashboard/notifications_screen.dart';
 import 'package:vetbiz_pro/screens/facilities/facility_screen.dart';
 import 'package:vetbiz_pro/screens/settings/business_hours_screen.dart';
 import 'package:vetbiz_pro/screens/settings/business_profile_screen.dart';
