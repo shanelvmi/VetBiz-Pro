@@ -28,6 +28,16 @@ gone and the tree file listed seven processes stopped. To repeat it, run
 another window (`Stop-Process -Id <its pid>`): no flutter_tester may remain
 (`Get-Process flutter_tester`).
 
+A **stale lock** (UX3): when `build/run_tests.lock` names a process that no
+longer runs (the machine slept, the window was closed) and no flutter test or
+analyze is running, the script removes the lock, says so in one line
+(`removed a stale build/run_tests.lock (pid N no longer runs); continuing.`)
+and runs. It does not run the cleanup for that lock (it would stop any
+flutter process started since, a `flutter run` included). Manual check
+(2026-11-22): a lock naming pid 999999, then `run_tests.ps1 -Changed`: the
+line above, the run went on, the lock was gone; a lock naming a live
+(sleeping) PowerShell: refused as before (exit 2), the lock kept.
+
 Rules it enforces:
 
 - **One flutter command at a time.** It refuses to start, in one line, while

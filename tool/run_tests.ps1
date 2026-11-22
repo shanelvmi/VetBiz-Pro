@@ -41,6 +41,19 @@ $others = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Ob
   $_.ProcessId -ne $PID -and $_.CommandLine -and
   $_.CommandLine -match 'flutter_tools' -and $_.CommandLine -match '\s(test|analyze)(\s|$)'
 }
+# UX3: a lock whose run is gone (the machine slept, the window was closed)
+# is stale: remove it, say so, and go on (a test run it left still going is
+# caught by the process check above). Its cleanup is not run: it would stop
+# any flutter process started since, a `flutter run` included. A lock that
+# cannot be read is treated the same.
+if (-not $others -and (Test-Path $lockPath)) {
+  $stalePid = $null
+  try { $stalePid = [int](Get-Content $lockPath -Raw | ConvertFrom-Json).pid } catch { }
+  if (-not $stalePid -or -not (Get-Process -Id $stalePid -ErrorAction SilentlyContinue)) {
+    Remove-Item $lockPath -ErrorAction SilentlyContinue
+    Write-Host "run_tests: removed a stale build/run_tests.lock (pid $stalePid no longer runs); continuing."
+  }
+}
 if ($others -or (Test-Path $lockPath)) {
   # One line, naming what is running (a run left hung for days shows its date:
   # stop it with Stop-Process -Id <pid> if it is not yours).
