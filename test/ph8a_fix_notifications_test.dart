@@ -199,12 +199,14 @@ void main() {
     await letToastGo(tester);
   });
 
-  testWidgets('a tablet keeps the buttons and no menu', (tester) async {
+  testWidgets('a tablet: Mark all read in the header, the other two in its "more" menu (UX6)', (tester) async {
     final c = await _feed(tester);
     await pumpNotifications(tester, c, width: 1024, height: 768);
     expect(find.byKey(_menu), findsNothing);
     expect(find.widgetWithText(OutlinedButton, 'Mark all read'), findsOneWidget);
-    expect(find.widgetWithText(OutlinedButton, 'Remove read ones'), findsOneWidget);
-    expect(find.widgetWithText(OutlinedButton, 'Select'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('notifications-wide-more')));
+    await tester.pumpAndSettle();
+    expect(find.text('Remove read ones'), findsOneWidget);
+    expect(find.text('Select'), findsOneWidget);
   });
 }

@@ -104,6 +104,9 @@ void main() {
     await tester.tap(find.text('T n1'));
     await tester.pumpAndSettle();
     expect(itemOf(c, 'n1').isRead, isTrue);
+    // UX6: Remove read ones is behind the header's "more" menu.
+    await tester.tap(find.byKey(const ValueKey('notifications-wide-more')));
+    await tester.pumpAndSettle();
     expect(find.text('Remove read ones'), findsOneWidget);
   });
 
