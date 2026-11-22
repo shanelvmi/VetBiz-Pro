@@ -3912,7 +3912,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reports_tapGenerate =>
-      'Tap \"Generate Today\'s Report\" above to get started.';
+      'Tap \"Generate Today\'s Report\" to get started.';
 
   @override
   String get reports_closedToday => 'This facility is marked closed today.';

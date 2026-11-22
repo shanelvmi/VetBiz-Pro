@@ -1129,7 +1129,7 @@
   "reports_generateClosedToday": ["Tengeneza Ripoti ya Leo (imefungwa leo)","Reports screen button, facility closed all day.","draft"],
   "reports_generateAt": ["Tengeneza Ripoti ya Leo (saa {time})","Reports screen button before closing time.","draft"],
   "reports_generateAfterClosing": ["Tengeneza Ripoti ya Leo (baada ya muda wa kufunga)","Reports screen button, no closing time set.","draft"],
-  "reports_tapGenerate": ["Gusa \"Tengeneza Ripoti ya Leo\" hapo juu kuanza.","Reports screen, no report yet.","draft"],
+  "reports_tapGenerate": ["Gusa \"Tengeneza Ripoti ya Leo\" kuanza.","Reports screen, no report yet. UX8: no 'above' (on a phone the button is below).","draft"],
   "reports_closedToday": ["Kituo hiki kimewekwa kuwa kimefungwa leo.","Reports screen, no report yet.","draft"],
   "reports_availableAt": ["Inapatikana saa {time}.","Reports screen, no report yet.","draft"],
   "reports_availableOnceClosing": ["Inapatikana muda wa kufunga wa leo ukifika.","Reports screen, no report yet.","draft"],

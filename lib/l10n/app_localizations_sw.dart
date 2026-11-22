@@ -3930,8 +3930,7 @@ class AppLocalizationsSw extends AppLocalizations {
       'Tengeneza Ripoti ya Leo (baada ya muda wa kufunga)';
 
   @override
-  String get reports_tapGenerate =>
-      'Gusa \"Tengeneza Ripoti ya Leo\" hapo juu kuanza.';
+  String get reports_tapGenerate => 'Gusa \"Tengeneza Ripoti ya Leo\" kuanza.';
 
   @override
   String get reports_closedToday => 'Kituo hiki kimewekwa kuwa kimefungwa leo.';

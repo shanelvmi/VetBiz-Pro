@@ -6883,10 +6883,10 @@ abstract class AppLocalizations {
   /// **'Generate Today\'s Report (after closing time)'**
   String get reports_generateAfterClosing;
 
-  /// Reports screen, no report yet.
+  /// Reports screen, no report yet. UX8: no 'above' (on a phone the button is below).
   ///
   /// In en, this message translates to:
-  /// **'Tap \"Generate Today\'s Report\" above to get started.'**
+  /// **'Tap \"Generate Today\'s Report\" to get started.'**
   String get reports_tapGenerate;
 
   /// Reports screen, no report yet.

@@ -2260,7 +2260,7 @@
   "@reports_generateAt": {"x-review":"draft"},
   "reports_generateAfterClosing": "Tengeneza Ripoti ya Leo (baada ya muda wa kufunga)",
   "@reports_generateAfterClosing": {"x-review":"draft"},
-  "reports_tapGenerate": "Gusa \"Tengeneza Ripoti ya Leo\" hapo juu kuanza.",
+  "reports_tapGenerate": "Gusa \"Tengeneza Ripoti ya Leo\" kuanza.",
   "@reports_tapGenerate": {"x-review":"draft"},
   "reports_closedToday": "Kituo hiki kimewekwa kuwa kimefungwa leo.",
   "@reports_closedToday": {"x-review":"draft"},
