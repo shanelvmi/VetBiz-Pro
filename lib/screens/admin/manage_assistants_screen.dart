@@ -1,5 +1,4 @@
 import 'dart:async';
-import '../settings/settings_pane_scope.dart';
 
 import 'package:flutter/material.dart';
 import '../../widgets/shell/page_header.dart';
@@ -994,19 +993,17 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     });
   }
 
-  // UX1b: opened as a page (not a Settings pane, UX3): the shared page
+  // UX1b: opened as a page: the shared page
   // header with the same title, subtitle and actions, title left, back arrow
-  // (pushed). The pane keeps the bar.
+  // (pushed). (UX3: no Settings pane any more.)
   PreferredSizeWidget _buildAppBar() {
     final bar = _buildBar();
-    if (SettingsPaneScope.isPane(context)) return bar;
     return PageHeader(title: context.l10n.team_title, subtitle: context.l10n.team_subtitle, actions: bar.actions ?? const []);
   }
 
   AppBar _buildBar() {
     final narrow = context.screenWidth < AppBreakpoints.compact;
     return AppBar(
-      automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
       backgroundColor: context.colors.surface,
       foregroundColor: context.colors.textPrimary,
       elevation: AppElevation.e1,

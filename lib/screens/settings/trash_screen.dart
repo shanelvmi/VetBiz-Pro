@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'settings_pane_scope.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -61,7 +60,7 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
       backgroundColor: context.colors.background,
       // UX3: PC and tablet: the shared page header with the five tabs under
       // it (the body is unchanged); the pane keeps the bar.
-      appBar: !AppLayout.isPhone(context) && !SettingsPaneScope.isPane(context)
+      appBar: !AppLayout.isPhone(context)
           ? PreferredSize(
               preferredSize: const Size.fromHeight(PageHeader.height + kTextTabBarHeight),
               child: Column(children: [
@@ -80,7 +79,6 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
               ]),
             )
           : AppBar(
-        automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         title: Text(context.l10n.activityType_trash),
         centerTitle: true,
         backgroundColor: context.colors.brandSurface,

@@ -1,5 +1,4 @@
 import 'dart:async';
-import '../settings/settings_pane_scope.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -298,14 +297,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       backgroundColor: colors.background,
       // UX3: PC and tablet, opened as a page: the shared page header. The
       // phone, the modal and the pane keep the bar.
-      appBar: !_phone && !widget.isModal && !SettingsPaneScope.isPane(context)
+      appBar: !_phone && !widget.isModal
           ? PageHeader(title: context.l10n.subscription_title)
           : AppBar(
         title: Text(context.l10n.subscription_title),
         centerTitle: true,
         backgroundColor: colors.brandSurface,
         foregroundColor: colors.onBrandSurface,
-        automaticallyImplyLeading: !widget.isModal && !SettingsPaneScope.isPane(context),
+        automaticallyImplyLeading: !widget.isModal,
         leading: widget.isModal
             ? IconButton(
                 icon: const Icon(Icons.close),

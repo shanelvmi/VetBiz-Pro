@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'settings_pane_scope.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -549,10 +548,9 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: !AppLayout.isPhone(context) && !SettingsPaneScope.isPane(context)
+      appBar: !AppLayout.isPhone(context)
           ? PageHeader(title: context.l10n.account_title)
           : AppBar(
-        automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         title: Text(context.l10n.account_title),
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,

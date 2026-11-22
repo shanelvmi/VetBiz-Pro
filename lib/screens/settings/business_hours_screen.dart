@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'settings_pane_scope.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -115,10 +114,9 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: !AppLayout.isPhone(context) && !SettingsPaneScope.isPane(context)
+      appBar: !AppLayout.isPhone(context)
           ? PageHeader(title: context.l10n.hours_title)
           : AppBar(
-        automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         centerTitle: true,
         title: Text(context.l10n.hours_title, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20)),
         backgroundColor: context.colors.primary,

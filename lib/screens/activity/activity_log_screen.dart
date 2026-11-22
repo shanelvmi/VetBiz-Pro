@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../settings/settings_pane_scope.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/shell/page_header.dart';
@@ -427,7 +426,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           foregroundColor: context.colors.textPrimary,
           elevation: AppElevation.e1,
           centerTitle: true,
-          automaticallyImplyLeading: !widget.isModal && !SettingsPaneScope.isPane(context),
+      automaticallyImplyLeading: !widget.isModal,
           leading: widget.isModal
               ? IconButton(
                   icon: Icon(Icons.close, color: context.colors.textPrimary),
@@ -682,11 +681,10 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
-    // UX1b: opened as a page (not a Settings pane, UX3): the shared page
+    // UX1b: opened as a page: the shared page
     // header, title left; the close button as a modal, else the back arrow
-    // (pushed). The pane keeps the bar below.
-    if (!SettingsPaneScope.isPane(context)) {
-      return PageHeader(
+    // (pushed). (UX3: no Settings pane any more.)
+    return PageHeader(
         title: context.l10n.export_activityLog,
         subtitle: context.l10n.activity_subtitle,
         leading: widget.isModal
@@ -697,29 +695,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
               )
             : null,
       );
-    }
-    return AppBar(
-      backgroundColor: context.colors.surface,
-      foregroundColor: context.colors.textPrimary,
-      elevation: AppElevation.e1,
-      centerTitle: true,
-      toolbarHeight: 72,
-      automaticallyImplyLeading: !widget.isModal && !SettingsPaneScope.isPane(context),
-      leading: widget.isModal
-          ? IconButton(
-              icon: const Icon(Icons.close),
-              tooltip: context.l10n.common_close,
-              onPressed: () => Navigator.of(context).pop(),
-            )
-          : null,
-      title: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(context.l10n.export_activityLog, style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f19, color: context.colors.textPrimary)),
-          Text(context.l10n.activity_subtitle, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
-        ],
-      ),
-    );
   }
 
   // A single thin line - just the numbers, no card, no gradient, no
