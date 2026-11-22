@@ -106,7 +106,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   // their lifetime, so they leave by themselves while this screen is open.
   Timer? _expiryTicker;
   int _currentPage = 1;
-  int _pageSize = AppLimits.tablePageSize;
+  // PAGE1: PC/tablet starts at the shared pager's 25; the phone at 10.
+  late int _pageSize = _pagedWide ? AppLimits.pageSize : AppLimits.tablePageSize;
 
   bool get _isLoading => _feed?.isLoading ?? false;
 
@@ -157,8 +158,60 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       isAdmin: () => role.isAdmin,
       subscription: () => SubscriptionFacts.of(subscription),
       subscriptionChanges: Listenable.merge([subscription, role]),
-      window: widget.isDropdown ? AppLimits.dashboardNotifications : AppLimits.notificationsWindow,
+      // PAGE1: PC/tablet watches the newest page (pageSize + 1) and pages
+      // older ones by cursor; the phone keeps its window and Load older.
+      window: widget.isDropdown
+          ? AppLimits.dashboardNotifications
+          : _pagedWide
+              ? AppLimits.pageSize + 1
+              : AppLimits.notificationsWindow,
     );
+  }
+
+  /// PAGE1: the full page on PC/tablet (server pages through ListPageBar).
+  /// Read from the window's size: the feed is made in initState, before
+  /// MediaQuery may be asked (AppLayout.isPhone answers the same from it).
+  late final bool _pagedWide = !widget.isDropdown && _viewIsWide();
+
+  static bool _viewIsWide() {
+    final view = WidgetsBinding.instance.platformDispatcher.implicitView;
+    if (view == null) return false;
+    return AppLayout.fromSize(view.physicalSize / view.devicePixelRatio) != AppLayout.phone;
+  }
+
+  /// PAGE1: PC/tablet order: the live window with the unread first (as
+  /// before), then the older pages newest first, so Next never reshuffles a
+  /// page already seen. The phone keeps newThenEarlier over everything.
+  List<NotificationItem> _wideOrder(List<NotificationItem> items) {
+    final older = _feed?.olderIds ?? const <String>{};
+    return [
+      ...newThenEarlier(items.where((i) => !older.contains(i.id)).toList()),
+      ...items.where((i) => older.contains(i.id)),
+    ];
+  }
+
+  /// PAGE1: Next into a page not fully loaded fetches what it lacks of
+  /// older notifications by cursor (at most pageSize + 1: the next page and
+  /// one row to know another exists), then moves on.
+  Future<void> _wideNext(int page, int totalPages) async {
+    final feed = _feed;
+    final needed = (page + 1) * _pageSize + 1 - _items.length;
+    if (needed > 0 && feed != null && feed.canLoadOlder) {
+      await _run(() => feed.loadOlder(count: needed));
+    }
+    if (mounted) setState(() => _currentPage = page + 1);
+  }
+
+  /// PAGE1: a bigger page loads what it needs to fill page 1 (one get).
+  Future<void> _wideSetPageSize(int size) async {
+    setState(() {
+      _pageSize = size;
+      _currentPage = 1;
+    });
+    final feed = _feed;
+    if (feed != null && feed.canLoadOlder && _items.length <= size) {
+      await _run(() => feed.loadOlder(count: size + 1 - _items.length));
+    }
   }
 
   void _onFeedChanged() {
@@ -378,7 +431,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: _isLoading
             ? _buildStillLoading()
             : _error != null
-                ? Center(child: Padding(padding: const EdgeInsets.all(AppSpacing.s24), child: Text(context.l10n.notifications_loadFailed('$_error'))))
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.s24),
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        Text(context.l10n.notifications_loadFailed('$_error')),
+                        // PAGE1: PC/tablet: the existing text with Retry.
+                        if (_pagedWide)
+                          OutlinedButton(
+                            key: const ValueKey('notifications-retry'),
+                            onPressed: () => _feed?.retry(),
+                            child: Text(context.l10n.common_retry),
+                          ),
+                      ]),
+                    ),
+                  )
                 : _buildFullScreenBody(),
       ),
     );
@@ -449,7 +516,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     // POL1: the unread first ("New"), then the read ("Earlier"), each in the
     // feed's own order. The filter itself is unchanged.
-    final filtered = newThenEarlier(_filteredHistory);
+    final filtered = _pagedWide ? _wideOrder(_filteredHistory) : newThenEarlier(_filteredHistory);
     final total = filtered.length;
     final totalPages = total == 0 ? 1 : ((total + _pageSize - 1) ~/ _pageSize);
     // Notifications expiring can shrink the list under the page being viewed.
@@ -483,7 +550,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ? _buildEmptyState()
         : filtered.isEmpty
             ? _buildNoMatches()
-            : _buildResults(pageItems);
+            // PAGE1: the page shown stays, dimmed, while Next loads older ones.
+            : _pagedWide && (_feed?.isLoadingOlder ?? false)
+                ? IgnorePointer(child: Opacity(key: const ValueKey('pagedList-page'), opacity: AppAlpha.a50, child: _buildResults(pageItems)))
+                : _buildResults(pageItems);
     final showPager = all.isNotEmpty || (_feed?.canLoadOlder ?? false);
     // UX6: PC and tablet use the shared ListPageBar (its spacing ends the
     // "notifications10 per page" run-together); the phone keeps its bar.
@@ -1236,31 +1306,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   /// live window, then older pages on request): the same page sizes, the
   /// same range sentence, and Load older beside the range when there is more.
   Widget _buildListPageBar({required int total, required int page, required int totalPages, required int shown}) {
-    final start = total == 0 ? 0 : (page - 1) * _pageSize + 1;
-    final end = start == 0 ? 0 : start + shown - 1;
+    final loadingOlder = _feed?.isLoadingOlder ?? false;
     return ListPageBar(
       key: const ValueKey('notifications-page-bar'),
       emptyText: context.l10n.notifications_empty,
       itemCount: shown,
       pageSize: _pageSize,
       currentPage: page,
-      hasPreviousPage: page > 1,
-      hasNextPage: page < totalPages,
-      isLoading: false,
-      rangeText: context.l10n.notifications_showingRange(start, end, total),
-      extra: (_feed?.canLoadOlder ?? false)
-          ? TextButton.icon(
-              onPressed: _feed!.isLoadingOlder ? null : () => _run(_feed!.loadOlder),
-              icon: const Icon(Icons.history, size: AppIconSize.i16),
-              label: Text(context.l10n.notifications_loadOlder),
-            )
-          : null,
-      onPageSize: (size) => setState(() {
-        _pageSize = size;
-        _currentPage = 1;
-      }),
+      // PAGE1: Next goes on into older notifications (one cursor page,
+      // pageSize + 1) when the loaded ones are used up; no Load older. The
+      // range says "Showing a to b": the total of loaded rows is not the
+      // whole history.
+      hasPreviousPage: page > 1 && !loadingOlder,
+      hasNextPage: page < totalPages || (_feed?.canLoadOlder ?? false),
+      isLoading: loadingOlder,
+      showLoadingSpinner: false,
+      onPageSize: _wideSetPageSize,
       onPrevious: () => setState(() => _currentPage = page - 1),
-      onNext: () => setState(() => _currentPage = page + 1),
+      onNext: () => _wideNext(page, totalPages),
     );
   }
 

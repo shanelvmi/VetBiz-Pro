@@ -380,16 +380,25 @@ class NotificationFeedController extends ChangeNotifier {
   bool get canLoadOlder => !_olderDone && _live.length >= window;
   bool get isLoadingOlder => _loadingOlder;
 
-  Future<void> loadOlder() async {
+  /// PAGE1: the ids of the notifications that came from older pages (not
+  /// the live window): the PC/tablet list keeps them after the window, newest
+  /// first, so a page already seen never reshuffles.
+  Set<String> get olderIds => {for (final n in _older) n.id};
+
+  /// The next [count] (default [olderPage]) stored notifications after the
+  /// ones loaded, by cursor, one get. PAGE1: the PC/tablet page bar asks for
+  /// one page (pageSize + 1) when Next goes past what is loaded.
+  Future<void> loadOlder({int? count}) async {
     if (!canLoadOlder || _loadingOlder) return;
+    final n = count ?? olderPage;
     _loadingOlder = true;
     _notify();
     try {
       final cursor = _olderCursor ?? _live.last;
-      final snap = await _newestFirst.startAfterDocument(cursor).limit(olderPage).get();
+      final snap = await _newestFirst.startAfterDocument(cursor).limit(n).get();
       _older.addAll(snap.docs.map(FacilityNotification.fromFirestore));
       if (snap.docs.isNotEmpty) _olderCursor = snap.docs.last;
-      if (snap.docs.length < olderPage) _olderDone = true;
+      if (snap.docs.length < n) _olderDone = true;
     } finally {
       _loadingOlder = false;
       _rebuild();
@@ -398,6 +407,23 @@ class NotificationFeedController extends ChangeNotifier {
 
   /// Re-applies the lifetimes at the clock's time now.
   void refresh() => _rebuild();
+
+  /// PAGE1: the page's Retry after [error]: the listeners start again (the
+  /// older pages already loaded stay). Writes are untouched.
+  void retry() {
+    if (_disposed) return;
+    for (final s in _subs) {
+      s.cancel();
+    }
+    _subs.clear();
+    _subscriptionChanges?.removeListener(_rebuild);
+    _started = false;
+    _error = null;
+    _notificationsLoaded = false;
+    _stateLoaded = false;
+    _notify();
+    start();
+  }
 
   Future<void> markRead(Iterable<NotificationRowFacts> items) async {
     final ids = items.map((i) => i.id).toSet();
