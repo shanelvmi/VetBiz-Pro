@@ -45,13 +45,13 @@ void main() {
       final source = File(path).readAsStringSync();
       expect(source, contains('FacilityTypeField('), reason: path);
     }
-    // Only the shared field and the picker's filter menu list the types
+    // Only the shared field lists the types (UX9 removed the picker's Filter)
     // (kFacilityTypes.map( or a for loop over it).
     final listing = <String>[];
     for (final f in Directory('lib').listSync(recursive: true).whereType<File>().where((f) => f.path.endsWith('.dart'))) {
       if (RegExp(r'kFacilityTypes\.map\(|in kFacilityTypes\)').hasMatch(f.readAsStringSync())) listing.add(f.path.replaceAll('\\', '/'));
     }
     listing.sort();
-    expect(listing, ['lib/screens/facilities/facility_picker_screen.dart', 'lib/widgets/facility_type_field.dart']);
+    expect(listing, ['lib/widgets/facility_type_field.dart']);
   });
 }

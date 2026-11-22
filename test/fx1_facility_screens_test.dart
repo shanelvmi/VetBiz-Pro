@@ -46,7 +46,8 @@ void _picker(String name, List<Object?> facilities, Size size, {List<String> car
     final error = await _pump(tester, _app(() => FacilityPickerScreen(facilities: list, role: 'admin')), size);
     expect(error, isNull, reason: '$error');
     for (final card in cards) {
-      expect(find.text(card), findsOneWidget, reason: card);
+      // UX9: a two-character name ("12") also shows as its own initials tile.
+      expect(find.text(card), findsAtLeastNWidgets(1), reason: card);
     }
   }, skip: _failsToday.contains('Facility picker at ${size.width.toInt()}: $name'));
 }

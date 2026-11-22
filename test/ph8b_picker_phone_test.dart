@@ -35,15 +35,15 @@ void main() {
     }
   }
 
-  ph5TestWidgets('at 360 the card keeps its room: a 16 px gutter and its own 14 px padding', (tester) async {
+  // UX9: the redesigned card (lib/widgets/facility_pick_card.dart) keeps the
+  // 16 px gutter; its own padding is 16 and its tile 48.
+  ph5TestWidgets('at 360 the card keeps its room: a 16 px gutter and its own 16 px padding', (tester) async {
     await _picker(tester, const Size(360, 740), MatrixLook.light);
-    final card = find.ancestor(of: find.text('Mifugo Clinic'), matching: find.byType(Stack)).first;
-    final rect = tester.getRect(card);
-    // The 16 px gutter, then the card's 1 px border.
-    expect(rect.left, 16 + 1);
-    expect(rect.right, 360 - 16 - 1);
+    final rect = tester.getRect(find.byKey(const ValueKey('facilityPickCard-f2')));
+    expect(rect.left, 16);
+    expect(rect.right, 360 - 16);
     final name = tester.getRect(find.text('Mifugo Clinic'));
-    // 14 px padding, the 56 px logo and its 12 px gap before the name.
-    expect(name.left - rect.left, 14 + 56 + 12);
+    // 16 px padding, the 48 px tile and its 12 px gap before the name.
+    expect(name.left - rect.left, 16 + 48 + 12);
   });
 }

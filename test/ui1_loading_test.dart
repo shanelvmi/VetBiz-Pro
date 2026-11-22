@@ -103,6 +103,8 @@ void main() {
     expect(main.contains('Center(child: CircularProgressIndicator())'), isFalse, reason: 'the decision\'s waits');
     expect(main.contains('VetBizLoadingPage'), isTrue);
     expect(_read('lib/utils/facility_activation.dart').contains('VetBizLoadingPage('), isTrue, reason: 'setting up the facility');
-    expect(_read('lib/screens/facilities/facility_picker_screen.dart').contains('VetBizLoadingPage('), isTrue);
+    // UX9: the facility picker waits on skeleton cards in its own shape instead
+    // (test/ux9_picker_test.dart), never a spinner.
+    expect(_read('lib/screens/facilities/facility_picker_screen.dart').contains('SkeletonPulse('), isTrue);
   });
 }

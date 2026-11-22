@@ -269,7 +269,8 @@ void main() {
     final main = File('lib/main.dart').readAsStringSync();
     final resume = main.indexOf('ActiveFacilityMemory.facilityToResume(');
     expect(resume, greaterThan(main.indexOf('entry_notActiveYet')));
-    expect(resume, lessThan(main.indexOf('facilities.length == 1')));
+    // UX9: the one-facility branch now reads through facilityLandingFor.
+    expect(resume, lessThan(main.indexOf('facilityLandingFor(facilities.length) == FacilityLanding.straightIn')));
     expect(main, contains('resume: true'));
     expect(main, contains('if (_currentUser != null && user == null) ActiveFacilityMemory.forget();'),
         reason: 'any sign-out seen by the front door forgets, a reload\'s first null does not');

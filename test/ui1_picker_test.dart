@@ -1,9 +1,9 @@
 // UI1 (3), written before the change: the facility picker at every width.
 // The top bar: the brand at the left (the mark and the name, no tagline) and
-// the profile menu in the right corner; the page header centred (the store
-// icon in its circle above the title and its subtitle); no decorative icons
-// (the tractor, rabbit and paw) and no footer line. The search, the Filter
-// button and the cards stay as built (PH8b's tests). At 360x740, 390x844,
+// the profile menu in the right corner; the page header centred (UX9: the
+// title and its subtitle, the store icon gone); no decorative icons
+// (the tractor, rabbit and paw) and no footer line. The cards, the search
+// rule and the layouts are UX9's (test/ux9_picker_test.dart). At 360x740, 390x844,
 // 740x360, 768x1024 and 1200x800 in Light, Dark and Kiswahili.
 import 'dart:io';
 
@@ -19,7 +19,8 @@ import 'helpers/screen_size_matrix.dart';
 
 // Not UI1: at 768 in Kiswahili a card's staff-and-status row (the cards
 // stay as built) overflows by 37 px; this case waits for a cards batch.
-const _known = {'768x1024 kiswahili': 'a card row overflows in Kiswahili at 768 (cards not in UI1)'};
+// UX9: the cards were redesigned and their row wraps; no known case is left.
+const _known = <String, String>{};
 
 const _sizes = [Size(360, 740), Size(390, 844), Size(740, 360), Size(768, 1024), Size(1200, 800)];
 
@@ -62,13 +63,13 @@ void main() {
 
         // The header: the icon above, the title and subtitle, centred on the page.
         final centre = size.width / 2;
-        final icon = tester.getRect(find.byIcon(Icons.storefront_outlined).first);
         final title = _ink(tester, find.text(l10n.facilityPicker_title));
         final intro = _ink(tester, find.text(l10n.facilityPicker_intro));
-        expect(icon.center.dx, closeTo(centre, 1));
         expect(title.center.dx, closeTo(centre, 1));
         expect(intro.center.dx, closeTo(centre, 1));
-        expect(icon.bottom, lessThanOrEqualTo(title.top));
+        // UX9: the store icon in its accent circle is gone (only the Default
+        // card carries the accent).
+        expect(find.byIcon(Icons.storefront_outlined), findsNothing);
         expect(title.bottom, lessThanOrEqualTo(intro.top));
 
         for (final decoration in [Icons.agriculture_outlined, Icons.cruelty_free, Icons.pets]) {
