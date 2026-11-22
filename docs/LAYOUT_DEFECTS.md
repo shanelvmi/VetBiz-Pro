@@ -125,3 +125,10 @@ registry. Line numbers at LAY2 (8).
 | # | Where | What | Why it waits |
 |---|---|---|---|
 | 36 | ~~app_shell.dart, the UX7 AppShell.banner slot~~ | The subscription pill in the layout pushed every wide page down by its height (follow-up to #28) | FIXED UX8b: ShellBannerHost floats over the content, placed in the header's free middle, chip or under the header when narrow (ux8b_shell_banner_test) |
+
+## Found in UX9
+
+| # | Where | What | Why it waits |
+|---|---|---|---|
+| 37 | ~~facility_picker_screen.dart, the cards at 768 in Kiswahili (UI1 known case)~~ | The staff-and-status row overflowed by 37 px | FIXED UX9: the redesigned card wraps that row (ui1_picker_test skip lifted, ux9_picker_test) |
+| 38 | ~~facility_picker_screen.dart, the Default card's ⋮ menu~~ | Opened an empty menu (its only item hidden on the default) | FIXED UX9: no ⋮ on the Default card |
