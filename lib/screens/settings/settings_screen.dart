@@ -61,6 +61,8 @@ class SettingsRequest {
 
   static const team = 'team';
   static const activityLog = 'activity_log';
+  /// UX7: Subscription's full page (the expired banner's Renew on PC/tablet).
+  static const subscription = 'subscription';
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
@@ -355,11 +357,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// The screen of an item another place asks for ([SettingsRequest]) or a
   /// hub row opens. UX5: Business Hours and Activity Log open as tabs of
-  /// Business Profile (their keys are kept for the requests).
+  /// Business Profile (their keys are kept for the requests). UX7: the tab
+  /// host opens on Business Hours (its default), its identity card on top.
   Widget _itemScreen(String key, {String? teamStatus}) => switch (key) {
-        'business_profile' => BusinessProfileTabs(firestore: widget.firestore, auth: widget.auth),
-        'business_hours' =>
+        'business_profile' || 'business_hours' =>
           BusinessProfileTabs(firestore: widget.firestore, auth: widget.auth, initialTab: BusinessProfileTabs.hours),
+        // UX7: the full page, never the modal.
+        SettingsRequest.subscription => SubscriptionScreen(firestore: widget.firestore, auth: widget.auth),
         'facilities' => FacilityScreen(firestore: widget.firestore, auth: widget.auth),
         'team' => ManageAssistantsScreen(firestore: widget.firestore, auth: widget.auth, initialStatus: teamStatus),
         _ => BusinessProfileTabs(firestore: widget.firestore, auth: widget.auth, initialTab: BusinessProfileTabs.activityLog),

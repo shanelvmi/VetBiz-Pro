@@ -14,6 +14,9 @@ import '../../theme/app_layout.dart';
 import '../../widgets/shell/page_header.dart';
 import '../../widgets/app_sheet.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/page_card.dart';
+import '../../ui/polish/page_layout.dart';
 
 class BusinessHoursScreen extends StatefulWidget {
   // Null: the app's own Firestore. Tests pass a fake one (PH8a seam; no
@@ -117,6 +120,7 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_phone) return _buildWide();
     return Scaffold(
       appBar: widget.embedded
           ? null
@@ -235,50 +239,140 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
     required VoidCallback onTimeTap,
     required ValueChanged<bool> onClosedChanged,
   }) {
-    if (_phone) return _phoneDayGroupCard(title: title, time: time, closed: closed, onTimeTap: onTimeTap, onClosedChanged: onClosedChanged);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.s16),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return _phoneDayGroupCard(title: title, time: time, closed: closed, onTimeTap: onTimeTap, onClosedChanged: onClosedChanged);
+  }
+
+  /// UX7 (owner, 2026-11-22): PC and tablet: the page template at the full
+  /// content width (it was a 700 px centred column). The intro, then one
+  /// card per day group (the day, its closing time, Closed all day) two per
+  /// row from 900 of the content, the "Allow anytime" override as its own
+  /// card, then Save at the right. The same state, pickers and save.
+  Widget _buildWide() {
+    final l10n = context.l10n;
+    return Scaffold(
+      backgroundColor: context.colors.background,
+      appBar: widget.embedded ? null : PageHeader(title: l10n.hours_title),
+      body: PageCardList(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // LAY7b (#24): neither side could shrink, so a long day name and
-              // "Closed all day" (Kiswahili at large text) overflowed the 700
-              // card; now both wrap and the switch keeps its place.
-              Flexible(child: Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14))),
-              Flexible(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(context.l10n.hours_closedAllDay, style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textSoft)),
-                    ),
-                    Switch(value: closed, activeThumbColor: context.colors.primary, onChanged: onClosedChanged),
-                  ],
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: PolishMetrics.gapBetweenGroups),
+            child: Text(l10n.hours_intro, style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textMuted)),
+          ),
+          PageGrid(children: [
+            _wideDayCard(
+              key: 'weekdays',
+              title: l10n.hours_weekdays,
+              time: _weekdayTime,
+              closed: _weekdayClosed,
+              onTimeTap: () => _pickTime(_weekdayTime, (t) => setState(() => _weekdayTime = t), title: l10n.hours_weekdays),
+              onClosedChanged: (v) => setState(() => _weekdayClosed = v),
+            ),
+            _wideDayCard(
+              key: 'saturday',
+              title: l10n.hours_saturday,
+              time: _saturdayTime,
+              closed: _saturdayClosed,
+              onTimeTap: () => _pickTime(_saturdayTime, (t) => setState(() => _saturdayTime = t), title: l10n.hours_saturday),
+              onClosedChanged: (v) => setState(() => _saturdayClosed = v),
+            ),
+            _wideDayCard(
+              key: 'sunday',
+              title: l10n.hours_sunday,
+              time: _sundayTime,
+              closed: _sundayClosed,
+              onTimeTap: () => _pickTime(_sundayTime, (t) => setState(() => _sundayTime = t), title: l10n.hours_sunday),
+              onClosedChanged: (v) => setState(() => _sundayClosed = v),
+            ),
+          ]),
+          const SizedBox(height: PolishMetrics.gapBetweenGroups),
+          PageCard(
+            key: const ValueKey('hours-allow-anytime'),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.hours_allowAnytime, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
+                      const SizedBox(height: AppSpacing.s4),
+                      Text(l10n.hours_allowAnytimeHint, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSoft)),
+                    ],
+                  ),
                 ),
+                Switch(
+                  value: _allowAnytime,
+                  activeThumbColor: context.colors.warningStrong,
+                  onChanged: (v) => setState(() => _allowAnytime = v),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: PolishMetrics.gapBetweenSections),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton(
+              key: const ValueKey('hours-save'),
+              onPressed: _isSaving ? null : _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: context.colors.primary,
+                foregroundColor: context.colors.onPrimary,
+                minimumSize: const Size(0, AppSizes.minTapTarget),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r10)),
               ),
+              child: _isSaving
+                  ? SizedBox(
+                      width: AppIconSize.i18,
+                      height: AppIconSize.i18,
+                      child: CircularProgressIndicator(strokeWidth: PolishMetrics.spinnerStroke, color: context.colors.onPrimary))
+                  : Text(l10n.hours_save, style: const TextStyle(fontWeight: AppFontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// UX7: a day group on PC and tablet: one flat card, the day at the left,
+  /// then its closing time (or why there is none) and Closed all day. A Wrap,
+  /// so a long day name or Kiswahili at large text moves the controls to a
+  /// second line instead of overflowing (LAY7b, #24).
+  Widget _wideDayCard({
+    required String key,
+    required String title,
+    required TimeOfDay time,
+    required bool closed,
+    required VoidCallback onTimeTap,
+    required ValueChanged<bool> onClosedChanged,
+  }) {
+    final colors = context.colors;
+    return PageCard(
+      key: ValueKey('hours-day-$key'),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: AppSpacing.s12,
+        runSpacing: AppSpacing.s4,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f14)),
+          closed
+              ? Text(context.l10n.hours_noClosingTime, style: TextStyle(fontSize: AppFontSize.f12, color: colors.textHint))
+              : OutlinedButton.icon(
+                  onPressed: onTimeTap,
+                  icon: Icon(Icons.access_time, size: AppIconSize.i16, color: colors.primary),
+                  label: Text(context.l10n.hours_closesAt(time.format(context)), style: TextStyle(color: colors.primary)),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, AppSizes.minTapTarget),
+                    side: BorderSide(color: colors.primary.withValues(alpha: AppAlpha.a40)),
+                  ),
+                ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(context.l10n.hours_closedAllDay, style: TextStyle(fontSize: AppFontSize.f12_5, color: colors.textSoft)),
+              Switch(value: closed, activeThumbColor: colors.primary, onChanged: onClosedChanged),
             ],
           ),
-          if (!closed) ...[
-            const SizedBox(height: AppSpacing.s4),
-            OutlinedButton.icon(
-              onPressed: onTimeTap,
-              icon: Icon(Icons.access_time, size: AppIconSize.i16, color: context.colors.primary),
-              label: Text(context.l10n.hours_closesAt(time.format(context)), style: TextStyle(color: context.colors.primary)),
-              style: OutlinedButton.styleFrom(side: BorderSide(color: context.colors.primary.withValues(alpha: AppAlpha.a40))),
-            ),
-          ] else
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.s4),
-              child: Text(context.l10n.hours_noClosingTime, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint)),
-            ),
         ],
       ),
     );

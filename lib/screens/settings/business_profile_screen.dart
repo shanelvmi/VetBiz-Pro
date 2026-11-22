@@ -21,6 +21,8 @@ import '../../theme/app_layout.dart';
 import '../../widgets/shell/page_header.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
 import '../../utils/app_clock.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/page_card.dart';
 
 /// A dedicated home for facility-level branding (currently just the
 /// logo) - built for discoverability, since the drawer's own
@@ -124,11 +126,15 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
     final type = selectedFacility?['type'] ?? '';
     final logoUrl = selectedFacility?['logoUrl'];
 
+    // UX7: inside the tab host (PC/tablet) this is the identity card on top
+    // of the page: the same facility, logo, pending bytes and upload.
+    if (widget.embedded) {
+      return _identityCard(facilityName: facilityName, type: type, typeDetail: selectedFacility?['typeDetail'], logoUrl: logoUrl);
+    }
+
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: widget.embedded
-          ? null
-          : !AppLayout.isPhone(context)
+      appBar: !AppLayout.isPhone(context)
           ? PageHeader(title: context.l10n.profile_title)
           : AppBar(
         title: Text(context.l10n.profile_title),
@@ -159,37 +165,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.s24),
-                Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundColor: context.colors.divider,
-                      backgroundImage: _pendingLogoBytes != null
-                          ? MemoryImage(_pendingLogoBytes!)
-                          : (logoUrl != null
-                              ? NetworkImage(logoUrl)
-                              : const AssetImage(AppAssets.logo) as ImageProvider),
-                    ),
-                    if (_isUploading)
-                      Positioned.fill(
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundColor: context.colors.scrim.withValues(alpha: AppAlpha.a40),
-                          child: CircularProgressIndicator(color: context.colors.onPrimary),
-                        ),
-                      ),
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.s6),
-                      decoration: BoxDecoration(
-                        color: context.colors.accent,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: context.colors.background, width: 2),
-                      ),
-                      child: Icon(Icons.camera_alt, size: AppIconSize.i16, color: context.colors.onPrimary),
-                    ),
-                  ],
-                ),
+                _logoAvatar(logoUrl, radius: 60),
                 const SizedBox(height: AppSpacing.s16),
                 Text(
                   context.l10n.profile_logoHint,
@@ -198,19 +174,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                 ),
                 if (!_phone) ...[
                 const SizedBox(height: AppSpacing.s24),
-                ElevatedButton.icon(
-                  onPressed: _isUploading ? null : _changeLogo,
-                  icon: const Icon(Icons.upload),
-                  label: Text(logoUrl != null ? context.l10n.profile_changeLogo : context.l10n.profile_uploadLogo),
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-                      if (states.contains(WidgetState.hovered)) return context.colors.accent;
-                      return context.colors.primary;
-                    }),
-                    foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
-                    padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s12)),
-                  ),
-                ),
+                _uploadButton(logoUrl),
                 ],
               ],
             ),
@@ -225,6 +189,102 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
               busy: _isUploading,
             )
           : null,
+    );
+  }
+
+  /// The logo, the picked bytes while they upload (then the saved URL), a
+  /// spinner over it while uploading and the camera badge. Lifted unchanged
+  /// from the page for the UX7 identity card.
+  Widget _logoAvatar(String? logoUrl, {required double radius}) => Stack(
+        alignment: Alignment.bottomRight,
+        children: [
+          CircleAvatar(
+            radius: radius,
+            backgroundColor: context.colors.divider,
+            backgroundImage: _pendingLogoBytes != null
+                ? MemoryImage(_pendingLogoBytes!)
+                : (logoUrl != null
+                    ? NetworkImage(logoUrl)
+                    : const AssetImage(AppAssets.logo) as ImageProvider),
+          ),
+          if (_isUploading)
+            Positioned.fill(
+              child: CircleAvatar(
+                radius: radius,
+                backgroundColor: context.colors.scrim.withValues(alpha: AppAlpha.a40),
+                child: CircularProgressIndicator(color: context.colors.onPrimary),
+              ),
+            ),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.s6),
+            decoration: BoxDecoration(
+              color: context.colors.accent,
+              shape: BoxShape.circle,
+              border: Border.all(color: context.colors.background, width: 2),
+            ),
+            child: Icon(Icons.camera_alt, size: AppIconSize.i16, color: context.colors.onPrimary),
+          ),
+        ],
+      );
+
+  /// Upload Logo (Change Logo once there is one): PC and tablet.
+  Widget _uploadButton(String? logoUrl) => ElevatedButton.icon(
+        key: const ValueKey('business-upload-logo'),
+        onPressed: _isUploading ? null : _changeLogo,
+        icon: const Icon(Icons.upload),
+        label: Text(logoUrl != null ? context.l10n.profile_changeLogo : context.l10n.profile_uploadLogo),
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+            if (states.contains(WidgetState.hovered)) return context.colors.accent;
+            return context.colors.primary;
+          }),
+          foregroundColor: WidgetStateProperty.all(context.colors.onPrimary),
+          minimumSize: WidgetStateProperty.all(const Size(0, AppSizes.minTapTarget)),
+          padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: AppSpacing.s24, vertical: AppSpacing.s12)),
+        ),
+      );
+
+  /// UX7 (owner, 2026-11-22): the permanent identity card of the Business
+  /// Profile page on PC and tablet: the logo, the facility's name and type
+  /// (FN1: the type beside its label, never joined to the name) with the
+  /// logo caption, and Upload Logo at the right. Nothing of the old Profile
+  /// tab is dropped (it held exactly these).
+  Widget _identityCard({required String facilityName, required String type, dynamic typeDetail, String? logoUrl}) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(PolishMetrics.pagePadding, 0, PolishMetrics.pagePadding, 0),
+      child: PageCard(
+        key: const ValueKey('business-identity-card'),
+        child: Row(
+          children: [
+            _logoAvatar(logoUrl, radius: AppSizes.profileAvatarDrawer / 2),
+            const SizedBox(width: AppSpacing.s16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(facilityName, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f18)),
+                  const SizedBox(height: AppSpacing.s4),
+                  Wrap(
+                    spacing: AppSpacing.s6,
+                    children: [
+                      Text(context.l10n.facilities_typeOfFacility, style: TextStyle(color: colors.textMuted, fontSize: AppFontSize.f13)),
+                      Text(
+                        type.isNotEmpty ? context.l10n.facilityTypeDisplay(type, typeDetail) : context.l10n.facilityPicker_typeNotSet,
+                        style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f13),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.s4),
+                  Text(context.l10n.profile_logoHint, style: TextStyle(color: colors.textMuted, fontSize: AppFontSize.f12)),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s16),
+            _uploadButton(logoUrl),
+          ],
+        ),
+      ),
     );
   }
 }
