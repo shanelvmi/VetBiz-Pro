@@ -1056,19 +1056,19 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   }) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(title, style: TextStyle(color: context.colors.primary)),
         content: Text(content),
         actions: [
           TextButton(
             child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: context.colors.accent),
             child: Text(context.l10n.common_confirm),
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               onConfirm();
             },
           ),
@@ -1080,12 +1080,12 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   void _showChangePasswordDialog(String email) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(context.l10n.dashboard_resetPasswordTitle),
         content: Text(context.l10n.dashboard_resetPasswordPrompt(email)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(context.l10n.common_cancel),
           ),
           ElevatedButton(
@@ -1093,7 +1093,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
             onPressed: () async {
               // Captured before the await: the dialog must close whether the
               // email was sent or not.
-              final navigator = Navigator.of(context);
+              final navigator = Navigator.of(dialogContext);
               try {
                 await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
                 navigator.pop();

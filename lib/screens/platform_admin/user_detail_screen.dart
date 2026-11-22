@@ -337,7 +337,7 @@ class _UserDetailScreenState extends State<UserDetailScreen> {
                         await callable.call({'userId': widget.userId});
                         if (dialogContext.mounted) Navigator.pop(dialogContext);
                         if (!mounted) return;
-                        Navigator.pop(context); // back to Users list - this account no longer exists
+                        Navigator.pop(context); // back to Users list - this account no longer exists (UX8: the page, on purpose)
                         AppFeedback.success('Account removed');
                       } catch (e) {
                         setDialogState(() {

@@ -326,18 +326,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
   static Future<void> _deleteProductIn(BuildContext context, Product p, {VoidCallback? onDeleted}) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: context.colors.raisedSurface,
         title: Text(context.l10n.products_confirmDeleteTitle, style: TextStyle(color: context.colors.primary)),
         content: Text(context.l10n.products_confirmDeleteNamed(p.name)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             style: TextButton.styleFrom(foregroundColor: context.colors.primary),
             child: Text(context.l10n.common_cancel),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.danger,
               foregroundColor: context.colors.background,

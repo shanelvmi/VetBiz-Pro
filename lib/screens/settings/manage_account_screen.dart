@@ -80,27 +80,29 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
   }
 
   // PH8a: how this page asks: a sheet on a phone (showSheetOrDialog), today's
-  // dialog elsewhere. Every action pops with Navigator.pop(context, ...),
-  // which closes either. [dismissible] false: only the buttons close it.
+  // dialog elsewhere. Every action pops with Navigator.pop(dialogContext, ...),
+  // which closes either. UX8: never the page's context: on PC/tablet the
+  // dialog sits on the root navigator while this page lives in the shell's
+  // content navigator, so Navigator.pop(context) missed the dialog. [dismissible] false: only the buttons close it.
   Future<T?> _ask<T>({
     required String title,
     required Widget body,
-    required List<Widget> actions,
+    required List<Widget> Function(BuildContext dialogContext) actions,
     bool dismissible = true,
   }) {
     final heading = Text(title, style: TextStyle(color: context.colors.primary, fontWeight: AppFontWeight.bold));
     if (AppLayout.isPhone(context)) {
       return showSheetOrDialog<T>(context,
-          title: heading, body: (_, __) => body, actions: (_, __) => actions, dismissible: dismissible);
+          title: heading, body: (_, __) => body, actions: (ctx, __) => actions(ctx), dismissible: dismissible);
     }
     return showDialog<T>(
       context: context,
       barrierDismissible: dismissible,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: context.colors.raisedSurface,
         title: heading,
         content: SizedBox(width: _dialogWidth(context), child: body),
-        actions: actions,
+        actions: actions(dialogContext),
       ),
     );
   }
@@ -170,13 +172,13 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final confirm = await _ask<bool>(
       title: context.l10n.account_logoutAllTitle,
       body: Text(context.l10n.account_logoutAllBody),
-      actions: [
+      actions: (dialogContext) => [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: _actionButtonStyle(context.colors.primary),
             child: Text(context.l10n.account_logoutEverywhere),
           ),
@@ -231,13 +233,13 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               Text(context.l10n.account_wipeBody),
             ],
           ),
-      actions: [
+      actions: (dialogContext) => [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: _actionButtonStyle(dangerColor),
             child: Text(context.l10n.account_wipe),
           ),
@@ -265,13 +267,13 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               ),
             ],
             ),
-      actions: [
+      actions: (dialogContext) => [
             TextButton(
-              onPressed: () => Navigator.pop(context, ''),
+              onPressed: () => Navigator.pop(dialogContext, ''),
               child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
               style: _actionButtonStyle(context.colors.primary),
               child: Text(context.l10n.common_confirm),
             ),
@@ -335,9 +337,9 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
         await _ask<void>(
           title: context.l10n.account_cannotDeactivateTitle,
           body: Text(context.l10n.account_cannotDeactivateBody),
-          actions: [
+          actions: (dialogContext) => [
               ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => Navigator.pop(dialogContext),
                 style: _actionButtonStyle(context.colors.primary),
                 child: Text(context.l10n.common_ok),
               ),
@@ -351,13 +353,13 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
     final confirm = await _ask<bool>(
       title: context.l10n.account_deactivateTitle,
       body: Text(context.l10n.account_deactivateBody),
-      actions: [
+      actions: (dialogContext) => [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: _actionButtonStyle(context.colors.primary),
             child: Text(context.l10n.team_deactivate),
           ),
@@ -389,13 +391,13 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
               ),
             ],
             ),
-      actions: [
+      actions: (dialogContext) => [
             TextButton(
-              onPressed: () => Navigator.pop(context, ''),
+              onPressed: () => Navigator.pop(dialogContext, ''),
               child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
               style: _actionButtonStyle(context.colors.primary),
               child: Text(context.l10n.common_confirm),
             ),
@@ -467,12 +469,12 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
             ),
           ],
           ),
-      actions: [
+      actions: (dialogContext) => [
           TextButton(
             onPressed: () {
               _deleteEmailController.clear();
               _deletePasswordController.clear();
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
             },
             child: Text(context.l10n.common_cancel, style: TextStyle(color: context.colors.primary)),
           ),
@@ -502,7 +504,7 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                         password: _deletePasswordController.text.trim(),
                       );
                       if (!mounted) return;
-                      Navigator.pop(context);
+                      if (dialogContext.mounted) Navigator.pop(dialogContext);
                       AppFeedback.info(L10n.current.account_deleted);
                     } catch (e, st) {
                       // A refused password does not stay in the field (P1b).

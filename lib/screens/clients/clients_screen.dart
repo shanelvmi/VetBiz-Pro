@@ -308,13 +308,13 @@ class _ClientsScreenState extends State<ClientsScreen> {
 
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: context.colors.raisedSurface,
         title: Text(context.l10n.clients_deleteTitle, style: TextStyle(color: context.colors.primary)),
         content: Text(context.l10n.clients_deleteToTrashBody(client.name)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             style: ButtonStyle(
               foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                 if (states.contains(WidgetState.hovered)) return Color.alphaBlend(context.colors.onPrimary.withValues(alpha: PolishMetrics.buttonHoverAlpha), context.colors.primary);
@@ -324,7 +324,7 @@ class _ClientsScreenState extends State<ClientsScreen> {
             child: Text(context.l10n.common_cancel),
           ),
           TextButton.icon(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: ButtonStyle(
               foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
                 if (states.contains(WidgetState.hovered)) return context.colors.dangerDeep;
