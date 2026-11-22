@@ -74,6 +74,14 @@ class PolishMetrics {
   /// primary dot at its leading edge.
   static const double unreadTintAlpha = AppAlpha.a10;
   static const double unreadDot = AppSizes.statusDot;
+
+  /// UX7: the Settings page template (lib/ui/polish/page_layout.dart). A
+  /// table keeps its Date column (and its actions column) one fixed width,
+  /// so the date sits at the same x on every row.
+  static const double tableDateColumn = 180;
+  static const double tableActionsColumn = 200;
+  static const double tableRowPaddingV = AppSpacing.s10;
+  static const double tableHeaderText = AppFontSize.f12;
 }
 
 /// LAY6a: the record screens' details panel (DetailsLayout) and the toolbar
