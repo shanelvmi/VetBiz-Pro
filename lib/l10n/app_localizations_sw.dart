@@ -1509,6 +1509,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get transactions_searchHint => 'Tafuta kwa maelezo, kundi...';
 
   @override
+  String get transactions_searchDescriptionHint =>
+      'Tafuta kwa maelezo (tarehe zote)...';
+
+  @override
   String transactions_count(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

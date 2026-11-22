@@ -454,6 +454,7 @@
   "transactions_expenses": ["Matumizi","Transactions metric card: total expenses in the period.","draft"],
   "transactions_incomeVsExpenses": ["Mapato Mengine dhidi ya Matumizi","Transactions metric card: other income minus expenses.","draft"],
   "transactions_searchHint": ["Tafuta kwa maelezo, kundi...","Transactions search box hint.","draft"],
+  "transactions_searchDescriptionHint": ["Tafuta kwa maelezo (tarehe zote)...","PC/tablet Transactions search hint: the search matches descriptions that start with the text, across every date (not only the chosen range).","draft"],
   "transactions_count": ["{count, plural, =1{Muamala 1} other{Miamala {count}}}","Number of transactions shown, beside the filters.","draft"],
   "transactions_empty": ["Hakuna miamala.","Transactions list when it is empty.","draft"],
   "transactions_emptyForType": ["Hakuna miamala ya {type}.","Transactions list when the type filter has none; type is the type's label.","draft"],

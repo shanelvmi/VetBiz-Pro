@@ -2828,6 +2828,12 @@ abstract class AppLocalizations {
   /// **'Search by description, category...'**
   String get transactions_searchHint;
 
+  /// PC/tablet Transactions search hint: the search matches descriptions that start with the text, across every date (not only the chosen range).
+  ///
+  /// In en, this message translates to:
+  /// **'Search by description (all dates)...'**
+  String get transactions_searchDescriptionHint;
+
   /// Number of transactions shown, beside the filters.
   ///
   /// In en, this message translates to:

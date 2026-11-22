@@ -910,6 +910,8 @@
   "@transactions_incomeVsExpenses": {"x-review":"draft"},
   "transactions_searchHint": "Tafuta kwa maelezo, kundi...",
   "@transactions_searchHint": {"x-review":"draft"},
+  "transactions_searchDescriptionHint": "Tafuta kwa maelezo (tarehe zote)...",
+  "@transactions_searchDescriptionHint": {"x-review":"draft"},
   "transactions_count": "{count, plural, =1{Muamala 1} other{Miamala {count}}}",
   "@transactions_count": {"x-review":"draft"},
   "transactions_empty": "Hakuna miamala.",

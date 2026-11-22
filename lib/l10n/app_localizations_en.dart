@@ -1501,6 +1501,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactions_searchHint => 'Search by description, category...';
 
   @override
+  String get transactions_searchDescriptionHint =>
+      'Search by description (all dates)...';
+
+  @override
   String transactions_count(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

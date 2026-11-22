@@ -454,6 +454,7 @@ transactions_update,Update Transaction,Sasisha Muamala,Save button when editing 
 transactions_expenses,Expenses,Matumizi,Transactions metric card: total expenses in the period.,draft
 transactions_incomeVsExpenses,Other Income vs Expenses,Mapato Mengine dhidi ya Matumizi,Transactions metric card: other income minus expenses.,draft
 transactions_searchHint,"Search by description, category...","Tafuta kwa maelezo, kundi...",Transactions search box hint.,draft
+transactions_searchDescriptionHint,Search by description (all dates)...,Tafuta kwa maelezo (tarehe zote)...,"PC/tablet Transactions search hint: the search matches descriptions that start with the text, across every date (not only the chosen range).",draft
 transactions_count,"{count, plural, =1{1 transaction} other{{count} transactions}}","{count, plural, =1{Muamala 1} other{Miamala {count}}}","Number of transactions shown, beside the filters.",draft
 transactions_empty,No transactions.,Hakuna miamala.,Transactions list when it is empty.,draft
 transactions_emptyForType,No transactions for {type}.,Hakuna miamala ya {type}.,"Transactions list when the type filter has none; type is the type's label.",draft

@@ -910,6 +910,8 @@
   "@transactions_incomeVsExpenses": {"description":"Transactions metric card: other income minus expenses."},
   "transactions_searchHint": "Search by description, category...",
   "@transactions_searchHint": {"description":"Transactions search box hint."},
+  "transactions_searchDescriptionHint": "Search by description (all dates)...",
+  "@transactions_searchDescriptionHint": {"description":"PC/tablet Transactions search hint: the search matches descriptions that start with the text, across every date (not only the chosen range)."},
   "transactions_count": "{count, plural, =1{1 transaction} other{{count} transactions}}",
   "@transactions_count": {"description":"Number of transactions shown, beside the filters.","placeholders":{"count":{"type":"int"}}},
   "transactions_empty": "No transactions.",
