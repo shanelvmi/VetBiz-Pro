@@ -2633,6 +2633,16 @@ class AppLocalizationsSw extends AppLocalizations {
   String get profile_uploadLogo => 'Pakia Nembo';
 
   @override
+  String get profile_removeLogoTitle => 'Ondoa nembo?';
+
+  @override
+  String get profile_removeLogoBody =>
+      'Nembo itaondolewa kwenye dashibodi, risiti, na popote kituo chako kinapoonyeshwa. Unaweza kupakia nyingine wakati wowote.';
+
+  @override
+  String get profile_logoRemoved => 'Nembo imeondolewa';
+
+  @override
   String get searchIndex_title => 'Jenga Upya Faharasa ya Kutafuta Wateja';
 
   @override

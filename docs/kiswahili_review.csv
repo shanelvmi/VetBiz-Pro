@@ -771,6 +771,9 @@ profile_title,Business Profile,Wasifu wa Biashara,Business Profile screen title.
 profile_logoHint,"This logo appears on the dashboard, receipts, and anywhere your facility is shown throughout the app.","Nembo hii inaonekana kwenye dashibodi, risiti, na popote kituo chako kinapoonyeshwa ndani ya programu.",Under the logo.,draft
 profile_changeLogo,Change Logo,Badilisha Nembo,Button when a logo exists.,draft
 profile_uploadLogo,Upload Logo,Pakia Nembo,Button when there is no logo.,draft
+profile_removeLogoTitle,Remove the logo?,Ondoa nembo?,Confirm dialog title before removing the facility logo.,draft
+profile_removeLogoBody,"The logo will be removed from the dashboard, receipts, and anywhere your facility is shown. You can upload a new one at any time.","Nembo itaondolewa kwenye dashibodi, risiti, na popote kituo chako kinapoonyeshwa. Unaweza kupakia nyingine wakati wowote.",Confirm dialog text before removing the facility logo.,draft
+profile_logoRemoved,Logo removed,Nembo imeondolewa,Message after removing the logo.,draft
 searchIndex_title,Rebuild Client Search Index,Jenga Upya Faharasa ya Kutafuta Wateja,Rebuild dialog title.,draft
 searchIndex_body,"This makes clients added before search was available show up correctly when searched by name, and lets the app spot a new client whose phone number or name matches one you already have. It only needs to be run once - clients that are already up to date are left alone.","Hii huwafanya wateja walioongezwa kabla utafutaji haujakuwepo waonekane vizuri wanapotafutwa kwa jina, na huiwezesha programu kumtambua mteja mpya ambaye namba ya simu au jina lake linalingana na mteja uliye naye. Inahitaji kuendeshwa mara moja tu - wateja ambao tayari wako sawa hawaguswi.",Rebuild dialog text.,draft
 searchIndex_nothing,Nothing to update - every client is already searchable.,Hakuna cha kusasisha - kila mteja tayari anatafutika.,Rebuild result when nothing changed.,draft

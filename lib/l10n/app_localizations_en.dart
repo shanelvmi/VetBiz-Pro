@@ -2618,6 +2618,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile_uploadLogo => 'Upload Logo';
 
   @override
+  String get profile_removeLogoTitle => 'Remove the logo?';
+
+  @override
+  String get profile_removeLogoBody =>
+      'The logo will be removed from the dashboard, receipts, and anywhere your facility is shown. You can upload a new one at any time.';
+
+  @override
+  String get profile_logoRemoved => 'Logo removed';
+
+  @override
   String get searchIndex_title => 'Rebuild Client Search Index';
 
   @override

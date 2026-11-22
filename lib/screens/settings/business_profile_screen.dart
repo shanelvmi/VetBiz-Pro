@@ -20,6 +20,8 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/shell/page_header.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
+import '../../widgets/phone_form/sheet_or_dialog.dart';
+import '../../providers/user_role_provider.dart';
 import '../../utils/app_clock.dart';
 import '../../theme/polish_metrics.dart';
 import '../../ui/polish/page_card.dart';
@@ -118,6 +120,79 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
     }
   }
 
+  /// UX8: Remove logo, asked first. The facility document's logoUrl goes
+  /// first (the FacilityProvider listener then clears it, and the sidebar,
+  /// Home and receipts fall back to their no-logo look); then the uploaded
+  /// file, as the Edit Facility dialog does. That order keeps the logo when
+  /// the write fails, and never leaves a logoUrl pointing at a deleted file.
+  Future<void> _removeLogo() async {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacility?['id'];
+    if (facilityId == null) return;
+    final l10n = context.l10n;
+    final confirmed = await showSheetOrDialog<bool>(
+      context,
+      title: Text(l10n.profile_removeLogoTitle),
+      body: (_, _) => Text(l10n.profile_removeLogoBody),
+      actions: (dialogContext, _) => [
+        TextButton(
+          key: const ValueKey('business-remove-logo-cancel'),
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: Text(l10n.common_cancel),
+        ),
+        ElevatedButton(
+          key: const ValueKey('business-remove-logo-confirm'),
+          onPressed: () => Navigator.pop(dialogContext, true),
+          child: Text(l10n.common_remove),
+        ),
+      ],
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _isUploading = true);
+    try {
+      await (widget.firestore ?? FirebaseFirestore.instance)
+          .collection(Collections.facilities)
+          .doc(facilityId)
+          .update({'logoUrl': FieldValue.delete()});
+    } catch (e, st) {
+      if (mounted) setState(() => _isUploading = false);
+      AppFeedback.error(L10n.current.profile_logoFailed, error: e, stackTrace: st);
+      return;
+    }
+    try {
+      await (widget.storage ?? FirebaseStorage.instance).ref().child('facility_logos/$facilityId.png').delete();
+    } catch (e) {
+      // The file may already be gone (a stale reference): not fatal, the
+      // field above is what decides what is shown.
+      debugPrint('Could not delete logo file (may already be gone): $e');
+    }
+    if (!mounted) return;
+    setState(() {
+      _isUploading = false;
+      _pendingLogoBytes = null;
+    });
+    AppFeedback.success(L10n.current.profile_logoRemoved);
+  }
+
+  /// Remove logo shows only to an admin, and only when there is a logo.
+  bool _canRemove(String? logoUrl) =>
+      logoUrl != null && logoUrl.isNotEmpty && Provider.of<UserRoleProvider>(context).isAdmin;
+
+  /// Remove logo beside Upload Logo (PC and tablet).
+  Widget _removeButton() => Padding(
+        padding: const EdgeInsets.only(left: AppSpacing.s8),
+        child: OutlinedButton.icon(
+          key: const ValueKey('business-remove-logo'),
+          onPressed: _isUploading ? null : _removeLogo,
+          icon: const Icon(Icons.delete_outline),
+          label: Text(context.l10n.facilities_removeLogo),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: context.colors.primary,
+            minimumSize: const Size(0, AppSizes.minTapTarget),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final facilityProvider = Provider.of<FacilityProvider>(context);
@@ -174,7 +249,10 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
                 ),
                 if (!_phone) ...[
                 const SizedBox(height: AppSpacing.s24),
-                _uploadButton(logoUrl),
+                // UX8: a Row only beside Remove logo (no logo: the tree as before).
+                _canRemove(logoUrl)
+                    ? Row(mainAxisSize: MainAxisSize.min, children: [_uploadButton(logoUrl), _removeButton()])
+                    : _uploadButton(logoUrl),
                 ],
               ],
             ),
@@ -187,6 +265,8 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
               primaryIcon: Icons.upload,
               onPrimary: _isUploading ? null : _changeLogo,
               busy: _isUploading,
+              secondaryLabel: _canRemove(logoUrl) ? context.l10n.facilities_removeLogo : null,
+              onSecondary: _isUploading ? null : _removeLogo,
             )
           : null,
     );
@@ -282,6 +362,7 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
             ),
             const SizedBox(width: AppSpacing.s16),
             _uploadButton(logoUrl),
+            if (_canRemove(logoUrl)) _removeButton(),
           ],
         ),
       ),

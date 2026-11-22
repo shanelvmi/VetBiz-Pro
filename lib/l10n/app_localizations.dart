@@ -4706,6 +4706,24 @@ abstract class AppLocalizations {
   /// **'Upload Logo'**
   String get profile_uploadLogo;
 
+  /// Confirm dialog title before removing the facility logo.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the logo?'**
+  String get profile_removeLogoTitle;
+
+  /// Confirm dialog text before removing the facility logo.
+  ///
+  /// In en, this message translates to:
+  /// **'The logo will be removed from the dashboard, receipts, and anywhere your facility is shown. You can upload a new one at any time.'**
+  String get profile_removeLogoBody;
+
+  /// Message after removing the logo.
+  ///
+  /// In en, this message translates to:
+  /// **'Logo removed'**
+  String get profile_logoRemoved;
+
   /// Rebuild dialog title.
   ///
   /// In en, this message translates to:
