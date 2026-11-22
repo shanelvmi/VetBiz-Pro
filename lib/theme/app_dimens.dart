@@ -1069,3 +1069,14 @@ class ShellBannerMetrics {
   static const double sideGap = 16;
   static const double belowHeaderGap = 8;
 }
+
+/// PAGE1: PagedListBody. Given less than [crampedBelow] of height (the cards
+/// and toolbar above wrapped, a details panel beside, large text), the page
+/// keeps [minBodyHeight] and scrolls together with its bar, rather than the
+/// bar overflowing.
+class PagedListMetrics {
+  PagedListMetrics._();
+
+  static const double minBodyHeight = 200;
+  static const double crampedBelow = 360;
+}

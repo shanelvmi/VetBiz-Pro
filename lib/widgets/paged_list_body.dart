@@ -70,25 +70,36 @@ class PagedListBody<T> extends StatelessWidget {
             ),
           );
         }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: body),
-            ListPageBar(
-              emptyText: barEmptyText,
-              itemCount: items.length,
-              pageSize: controller.pageSize,
-              currentPage: controller.currentPage < 1 ? 1 : controller.currentPage,
-              hasPreviousPage: controller.hasPreviousPage && !controller.isLoading,
-              hasNextPage: controller.hasNextPage,
-              isLoading: controller.isLoading,
-              showLoadingSpinner: false,
-              onPageSize: controller.setPageSize,
-              onPrevious: controller.goToPreviousPage,
-              onNext: controller.goToNextPage,
-            ),
-          ],
+        final bar = ListPageBar(
+          emptyText: barEmptyText,
+          itemCount: items.length,
+          pageSize: controller.pageSize,
+          currentPage: controller.currentPage < 1 ? 1 : controller.currentPage,
+          hasPreviousPage: controller.hasPreviousPage && !controller.isLoading,
+          hasNextPage: controller.hasNextPage,
+          isLoading: controller.isLoading,
+          showLoadingSpinner: false,
+          onPageSize: controller.setPageSize,
+          onPrevious: controller.goToPreviousPage,
+          onNext: controller.goToNextPage,
         );
+        return LayoutBuilder(builder: (context, constraints) {
+          // Too little height for the page and the bar (the cards and the
+          // toolbar wrapped above, large text): they scroll together, the
+          // page keeping a few rows' height, rather than the bar overflowing.
+          if (constraints.maxHeight < PagedListMetrics.crampedBelow) {
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [SizedBox(height: PagedListMetrics.minBodyHeight, child: body), bar],
+              ),
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [Expanded(child: body), bar],
+          );
+        });
       },
     );
   }

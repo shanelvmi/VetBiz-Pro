@@ -50,10 +50,24 @@ Future<CursorPage<T>> fetchMergedPage<T>({
           .get(),
   ]);
 
-  final rows = <({int source, QueryDocumentSnapshot<Map<String, dynamic>> doc, T item})>[
-    for (var i = 0; i < sources.length; i++)
-      for (final doc in snaps[i].docs) (source: i, doc: doc, item: sources[i].map(doc)),
-  ]..sort((a, b) => compare(a.item, b.item));
+  // Each source's rows stay in its own query's order; the merge only
+  // compares the heads (ties: the earlier source), so a cursor always moves
+  // past exactly the rows shown, whatever [compare] says about ties.
+  final lists = [
+    for (var i = 0; i < sources.length; i++) [for (final doc in snaps[i].docs) (doc: doc, item: sources[i].map(doc))],
+  ];
+  final heads = List.filled(sources.length, 0);
+  final rows = <({int source, QueryDocumentSnapshot<Map<String, dynamic>> doc, T item})>[];
+  while (true) {
+    var next = -1;
+    for (var i = 0; i < lists.length; i++) {
+      if (heads[i] >= lists[i].length) continue;
+      if (next < 0 || compare(lists[i][heads[i]].item, lists[next][heads[next]].item) < 0) next = i;
+    }
+    if (next < 0) break;
+    final row = lists[next][heads[next]++];
+    rows.add((source: next, doc: row.doc, item: row.item));
+  }
 
   final lastShown = List.of(previous);
   final items = <T>[];
