@@ -119,3 +119,9 @@ registry. Line numbers at LAY2 (8).
 | 33 | ~~every showAdaptiveForm modal (PC/tablet)~~ | Warnings and save errors were toasts behind the modal's scrim | FIXED UX8: ModalErrorScope banner inside the modal (ux8_modal_errors_test) |
 | 34 | ~~reports_tapGenerate~~ | "above" while the phone's Generate button is below | FIXED UX8: neutral wording |
 | 35 | insights_screen.dart, Business Pulse skeleton | Laid out from the quiet day's words: a day whose headline or sentence wraps to another line still changes the card's height by a line | Open (exact shape needs fixed-line text, a content change) |
+
+## Found in UX8b
+
+| # | Where | What | Why it waits |
+|---|---|---|---|
+| 36 | ~~app_shell.dart, the UX7 AppShell.banner slot~~ | The subscription pill in the layout pushed every wide page down by its height (follow-up to #28) | FIXED UX8b: ShellBannerHost floats over the content, placed in the header's free middle, chip or under the header when narrow (ux8b_shell_banner_test) |
