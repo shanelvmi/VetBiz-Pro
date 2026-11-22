@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../navigation/app_destinations.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../theme/app_motion.dart';
+import 'shell_banner.dart';
 
 /// Builds the sidebar (or rail) for the place now [selected]; a tap calls
 /// [onSelect].
@@ -45,9 +46,10 @@ class AppShell extends StatefulWidget {
   final ShellSidebarBuilder sidebar;
   final Widget topBar;
 
-  /// UX7: shown under [topBar], above the content, in the layout flow (the
-  /// subscription pill); its own height, none when it shows nothing.
-  final Widget? banner;
+  /// UX8b: the subscription banner, floating over the top of the content
+  /// (ShellBannerHost); it takes no layout space. Null: none. (UX7 had it in
+  /// the layout under [topBar], which pushed every page down.)
+  final ShellBannerSpec? banner;
   final Widget home;
 
   /// The screen of a destination that lives in the shell, or null for one
@@ -62,6 +64,17 @@ class AppShell extends StatefulWidget {
 
 class AppShellState extends State<AppShell> {
   final GlobalKey<NavigatorState> contentNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell-content');
+
+  /// UX8b: the content area (the banner's coordinates) and where the current
+  /// page header has its title and actions.
+  final GlobalKey _contentAreaKey = GlobalKey(debugLabel: 'shell-content-area');
+  final ShellHeaderSpan _headerSpan = ShellHeaderSpan();
+
+  @override
+  void dispose() {
+    _headerSpan.dispose();
+    super.dispose();
+  }
 
   /// The destination on top of Home, or null when Home shows.
   AppDestination? _open;
@@ -145,9 +158,16 @@ class AppShellState extends State<AppShell> {
           child: Column(
             children: [
               widget.topBar,
-              if (widget.banner != null) widget.banner!,
               Expanded(
-                child: LayoutBuilder(
+                // UX8b: the banner floats over the content; the page lays out as if
+                // it were not there.
+                child: Stack(
+                  key: _contentAreaKey,
+                  children: [
+                    Positioned.fill(
+                      child: ShellHeaderScope(
+                        span: _headerSpan,
+                        child: LayoutBuilder(
                   builder: (context, constraints) => MediaQuery(
                     data: window.copyWith(
                       size: Size(math.max(constraints.maxWidth, AppBreakpoints.compact), window.size.height),
@@ -173,6 +193,13 @@ class AppShellState extends State<AppShell> {
                       ),
                     ),
                   ),
+                ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: ShellBannerHost(spec: widget.banner, span: _headerSpan, areaKey: _contentAreaKey),
+                    ),
+                  ],
                 ),
               ),
             ],

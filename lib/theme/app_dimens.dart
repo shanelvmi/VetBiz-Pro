@@ -1056,3 +1056,16 @@ class LoadingMetrics {
   static const double subtitleGap = AppSpacing.s6;
   static const double recoveryGap = AppSpacing.s20;
 }
+
+/// UX8b: the subscription banner floating over the shell's content (PC and
+/// tablet): its height (also its buttons' tap height), its widest, the gap it
+/// keeps from the page title and the header actions, and the gap under the
+/// page header when it has to sit below it.
+class ShellBannerMetrics {
+  ShellBannerMetrics._();
+
+  static const double height = 44;
+  static const double maxWidth = 720;
+  static const double sideGap = 16;
+  static const double belowHeaderGap = 8;
+}

@@ -8,6 +8,7 @@ import '../../theme/app_text.dart';
 import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
 import 'app_shell.dart';
+import 'shell_banner.dart';
 
 /// UX1a (owner, 2026-11-21): the one page header of the PC/tablet screens,
 /// passed as Scaffold.appBar. A white (surface) bar with a hairline under it,
@@ -24,7 +25,7 @@ import 'app_shell.dart';
 /// overrides the back rule.
 ///
 /// The height is today's page bars' (72), so a screen's body does not move.
-class PageHeader extends StatelessWidget implements PreferredSizeWidget {
+class PageHeader extends StatefulWidget implements PreferredSizeWidget {
   const PageHeader({
     super.key,
     required this.title,
@@ -55,12 +56,45 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => const Size.fromHeight(height);
 
+  @override
+  State<PageHeader> createState() => _PageHeaderState();
+}
+
+class _PageHeaderState extends State<PageHeader> {
+  // UX8b: inside the shell, where the title text ends and the actions start
+  // (its title slot's right edge), for the floating subscription banner.
+  // Keys on widgets the header already has: no node is added.
+  final ShellHeaderKeys _keys = ShellHeaderKeys();
+  ShellHeaderSpan? _span;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final span = ShellHeaderScope.maybeOf(context);
+    if (span != _span) {
+      _span?.unregister(_keys);
+      _span = span?..register(_keys);
+    }
+  }
+
+  @override
+  void didUpdateWidget(PageHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.title != widget.title || oldWidget.actions.length != widget.actions.length) _span?.touch();
+  }
+
+  @override
+  void dispose() {
+    _span?.unregister(_keys);
+    super.dispose();
+  }
+
   Widget? _leading(BuildContext context) {
-    if (leading != null) return leading;
+    if (widget.leading != null) return widget.leading;
     final scaffold = Scaffold.maybeOf(context);
     // The same DrawerButton (and tooltip) AppBar adds for a drawer.
     if (scaffold != null && scaffold.hasDrawer) return const DrawerButton();
-    final back = showBack ?? (!ShellScope.isTopLevel(context) && (ModalRoute.of(context)?.canPop ?? false));
+    final back = widget.showBack ?? (!ShellScope.isTopLevel(context) && (ModalRoute.of(context)?.canPop ?? false));
     return back ? const BackButton() : null;
   }
 
@@ -72,7 +106,7 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
       child: Material(
         color: context.colors.surface,
         child: Container(
-          height: height,
+          height: PageHeader.height,
           padding: EdgeInsets.only(left: lead == null ? PolishMetrics.pagePadding : AppSpacing.s4, right: AppSpacing.s4),
           // Painted over, not laid out: the row is centred in the full 72 as
           // in the AppBar it replaced (a laid-out border took 1 and moved the
@@ -87,11 +121,11 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
                 if (lead != null) ...[lead, const SizedBox(width: AppSpacing.s8)],
                 // UX4: without a flex action the plain Row already ends the actions at the
                 // right padding (and keeps the tree every wide fingerprint recorded).
-                if (actions.any((a) => a is Flexible))
-                  Expanded(child: _TitleAndActions(title: _title(context), actions: actions))
+                if (widget.actions.any((a) => a is Flexible))
+                  Expanded(child: _TitleAndActions(title: _title(context), actions: widget.actions))
                 else ...[
                   Expanded(child: _title(context)),
-                  ...actions,
+                  ...widget.actions,
                 ],
               ],
             ),
@@ -102,13 +136,15 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _title(BuildContext context) => Column(
+    key: _span == null ? null : _keys.slot,
     mainAxisAlignment: MainAxisAlignment.center,
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Semantics(
+        key: _span == null ? null : _keys.title,
         header: true,
         child: Text(
-          title,
+          widget.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
@@ -118,15 +154,15 @@ class PageHeader extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
-      if (subtitle != null)
+      if (widget.subtitle != null)
         Text(
-          subtitle!,
+          widget.subtitle!,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary),
         )
-      else if (subtitleWidget != null)
-        subtitleWidget!,
+      else if (widget.subtitleWidget != null)
+        widget.subtitleWidget!,
     ],
   );
 }

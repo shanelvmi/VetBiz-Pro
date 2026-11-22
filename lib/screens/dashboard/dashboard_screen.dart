@@ -26,6 +26,7 @@ import '../../widgets/summary_card.dart';
 import '../../widgets/support_contact_dialog.dart';
 import '../../widgets/shell/sidebar_item.dart';
 import '../../widgets/shell/app_shell.dart';
+import '../../widgets/shell/shell_banner.dart';
 import '../../widgets/shell/app_sidebar.dart';
 import '../../widgets/shell/wide_top_bar.dart';
 import '../../navigation/app_destinations.dart';
@@ -247,7 +248,6 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingObserver {
   // The subscription banner's fade-and-scale switch (was 550 ms), snapped to
   // the nearest motion step (parked_values.md C3).
-  static const Duration _bannerSwitch = AppMotion.slowest;
 
   final user = FirebaseAuth.instance.currentUser;
   late final userDoc = FirebaseFirestore.instance.collection(Collections.users).doc(user?.uid);
@@ -1198,13 +1198,9 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                         sidebar: (selected, onSelect) =>
                             _buildDrawerContent(rail: !isLargeScreen, selected: selected, onSelect: onSelect),
                         topBar: _buildTopBar(context, rail: !isLargeScreen),
-                        // UX7: the subscription pill in the layout, under the top bar and
-                        // above the page (it floated at top 56 over the top bar and the
-                        // page header).
-                        banner: ColoredBox(
-                          color: context.colors.background,
-                          child: Center(child: _buildSubscriptionBanner(context)),
-                        ),
+                        // UX8b: the subscription banner floats over the top of the content
+                        // (no layout space; UX7 had it in the layout, pushing pages down).
+                        banner: _wideSubscriptionBanner(context),
                         pageFor: _shellPageFor,
                         onOpenFullScreen: _openDestination,
                         // Home is refreshed on the way back only where the registry says.
@@ -1656,7 +1652,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
   // inline in the Today/This Week/.../Insights row now, vertically
   // centered with those chips rather than occupying its own separate
   // strip across the screen.
-  Widget _buildSubscriptionBanner(BuildContext context) {
+  // UX8b: the wide banner floats over the shell's content (ShellBannerHost);
+  // this gives what it tells, from the same state, text and colours as the
+  // pill before. Close, or the idle fade, hides it for this status until the
+  // status changes (or the app starts again); the phone keeps its snooze.
+  SubscriptionBannerState? _wideBannerDismissedFor;
+
+  ShellBannerSpec? _wideSubscriptionBanner(BuildContext context) {
     final sub = Provider.of<SubscriptionProvider>(context);
 
     // Calm, informational - shown for the rest of the trial once the
@@ -1667,8 +1669,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // PH8a: what to tell (and whether), from the one rule the phone banner
     // shares: locked, grace, the calm trial, the last 7 days.
     final state = subscriptionBannerFor(status: sub.status, daysRemaining: sub.daysRemaining, inCalmTrial: isInTrialInfo);
-    final isSnoozed = _subscriptionSnooze.isSnoozed(AppClock.now());
-    final shouldShow = state != null && !isSnoozed && _subscriptionPillDelayPassed;
+    if (state == null || !_subscriptionPillDelayPassed || state == _wideBannerDismissedFor) return null;
 
     final isLocked = sub.status == SubscriptionStatus.locked;
     // The accent - carried by the icon, the text, and a thin border -
@@ -1678,88 +1679,24 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
     // POL2 (owner rule 2): the calm trial is neutral (it was info); the
     // trial or subscription ending stays warning, locked stays danger.
     final accent = isLocked ? context.colors.dangerAccent : (isInTrialInfo ? context.colors.textSecondary : context.colors.warningBannerText);
-
-    // Full sentence now that this sits in its own row above the filter
-    // chips, rather than the shortened version needed when it was
-    // squeezed inline next to Insights.
     final l = context.l10n;
-    // The full sentence (subscriptionBannerSentence). After a trial ends the
-    // status is grace or locked like a paid one, so those read "subscription".
-    final message = state == null ? '' : subscriptionBannerSentence(l, state);
-
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
-
-    return AnimatedSwitcher(
-      duration: _bannerSwitch,
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: CurvedAnimation(parent: animation, curve: const Interval(0, 0.5, curve: Curves.easeOut)),
-        child: ScaleTransition(
-          scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
-          child: child,
-        ),
-      ),
-      child: !shouldShow
-          ? const SizedBox.shrink(key: ValueKey('sub-banner-hidden'))
-          : Container(
-              key: const ValueKey('sub-banner-shown'),
-              // UX7: its own room in the layout flow (AppShell.banner).
-              margin: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s8),
-              decoration: BoxDecoration(
-                // POL2: the calm trial on the plain surface (not the warning
-                // fill); no shadow (owner rule 4), the border carries it.
-                color: isInTrialInfo ? context.colors.surface : context.colors.warningBannerFill.withValues(alpha: 0.92),
-                borderRadius: BorderRadius.circular(AppRadius.r24),
-                border: Border.all(color: accent.withValues(alpha: AppAlpha.a40)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isLocked
-                        ? Icons.lock_outline
-                        : (isInTrialInfo ? AppIcons.subscription.outlined : Icons.warning_amber_rounded),
-                    color: accent,
-                    size: AppIconSize.i16,
-                  ),
-                  const SizedBox(width: AppSpacing.s6),
-                  Text(
-                    message,
-                    style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f12_5, fontWeight: AppFontWeight.semibold),
-                  ),
-                  if (isAdmin) ...[
-                    const SizedBox(width: AppSpacing.s16),
-                    GestureDetector(
-                      onTap: _openSubscription,
-                      child: Text(
-                        isInTrialInfo ? l.subscription_viewPlans : l.subscription_renew,
-                        style: TextStyle(
-                          color: accent,
-                          fontSize: AppFontSize.f12_5,
-                          fontWeight: AppFontWeight.bold,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ] else ...[
-                    const SizedBox(width: AppSpacing.s8),
-                    Text(l.subscription_askYourAdmin,
-                        style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f11_5, fontStyle: FontStyle.italic)),
-                  ],
-                  // Snoozes rather than dismisses permanently - see the
-                  // note on _subscriptionSnooze above for why.
-                  const SizedBox(width: AppSpacing.s4),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(AppRadius.r12),
-                    onTap: _snoozeSubscriptionBanner,
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.s4),
-                      child: Icon(Icons.close, size: AppIconSize.i16, color: context.colors.textHint),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+    return ShellBannerSpec(
+      identity: state,
+      // The full sentence (subscriptionBannerSentence). After a trial ends the
+      // status is grace or locked like a paid one, so those read "subscription".
+      message: subscriptionBannerSentence(l, state),
+      icon: isLocked ? Icons.lock_outline : (isInTrialInfo ? AppIcons.subscription.outlined : Icons.warning_amber_rounded),
+      accent: accent,
+      // POL2: the calm trial on the plain surface (not the warning fill); no
+      // shadow (owner rule 4), the border carries it.
+      fill: isInTrialInfo ? context.colors.surface : context.colors.warningBannerFill.withValues(alpha: 0.92),
+      actionLabel: isAdmin ? (isInTrialInfo ? l.subscription_viewPlans : l.subscription_renew) : null,
+      onAction: isAdmin ? _openSubscription : null,
+      note: isAdmin ? null : l.subscription_askYourAdmin,
+      onDismissed: () {
+        if (mounted) setState(() => _wideBannerDismissedFor = state);
+      },
     );
   }
 

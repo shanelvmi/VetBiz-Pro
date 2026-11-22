@@ -135,6 +135,10 @@ class AppTimeouts {
   /// "Remind me later" on the dashboard's subscription notice.
   static const Duration subscriptionNoticeSnooze = Duration(hours: 2);
 
+  /// UX8b: the wide subscription banner fades out on its own after this long
+  /// without a hover or a tap (ShellBannerHost).
+  static const Duration shellBannerIdle = Duration(seconds: 10);
+
   // Refreshing a screen's summary after a change. Two values on purpose
   // (decided by the owner, Phase 2 open questions).
 

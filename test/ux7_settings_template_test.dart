@@ -41,16 +41,14 @@ final _request = ValueNotifier<SettingsRequest?>(null);
 
 const _wide = [Size(768, 1024), Size(1200, 800), Size(1920, 1080)];
 const _looks = [(MatrixLook.light, 1.0), (MatrixLook.light, 1.3), (MatrixLook.kiswahili, 1.3)];
-const _bannerKey = ValueKey('test-banner');
 
-/// The real SettingsScreen in AppShell (as lay7_settings_test), with a
-/// 40 px banner in the shell's banner slot.
+/// The real SettingsScreen in AppShell (as lay7_settings_test). (UX8b: the
+/// banner floats over the content now: ux8b_shell_banner_test.)
 Widget _harness(FirebaseFirestore fs, double sidebar, {Widget? contentButton}) => Scaffold(
       body: AppShell(
         key: _shell,
         sidebar: (s, o) => SizedBox(width: sidebar),
         topBar: const SizedBox(height: 64),
-        banner: const SizedBox(key: _bannerKey, height: 40),
         home: contentButton ?? const Text('HOME'),
         pageFor: (d) => d == AppDestination.settings ? SettingsScreen(firestore: fs, auth: Ph8bAuth(), request: _request) : null,
         onOpenFullScreen: (_) async {},
@@ -147,17 +145,6 @@ void main() {
 
     // With no shell (a page pushed full screen) ph2b_adaptive_form_test pins
     // a MaterialPageRoute at every width.
-  });
-
-  group('the subscription banner', () {
-    ph5TestWidgets('in the layout under the top bar, not over the page header', (tester) async {
-      await _pumpShell(tester);
-      await _openSettings(tester);
-      final banner = tester.getRect(find.byKey(_bannerKey));
-      final header = tester.getRect(find.byType(PageHeader).last);
-      expect(banner.top, 64, reason: 'under the top bar');
-      expect(header.top, greaterThanOrEqualTo(banner.bottom), reason: 'no overlap');
-    });
   });
 
   group('Business Profile', () {
