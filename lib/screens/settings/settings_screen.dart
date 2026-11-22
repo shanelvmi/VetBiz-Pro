@@ -130,8 +130,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _HubRow('notifications', Icons.notifications_none, l10n.common_notifications, () => push(const NotificationsScreen())),
         _HubRow('ui_settings', Icons.color_lens_outlined, l10n.uiSettings_title, () => showUiSettingsDialog(context),
             trailing: l10n.settings_themeLayout),
-        // Not a real choice: no picker to open.
-        _HubRow('currency', AppIcons.currency.outlined, l10n.settings_currency, () {}, trailing: AppDefaults.currencySymbol),
+        // UX6 (owner): information only, not a choice: no chevron, no tap.
+        _HubRow('currency', AppIcons.currency.outlined, l10n.settings_currency, null, trailing: AppDefaults.currencySymbol),
         _HubRow('language', Icons.language_outlined, l10n.settings_languageBoth, () => showLanguagePicker(context, uiSettings),
             trailing: AppDefaults.languageNames[uiSettings.languageCode]),
         _HubRow('app_info', Icons.info_outline, l10n.settings_appInfo, () => _showAppInfoDialog(context)),
@@ -256,7 +256,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: l10n.settings_themeLayout),
         // Not a real choice: no picker to open. App-wide (AppDefaults), not a
         // facility's setting (UX5 Step 0a), so it stays in this group.
-        _HubRow('currency', AppIcons.currency.outlined, l10n.settings_currency, () {}, trailing: AppDefaults.currencySymbol),
+        _HubRow('currency', AppIcons.currency.outlined, l10n.settings_currency, null, trailing: AppDefaults.currencySymbol),
         _HubRow('language', Icons.language_outlined, l10n.settings_languageBoth, () => showLanguagePicker(context, uiSettings),
             trailing: AppDefaults.languageNames[uiSettings.languageCode]),
         _HubRow('app_info', Icons.info_outline, l10n.settings_appInfo, () => _showAppInfoDialog(context)),
@@ -339,8 +339,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(width: AppSpacing.s8),
                   Text(row.trailing!, style: TextStyle(color: colors.textMuted, fontSize: AppFontSize.f13)),
                 ],
-                const SizedBox(width: AppSpacing.s4),
-                Icon(Icons.chevron_right_rounded, color: colors.textHint, size: AppIconSize.i20),
+                // UX6: an information row (onTap null) has no chevron.
+                if (row.onTap != null) ...[
+                  const SizedBox(width: AppSpacing.s4),
+                  Icon(Icons.chevron_right_rounded, color: colors.textHint, size: AppIconSize.i20),
+                ],
               ],
             ),
           ),
@@ -374,7 +377,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSettingsItem({
     required IconData icon,
     required String label,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
     required bool isLast,
     String? trailingText,
   }) {
@@ -402,6 +405,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(width: AppSpacing.s4),
               ],
+              // UX6: an information row (onTap null) has no chevron.
+              if (onTap != null)
               Icon(
                 Icons.chevron_right_rounded,
                 color: context.colors.textHint,
@@ -550,7 +555,8 @@ class _HubRow {
   final String key;
   final IconData icon;
   final String label;
-  final VoidCallback onTap;
+  /// Null: an information row (UX6: Currency): no chevron, not tappable.
+  final VoidCallback? onTap;
   final String? trailing;
   const _HubRow(this.key, this.icon, this.label, this.onTap, {this.trailing});
 }
