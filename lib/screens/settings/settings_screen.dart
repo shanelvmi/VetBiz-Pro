@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../providers/ui_settings_provider.dart';
 import '../../providers/user_role_provider.dart';
 import 'ui_settings_dialog.dart';
+import 'language_dialog.dart';
 
 import 'manage_account_screen.dart';
 import 'printer_settings_screen.dart';
@@ -494,6 +495,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
 /// panel's Language row). Lifted unchanged from the Settings screen so both
 /// set the same stored code through [UiSettingsProvider.setLocale].
 void showLanguagePicker(BuildContext context, UiSettingsProvider uiSettings) {
+  // UX6: PC and tablet get a centred dialog in the Theme and layout dialog's
+  // style; the phone keeps this sheet.
+  if (!AppLayout.isPhone(context)) {
+    showDialog<void>(
+      context: context,
+      useRootNavigator: true,
+      builder: (_) => LanguageDialog(uiSettings: uiSettings),
+    );
+    return;
+  }
   showModalBottomSheet(
     context: context,
     // LAY4: over the whole window, also from inside the shell's content.

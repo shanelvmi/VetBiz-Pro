@@ -33,9 +33,10 @@ class _UiSettingsDialog extends StatelessWidget {
       backgroundColor: context.colors.surface,
       insetPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.r16)),
-      // A dialog with no width limit stretches across a whole desktop screen.
+      // A dialog with no width limit stretches across a whole desktop screen. UX6: the
+      // same width as the Language dialog (AppSizes.dialogMd).
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: 460, maxHeight: maxHeight),
+        constraints: BoxConstraints(maxWidth: AppSizes.dialogMd, maxHeight: maxHeight),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
