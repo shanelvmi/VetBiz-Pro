@@ -171,7 +171,8 @@ void main() {
         expect(find.byType(ListPageBar), findsOneWidget);
         // The range and the page size no longer run together.
         final range = tester.getRect(find.textContaining(RegExp(r'^Showing')));
-        final size = tester.getRect(find.text(_en.common_perPage(10)));
+        // PAGE1: PC/tablet starts at 25 per page (the shared pager's default).
+        final size = tester.getRect(find.text(_en.common_perPage(25)));
         expect(size.left - range.right > 8 || size.top >= range.bottom, isTrue, reason: 'apart');
       });
     }
