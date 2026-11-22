@@ -74,7 +74,7 @@ NotificationFeedController newFeed(FirebaseFirestore fs, String uid, Clock clock
 
 /// Pumps the full screen (or the dropdown in its 400 px panel) on [c].
 Future<void> pumpNotifications(WidgetTester tester, NotificationFeedController c,
-    {double width = 390, double height = 800, bool dark = false, bool dropdown = false, String locale = 'en', ImageProvider Function(String url)? imageFor}) async {
+    {double width = 390, double height = 800, bool dark = false, bool dropdown = false, String locale = 'en', ImageProvider Function(String url)? imageFor, double textScale = 1}) async {
   SharedPreferences.setMockInitialValues({});
   // The view itself (not only the surface), so MediaQuery says the same
   // width as the layout: the phone layout and the swipes go by MediaQuery.
@@ -87,6 +87,10 @@ Future<void> pumpNotifications(WidgetTester tester, NotificationFeedController c
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     locale: Locale(locale),
+    // UX6: a text scale for the overflow checks; 1 builds the tree as before.
+    builder: textScale == 1
+        ? null
+        : (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)), child: child!),
     theme: AppTheme.build(AppColorTheme.pasture, dark ? Brightness.dark : Brightness.light),
     home: dropdown
         ? Scaffold(body: Align(alignment: Alignment.topLeft, child: SizedBox(width: 400, height: 600, child: Material(child: screen))))

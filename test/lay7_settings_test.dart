@@ -278,8 +278,9 @@ void main() {
       expect(find.descendant(of: find.byType(ManageAssistantsScreen), matching: find.text(_en.team_inviteAssistant)), findsOneWidget);
     });
 
-    for (final (key, dialog) in [('app_info', AlertDialog), ('language', BottomSheet)]) {
-      ph5TestWidgets('$key still opens its ${dialog == AlertDialog ? 'dialog' : 'sheet'}', (tester) async {
+    // UX6: Language opens its centred dialog on PC and tablet (a Dialog).
+    for (final (key, dialog) in [('app_info', AlertDialog), ('language', Dialog)]) {
+      ph5TestWidgets('$key still opens its dialog', (tester) async {
         await _pumpWide(tester, 950);
         await _reveal(tester, key);
         await tester.tap(_row(key));

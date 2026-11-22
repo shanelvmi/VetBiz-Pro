@@ -182,18 +182,19 @@ void main() {
   });
 
   group('the Language row in the panel', () {
-    testWidgets('opens the Settings sheet over the panel; a pick stores the same code as Settings', (tester) async {
+    testWidgets('opens the Settings language dialog over the panel (UX6); a pick stores the same code as Settings', (tester) async {
       final ui = await _provider(tester);
       expect(ui.languageCode, AppDefaults.defaultLanguage);
       await pumpAtSize(tester, screen: _panel(admin: true, ui: ui), size: const Size(1200, 800));
       await tester.pumpAndSettle();
       await tester.tap(find.text(_en.settings_languageBoth));
       await tester.pumpAndSettle();
-      expect(find.text(_en.settings_selectLanguageBoth), findsOneWidget, reason: 'the Settings sheet, same title');
+      // UX6: PC and tablet: the centred Language dialog (the phone keeps the sheet).
+      expect(find.byKey(const ValueKey('language-dialog')), findsOneWidget, reason: 'the Settings language dialog');
       for (final code in AppDefaults.supportedLanguages) {
         expect(find.text(AppDefaults.languageNames[code]!), findsOneWidget);
       }
-      expect(find.byType(Drawer), findsOneWidget, reason: 'the panel stays open under the sheet');
+      expect(find.byType(Drawer), findsOneWidget, reason: 'the panel stays open under the dialog');
       await tester.runAsync(() async {
         await tester.tap(find.text(AppDefaults.languageNames['sw']!));
         await Future<void>.delayed(const Duration(milliseconds: 50));
