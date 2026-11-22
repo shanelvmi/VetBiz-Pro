@@ -17,6 +17,7 @@ import 'package:vetbiz_pro/screens/settings/manage_account_screen.dart';
 import 'package:vetbiz_pro/screens/settings/printer_settings_screen.dart';
 import 'package:vetbiz_pro/screens/settings/settings_screen.dart';
 import 'package:vetbiz_pro/screens/settings/trash_screen.dart';
+import 'package:vetbiz_pro/screens/settings/trash_actions.dart' show trashKinds;
 
 import 'helpers/fake_firestore.dart';
 import 'helpers/fake_storage.dart';
@@ -128,7 +129,8 @@ void main() {
       await pumpPh5(tester, (fs) => TrashScreen(firestore: fs, currentUserInfo: ph8UserInfo),
           size: size, pushed: true, seed: seedTrash);
       for (final (i, tab) in ['products', 'clients', 'services', 'sales', 'transactions'].indexed) {
-        await tester.tap(find.byType(Tab).at(i));
+        // UX7: the kinds are a FilterRow in the body (they were a TabBar).
+        await tester.tap(find.byKey(ValueKey('trashTab-${trashKinds[i].trashCollection}')));
         await ph5Settle(tester);
         _expect(tester, 'ph8a-trash-$tab-$at', find.byType(TrashScreen));
       }

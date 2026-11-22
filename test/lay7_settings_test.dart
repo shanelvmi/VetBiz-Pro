@@ -329,7 +329,9 @@ void main() {
       // built only when first chosen.
       expect(find.byType(BusinessProfileTabs), findsOneWidget);
       expect(find.byType(ActivityLogScreen), findsOneWidget);
-      expect(find.byType(BusinessProfileScreen), findsNothing);
+      // UX7: the identity card (BusinessProfileScreen embedded) is always on top.
+      expect(find.byType(BusinessProfileScreen), findsOneWidget);
+      expect(find.byType(BusinessHoursScreen), findsNothing);
       await _back(tester);
       expect(_row('business_profile'), findsOneWidget);
     });

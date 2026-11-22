@@ -80,7 +80,11 @@ class _Helper {
   /// The value a pop hands back through the helper (null: a void helper).
   final Object? result;
 
-  const _Helper(this.name, this.open, this.rule, {this.result});
+  /// UX7: false where PC and tablet get a full page, never the modal
+  /// (Subscription).
+  final bool modal;
+
+  const _Helper(this.name, this.open, this.rule, {this.result, this.modal = true});
 }
 
 final _helpers = <_Helper>[
@@ -93,7 +97,7 @@ final _helpers = <_Helper>[
   _Helper('Add Batch', (c) => showAddBatchScreen(c, product: _product), _form),
   _Helper('View Batches', (c) => showViewBatchesScreen(c, product: _product), _form),
   _Helper('Insights', (c) => showInsightsScreen(c), _form),
-  _Helper('Subscription', (c) => showSubscriptionScreen(c), _form),
+  _Helper('Subscription', (c) => showSubscriptionScreen(c), _form, modal: false),
   _Helper('Edit Profile', (c) => showEditProfileScreen(c, userData: const {}), _form, result: true),
   _Helper('Full report', (c) => showReportFullViewScreen(c, _report), _reportFull),
   _Helper('Report review', (c) => showReportReviewScreen(c, _report), _reportReview, result: _report),
@@ -176,8 +180,8 @@ void main() {
         if (h.name == 'View Batches' && window.width < 600) {
           // PH7a: on a phone View Batches is a bottom sheet.
           expect(route, isA<ModalBottomSheetRoute<dynamic>>(), reason: h.name);
-        } else if (window.width < 900) {
-          // A full page with its own back arrow.
+        } else if (window.width < 900 || !h.modal) {
+          // A full page with its own back arrow (UX7: Subscription at every width).
           expect(route, isA<MaterialPageRoute<dynamic>>(), reason: h.name);
         } else {
           expect(route, isA<RawDialogRoute<dynamic>>(), reason: h.name);
@@ -204,6 +208,7 @@ void main() {
       });
     }
 
+    if (!h.modal) continue;
     testWidgets('${h.name}: the modal closes on a tap outside it', (tester) async {
       final observer = _Observer();
       final (route, future) = await _open(tester, h, const Size(1200, 800), observer);

@@ -1,5 +1,5 @@
 // UX5 (owner, 2026-11-22): Settings grouped by scope; Business Profile as
-// one page with three tabs; the Printer row only where Bluetooth printing
+// one page with three tabs (UX7: an identity card over two tabs, ux7_settings_template_test); the Printer row only where Bluetooth printing
 // runs (a platform check, not the width). lay7_settings_test covers the hub
 // inside the shell (rows per role, each row's page, the requests); this file
 // covers what UX5 adds.
@@ -156,12 +156,11 @@ void main() {
         expect(find.descendant(of: _tab(t), matching: find.byType(Text)), findsOneWidget);
       }
       // Left-aligned: the first tab starts at the page padding.
-      expect(tester.getRect(_tab(BusinessProfileTabs.profile)).left, lessThan(40));
+      expect(tester.getRect(_tab(BusinessProfileTabs.hours)).left, lessThan(40));
+      // UX7: the identity card (the old Profile tab) above the tabs; Business
+      // Hours open by default.
       expect(find.byType(BusinessProfileScreen), findsOneWidget);
       final profileState = tester.state(find.byType(BusinessProfileScreen));
-
-      await tester.tap(_tab(BusinessProfileTabs.hours));
-      await ph5Settle(tester);
       expect(find.byType(BusinessHoursScreen), findsOneWidget);
       final hoursState = tester.state(find.byType(BusinessHoursScreen));
 
@@ -169,9 +168,7 @@ void main() {
       await ph5Settle(tester);
       expect(find.byType(ActivityLogScreen), findsOneWidget);
 
-      await tester.tap(_tab(BusinessProfileTabs.profile));
-      await ph5Settle(tester);
-      expect(identical(tester.state(find.byType(BusinessProfileScreen)), profileState), isTrue, reason: 'kept, not rebuilt');
+      expect(identical(tester.state(find.byType(BusinessProfileScreen)), profileState), isTrue, reason: 'the card stays');
       await tester.tap(_tab(BusinessProfileTabs.hours));
       await ph5Settle(tester);
       expect(identical(tester.state(find.byType(BusinessHoursScreen)), hoursState), isTrue, reason: 'kept, not rebuilt');

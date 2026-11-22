@@ -109,8 +109,10 @@ void main() {
       ph5TestWidgets('$name: PageCard on PC/tablet, full width; not on a phone', (tester) async {
         await pumpPh5(tester, (fs) => build(fs), size: const Size(1200, 800), pushed: true, seed: seedTrash);
         expect(find.byType(PageCard), findsWidgets);
-        final card = tester.getRect(find.byKey(const ValueKey('pageCard')).first);
-        expect(card.width, greaterThan(1200 - 80), reason: 'the full content width');
+        // UX7: the cards together span the content (Export: two columns).
+        final cards = find.byKey(const ValueKey('pageCard')).evaluate().map((e) => tester.getRect(find.byWidget(e.widget)));
+        final span = cards.reduce((a, b) => a.expandToInclude(b));
+        expect(span.width, greaterThan(1200 - 80), reason: 'the full content width');
         await pumpPh5(tester, (fs) => build(fs), size: _phone, pushed: true, seed: seedTrash);
         expect(find.byType(PageCard), findsNothing, reason: 'the phone keeps its page');
       });
