@@ -3,18 +3,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/shell/page_header.dart';
 import '../../services/activity_log_retention.dart';
-import 'package:flutter/gestures.dart';
 import 'package:provider/provider.dart';
 import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../utils/merged_query_stream.dart';
 import '../../utils/text_sanitizer.dart';
-import '../../widgets/firestore_error_view.dart';
 import '../../theme/activity_type_style.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
-import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../data/activity_type.dart';
 import '../../data/collections.dart';
@@ -29,11 +26,13 @@ import '../../widgets/phone_form/sheet_or_dialog.dart';
 import '../../widgets/phone_list/phone_filter_sheet.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
-import '../../widgets/phone_list/phone_list_skeleton.dart';
 import '../../utils/server_first.dart';
 import '../../widgets/phone_list/record_tile.dart';
 import '../../theme/polish_metrics.dart';
 import '../../ui/polish/page_layout.dart';
+import '../../services/cursor_paginated_list_controller.dart';
+import '../../services/merged_cursor.dart';
+import '../../widgets/paged_list_body.dart';
 
 part 'activity_log_phone.dart';
 
@@ -65,22 +64,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   // search box - to the left of the days filter, not tucked behind an
   // expandable AppBar icon.
   final TextEditingController _searchController = TextEditingController();
-
-  // Drives the action-chip row's horizontal scroll - a plain
-  // SingleChildScrollView supports click-drag on desktop by default,
-  // but nothing maps mouse-wheel/trackpad scrolling to it, and there's
-  // no visible affordance telling anyone drag-to-scroll is even
-  // possible. This controller lets both be added explicitly.
-  final ScrollController _chipScrollController = ScrollController();
-
-  // One key per chip (keyed by its filter value: 'All' or an action
-  // type), so tapping a chip that's only partially visible near the
-  // edge can be scrolled fully into view on its own - rather than
-  // requiring the user to figure out how to scroll at all first.
-  final Map<String, GlobalKey> _chipKeys = {};
-
-  GlobalKey _keyFor(String filterValue) =>
-      _chipKeys.putIfAbsent(filterValue, () => GlobalKey());
 
   FacilityProvider? _facilityProvider;
 
@@ -135,7 +118,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   void dispose() {
     _facilityProvider?.removeListener(_onFacilityChange);
     _searchController.dispose();
-    _chipScrollController.dispose();
+    _pager.dispose();
     super.dispose();
   }
 
@@ -150,6 +133,9 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       _logStream = null;
       _actionSummaryStream = null;
       _cleanupRanForFacilityId = null;
+      _window = null;
+      _pagerOpenFor = null;
+      _pager.disposeSession();
     });
   }
 
@@ -226,7 +212,76 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   /// the "keep for N days" window stayed visible - the reported "set to 30
   /// days but still seeing 31 August". Bounding the query itself means the
   /// screen is always right, whether or not anything has been deleted yet.
+  ///
+  /// PAGE1: the streams are the phone's list only. PC/tablet pages the same
+  /// window by cursor ([_pager]), so it never streams 500 entries plus the
+  /// whole window for the chips.
   void _buildStreams(String facilityId, int retentionDays, {required bool isAdmin}) {
+    _window = (facilityId: facilityId, retentionDays: retentionDays, isAdmin: isAdmin);
+    if (_phoneLayout) {
+      _buildLiveStreams();
+    } else {
+      // build() opens the pages for the new window (it runs next: this is
+      // called inside setState).
+      _logStream = null;
+      _actionSummaryStream = null;
+    }
+  }
+
+  // PAGE1: the window the screen shows (facility, retention, role); null
+  // until the retention setting is loaded.
+  ({String facilityId, int retentionDays, bool isAdmin})? _window;
+  bool _phoneLayout = false;
+  Object? _pagerOpenFor;
+
+  String get _uid => (widget.auth ?? FirebaseAuth.instance).currentUser?.uid ?? '';
+
+  // Newest first, inside the retention window (the streams and the pages).
+  Query<Map<String, dynamic>> _windowed(Query<Map<String, dynamic>> q, int retentionDays) => q
+      .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(ActivityLogRetention.cutoffFor(retentionDays)))
+      .orderBy('timestamp', descending: true);
+
+  /// PAGE1: PC/tablet pages. An admin: one query. An assistant: the same two
+  /// questions as the streams (what they did, what is about them), merged
+  /// by fetchMergedPage, an entry in both shown once.
+  late final CursorPaginatedListController<LogDoc> _pager = CursorPaginatedListController<LogDoc>.after(
+    fetchPageAfter: ({required snapshotAt, required pageSize, after}) async {
+      final w = _window;
+      if (w == null) return const CursorPage(items: [], lastDocument: null, hasMore: false);
+      final logs = _db.collection(Collections.facilities).doc(w.facilityId).collection(Collections.activityLogs);
+      // Firestore orders ties by document name in the same direction as the
+      // last orderBy, which is what [compare] below assumes.
+      Query<Map<String, dynamic>> paged(Query<Map<String, dynamic>> q) => _windowed(q, w.retentionDays);
+      final queries = w.isAdmin
+          ? [paged(logs)]
+          : [paged(logs.where(Fields.userId, isEqualTo: _uid)), paged(logs.where('targetUserId', isEqualTo: _uid))];
+      return fetchMergedPage<LogDoc>(
+        sources: [for (final q in queries) MergedSource(q, (d) => d)],
+        pageSize: pageSize,
+        after: after,
+        compare: (a, b) {
+          final ta = a.data()['timestamp'];
+          final tb = b.data()['timestamp'];
+          final byTime = (tb is Timestamp && ta is Timestamp) ? tb.compareTo(ta) : 0;
+          return byTime != 0 ? byTime : b.id.compareTo(a.id);
+        },
+        key: (d) => d.id,
+      );
+    },
+  );
+
+  void _openPager({bool forceRefresh = false}) {
+    final w = _window;
+    if (w == null || _phoneLayout) return;
+    _pager.openSession((w, _uid), forceRefresh: forceRefresh);
+  }
+
+  void _buildLiveStreams() {
+    final w = _window;
+    if (w == null) return;
+    final facilityId = w.facilityId;
+    final retentionDays = w.retentionDays;
+    final isAdmin = w.isAdmin;
     final cutoff = Timestamp.fromDate(ActivityLogRetention.cutoffFor(retentionDays));
     final logs = _db.collection(Collections.facilities).doc(facilityId).collection(Collections.activityLogs);
 
@@ -403,7 +458,25 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   Future<int> _cleanupOldLogs(String facilityId, int retentionDays) =>
       ActivityLogRetention.deleteExpired(facilityId, retentionDays, firestore: widget.firestore);
 
+  // PAGE1: PC/tablet: the search only, over the page shown.
+  bool _matchesSearch(LogDoc doc) =>
+      (doc.data()['description'] ?? '').toString().toLowerCase().contains(searchQuery.toLowerCase());
+
+  // PAGE1: where the category chips were (PC/tablet).
+  Widget _buildCategoryUnavailable() {
+    return Container(
+      key: const ValueKey('activity-categoryUnavailable'),
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(PolishMetrics.pagePadding, AppSpacing.s10, PolishMetrics.pagePadding, AppSpacing.s6),
+      child: Text(
+        context.l10n.activity_categoryFilterUnavailable,
+        style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
+      ),
+    );
+  }
+
   // The type chip and the search, the same on every width (PH8a).
+  // PAGE1: the phone's list (the streams); PC/tablet uses _matchesSearch.
   bool _matchesFilters(LogDoc doc) {
     final data = doc.data();
     final actionType = ActivityType.canonicalKey((data['actionType'] ?? '').toString());
@@ -456,11 +529,24 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     // Stream instance resets StreamBuilder to "waiting" even though
     // it's the same query) and re-running cleanup redundantly, each
     // time racing the retention fetch independently.
+    _phoneLayout = AppLayout.isPhone(context);
     _ensureInitializedForFacility(facilityId, isAdmin: isAdmin);
 
     // PH8a: a phone gets the PH5a list (activity_log_phone.dart); tablets and
     // computers keep today's log. The same streams, filters and settings.
-    if (AppLayout.isPhone(context)) return _buildPhone(facilityId, isAdmin: isAdmin);
+    // PAGE1: the streams are made when the phone needs them (the window was
+    // loaded on a wider screen), and the pages when a wider one does.
+    if (_phoneLayout) {
+      if (_logStream == null && _window != null) _buildLiveStreams();
+      return _buildPhone(facilityId, isAdmin: isAdmin);
+    }
+    final w = _window;
+    if (w != null && _pagerOpenFor != (w, _uid)) {
+      _pagerOpenFor = (w, _uid);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _openPager();
+      });
+    }
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -470,7 +556,11 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           // One unified summary that's also the filter - see
           // _buildActionSummary for the full reasoning.
           if (!isAdmin) _buildScopeNote(),
-          _buildActionSummary(facilityId),
+          // PAGE1: the category chips counted and filtered the whole window
+          // from an unbounded stream. Filtering by category on the server
+          // needs indexes not deployed yet (docs/PAGE1_INDEXES.md), so the
+          // filter is off here with a short note, never a filter of one page.
+          _buildCategoryUnavailable(),
 
           Padding(
             padding: const EdgeInsets.fromLTRB(PolishMetrics.pagePadding, 0, PolishMetrics.pagePadding, AppSpacing.s8),
@@ -480,7 +570,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: context.l10n.activity_searchHint,
+                      // PAGE1: the search looks at the page shown (said so).
+                      hintText: context.l10n.activity_searchPageHint,
                       prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s10, horizontal: AppSpacing.s12),
@@ -504,26 +595,13 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
           // Activity Log List
           Expanded(
-            child: StreamBuilder<List<LogDoc>>(
-              stream: _logStream,
-              builder: (context, snapshot) {
-                // Said out loud: a refused or not-yet-ready query used to fall
-                // through to "No activity logs found", which looks like an
-                // empty log rather than a problem.
-                if (snapshot.hasError) {
-                  return Center(child: FirestoreErrorView(error: snapshot.error));
-                }
-                // 'none' = the stream doesn't exist yet (still loading the
-                // retention window) - show loading, not an empty list. UX8: the shared
-                // skeleton rows until the server confirms the list (no spinner,
-                // no cached half-list first).
-                if (snapshot.connectionState == ConnectionState.waiting ||
-                    snapshot.connectionState == ConnectionState.none) {
-                  return const SingleChildScrollView(child: PhoneListSkeleton());
-                }
-
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(
+            // PAGE1: one server page at a time (newest first, inside the
+            // retention window) with the shared page bar; the skeleton, the
+            // error with Retry and the empty state come from PagedListBody.
+            child: PagedListBody<LogDoc>(
+              controller: _pager,
+              barEmptyText: context.l10n.activity_empty,
+              empty: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -548,11 +626,10 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                         ),
                       ],
                     ),
-                  );
-                }
-
-                // Filter logs
-                final logs = snapshot.data!.where(_matchesFilters).toList();
+                  ),
+              list: (page) {
+                // The search looks at this page only (its hint says so).
+                final logs = page.where(_matchesSearch).toList();
 
                 if (logs.isEmpty) {
                   return Center(
@@ -648,34 +725,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       );
   }
 
-  // A single thin line - just the numbers, no card, no gradient, no
-  // padding-heavy container. Previously this was a large gradient
-  // card sitting above the filters, above the list - between it and
-  // two dropdowns and a search field, real data didn't start until
-  // well down the screen. This is meant to read as a subtitle to the
-  // list, not compete with it.
-  // Merges what were two separate rows (a stats line, then a chip
-  // row) into one - each chip is both a count and a filter, so
-  // tapping "Products · 8" both shows you the number and narrows the
-  // list to it. Wrapped in a light tint to still read as "the
-  // summary," not just a generic filter row. Only ever shows action
-  // types that actually have at least one log - a facility that's
-  // never had, say, Debtors activity doesn't get a useless "Debtors ·
-  // 0" chip cluttering the row.
-  void _selectFilterAndScrollIntoView(String filterValue) {
-    setState(() => selectedFilter = filterValue);
-    final key = _chipKeys[filterValue];
-    final targetContext = key?.currentContext;
-    if (targetContext != null) {
-      Scrollable.ensureVisible(
-        targetContext,
-        duration: AppMotion.normal,
-        curve: Curves.easeOut,
-        alignment: 0.5,
-      );
-    }
-  }
-
   // Said plainly, so a short log isn't mistaken for a broken one.
   Widget _buildScopeNote() {
     return Container(
@@ -699,98 +748,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildActionSummary(String facilityId) {
-    return StreamBuilder<List<LogDoc>>(
-      stream: _actionSummaryStream,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const SizedBox.shrink();
-
-        final docs = snapshot.data!;
-        final totalLogs = docs.length;
-
-        final typeCounts = <String, int>{};
-        for (final doc in docs) {
-          // 'Unknown' is a grouping key the chip filters on (a stand-in for a
-          // stored type), so it stays English, like any unlisted stored type.
-          final type =ActivityType.canonicalKey((doc['actionType'] ?? 'Unknown').toString());
-          typeCounts[type] = (typeCounts[type] ?? 0) + 1;
-        }
-
-        // Most-active types first - the most useful ordering for an
-        // at-a-glance summary that's also a filter.
-        final sortedTypes = typeCounts.keys.toList()
-          ..sort((a, b) => typeCounts[b]!.compareTo(typeCounts[a]!));
-
-        return Container(
-          // UX7: left-aligned in the page's toolbar, on the page itself (it was
-          // centred on a primary tint).
-          margin: const EdgeInsets.fromLTRB(PolishMetrics.pagePadding, AppSpacing.s10, PolishMetrics.pagePadding, AppSpacing.s6),
-          child: SizedBox(
-            height: AppSizes.minTapTarget,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Listener(
-                // Maps mouse-wheel/trackpad scrolling (which arrives
-                // as a vertical delta) onto this row's horizontal
-                // scroll - without this, scrolling over the chips with
-                // a wheel or trackpad does nothing at all, since this
-                // view only scrolls horizontally by default.
-                onPointerSignal: (event) {
-                  if (event is PointerScrollEvent && _chipScrollController.hasClients) {
-                    final target = _chipScrollController.offset + event.scrollDelta.dy;
-                    _chipScrollController.jumpTo(
-                      target.clamp(0.0, _chipScrollController.position.maxScrollExtent),
-                    );
-                  }
-                },
-                child: Scrollbar(
-                  controller: _chipScrollController,
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                controller: _chipScrollController,
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: AppSpacing.s8),
-                      child: ChoiceChip(
-                        key: _keyFor('All'),
-                        label: Text(context.l10n.activity_filterChip(context.l10n.common_all, totalLogs)),
-                        selected: selectedFilter == 'All',
-                        onSelected: (_) => _selectFilterAndScrollIntoView('All'),
-                        selectedColor: context.colors.accent,
-                        labelStyle: selectedFilter == 'All' ? TextStyle(color: context.colors.onAccentChip) : null,
-                        checkmarkColor: context.colors.onAccentChip,
-                      ),
-                    ),
-                    ...sortedTypes.map((type) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: AppSpacing.s8),
-                        child: ChoiceChip(
-                          key: _keyFor(type),
-                          // Shows the label; the chip filters on the stored type.
-                          label: Text(context.l10n.activity_filterChip(context.l10n.activityTypeLabel(type), typeCounts[type]!)),
-                          selected: selectedFilter == type,
-                          onSelected: (_) => _selectFilterAndScrollIntoView(type),
-                          selectedColor: context.colors.accent,
-                          labelStyle: selectedFilter == type ? TextStyle(color: context.colors.onAccentChip) : null,
-                          checkmarkColor: context.colors.onAccentChip,
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }
