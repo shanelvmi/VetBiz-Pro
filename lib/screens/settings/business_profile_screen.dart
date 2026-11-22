@@ -19,6 +19,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
 import '../../utils/app_clock.dart';
 
@@ -122,7 +123,9 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
+      appBar: !AppLayout.isPhone(context) && !SettingsPaneScope.isPane(context)
+          ? PageHeader(title: context.l10n.profile_title)
+          : AppBar(
         automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         title: Text(context.l10n.profile_title),
         centerTitle: true,

@@ -12,6 +12,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/app_sheet.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
 
@@ -114,7 +115,9 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: !AppLayout.isPhone(context) && !SettingsPaneScope.isPane(context)
+          ? PageHeader(title: context.l10n.hours_title)
+          : AppBar(
         automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         centerTitle: true,
         title: Text(context.l10n.hours_title, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20)),

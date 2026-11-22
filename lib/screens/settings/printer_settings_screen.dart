@@ -9,6 +9,7 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/phone_form/picker_sheet.dart';
 
 class PrinterSettingsScreen extends StatefulWidget {
@@ -176,7 +177,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
+      appBar: !AppLayout.isPhone(context) && !SettingsPaneScope.isPane(context)
+          ? PageHeader(title: context.l10n.printer_title)
+          : AppBar(
         automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         title: Text(context.l10n.printer_title),
         backgroundColor: context.colors.primary,

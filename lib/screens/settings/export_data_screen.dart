@@ -25,6 +25,7 @@ import '../../theme/theme_context.dart';
 import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
 import '../../data/payment_status.dart';
 import '../../utils/app_clock.dart';
@@ -851,7 +852,9 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
+      appBar: !AppLayout.isPhone(context) && !SettingsPaneScope.isPane(context)
+          ? PageHeader(title: context.l10n.export_title)
+          : AppBar(
         automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         centerTitle: true,
         title: Text(context.l10n.export_title, style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f20)),

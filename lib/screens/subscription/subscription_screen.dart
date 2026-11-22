@@ -35,6 +35,7 @@ import '../../utils/submission_people.dart';
 import '../../config/app_info.dart';
 import '../../widgets/app_sheet.dart';
 import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
 import '../../utils/app_clock.dart';
@@ -295,7 +296,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
     final scaffold = Scaffold(
       backgroundColor: colors.background,
-      appBar: AppBar(
+      // UX3: PC and tablet, opened as a page: the shared page header. The
+      // phone, the modal and the pane keep the bar.
+      appBar: !_phone && !widget.isModal && !SettingsPaneScope.isPane(context)
+          ? PageHeader(title: context.l10n.subscription_title)
+          : AppBar(
         title: Text(context.l10n.subscription_title),
         centerTitle: true,
         backgroundColor: colors.brandSurface,

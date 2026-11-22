@@ -9,6 +9,7 @@ import '../../data/collections.dart';
 import '../../l10n/l10n.dart';
 import '../../config/app_date_format.dart';
 import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
@@ -58,7 +59,27 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
+      // UX3: PC and tablet: the shared page header with the five tabs under
+      // it (the body is unchanged); the pane keeps the bar.
+      appBar: !AppLayout.isPhone(context) && !SettingsPaneScope.isPane(context)
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(PageHeader.height + kTextTabBarHeight),
+              child: Column(children: [
+                PageHeader(title: context.l10n.activityType_trash),
+                Material(
+                  color: context.colors.surface,
+                  child: TabBar(
+                    controller: _tabController,
+                    indicatorColor: context.colors.primary,
+                    labelColor: context.colors.primary,
+                    unselectedLabelColor: context.colors.textSecondary,
+                    dividerColor: context.colors.divider,
+                    tabs: [for (final kind in trashKinds) Tab(text: kind.label(context.l10n))],
+                  ),
+                ),
+              ]),
+            )
+          : AppBar(
         automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         title: Text(context.l10n.activityType_trash),
         centerTitle: true,

@@ -26,6 +26,7 @@ import '../../ui/feedback/app_feedback.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/password_field_guard.dart';
 import '../../theme/app_layout.dart';
+import '../../widgets/shell/page_header.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
 
 class ManageAccountScreen extends StatefulWidget {
@@ -548,7 +549,9 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: AppBar(
+      appBar: !AppLayout.isPhone(context) && !SettingsPaneScope.isPane(context)
+          ? PageHeader(title: context.l10n.account_title)
+          : AppBar(
         automaticallyImplyLeading: !SettingsPaneScope.isPane(context),
         title: Text(context.l10n.account_title),
         backgroundColor: context.colors.primary,
