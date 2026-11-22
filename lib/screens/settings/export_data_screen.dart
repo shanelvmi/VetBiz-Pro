@@ -25,6 +25,9 @@ import '../../theme/app_breakpoints.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/shell/page_header.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/page_card.dart';
+import '../../ui/polish/section_label.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
 import '../../data/payment_status.dart';
 import '../../utils/app_clock.dart';
@@ -849,6 +852,8 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
                 ? context.l10n.export_allRecords
                 : context.l10n.export_rangeLine(DateFormat(DataKeys.isoDay).format(_selectedDateRange!.start), DateFormat(DataKeys.isoDay).format(_selectedDateRange!.end));
 
+    if (!AppLayout.isPhone(context)) return _buildWide(context);
+
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: !AppLayout.isPhone(context)
@@ -984,6 +989,107 @@ class _ExportDataScreenState extends State<ExportDataScreen> {
         ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// UX6: PC and tablet, the card template: one card with the date range and
+  /// the file format, then one card per data set with its Export button at
+  /// the right. A button chooses its data set and runs the same export as
+  /// Generate & Export did (the same range check first). The phone keeps
+  /// its three steps.
+  Widget _buildWide(BuildContext context) {
+    final rangeText = !_hasChosenDateRange
+        ? context.l10n.export_pickRange
+        : _selectedDateRange == null
+            ? context.l10n.export_allRecords
+            : context.l10n.export_rangeLine(DateFormat(DataKeys.isoDay).format(_selectedDateRange!.start),
+                DateFormat(DataKeys.isoDay).format(_selectedDateRange!.end));
+
+    void export(String type) {
+      setState(() => _selectedDataType = type);
+      if (!_snapshotTypes.contains(type) && !_hasChosenDateRange) {
+        AppFeedback.warning(L10n.current.export_pickRangeWarning);
+        return;
+      }
+      _triggerExportPipeline();
+    }
+
+    return Scaffold(
+      backgroundColor: context.colors.background,
+      appBar: PageHeader(title: context.l10n.export_title),
+      body: PageCardList(
+        children: [
+          PageCard(
+            title: context.l10n.export_groupOptions,
+            padding: null,
+            child: Column(
+              children: [
+                ListTile(
+                  leading: Icon(Icons.calendar_today_outlined, color: context.colors.primary),
+                  title: Text(context.l10n.export_scope, style: const TextStyle(fontWeight: AppFontWeight.medium)),
+                  subtitle: Text(rangeText),
+                  trailing: TextButton(
+                    key: const ValueKey('export-modify-range'),
+                    onPressed: _pickDateRange,
+                    style: TextButton.styleFrom(minimumSize: const Size(0, AppSizes.minTapTarget)),
+                    child: Text(context.l10n.export_modify, style: const TextStyle(fontWeight: AppFontWeight.bold)),
+                  ),
+                ),
+                Divider(height: PolishMetrics.hairline, color: context.colors.divider),
+                RadioGroup<String>(
+                  groupValue: _selectedFormat,
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedFormat = val);
+                  },
+                  child: Column(
+                    children: [
+                      _buildFormatTile(value: 'xlsx', title: context.l10n.export_xlsx, subtitle: context.l10n.export_xlsxHint),
+                      _buildFormatTile(value: 'csv', title: context.l10n.export_csv, subtitle: context.l10n.export_csvHint),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SectionLabel(
+            context.l10n.export_groupDatasets,
+            padding: const EdgeInsets.only(top: PolishMetrics.sectionLabelPaddingTop, bottom: PolishMetrics.sectionLabelPaddingBottom),
+          ),
+          for (final (i, type) in _dataTypes.indexed) ...[
+            if (i > 0) const SizedBox(height: PolishMetrics.gapInGroup),
+            PageCard(
+              key: ValueKey('export-card-$type'),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(_dataTypeLabel(type), style: const TextStyle(fontWeight: AppFontWeight.semibold, fontSize: AppFontSize.f15)),
+                        const SizedBox(height: AppSpacing.s2),
+                        Text(_dataTypeHint(type), style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.textSecondary)),
+                        // A snapshot ignores the date range: said where it applies.
+                        if (_snapshotTypes.contains(type))
+                          Text(context.l10n.export_notApplicable, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.s12),
+                  OutlinedButton.icon(
+                    key: ValueKey('export-action-$type'),
+                    onPressed: _isExporting ? null : () => export(type),
+                    icon: _isExporting && _selectedDataType == type
+                        ? const SizedBox(width: AppSpacing.s16, height: AppSpacing.s16, child: CircularProgressIndicator(strokeWidth: PolishMetrics.spinnerStroke))
+                        : const Icon(Icons.download_outlined, size: AppIconSize.i18),
+                    label: Text(context.l10n.common_export),
+                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, AppSizes.minTapTarget)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
