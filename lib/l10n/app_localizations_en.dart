@@ -6528,6 +6528,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activity_searchHint => 'Search logs...';
 
   @override
+  String get activity_searchPageHint => 'Search this page...';
+
+  @override
+  String get activity_categoryFilterUnavailable =>
+      'Filter by category: not available yet';
+
+  @override
   String activity_keepingLogsFor(int count) {
     return 'Keeping logs for $count days';
   }

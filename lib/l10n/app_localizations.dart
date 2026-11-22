@@ -11112,6 +11112,18 @@ abstract class AppLocalizations {
   /// **'Search logs...'**
   String get activity_searchHint;
 
+  /// PC/tablet Activity Log search hint: the search looks only at the page of entries shown.
+  ///
+  /// In en, this message translates to:
+  /// **'Search this page...'**
+  String get activity_searchPageHint;
+
+  /// PC/tablet Activity Log, where the category chips were: the filter waits for a database update.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by category: not available yet'**
+  String get activity_categoryFilterUnavailable;
+
   /// Activity Log, admin button that opens the retention dialog.
   ///
   /// In en, this message translates to:

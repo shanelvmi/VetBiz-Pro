@@ -1837,6 +1837,8 @@ facilities_lastUpdated,Last Updated,Kilisasishwa Mwisho,"Facility detail, About 
 facilities_viewAllActivity,View all activity,Angalia shughuli zote,"Facility detail, Recent Activity link.",draft
 activity_subtitle,Every recorded action for this facility,Kila tendo lililorekodiwa kwa kituo hiki,"Activity Log app bar, line under the title.",draft
 activity_searchHint,Search logs...,Tafuta kumbukumbu...,Activity Log search box hint.,draft
+activity_searchPageHint,Search this page...,Tafuta katika ukurasa huu...,PC/tablet Activity Log search hint: the search looks only at the page of entries shown.,draft
+activity_categoryFilterUnavailable,Filter by category: not available yet,Chuja kwa kundi: bado haipatikani,"PC/tablet Activity Log, where the category chips were: the filter waits for a database update.",draft
 activity_keepingLogsFor,Keeping logs for {count} days,Kumbukumbu zinahifadhiwa kwa siku {count},"Activity Log, admin button that opens the retention dialog.",draft
 activity_empty,No activity logs found,Hakuna kumbukumbu za shughuli,"Activity Log, empty list.",draft
 activity_autoDeleteAfter,Logs auto-delete after {count} days,Kumbukumbu hufutwa zenyewe baada ya siku {count},"Activity Log, empty list, second line.",draft

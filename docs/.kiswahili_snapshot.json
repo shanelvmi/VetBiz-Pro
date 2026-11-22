@@ -1831,6 +1831,8 @@
   "facilities_viewAllActivity": ["Angalia shughuli zote","Facility detail, Recent Activity link.","draft"],
   "activity_subtitle": ["Kila tendo lililorekodiwa kwa kituo hiki","Activity Log app bar, line under the title.","draft"],
   "activity_searchHint": ["Tafuta kumbukumbu...","Activity Log search box hint.","draft"],
+  "activity_searchPageHint": ["Tafuta katika ukurasa huu...","PC/tablet Activity Log search hint: the search looks only at the page of entries shown.","draft"],
+  "activity_categoryFilterUnavailable": ["Chuja kwa kundi: bado haipatikani","PC/tablet Activity Log, where the category chips were: the filter waits for a database update.","draft"],
   "activity_keepingLogsFor": ["Kumbukumbu zinahifadhiwa kwa siku {count}","Activity Log, admin button that opens the retention dialog.","draft"],
   "activity_empty": ["Hakuna kumbukumbu za shughuli","Activity Log, empty list.","draft"],
   "activity_autoDeleteAfter": ["Kumbukumbu hufutwa zenyewe baada ya siku {count}","Activity Log, empty list, second line.","draft"],

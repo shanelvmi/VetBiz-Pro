@@ -6566,6 +6566,13 @@ class AppLocalizationsSw extends AppLocalizations {
   String get activity_searchHint => 'Tafuta kumbukumbu...';
 
   @override
+  String get activity_searchPageHint => 'Tafuta katika ukurasa huu...';
+
+  @override
+  String get activity_categoryFilterUnavailable =>
+      'Chuja kwa kundi: bado haipatikani';
+
+  @override
   String activity_keepingLogsFor(int count) {
     return 'Kumbukumbu zinahifadhiwa kwa siku $count';
   }
