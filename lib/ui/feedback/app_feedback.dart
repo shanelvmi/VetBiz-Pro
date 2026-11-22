@@ -11,6 +11,7 @@ import '../../theme/app_palette.dart';
 import '../../l10n/l10n.dart';
 import '../../theme/app_text.dart';
 import 'friendly_error.dart';
+import 'modal_error.dart';
 
 /// The one way the app tells the user what just happened
 /// (docs/PHASE2_FEEDBACK_SPEC.md). Screens never call ScaffoldMessenger or
@@ -81,6 +82,12 @@ class AppFeedback {
     String? actionLabel,
     VoidCallback? onAction,
   }) {
+    // UX8: while a modal form is open, its warnings and errors are shown in
+    // it (ModalErrorScope), not in a toast behind its scrim.
+    if ((kind == _Kind.warning || kind == _Kind.error) &&
+        ModalErrorScope.show(title, detail: detail, isError: kind == _Kind.error)) {
+      return;
+    }
     final messenger = messengerKey.currentState;
     final context = messengerKey.currentContext;
     if (messenger == null || context == null || !messenger.mounted) return;

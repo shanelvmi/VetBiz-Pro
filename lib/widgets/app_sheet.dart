@@ -8,6 +8,7 @@ import '../theme/app_motion.dart';
 import '../theme/app_text.dart';
 import '../theme/theme_context.dart';
 import 'app_safe_area.dart';
+import '../ui/feedback/modal_error.dart';
 
 // PH2b S4 (docs/design/phone_foundations.md): one sheet helper and one form
 // helper instead of a copy per screen.
@@ -113,7 +114,8 @@ Future<T?> showAdaptiveForm<T>(
           height: box.height,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.r16),
-            child: Material(child: builder(true)),
+            // UX8: its warnings and errors inside it (ModalErrorScope).
+            child: Material(child: ModalErrorScope(child: builder(true))),
           ),
         ),
       );
