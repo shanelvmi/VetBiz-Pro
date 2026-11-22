@@ -45,6 +45,9 @@ import '../../theme/app_layout.dart';
 import '../../theme/app_tap_target.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/feedback/friendly_error.dart';
+import '../../ui/polish/app_status.dart';
+import '../../ui/polish/filter_row.dart';
+import '../../theme/polish_metrics.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/initials_avatar.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
@@ -1422,6 +1425,26 @@ class _FacilityScreenState extends State<FacilityScreen> {
         null => context.colors.textHint,
       };
 
+  /// UX5: a facility's STORED status as one of the four states, the same
+  /// meaning as [_statusColor] (an unknown value is neutral).
+  AppStatus _appStatus(String status) => switch (FacilityStatus.fromKey(status)) {
+        FacilityStatus.active => AppStatus.success,
+        FacilityStatus.inactive => AppStatus.danger,
+        FacilityStatus.pending => AppStatus.warning,
+        null => AppStatus.neutral,
+      };
+
+  /// UX5: PC and tablet show a status as the one status style (POL1's dot
+  /// and word); the phone keeps its chip ([buildStatusChip]).
+  Widget _statusDot(String status) => StatusDot(status: _appStatus(status), label: context.l10n.facilityStatusLabel(status));
+
+  /// UX5: the wide cards: flat, a hairline border, no shadow.
+  BoxDecoration _flatCard() => BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(PolishMetrics.cardRadius),
+        border: Border.all(color: context.colors.border, width: PolishMetrics.hairline),
+      );
+
   Widget buildStatusChip(String status) {
     final chipColor = _statusColor(status);
     return Container(
@@ -2218,19 +2241,20 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   ),
                   onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
                 ),
-                const SizedBox(height: AppSpacing.s10),
-                Row(
-                  children: [
-                    _statusFilterChip('All'),
-                    const SizedBox(width: AppSpacing.s8),
-                    _statusFilterChip(FacilityStatus.active.key),
-                    const SizedBox(width: AppSpacing.s8),
-                    _statusFilterChip(FacilityStatus.inactive.key),
-                  ],
-                ),
               ],
             ),
           ),
+          // UX5: the one filter row (POL1), left-aligned; it saves and compares
+          // the stored status ('All' included), as the chips did.
+          FilterRow(
+            values: ['All', FacilityStatus.active.key, FacilityStatus.inactive.key],
+            selected: _listStatusFilter,
+            label: (v) => v == 'All' ? context.l10n.common_all : context.l10n.facilityStatusLabel(v),
+            keyPrefix: 'facilityStatusFilter-',
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
+            onSelected: (v) => setState(() => _listStatusFilter = v),
+          ),
+          const SizedBox(height: AppSpacing.s8),
           Expanded(
             child: filtered.isEmpty
                 ? Padding(
@@ -2250,31 +2274,6 @@ class _FacilityScreenState extends State<FacilityScreen> {
                   ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _statusFilterChip(String value) {
-    final isSelected = _listStatusFilter == value;
-    return InkWell(
-      onTap: () => setState(() => _listStatusFilter = value),
-      borderRadius: BorderRadius.circular(AppRadius.r20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s8),
-        decoration: BoxDecoration(
-          color: isSelected ? context.colors.primary : context.colors.surface,
-          borderRadius: BorderRadius.circular(AppRadius.r20),
-          border: Border.all(color: isSelected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30)),
-        ),
-        // Shows the label; the filter keeps the stored status.
-        child: Text(
-          value == 'All' ? context.l10n.common_all : context.l10n.facilityStatusLabel(value),
-          style: TextStyle(
-            fontSize: AppFontSize.f12_5,
-            color: isSelected ? context.colors.onPrimary : context.colors.textPrimary,
-            fontWeight: isSelected ? AppFontWeight.semibold : AppFontWeight.regular,
-          ),
-        ),
       ),
     );
   }
@@ -2344,8 +2343,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  const SizedBox(height: AppSpacing.s3),
-                  buildStatusChip(status),
+                  const SizedBox(height: AppSpacing.s4),
+                  _statusDot(status),
                 ],
               ),
             ),
@@ -2440,15 +2439,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final createdAt = details?[Fields.createdAt] as DateTime?;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.s16),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r14),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
-        boxShadow: [
-          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 8, offset: const Offset(0, 2)),
-        ],
-      ),
+      padding: const EdgeInsets.all(PolishMetrics.cardPadding),
+      decoration: _flatCard(),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2483,7 +2475,8 @@ class _FacilityScreenState extends State<FacilityScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    buildStatusChip(status),
+                    const SizedBox(width: AppSpacing.s12),
+                    _statusDot(status),
                   ],
                 ),
                 _typeTag(facility),
@@ -2735,14 +2728,7 @@ class _FacilityScreenState extends State<FacilityScreen> {
   }) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.s14),
-      decoration: BoxDecoration(
-        color: context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r12),
-        border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a15)),
-        boxShadow: [
-          BoxShadow(color: context.colors.shadow.withValues(alpha: AppAlpha.a05), blurRadius: 6, offset: const Offset(0, 2)),
-        ],
-      ),
+      decoration: _flatCard(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -2804,53 +2790,17 @@ class _FacilityScreenState extends State<FacilityScreen> {
     final assistantCount = _assistantsByFacility[facilityId]?.length ?? 0;
     final tabLabels = _tabLabels();
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(tabLabels.length, (index) {
-          final isSelected = _selectedTabIndex == index;
-          final label = tabLabels[index];
-          return InkWell(
-            onTap: () => setState(() => _selectedTabIndex = index),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s10),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: isSelected ? context.colors.primary : Colors.transparent,
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: AppFontSize.f13_5,
-                      fontWeight: isSelected ? AppFontWeight.bold : AppFontWeight.regular,
-                      color: isSelected ? context.colors.primary : context.colors.textPrimary,
-                    ),
-                  ),
-                  // By index, not by the label (the label is translated).
-                  if (index == _teamTabIndex && assistantCount > 0) ...[
-                    const SizedBox(width: AppSpacing.s6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s6, vertical: AppSpacing.s2),
-                      decoration: BoxDecoration(
-                        color: context.colors.divider,
-                        borderRadius: BorderRadius.circular(AppRadius.r10),
-                      ),
-                      child: Text('$assistantCount', style: const TextStyle(fontSize: AppFontSize.f11)),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          );
-        }),
-      ),
+    // UX5: the one filter row (POL1): left-aligned, one accent, the team
+    // count after its label. Segments are the tab indexes (by index, not by
+    // the label: the label is translated).
+    return FilterRow(
+      values: [for (var i = 0; i < tabLabels.length; i++) '$i'],
+      selected: '$_selectedTabIndex',
+      label: (v) => tabLabels[int.parse(v)],
+      count: (v) => int.parse(v) == _teamTabIndex && assistantCount > 0 ? assistantCount : null,
+      keyPrefix: 'facilityTab-',
+      padding: EdgeInsets.zero,
+      onSelected: (v) => setState(() => _selectedTabIndex = int.parse(v)),
     );
   }
 

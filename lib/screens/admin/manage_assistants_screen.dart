@@ -26,6 +26,8 @@ import '../../theme/app_breakpoints.dart';
 import '../../theme/app_layout.dart';
 import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
+import '../../ui/polish/app_status.dart';
+import '../../theme/polish_metrics.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/facility_display.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
@@ -1503,18 +1505,18 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
     required String? filter,
   }) {
     final selected = filter != null && _statusFilter == filter;
+    // UX5: flat with a hairline border (no elevation); the chosen card in the
+    // one accent, not its status colour (the icon keeps the status).
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(AppRadius.r12),
+      borderRadius: BorderRadius.circular(PolishMetrics.cardRadius),
       side: BorderSide(
-        color: selected ? color.withValues(alpha: AppAlpha.a70) : context.colors.textHint.withValues(alpha: AppAlpha.a15),
-        width: selected ? 1.5 : 1,
+        color: selected ? context.colors.primary : context.colors.border,
+        width: selected ? PolishMetrics.filterUnderline : PolishMetrics.hairline,
       ),
     );
     return Material(
-      color: selected ? color.withValues(alpha: AppAlpha.a05) : context.colors.surface,
+      color: selected ? context.colors.primary.withValues(alpha: AppAlpha.a05) : context.colors.surface,
       shape: shape,
-      elevation: AppElevation.e1,
-      shadowColor: context.colors.shadow.withValues(alpha: AppAlpha.a05),
       child: InkWell(
         customBorder: shape,
         onTap: () => setState(() {
@@ -1780,6 +1782,16 @@ class _ManageAssistantsScreenState extends State<ManageAssistantsScreen> {
   }
 
   Widget _statusChip(String bucket, {bool onPage = false}) {
+    // UX5: PC and tablet show the one status style (POL1's dot and word);
+    // the phone's details page keeps its chip.
+    if (!onPage) {
+      final status = switch (UserStatus.fromKey(bucket)) {
+        UserStatus.active => AppStatus.success,
+        UserStatus.deactivated => AppStatus.danger,
+        UserStatus.pending || UserStatus.rejected => AppStatus.warning,
+      };
+      return StatusDot(status: status, label: _statusLabel(bucket));
+    }
     final color = _statusColor(bucket);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s4),
