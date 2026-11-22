@@ -30,6 +30,8 @@ import '../../widgets/phone_list/phone_filter_sheet.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/record_tile.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/page_layout.dart';
 
 part 'activity_log_phone.dart';
 
@@ -469,7 +471,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           _buildActionSummary(facilityId),
 
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.s12, 0, AppSpacing.s12, AppSpacing.s8),
+            padding: const EdgeInsets.fromLTRB(PolishMetrics.pagePadding, 0, PolishMetrics.pagePadding, AppSpacing.s8),
             child: Row(
               children: [
                 Expanded(
@@ -497,8 +499,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
               ],
             ),
           ),
-
-          const Divider(height: 1),
 
           // Activity Log List
           Expanded(
@@ -560,122 +560,69 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   );
                 }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.all(AppSpacing.s12),
-                  itemCount: logs.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                        final data = logs[index].data();
-                        final user = data['userName'] ?? context.l10n.common_unknown;
-                        final action = sanitizeForDisplay(data['description'] ?? '');
-                        final type = data['actionType'] ?? '';
-                        final timestamp = data['timestamp'];
-                        String dateStr = '';
-                        if (timestamp != null && timestamp is Timestamp) {
-                          dateStr = AppDateFormat.dateTime24Seconds
-                              .format(timestamp.toDate().toLocal());
-                        }
-
-                        final actionColor = ActivityTypeStyle.color(type, context.colors);
-                        final actionIcon = ActivityTypeStyle.icon(type);
-
-                        return Card(
-                          elevation: AppElevation.e2,
-                          margin: const EdgeInsets.symmetric(vertical: AppSpacing.s4),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppRadius.r8)),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                CircleAvatar(
-                                  backgroundColor: actionColor.withValues(alpha: AppAlpha.a20),
-                                  child: Icon(
-                                    actionIcon,
-                                    color: actionColor,
-                                    size: AppIconSize.i20,
-                                  ),
-                                ),
-                                const SizedBox(width: AppSpacing.s16),
-                                Expanded(
-                                  flex: 3,
-                                  child: Column(
+                // UX7 (owner, 2026-11-22): a table in one flat hairline card:
+                // Activity (with who), Category, then Date in a fixed column so
+                // the time sits at one x on every row; hairline rows, no
+                // shadow, no colour per kind. The header stays while the rows
+                // scroll. (It was a list of elevated cards, the time in a
+                // flexible column.)
+                final colors = context.colors;
+                final radius = BorderRadius.circular(PolishMetrics.cardRadius);
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(PolishMetrics.pagePadding, 0, PolishMetrics.pagePadding, PolishMetrics.pagePadding),
+                  child: DecoratedBox(
+                    key: const ValueKey('activity-table'),
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: radius,
+                      border: Border.all(color: colors.border, width: PolishMetrics.hairline),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: radius,
+                      child: Column(
+                        children: [
+                          PageTableRow.header(context,
+                              main: context.l10n.facilities_activityFallback,
+                              middle: context.l10n.common_category,
+                              date: context.l10n.common_date),
+                          Divider(height: PolishMetrics.hairline, thickness: PolishMetrics.hairline, color: colors.divider),
+                          Expanded(
+                            child: ListView.separated(
+                              itemCount: logs.length,
+                              separatorBuilder: (_, __) =>
+                                  Divider(height: PolishMetrics.hairline, thickness: PolishMetrics.hairline, color: colors.divider),
+                              itemBuilder: (context, index) {
+                                final data = logs[index].data();
+                                final user = data['userName'] ?? context.l10n.common_unknown;
+                                final action = sanitizeForDisplay(data['description'] ?? '');
+                                final type = data['actionType'] ?? '';
+                                final timestamp = data['timestamp'];
+                                String dateStr = '';
+                                if (timestamp != null && timestamp is Timestamp) {
+                                  dateStr = AppDateFormat.dateTime24Seconds.format(timestamp.toDate().toLocal());
+                                }
+                                return PageTableRow(
+                                  key: ValueKey('activity-row-$index'),
+                                  main: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        action,
-                                        style: const TextStyle(
-                                          fontSize: AppFontSize.f14,
-                                          fontWeight: AppFontWeight.medium,
-                                        ),
-                                      ),
-                                      const SizedBox(height: AppSpacing.s4),
-                                      Row(
-                                        children: [
-                                          Icon(Icons.person,
-                                            size: AppIconSize.i14,
-                                            color: context.colors.textMuted),
-                                          const SizedBox(width: AppSpacing.s4),
-                                          Text(
-                                            user,
-                                            style: TextStyle(
-                                              fontSize: AppFontSize.f12,
-                                              color: context.colors.textSoft,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                      Text(action, style: const TextStyle(fontSize: AppFontSize.f14, fontWeight: AppFontWeight.medium)),
+                                      const SizedBox(height: AppSpacing.s2),
+                                      Text(user, style: TextStyle(fontSize: AppFontSize.f12, color: colors.textSecondary)),
                                     ],
                                   ),
-                                ),
-                                const SizedBox(width: AppSpacing.s16),
-                                Expanded(
-                                  flex: 2,
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.access_time,
-                                        size: AppIconSize.i14,
-                                        color: context.colors.textMuted),
-                                      const SizedBox(width: AppSpacing.s4),
-                                      Text(
-                                        dateStr,
-                                        style: TextStyle(
-                                          fontSize: AppFontSize.f11,
-                                          color: context.colors.textMuted,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: AppSpacing.s16),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.s8,
-                                    vertical: AppSpacing.s4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: actionColor.withValues(alpha: AppAlpha.a10),
-                                    borderRadius: BorderRadius.circular(AppRadius.r12),
-                                    border: Border.all(
-                                      color: actionColor.withValues(alpha: AppAlpha.a30),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    context.l10n.activityTypeLabel(type),
-                                    style: TextStyle(
-                                      fontSize: AppFontSize.f11,
-                                      fontWeight: AppFontWeight.semibold,
-                                      color: actionColor,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                  middle: Text(context.l10n.activityTypeLabel(type),
+                                      style: TextStyle(fontSize: AppFontSize.f13, color: colors.textSecondary)),
+                                  date: Text(dateStr, style: TextStyle(fontSize: AppFontSize.f13, color: colors.textSecondary)),
+                                );
+                              },
                             ),
                           ),
-                        );
-                      },
-                    );
+                        ],
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
           ),
@@ -778,15 +725,13 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           ..sort((a, b) => typeCounts[b]!.compareTo(typeCounts[a]!));
 
         return Container(
-          margin: const EdgeInsets.fromLTRB(AppSpacing.s12, AppSpacing.s10, AppSpacing.s12, AppSpacing.s6),
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
-          decoration: BoxDecoration(
-            color: context.colors.primary.withValues(alpha: AppAlpha.a05),
-            borderRadius: BorderRadius.circular(AppRadius.r10),
-          ),
+          // UX7: left-aligned in the page's toolbar, on the page itself (it was
+          // centred on a primary tint).
+          margin: const EdgeInsets.fromLTRB(PolishMetrics.pagePadding, AppSpacing.s10, PolishMetrics.pagePadding, AppSpacing.s6),
           child: SizedBox(
-            height: 44,
-            child: Center(
+            height: AppSizes.minTapTarget,
+            child: Align(
+              alignment: Alignment.centerLeft,
               child: Listener(
                 // Maps mouse-wheel/trackpad scrolling (which arrives
                 // as a vertical delta) onto this row's horizontal
@@ -807,7 +752,6 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                   child: SingleChildScrollView(
                 controller: _chipScrollController,
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
