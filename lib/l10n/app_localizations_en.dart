@@ -2466,6 +2466,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_selectPane => 'Select a setting from the left';
 
   @override
+  String settings_groupThisFacility(String facilityName) {
+    return 'This facility: $facilityName';
+  }
+
+  @override
+  String get settings_groupAllFacilities => 'All your facilities';
+
+  @override
+  String get settings_groupYouAndApp => 'You and the app';
+
+  @override
   String get settings_appName => 'App Name';
 
   @override

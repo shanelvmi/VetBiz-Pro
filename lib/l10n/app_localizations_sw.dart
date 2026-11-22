@@ -2479,6 +2479,17 @@ class AppLocalizationsSw extends AppLocalizations {
   String get settings_selectPane => 'Chagua mpangilio upande wa kushoto';
 
   @override
+  String settings_groupThisFacility(String facilityName) {
+    return 'Kituo hiki: $facilityName';
+  }
+
+  @override
+  String get settings_groupAllFacilities => 'Vituo vyako vyote';
+
+  @override
+  String get settings_groupYouAndApp => 'Wewe na programu';
+
+  @override
   String get settings_appName => 'Jina la Programu';
 
   @override

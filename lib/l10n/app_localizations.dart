@@ -4424,6 +4424,24 @@ abstract class AppLocalizations {
   /// **'Select a setting from the left'**
   String get settings_selectPane;
 
+  /// UX5: Settings hub (PC/tablet) and phone list, the title of the group of settings that apply to the selected facility; facilityName is the name as typed.
+  ///
+  /// In en, this message translates to:
+  /// **'This facility: {facilityName}'**
+  String settings_groupThisFacility(String facilityName);
+
+  /// UX5: Settings hub, the title of the admin-only group that covers every facility (Facilities, Team Members).
+  ///
+  /// In en, this message translates to:
+  /// **'All your facilities'**
+  String get settings_groupAllFacilities;
+
+  /// UX5: Settings hub and phone list, the title of the group of personal and app-wide settings (account, notifications, theme, currency, language, app info).
+  ///
+  /// In en, this message translates to:
+  /// **'You and the app'**
+  String get settings_groupYouAndApp;
+
   /// App info dialog label.
   ///
   /// In en, this message translates to:

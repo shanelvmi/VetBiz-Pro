@@ -724,6 +724,9 @@ settings_languageBoth,Language / Lugha,Language / Lugha,"Settings item for the l
 settings_selectLanguageBoth,SELECT LANGUAGE / CHAGUA LUGHA,SELECT LANGUAGE / CHAGUA LUGHA,"Language picker heading; both languages on purpose.",draft
 settings_versionLine,{appName} - v{version},{appName} - v{version},Footer of the Settings list.,draft
 settings_selectPane,Select a setting from the left,Chagua mpangilio upande wa kushoto,Wide Settings screen before anything is chosen.,draft
+settings_groupThisFacility,This facility: {facilityName},Kituo hiki: {facilityName},"UX5: Settings hub (PC/tablet) and phone list, the title of the group of settings that apply to the selected facility; facilityName is the name as typed.",draft
+settings_groupAllFacilities,All your facilities,Vituo vyako vyote,"UX5: Settings hub, the title of the admin-only group that covers every facility (Facilities, Team Members).",draft
+settings_groupYouAndApp,You and the app,Wewe na programu,"UX5: Settings hub and phone list, the title of the group of personal and app-wide settings (account, notifications, theme, currency, language, app info).",draft
 settings_appName,App Name,Jina la Programu,App info dialog label.,draft
 settings_version,Version,Toleo,App info dialog label.,draft
 settings_builtFor,Built For,Imetengenezwa Kwa,App info dialog label.,draft
