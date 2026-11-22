@@ -29,6 +29,7 @@ import '../../config/app_date_format.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../ui/polish/app_status.dart';
 import '../../theme/polish_metrics.dart';
+import '../../theme/app_breakpoints.dart';
 import '../../l10n/l10n.dart';
 import '../../utils/submission_people.dart';
 import '../../config/app_info.dart';
@@ -276,6 +277,56 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     }
   }
 
+  /// UX6: the body. The phone and the modal keep one centred column
+  /// (AppSizes.formMax), exactly as before. PC and tablet use the full
+  /// content width: the status banner (and an offer) on top, then two
+  /// columns from AppBreakpoints.medium of the content (left: the plan and
+  /// the payment; right: the recent submissions), else the same stacked at
+  /// full width. The same widgets in each case.
+  Widget _layout({required List<Widget> banner, required List<Widget> left, required List<Widget> right}) {
+    if (_phone || widget.isModal) {
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppSizes.formMax),
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.s16),
+            children: [...banner, ...left, const SizedBox(height: AppSpacing.s24), ...right],
+          ),
+        ),
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final twoColumns = constraints.maxWidth >= AppBreakpoints.medium;
+        return ListView(
+          key: const ValueKey('subscription-wide'),
+          padding: const EdgeInsets.all(PolishMetrics.pagePadding),
+          children: [
+            ...banner,
+            if (twoColumns)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(key: const ValueKey('subscription-left'), crossAxisAlignment: CrossAxisAlignment.stretch, children: left),
+                  ),
+                  const SizedBox(width: PolishMetrics.gapBetweenSections),
+                  Expanded(
+                    child: Column(key: const ValueKey('subscription-right'), crossAxisAlignment: CrossAxisAlignment.stretch, children: right),
+                  ),
+                ],
+              )
+            else ...[
+              Column(key: const ValueKey('subscription-left'), crossAxisAlignment: CrossAxisAlignment.stretch, children: left),
+              const SizedBox(height: AppSpacing.s24),
+              Column(key: const ValueKey('subscription-right'), crossAxisAlignment: CrossAxisAlignment.stretch, children: right),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final facilityId =
@@ -313,12 +364,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
               )
             : null,
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: AppSizes.formMax),
-          child: ListView(
-            padding: const EdgeInsets.all(AppSpacing.s16),
-            children: [
+      // UX6: banner, then the plan and payment (left) and the submissions
+      // (right); see _layout.
+      body: _layout(
+        banner: [
               Container(
                 padding: const EdgeInsets.all(AppSpacing.s16),
                 decoration: BoxDecoration(
@@ -412,6 +461,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 const SizedBox(height: AppSpacing.s20),
               ],
 
+        ],
+        left: [
               Text(context.l10n.subscription_choosePlan, style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
               const SizedBox(height: AppSpacing.s8),
               RadioGroup<SubscriptionPlan>(
@@ -579,13 +630,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                 );
               }),
 
-              const SizedBox(height: AppSpacing.s24),
+        ],
+        right: [
               Text(context.l10n.subscription_recentSubmissions, style: TextStyle(fontWeight: AppFontWeight.bold, color: colors.primary)),
               const SizedBox(height: AppSpacing.s8),
               if (facilityId != null) _SubmissionHistory(facilityId: facilityId, primaryColor: colors.primary, firestore: _db),
-            ],
-          ),
-        ),
+        ],
       ),
       bottomNavigationBar: _phone
           ? FormActionBar(
