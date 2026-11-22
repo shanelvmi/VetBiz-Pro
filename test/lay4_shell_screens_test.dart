@@ -2,7 +2,7 @@
 // dashboard): at 768 (rail 72), 1024 (sidebar 250) and 1200 (sidebar 250)
 // at text 1.3, Light and Dark, every colour theme: no overflow, the sidebar
 // on screen with the place selected, and no back arrow at the top level.
-// Also: Settings' side panel follows the content width (owner, 2026-11-18),
+// Also: Settings' hub follows the content width (UX3: two columns from 900),
 // Back from a place returns to Home, and where a snack bar lands.
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -74,7 +74,7 @@ void main() {
             expect(find.byType(_typeOf(d)), findsOneWidget);
             expect(find.byKey(ValueKey('sb-${d.name}-selected')), findsOneWidget, reason: 'the place is selected');
             // The place itself has no back arrow, and since LAY7 (#23) neither has
-            // a pane embedded in Settings' side panel (Subscription, for an admin).
+            // a Settings pane (UX3: there is none).
             expect(find.byType(BackButton), findsNothing, reason: 'top level and panes: no back arrow');
             final left = tester.getTopLeft(find.byType(_typeOf(d))).dx;
             expect(left, _sidebarFor(size), reason: 'beside the sidebar, not over it');
@@ -84,18 +84,22 @@ void main() {
     }
   }
 
-  group('Settings follows the content width (side panel from 900)', () {
+  // UX3: the hub has no side panel; its rows go two to a line from 900 of
+  // the content (no page is embedded: nothing opens until a row is tapped).
+  group('Settings follows the content width (two columns from 900)', () {
     for (final (size, collapsed, panel) in const [
       (Size(768, 1024), false, false),
       (Size(1024, 768), false, false),
       (Size(1024, 768), true, true),
       (Size(1200, 800), false, true),
     ]) {
-      ph5TestWidgets('${size.width.toInt()} ${collapsed ? 'collapsed' : 'open'}: side panel $panel', (tester) async {
+      ph5TestWidgets('${size.width.toInt()} ${collapsed ? 'collapsed' : 'open'}: two columns $panel', (tester) async {
         await pumpPh5(tester, (fs) => _harness(fs, _sidebarFor(size, collapsed: collapsed)), size: size);
         await _open(tester, AppDestination.settings);
-        // The side panel embeds the first section (Subscription, for an admin).
-        expect(find.byType(SubscriptionScreen), panel ? findsOneWidget : findsNothing);
+        expect(find.byType(SubscriptionScreen), findsNothing);
+        final a = tester.getRect(find.byKey(const ValueKey('settingsHub-business_profile')));
+        final b = tester.getRect(find.byKey(const ValueKey('settingsHub-business_hours')));
+        expect(a.top == b.top, panel, reason: 'side by side from 900');
       });
     }
   });
