@@ -27,6 +27,7 @@ class ListPageBar extends StatelessWidget {
     this.rangeText,
     this.pageText,
     this.extra,
+    this.showLoadingSpinner = true,
   });
 
   /// Shown when the page holds nothing.
@@ -50,6 +51,10 @@ class ListPageBar extends StatelessWidget {
   /// UX6: an extra control between the range and the page controls (the
   /// Notifications page's Load older); null: nothing, as before.
   final Widget? extra;
+
+  /// PAGE1: false where the list itself shows the loading (PagedListBody's
+  /// skeleton or dimmed page): Next is only disabled, no spinner.
+  final bool showLoadingSpinner;
 
   /// The page sizes offered (as the screens offered them).
   static const pageSizes = [10, 25, 50];
@@ -97,7 +102,7 @@ class ListPageBar extends StatelessWidget {
               ),
               Text(pageText ?? context.l10n.common_page(currentPage), style: const TextStyle(fontSize: AppFontSize.f13)),
               IconButton(
-                icon: isLoading
+                icon: isLoading && showLoadingSpinner
                     ? const SizedBox(width: AppSpacing.s16, height: AppSpacing.s16, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.chevron_right),
                 onPressed: hasNextPage && !isLoading ? onNext : null,
