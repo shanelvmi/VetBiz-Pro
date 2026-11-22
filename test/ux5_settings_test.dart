@@ -54,15 +54,15 @@ Future<(List<String>, List<String>)> _collect(WidgetTester tester) async {
 void main() {
   tearDown(() => PrinterSupport.debugOverride = null);
 
-  group('PrinterSupport: the plugin\'s platforms', () {
-    test('web never; Android, iOS, macOS, Windows yes; Linux and Fuchsia no', () {
+  group('PrinterSupport: Android and iOS only (UX6)', () {
+    test('web never; Android and iOS yes; Windows, macOS, Linux, Fuchsia no', () {
       for (final p in TargetPlatform.values) {
         expect(PrinterSupport.supportedOn(isWeb: true, platform: p), isFalse, reason: 'web on ${p.name}');
       }
       expect(PrinterSupport.supportedOn(isWeb: false, platform: TargetPlatform.android), isTrue);
       expect(PrinterSupport.supportedOn(isWeb: false, platform: TargetPlatform.iOS), isTrue);
-      expect(PrinterSupport.supportedOn(isWeb: false, platform: TargetPlatform.macOS), isTrue);
-      expect(PrinterSupport.supportedOn(isWeb: false, platform: TargetPlatform.windows), isTrue);
+      expect(PrinterSupport.supportedOn(isWeb: false, platform: TargetPlatform.macOS), isFalse);
+      expect(PrinterSupport.supportedOn(isWeb: false, platform: TargetPlatform.windows), isFalse);
       expect(PrinterSupport.supportedOn(isWeb: false, platform: TargetPlatform.linux), isFalse);
       expect(PrinterSupport.supportedOn(isWeb: false, platform: TargetPlatform.fuchsia), isFalse);
     });
@@ -97,10 +97,17 @@ void main() {
       expect(find.text(_en.dashboard_viewFacilities), findsNothing);
     });
 
-    for (final (name, platform) in [('Android', TargetPlatform.android), ('Linux', TargetPlatform.linux)]) {
-      ph5TestWidgets('$name platform: Printer row ${platform == TargetPlatform.android ? 'shown' : 'hidden'} (hub and phone)', (tester) async {
+    for (final (name, platform) in [
+      ('Android', TargetPlatform.android),
+      ('iOS', TargetPlatform.iOS),
+      ('Windows', TargetPlatform.windows),
+      ('macOS', TargetPlatform.macOS),
+      ('Linux', TargetPlatform.linux),
+      ('Fuchsia', TargetPlatform.fuchsia),
+    ]) {
+      ph5TestWidgets('$name platform: Printer row ${platform == TargetPlatform.android || platform == TargetPlatform.iOS ? 'shown' : 'hidden'} (hub and phone)', (tester) async {
         debugDefaultTargetPlatformOverride = platform;
-        final shown = platform == TargetPlatform.android;
+        final shown = platform == TargetPlatform.android || platform == TargetPlatform.iOS;
         await _pumpHub(tester);
         final (_, rows) = await _collect(tester);
         expect(rows.contains('printer'), shown);

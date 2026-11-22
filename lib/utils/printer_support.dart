@@ -1,9 +1,12 @@
 import 'package:flutter/foundation.dart';
 
-/// UX5 (Step 0c, owner 2026-11-22): where Bluetooth receipt printing can run.
-/// print_bluetooth_thermal 1.2.2 registers Android, iOS, macOS and Windows;
-/// its web and Linux entries are commented out, so there the plugin has no
-/// implementation and the Printer settings could only fail. A PLATFORM
+/// Where the Printer & Receipt Settings row is offered.
+///
+/// UX6 (owner decision): Android and iOS only. print_bluetooth_thermal 1.2.2
+/// also registers macOS and Windows, but Bluetooth thermal printing has never
+/// been tried on a real desktop, so every desktop (Windows, macOS, Linux) and
+/// the web are hidden; desktop can be enabled here later, after a real test.
+/// (UX5 had kept Windows and macOS, following the plugin's list.) A PLATFORM
 /// check, never the screen width: a wide Android tablet still prints.
 class PrinterSupport {
   PrinterSupport._();
@@ -18,8 +21,8 @@ class PrinterSupport {
   static bool supportedOn({required bool isWeb, required TargetPlatform platform}) {
     if (isWeb) return false;
     return switch (platform) {
-      TargetPlatform.android || TargetPlatform.iOS || TargetPlatform.macOS || TargetPlatform.windows => true,
-      TargetPlatform.linux || TargetPlatform.fuchsia => false,
+      TargetPlatform.android || TargetPlatform.iOS => true,
+      TargetPlatform.windows || TargetPlatform.macOS || TargetPlatform.linux || TargetPlatform.fuchsia => false,
     };
   }
 }
