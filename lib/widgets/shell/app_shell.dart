@@ -67,6 +67,11 @@ class AppShellState extends State<AppShell> {
 
   /// The place the sidebar highlights: the newest [openInContent] screen's,
   /// else the open destination (a screen pushed above it keeps it), else Home.
+  /// UX4: the shell around [context], or null with none (a phone, or a test
+  /// that pumps a screen alone). A dropdown on the root navigator is outside
+  /// it: look it up from the screen that opens the dropdown.
+  static AppShellState? maybeOf(BuildContext context) => context.findAncestorStateOfType<AppShellState>();
+
   AppDestination get selected => _shown.isNotEmpty ? _shown.last.$2 : (_open ?? AppDestination.home);
 
   /// LAY4b: shows [page] in the content area, on top of what is there, with

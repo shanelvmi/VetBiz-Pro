@@ -33,6 +33,8 @@ import '../../ui/polish/app_status.dart';
 import '../../ui/polish/filter_row.dart';
 import '../../widgets/list_page_bar.dart';
 import '../../widgets/shell/page_header.dart';
+import '../../widgets/shell/app_shell.dart';
+import '../../navigation/app_destinations.dart';
 import '../../theme/polish_metrics.dart';
 
 /// What kind of thing needs attention. Declared in the order they're
@@ -80,7 +82,29 @@ class StockAlertsScreen extends StatelessWidget {
   /// UI5: the kind chip chosen when the screen opens (Home's Needs attention
   /// sheet); null: All, as before.
   final StockAlertKind? initialKind;
-  const StockAlertsScreen({super.key, this.isDropdown = false, this.initialKind});
+  /// UX4: the dropdown's "View all" after the dropdown closes, given by the
+  /// bell (Products, Stock Store) when a shell is around it: the full screen
+  /// opens in the shell's content and the sidebar stays. Null: pushed.
+  final VoidCallback? onViewAll;
+  const StockAlertsScreen({super.key, this.isDropdown = false, this.initialKind, this.onViewAll});
+
+  /// UX4: the full Product Alerts from a bell in [highlight]'s place: in the
+  /// wide shell's content when there is one (Back returns there), else
+  /// pushed as before.
+  static Future<void> open(BuildContext context, {required AppDestination highlight}) async {
+    final shell = AppShellState.maybeOf(context);
+    if (shell != null) return shell.openInContent(const StockAlertsScreen(), highlight: highlight);
+    await Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const StockAlertsScreen()));
+  }
+
+  /// UX4: [onViewAll] for a dropdown opened from [context] (the bell's
+  /// screen, inside the shell; the dropdown itself is not), or null with no
+  /// shell.
+  static VoidCallback? viewAllFrom(BuildContext context, {required AppDestination highlight}) {
+    final shell = AppShellState.maybeOf(context);
+    if (shell == null) return null;
+    return () => shell.openInContent(const StockAlertsScreen(), highlight: highlight);
+  }
 
   static const int expiryWarningDays = 30;
 
@@ -298,9 +322,16 @@ class StockAlertsScreen extends StatelessWidget {
     final footer = Center(
       child: TextButton(
         onPressed: () {
+          // The dropdown closes first; then the full screen opens in the
+          // shell (UX4, onViewAll), or is pushed when there is none.
           final navigator = Navigator.of(context);
           navigator.pop();
-          navigator.push(MaterialPageRoute(builder: (_) => const StockAlertsScreen()));
+          final viewAll = onViewAll;
+          if (viewAll != null) {
+            viewAll();
+          } else {
+            navigator.push(MaterialPageRoute(builder: (_) => const StockAlertsScreen()));
+          }
         },
         style: TextButton.styleFrom(foregroundColor: context.colors.primary),
         child: Row(

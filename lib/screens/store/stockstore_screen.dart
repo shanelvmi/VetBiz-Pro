@@ -7,6 +7,7 @@ import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../widgets/product_catalog_side_panel.dart';
 import '../../widgets/shell/page_header.dart';
+import '../../navigation/app_destinations.dart';
 import '../../widgets/product_thumbnail.dart';
 import '../../services/product_catalog_service.dart';
 import '../products/add_edit_product_screen.dart';
@@ -638,10 +639,14 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                 final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
                 if (isWideScreen) {
                   // PH8a: the same anchored panel as the notifications bell.
-                  await showAnchoredDropdown(context, anchorKey: _bellKey, child: const StockAlertsScreen(isDropdown: true));
+                  // UX4: its View all opens in the shell (Stock Store highlighted).
+                  await showAnchoredDropdown(context,
+                      anchorKey: _bellKey,
+                      child: StockAlertsScreen(
+                          isDropdown: true,
+                          onViewAll: StockAlertsScreen.viewAllFrom(context, highlight: AppDestination.stockStore)));
                 } else {
-                  await Navigator.push(context, MaterialPageRoute(
-                      builder: (_) => const StockAlertsScreen()));
+                  await StockAlertsScreen.open(context, highlight: AppDestination.stockStore);
                 }
               },
             ),
