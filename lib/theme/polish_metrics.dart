@@ -100,3 +100,34 @@ class DetailsLayoutMetrics {
   /// the list's height; taller, it scrolls inside it.
   static const double headerMaxShare = 0.35;
 }
+
+/// UX9: the Select Facility screen (lib/screens/facilities/facility_picker_screen.dart)
+/// and its card (lib/widgets/facility_pick_card.dart). Flat hairline cards
+/// in a centred column; every value a step of the existing scale.
+class FacilityPickerMetrics {
+  FacilityPickerMetrics._();
+
+  /// The cards never spread wider than this, centred in the window.
+  static const double maxContentWidth = 1100;
+
+  /// A grid column is never narrower than this (3 or more facilities).
+  static const double minCardWidth = 220;
+
+  /// The gap between cards, both ways.
+  static const double gridGap = AppSpacing.s16;
+
+  /// The logo, or the two-letter initials tile when there is none.
+  static const double logoTile = AppIconSize.i48;
+  static const double logoTileRadius = AppRadius.r10;
+  static const double initialsText = AppFontSize.f16;
+
+  static const double cardPadding = AppSpacing.s16;
+  static const double cardRadius = AppRadius.r12;
+
+  /// The highlighted (Default) card's accent outline; every other card the
+  /// hairline.
+  static const double selectedOutline = 2;
+
+  /// More facilities than this, and a search box shows above the grid.
+  static const int searchAbove = 8;
+}
