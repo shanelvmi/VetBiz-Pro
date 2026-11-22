@@ -100,19 +100,30 @@ class TransactionProvider with ChangeNotifier {
 
   /// searchTerm searches description only (prefix match) - see
   /// SaleProvider's identical field for the full reasoning.
-  ({String searchTerm, String? typeFilter}) _transactionsListQuery = (searchTerm: '', typeFilter: null);
+  ({String searchTerm, String? typeFilter, DateTime? rangeStart, DateTime? rangeEnd}) _transactionsListQuery =
+      (searchTerm: '', typeFilter: null, rangeStart: null, rangeEnd: null);
 
   late final CursorPaginatedListController<TransactionModel> transactionsListController;
 
   String? _transactionsListFacilityId;
 
-  ({String searchTerm, String? typeFilter}) updateTransactionsListFilters({
+  /// PAGE1: [rangeStart]..[rangeEnd] bound the list by date (the toolbar's
+  /// range); a search looks at every date (a prefix on descriptionLower
+  /// cannot share a query with a date range without a new index).
+  ({String searchTerm, String? typeFilter, DateTime? rangeStart, DateTime? rangeEnd}) updateTransactionsListFilters({
     required String facilityId,
     required String searchTerm,
     required String? typeFilter,
+    DateTime? rangeStart,
+    DateTime? rangeEnd,
   }) {
     _transactionsListFacilityId = facilityId;
-    _transactionsListQuery = (searchTerm: searchTerm.trim().toLowerCase(), typeFilter: typeFilter);
+    _transactionsListQuery = (
+      searchTerm: searchTerm.trim().toLowerCase(),
+      typeFilter: typeFilter,
+      rangeStart: rangeStart,
+      rangeEnd: rangeEnd,
+    );
     return _transactionsListQuery;
   }
 
@@ -142,8 +153,10 @@ class TransactionProvider with ChangeNotifier {
           .orderBy('descriptionLower')
           .orderBy(FieldPath.documentId);
     } else {
+      final end = q.rangeEnd != null && q.rangeEnd!.isBefore(snapshotAt) ? q.rangeEnd! : snapshotAt;
+      if (q.rangeStart != null) query = query.where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(q.rangeStart!));
       query = query
-          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(snapshotAt))
+          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(end))
           .orderBy('date', descending: true)
           .orderBy(FieldPath.documentId, descending: true);
     }
@@ -152,12 +165,9 @@ class TransactionProvider with ChangeNotifier {
       query = query.startAfterDocument(startAfterDocument);
     }
 
-    final snapshot = await query.limit(pageSize).get();
-    return CursorPage(
-      items: snapshot.docs.map((d) => TransactionModel.fromFirestore(d.data(), d.id)).toList(),
-      lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
-      hasMore: snapshot.docs.length >= pageSize,
-    );
+    // PAGE1: one row more than the page, only to know Next exists.
+    final snapshot = await query.limit(pageSize + 1).get();
+    return CursorPage.fromDocs(snapshot.docs, pageSize, (d) => TransactionModel.fromFirestore(d.data(), d.id));
   }
 
   Future<int> _countNewTransactions({required DateTime after}) async {
@@ -234,8 +244,10 @@ class TransactionProvider with ChangeNotifier {
   /// loaded behind the live window are dropped and the window listened to
   /// again (as SaleProvider).
   void _onTransactionsChanged(String facilityId) {
+    // PAGE1: the PC/tablet page has no live listener behind it, so its own
+    // facility is checked too.
+    if (facilityId == _transactionsListFacilityId) unawaited(transactionsListController.refreshSession());
     if (facilityId != _facilityId) return;
-    unawaited(transactionsListController.refreshSession());
     if (_olderTransactions.isEmpty) return;
     _facilityId = null; // listenToTransactions skips the facility it already has
     listenToTransactions(facilityId);
@@ -330,6 +342,9 @@ class TransactionProvider with ChangeNotifier {
       final newTransaction = transaction.copyWith(id: docRef.id, receiptNumber: receiptNumber);
 
       await docRef.set({...newTransaction.toMap(), ...newTransaction.searchFields()});
+      // PAGE1: the PC/tablet page starts over so the new record is at the
+      // top of page 1 (as Sales); nothing happens without an open session.
+      if (facilityId == _transactionsListFacilityId) unawaited(transactionsListController.refreshSession());
 
       // No manual add needed if real-time listener is active
       if (_subscription == null) {
@@ -398,6 +413,8 @@ class TransactionProvider with ChangeNotifier {
           paymentMethod: updatedTransaction.paymentMethod, note: updatedTransaction.note,
         );
       });
+      // PAGE1: the edit shows on the PC/tablet page (same page 1 refresh as a save).
+      if (facilityId == _transactionsListFacilityId) unawaited(transactionsListController.refreshSession());
 
       // Update local list only if not listening in realtime
       if (_subscription == null) {

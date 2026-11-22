@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +35,8 @@ import '../../widgets/phone_list/record_tile.dart';
 import '../../utils/app_clock.dart';
 import '../../ui/polish/app_status.dart';
 import '../../ui/polish/flat_stat_card.dart';
+import '../../widgets/paged_list_body.dart';
+import '../../config/app_timeouts.dart';
 
 class TransactionScreen extends StatefulWidget {
   /// Null: the app's own Firestore. Tests pass an in-memory one (PH5b, as
@@ -93,17 +97,63 @@ class _TransactionScreenState extends State<TransactionScreen> {
         Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
     if (facilityId != null && facilityId.isNotEmpty) {
       _facilityId = facilityId;
-      // Real-time, paginated listener - previously this screen called a
-      // full one-time fetch of the ENTIRE transaction history on every
-      // open, bypassing the pagination work entirely.
-      Provider.of<TransactionProvider>(context, listen: false)
-          .listenToTransactions(facilityId);
       _loadPeriodTotals();
     }
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final facilityId = _facilityId;
+    if (facilityId == null) return;
+    if (AppLayout.isPhone(context)) {
+      // Real-time, paginated listener - previously this screen called a
+      // full one-time fetch of the ENTIRE transaction history on every
+      // open, bypassing the pagination work entirely. PAGE1: the phone's
+      // list only (its infinite scroll); it does nothing when already on.
+      Provider.of<TransactionProvider>(context, listen: false).listenToTransactions(facilityId);
+    } else {
+      // PAGE1: PC/tablet pages by cursor; opened after this frame, since
+      // opening notifies the page's listeners.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _openList();
+      });
+    }
+  }
+
+  /// PAGE1: (re)opens the PC/tablet page for the type, the search and the
+  /// date range; back to page 1 whenever one of them changed, a no-op when
+  /// none did.
+  void _openList() {
+    final facilityId = _facilityId;
+    if (facilityId == null || AppLayout.isPhone(context)) return;
+    final provider = Provider.of<TransactionProvider>(context, listen: false);
+    final signature = provider.updateTransactionsListFilters(
+      facilityId: facilityId,
+      searchTerm: _searchQuery,
+      typeFilter: _filterType,
+      rangeStart: _rangeStart,
+      rangeEnd: _rangeEnd,
+    );
+    provider.transactionsListController.openSession(signature);
+  }
+
+  Timer? _searchDebounce;
+
+  void _onWideSearchChanged(String val) {
+    setState(() => _searchQuery = val.trim());
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(AppTimeouts.searchDebounce, _openList);
+  }
+
+  void _setWideType(String? type) {
+    setState(() => _filterType = type);
+    _openList();
+  }
+
+  @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _phoneRevision.dispose();
     super.dispose();
@@ -129,6 +179,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       _hasLoadedSummaryOnce = false;
     });
 
+    _openList();
     await _loadPeriodTotals();
   }
 
@@ -197,8 +248,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
     final subProfit = _otherIncomeTotal - _expensesTotal;
 
-    final filteredTransactions = _filtered(transactionProvider);
-
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
@@ -217,19 +266,24 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 children: [
                   _buildMetricsRow(subProfit),
                   const SizedBox(height: AppSpacing.s16),
-                  _buildToolbarRow(filteredTransactions.length),
+                  _buildToolbarRow(),
                   const SizedBox(height: AppSpacing.s16),
+                  // PAGE1: one server page at a time (type, search and the
+                  // date range are in the query), the page bar under it.
                   Expanded(
-                    child: filteredTransactions.isEmpty
-                        ? Center(
-                            child: Text(
-                              _filterType != null
-                                  ? context.l10n.transactions_emptyForType(_typeLabel(_filterType!))
-                                  : context.l10n.transactions_empty,
-                              style: TextStyle(fontSize: AppFontSize.f16, color: context.colors.primary),
-                            ),
-                          )
-                        : _buildTransactionsTable(filteredTransactions, transactionProvider),
+                    child: PagedListBody<TransactionModel>(
+                      controller: transactionProvider.transactionsListController,
+                      barEmptyText: context.l10n.transactions_empty,
+                      empty: Center(
+                        child: Text(
+                          _filterType != null
+                              ? context.l10n.transactions_emptyForType(_typeLabel(_filterType!))
+                              : context.l10n.transactions_empty,
+                          style: TextStyle(fontSize: AppFontSize.f16, color: context.colors.primary),
+                        ),
+                      ),
+                      list: (page) => _buildTransactionsTable(page, transactionProvider),
+                    ),
                   ),
                 ],
               ),
@@ -307,7 +361,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
   Widget _metricCard(String title, double amount) =>
       FlatStatCard(label: title, value: Money.format(amount), loading: _isSummaryLoading);
 
-  Widget _buildToolbarRow(int count) {
+  Widget _buildToolbarRow() {
     final hasActiveFilter = _filterType != null;
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.r10),
@@ -319,7 +373,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
       search: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: context.l10n.transactions_searchHint,
+              // PAGE1: the search is a query (description starting with
+              // the text, every date), so the hint says what it looks at.
+              hintText: context.l10n.transactions_searchDescriptionHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f13),
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
@@ -332,13 +388,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: AppIconSize.i18),
-                      onPressed: () => setState(() {
+                      onPressed: () {
                         _searchController.clear();
-                        _searchQuery = '';
-                      }),
+                        _onWideSearchChanged('');
+                      },
                     ),
             ),
-            onChanged: (val) => setState(() => _searchQuery = val.trim()),
+            onChanged: _onWideSearchChanged,
           ),
       filters: [
         Container(
@@ -361,16 +417,17 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 for (final t in const ['other income', 'expense'])
                   DropdownMenuItem<String?>(value: t, child: Text(context.l10n.common_filterValue(context.l10n.common_type, _typeLabel(t)))),
               ],
-              onChanged: (val) => setState(() => _filterType = val),
+              onChanged: _setWideType,
             ),
           ),
         ),
         if (hasActiveFilter)
           TextButton(
-            onPressed: () => setState(() => _filterType = null),
+            onPressed: () => _setWideType(null),
             child: Text(context.l10n.common_clear, style: const TextStyle(fontSize: AppFontSize.f13)),
           ),
-        Text(context.l10n.transactions_count(count), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
+        // PAGE1: no count here: the rows loaded are one page, not the
+        // total; the page bar says which rows are shown.
       ],
     );
   }
@@ -402,7 +459,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
             // rows or day totals (those are in Reports). The provider's order.
             children: [
               for (final tx in transactions) _buildTransactionRow(tx, transactionProvider: transactionProvider),
-              _buildLoadMoreFooter(transactionProvider),
             ],
           ),
         ),
@@ -878,46 +934,4 @@ class _TransactionScreenState extends State<TransactionScreen> {
       onRefresh: _loadPeriodTotals,
     );
   }
-
-  Widget _buildLoadMoreFooter(TransactionProvider transactionProvider) {
-    if (transactionProvider.isLoadingMore) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
-        child: Center(
-          child: SizedBox(
-            height: 24,
-            width: 24,
-            child: CircularProgressIndicator(
-                strokeWidth: 2.5, color: context.colors.primary),
-          ),
-        ),
-      );
-    }
-    if (!transactionProvider.hasMore) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s20),
-        child: Center(
-          child: Text(
-            context.l10n.transactions_allShown,
-            style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint),
-          ),
-        ),
-      );
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s12),
-      child: Center(
-        child: OutlinedButton.icon(
-          onPressed: () => transactionProvider.loadMoreTransactions(),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: context.colors.primary,
-            side: BorderSide(color: context.colors.primary),
-          ),
-          icon: const Icon(Icons.expand_more),
-          label: Text(context.l10n.transactions_loadMore),
-        ),
-      ),
-    );
-  }
-
 }

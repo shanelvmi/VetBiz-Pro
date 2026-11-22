@@ -51,7 +51,9 @@ class PagedListBody<T> extends StatelessWidget {
               ),
             ),
           );
-        } else if (controller.isLoading && items.isEmpty) {
+        } else if ((controller.isLoading || !controller.hasOpenSession) && items.isEmpty) {
+          // No session yet (the screen opens it after its first frame): the
+          // skeleton too, never an empty flash.
           body = const SingleChildScrollView(
             key: ValueKey('pagedList-skeleton'),
             child: PhoneListSkeleton(),
