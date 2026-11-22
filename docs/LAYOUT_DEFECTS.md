@@ -108,3 +108,14 @@ registry. Line numbers at LAY2 (8).
 |---|---|---|---|
 | 28 | ~~dashboard_screen.dart, the wide subscription pill (`Positioned(top: 56)` over the shell)~~ | Floated over the top bar and the page header of every wide page | FIXED UX7: AppShell.banner, in the layout under the top bar (ux7_settings_template_test) |
 | 29 | ~~trash_screen.dart, PC/tablet: the five kinds as a TabBar spread across the header~~ | Tabs not left-aligned, in the header area | FIXED UX7: a left-aligned FilterRow in the body (ux7_settings_template_test, ph8a-trash re-recorded) |
+
+## Found in UX8
+
+| # | Where | What | Why it waits |
+|---|---|---|---|
+| 30 | ~~manage_account_screen.dart `_ask`; clients, products, stock store and two Home (password) dialogs~~ | On PC/tablet Cancel dimmed back but the dialog stayed: the actions popped with the page's context (the shell's content Navigator) while showDialog used the root Navigator | FIXED UX8: actions pop with the dialog's own context (ux8_dialog_cancel_test, which also scans every showDialog in lib/) |
+| 31 | ~~Activity Log, Recent Submissions, Subscription History~~ | Two-step load: the cached few rows, then the server's full list | FIXED UX8: holdCacheUntilServer / serverFirstSnapshots, the shared skeleton until then, cached rows after 3 s offline (ux8_server_first_test) |
+| 32 | ~~insights_screen.dart, Business Pulse~~ | A spinner for seconds after the charts | FIXED UX8: a skeleton in the card's shape, the snapshot read in parallel, the last value kept for the session (ux8_pulse_skeleton_test). The 21 reads remain: BE1 item |
+| 33 | ~~every showAdaptiveForm modal (PC/tablet)~~ | Warnings and save errors were toasts behind the modal's scrim | FIXED UX8: ModalErrorScope banner inside the modal (ux8_modal_errors_test) |
+| 34 | ~~reports_tapGenerate~~ | "above" while the phone's Generate button is below | FIXED UX8: neutral wording |
+| 35 | insights_screen.dart, Business Pulse skeleton | Laid out from the quiet day's words: a day whose headline or sentence wraps to another line still changes the card's height by a line | Open (exact shape needs fixed-line text, a content change) |
