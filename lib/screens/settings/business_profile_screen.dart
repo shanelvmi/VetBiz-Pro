@@ -36,7 +36,11 @@ class BusinessProfileScreen extends StatefulWidget {
   final FirebaseStorage? storage;
   final Future<Uint8List?> Function()? pickLogo;
 
-  const BusinessProfileScreen({super.key, this.firestore, this.storage, this.pickLogo});
+  /// UX5: shown as the Profile tab of BusinessProfileTabs: no app bar of its
+  /// own (the tab host has the page header). Alone, as before.
+  final bool embedded;
+
+  const BusinessProfileScreen({super.key, this.firestore, this.storage, this.pickLogo, this.embedded = false});
 
   @override
   State<BusinessProfileScreen> createState() => _BusinessProfileScreenState();
@@ -122,7 +126,9 @@ class _BusinessProfileScreenState extends State<BusinessProfileScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: !AppLayout.isPhone(context)
+      appBar: widget.embedded
+          ? null
+          : !AppLayout.isPhone(context)
           ? PageHeader(title: context.l10n.profile_title)
           : AppBar(
         title: Text(context.l10n.profile_title),

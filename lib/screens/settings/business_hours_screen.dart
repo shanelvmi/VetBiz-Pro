@@ -20,7 +20,11 @@ class BusinessHoursScreen extends StatefulWidget {
   // behaviour change).
   final FirebaseFirestore? firestore;
 
-  const BusinessHoursScreen({super.key, this.firestore});
+  /// UX5: shown as the Business Hours tab of BusinessProfileTabs: no app bar
+  /// of its own (the tab host has the page header). Alone, as before.
+  final bool embedded;
+
+  const BusinessHoursScreen({super.key, this.firestore, this.embedded = false});
 
   @override
   State<BusinessHoursScreen> createState() => _BusinessHoursScreenState();
@@ -114,7 +118,9 @@ class _BusinessHoursScreenState extends State<BusinessHoursScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: !AppLayout.isPhone(context)
+      appBar: widget.embedded
+          ? null
+          : !AppLayout.isPhone(context)
           ? PageHeader(title: context.l10n.hours_title)
           : AppBar(
         centerTitle: true,

@@ -41,7 +41,11 @@ class ActivityLogScreen extends StatefulWidget {
   final FirebaseFirestore? firestore;
   final FirebaseAuth? auth;
 
-  const ActivityLogScreen({super.key, this.isModal = false, this.firestore, this.auth});
+  /// UX5: shown as the Activity Log tab of BusinessProfileTabs: no app bar
+  /// of its own (the tab host has the page header). Alone, as before.
+  final bool embedded;
+
+  const ActivityLogScreen({super.key, this.isModal = false, this.firestore, this.auth, this.embedded = false});
 
   @override
   State<ActivityLogScreen> createState() => _ActivityLogScreenState();
@@ -420,7 +424,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     if (facilityId == null) {
       return Scaffold(
         backgroundColor: context.colors.background,
-        appBar: AppBar(
+        appBar: widget.embedded ? null : AppBar(
           title: Text(context.l10n.export_activityLog, style: TextStyle(color: context.colors.textPrimary)),
           backgroundColor: context.colors.surface,
           foregroundColor: context.colors.textPrimary,
@@ -456,7 +460,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: _buildAppBar(),
+      appBar: widget.embedded ? null : _buildAppBar(),
       body: Column(
         children: [
           // One unified summary that's also the filter - see
