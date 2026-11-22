@@ -75,6 +75,10 @@ void main() {
       ph5TestWidgets('$where: the list and the details panel as before PH5b', (tester) async {
         await pumpPh5(tester, (fs) => build(fs), size: size, pushed: true, seed: _seed);
         expectSameFingerprint('$where-list', '${_errors(tester)}${treeFingerprint(tester, find.byType(type))}');
+        // PAGE1: the page bar under a paged list leaves less height; the row
+        // is scrolled to first (nothing moves when it is already on screen).
+        await tester.ensureVisible(find.text(rowText, skipOffstage: false).last);
+        await ph5Settle(tester);
         await tester.tap(find.text(rowText).last);
         await ph5Settle(tester);
         expectSameFingerprint('$where-details', '${_errors(tester)}${treeFingerprint(tester, find.byType(type))}');

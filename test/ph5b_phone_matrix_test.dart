@@ -113,12 +113,14 @@ void main() {
         // PAGE1: on a computer these lists page by cursor (one get of
         // pageSize + 1) instead of the live window the phone keeps, so the
         // two no longer match: the phone's own cost is pinned as it was, and
-        // the computer reads no more than the phone.
-        const page1Phone = {'Transactions': (2, 1, 4)};
-        final phone = page1Phone[e.key];
-        if (phone != null) {
+        // the computer reads no more than the phone, plus Payments' two
+        // range-total aggregates (one per source).
+        const page1Phone = {'Transactions': ((2, 1, 4), 0), 'Payments': ((2, 10, 14), 2)};
+        final pinned = page1Phone[e.key];
+        if (pinned != null) {
+          final (phone, extra) = pinned;
           expect(counts['390'], phone, reason: 'the phone is unchanged');
-          expect(counts['1200']!.$3, lessThanOrEqualTo(counts['390']!.$3));
+          expect(counts['1200']!.$3, lessThanOrEqualTo(counts['390']!.$3 + extra));
         } else {
           expect(counts['390'], counts['1200']);
         }

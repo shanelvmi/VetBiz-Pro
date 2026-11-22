@@ -150,6 +150,25 @@ class _Query implements Query<Map<String, dynamic>> {
     return q.count();
   }
 
+  // PAGE1: a sum/count aggregate (Payments' range totals), billed as one
+  // read like count().
+  @override
+  AggregateQuery aggregate(AggregateField aggregateField1,
+      [AggregateField? aggregateField2, AggregateField? aggregateField3, AggregateField? aggregateField4,
+      AggregateField? aggregateField5, AggregateField? aggregateField6, AggregateField? aggregateField7,
+      AggregateField? aggregateField8, AggregateField? aggregateField9, AggregateField? aggregateField10,
+      AggregateField? aggregateField11, AggregateField? aggregateField12, AggregateField? aggregateField13,
+      AggregateField? aggregateField14, AggregateField? aggregateField15, AggregateField? aggregateField16,
+      AggregateField? aggregateField17, AggregateField? aggregateField18, AggregateField? aggregateField19,
+      AggregateField? aggregateField20, AggregateField? aggregateField21, AggregateField? aggregateField22,
+      AggregateField? aggregateField23, AggregateField? aggregateField24, AggregateField? aggregateField25,
+      AggregateField? aggregateField26, AggregateField? aggregateField27, AggregateField? aggregateField28,
+      AggregateField? aggregateField29, AggregateField? aggregateField30]) {
+    db.gets++;
+    db.reads++;
+    return q.aggregate(aggregateField1, aggregateField2);
+  }
+
   @override
   Future<QuerySnapshot<Map<String, dynamic>>> get([GetOptions? options]) => db._get(q);
 
