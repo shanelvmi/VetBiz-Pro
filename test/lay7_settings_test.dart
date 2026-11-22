@@ -7,6 +7,9 @@
 // header and a back arrow; Settings stays highlighted; Back returns to the
 // hub, then Home. Dialog rows open dialogs. Other places ask Settings for an
 // item (SettingsRequest). The phone list is unchanged.
+// UX5 (owner, 2026-11-22): the hub groups by scope (this facility, all your
+// facilities for admins, you and the app); Business Hours and Activity Log
+// are tabs of Business Profile (BusinessProfileTabs), not rows.
 // The real SettingsScreen inside AppShell, as lay4_shell_screens_test.
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +23,10 @@ import 'package:vetbiz_pro/screens/admin/manage_assistants_screen.dart';
 import 'package:vetbiz_pro/screens/facilities/facility_screen.dart';
 import 'package:vetbiz_pro/screens/settings/business_hours_screen.dart';
 import 'package:vetbiz_pro/screens/settings/business_profile_screen.dart';
+import 'package:vetbiz_pro/screens/settings/business_profile_tabs.dart';
+import 'package:vetbiz_pro/providers/facility_provider.dart';
+import 'package:vetbiz_pro/utils/facility_display.dart';
+import 'package:provider/provider.dart';
 import 'package:vetbiz_pro/screens/settings/export_data_screen.dart';
 import 'package:vetbiz_pro/screens/settings/manage_account_screen.dart';
 import 'package:vetbiz_pro/screens/settings/printer_settings_screen.dart';
@@ -91,31 +98,33 @@ Future<void> _pumpWide(WidgetTester tester, double content,
       size: size, admin: role != _Role.assistant, seed: (fs) => _seed(fs, role), look: look, colorTheme: colorTheme, textScale: textScale);
   _shell.currentState!.select(AppDestination.settings);
   await tester.pumpAndSettle();
+  _facilityName = FacilityDisplay.name(
+      Provider.of<FacilityProvider>(tester.element(find.byType(SettingsScreen)), listen: false).selectedFacilityName,
+      fallback: _en.profile_yourFacility);
 }
 
-/// The hub's groups, each with its rows' keys, for a role.
+/// The hub's groups, each with its rows' keys, for a role (UX5: by scope; the
+/// test platform is Android, so the Printer row shows).
 List<(String, List<String>)> _hub(AppLocalizations l, {required bool admin}) => [
-      if (admin) ...[
-        (l.subscription_title, ['subscription']),
-        (l.expenseGroup_business, ['business_profile', 'business_hours', 'facilities', 'team', 'activity_log']),
-      ],
-      (l.settings_accountData, [if (admin) ...['trash', 'export'], 'manage_account']),
-      (l.settings_general, ['notifications', 'printer', 'app_info']),
-      (l.settings_preferences, ['ui_settings', 'currency', 'language']),
+      (l.settings_groupThisFacility(_facilityName), [if (admin) ...['business_profile', 'subscription', 'trash', 'export'], 'printer']),
+      if (admin) (l.settings_groupAllFacilities, ['facilities', 'team']),
+      (l.settings_groupYouAndApp, ['manage_account', 'notifications', 'ui_settings', 'currency', 'language', 'app_info']),
     ];
 
-/// Each page row and the page it opens.
+/// The selected facility's name in the harness, read once Settings is up.
+String _facilityName = '';
+
+/// Each page row and the page it opens, in the hub's order (the reveal only
+/// scrolls down).
 const _pages = <String, Type>{
+  'business_profile': BusinessProfileTabs,
   'subscription': SubscriptionScreen,
-  'business_profile': BusinessProfileScreen,
-  'business_hours': BusinessHoursScreen,
-  'facilities': FacilityScreen,
-  'team': ManageAssistantsScreen,
-  'activity_log': ActivityLogScreen,
   'trash': TrashScreen,
   'export': ExportDataScreen,
-  'manage_account': ManageAccountScreen,
   'printer': PrinterSettingsScreen,
+  'facilities': FacilityScreen,
+  'team': ManageAssistantsScreen,
+  'manage_account': ManageAccountScreen,
 };
 
 Finder _row(String key) => find.byKey(ValueKey('settingsHub-$key'));
@@ -315,9 +324,13 @@ void main() {
       await _pumpWide(tester, 1128);
       _request.value = const SettingsRequest(SettingsRequest.activityLog);
       await tester.pumpAndSettle();
+      // UX5: the Activity Log tab of Business Profile; the other tabs are
+      // built only when first chosen.
+      expect(find.byType(BusinessProfileTabs), findsOneWidget);
       expect(find.byType(ActivityLogScreen), findsOneWidget);
+      expect(find.byType(BusinessProfileScreen), findsNothing);
       await _back(tester);
-      expect(_row('activity_log'), findsOneWidget);
+      expect(_row('business_profile'), findsOneWidget);
     });
 
     ph5TestWidgets('Settings opened on a page: Re-clicking Settings, the hub', (tester) async {

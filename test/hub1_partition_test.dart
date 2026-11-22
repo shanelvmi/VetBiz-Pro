@@ -39,7 +39,8 @@ Set<String> _profileMenu() {
 }
 
 Set<String> _settingsScreen() =>
-    _destinations(_read('lib/screens/settings/settings_screen.dart'), own: 'SettingsScreen');
+    // UX5: with its Business Profile tab host (Business Hours, Activity Log).
+    _destinations(_read('lib/screens/settings/settings_screen.dart') + _read('lib/screens/settings/business_profile_tabs.dart'), own: 'SettingsScreen');
 
 /// What the old phone navigation offered (the More page, its app bar, the
 /// bottom bar, the "+" sheet and its More group) and the profile menu.

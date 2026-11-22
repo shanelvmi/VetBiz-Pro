@@ -98,7 +98,7 @@ void main() {
         await _open(tester, AppDestination.settings);
         expect(find.byType(SubscriptionScreen), findsNothing);
         final a = tester.getRect(find.byKey(const ValueKey('settingsHub-business_profile')));
-        final b = tester.getRect(find.byKey(const ValueKey('settingsHub-business_hours')));
+        final b = tester.getRect(find.byKey(const ValueKey('settingsHub-subscription')));
         expect(a.top == b.top, panel, reason: 'side by side from 900');
       });
     }
