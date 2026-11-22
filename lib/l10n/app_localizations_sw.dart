@@ -6155,6 +6155,11 @@ class AppLocalizationsSw extends AppLocalizations {
   String get facilityPicker_default => 'Chaguo-msingi';
 
   @override
+  String facilityPicker_welcomeBack(String name) {
+    return 'Karibu tena, $name';
+  }
+
+  @override
   String get facilityOwnership_owned => 'Inamilikiwa';
 
   @override

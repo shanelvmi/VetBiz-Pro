@@ -6122,6 +6122,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get facilityPicker_default => 'Default';
 
   @override
+  String facilityPicker_welcomeBack(String name) {
+    return 'Welcome back, $name';
+  }
+
+  @override
   String get facilityOwnership_owned => 'Owned';
 
   @override

@@ -3444,6 +3444,8 @@
   "@facilityPicker_setAsDefault": {"description":"Facility picker card menu item."},
   "facilityPicker_default": "Default",
   "@facilityPicker_default": {"description":"Facility picker card badge on the default facility."},
+  "facilityPicker_welcomeBack": "Welcome back, {name}",
+  "@facilityPicker_welcomeBack": {"description":"UX9: Select Facility screen, the line above the title; name is the person's full name as typed. Not shown when the name is empty.","placeholders":{"name":{"type":"String"}}},
   "facilityOwnership_owned": "Owned",
   "@facilityOwnership_owned": {"description":"Facility ownership (stored value 'Owned'): Edit Facility dropdown and About card."},
   "facilityOwnership_rented": "Rented",

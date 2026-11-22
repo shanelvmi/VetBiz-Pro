@@ -1721,6 +1721,7 @@
   "facilityPicker_openFacility": ["Fungua Kituo","Facility picker card button.","draft"],
   "facilityPicker_setAsDefault": ["Weka kama Chaguo-msingi","Facility picker card menu item.","draft"],
   "facilityPicker_default": ["Chaguo-msingi","Facility picker card badge on the default facility.","draft"],
+  "facilityPicker_welcomeBack": ["Karibu tena, {name}","UX9: Select Facility screen, the line above the title; name is the person's full name as typed. Not shown when the name is empty.","draft"],
   "facilityOwnership_owned": ["Inamilikiwa","Facility ownership (stored value 'Owned'): Edit Facility dropdown and About card.","draft"],
   "facilityOwnership_rented": ["Imekodiwa","Facility ownership (stored value 'Rented'): Edit Facility dropdown and About card.","draft"],
   "facilities_loadFailed": ["Imeshindwa kupakia vituo","Facilities screen: loading failed.","draft"],

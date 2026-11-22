@@ -10452,6 +10452,12 @@ abstract class AppLocalizations {
   /// **'Default'**
   String get facilityPicker_default;
 
+  /// UX9: Select Facility screen, the line above the title; name is the person's full name as typed. Not shown when the name is empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome back, {name}'**
+  String facilityPicker_welcomeBack(String name);
+
   /// Facility ownership (stored value 'Owned'): Edit Facility dropdown and About card.
   ///
   /// In en, this message translates to:

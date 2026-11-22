@@ -1727,6 +1727,7 @@ facilityPicker_staffCount,{count} Staff,Wafanyakazi {count},Facility picker card
 facilityPicker_openFacility,Open Facility,Fungua Kituo,Facility picker card button.,draft
 facilityPicker_setAsDefault,Set as Default,Weka kama Chaguo-msingi,Facility picker card menu item.,draft
 facilityPicker_default,Default,Chaguo-msingi,Facility picker card badge on the default facility.,draft
+facilityPicker_welcomeBack,"Welcome back, {name}","Karibu tena, {name}","UX9: Select Facility screen, the line above the title; name is the person's full name as typed. Not shown when the name is empty.",draft
 facilityOwnership_owned,Owned,Inamilikiwa,Facility ownership (stored value 'Owned'): Edit Facility dropdown and About card.,draft
 facilityOwnership_rented,Rented,Imekodiwa,Facility ownership (stored value 'Rented'): Edit Facility dropdown and About card.,draft
 facilities_loadFailed,Couldn't load facilities,Imeshindwa kupakia vituo,Facilities screen: loading failed.,draft

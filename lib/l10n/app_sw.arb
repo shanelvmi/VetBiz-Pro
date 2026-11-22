@@ -3444,6 +3444,8 @@
   "@facilityPicker_setAsDefault": {"x-review":"draft"},
   "facilityPicker_default": "Chaguo-msingi",
   "@facilityPicker_default": {"x-review":"draft"},
+  "facilityPicker_welcomeBack": "Karibu tena, {name}",
+  "@facilityPicker_welcomeBack": {"x-review":"draft"},
   "facilityOwnership_owned": "Inamilikiwa",
   "@facilityOwnership_owned": {"x-review":"draft"},
   "facilityOwnership_rented": "Imekodiwa",
