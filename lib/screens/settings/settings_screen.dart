@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +13,6 @@ import 'printer_settings_screen.dart';
 import 'export_data_screen.dart';
 import 'business_hours_screen.dart';
 import 'trash_screen.dart';
-import 'settings_pane_scope.dart';
 import 'business_profile_screen.dart';
 import '../facilities/facility_screen.dart';
 import '../admin/manage_assistants_screen.dart';
@@ -31,6 +28,9 @@ import '../../theme/theme_context.dart';
 import '../../widgets/shell/app_shell.dart';
 import '../../navigation/app_destinations.dart';
 import '../../theme/app_breakpoints.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/section_label.dart';
+import '../../widgets/shell/page_header.dart';
 
 class SettingsScreen extends StatefulWidget {
   // Null: the app's own Firebase, passed on to the screens the wide view
@@ -67,24 +67,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   static const double cardElevation = 2.0;
 
-  // Master-detail (desktop/tablet-width) only - which navigable
-  // screen is currently shown in the content pane. Null means "show
-  // the empty state", but in practice this is set to a sensible
-  // default (see _defaultSelection) as soon as role/platform-admin
-  // status is known, so the pane is never blank on first load.
-  String? _selectedKey;
-
-  /// The Team pane's first status chip, from the last request; the pane is
-  /// rebuilt fresh for each request ([_requestCount]).
-  String? _teamStatus;
-  int _requestCount = 0;
-
   @override
   void initState() {
     super.initState();
     widget.request?.addListener(_onRequest);
     // A request made as Settings opens: shown once the first frame is laid out.
-    if (widget.request?.value != null) WidgetsBinding.instance.addPostFrameCallback((_) => _onRequest(fresh: true));
+    if (widget.request?.value != null) WidgetsBinding.instance.addPostFrameCallback((_) => _onRequest());
   }
 
   @override
@@ -93,32 +81,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
-  void _onRequest({bool fresh = false}) {
+  /// UX3: the item asked for opens as a page above the hub (or the phone
+  /// list), inside the content: Back returns to Settings, then Home.
+  void _onRequest() {
     final r = widget.request?.value;
     if (r == null || !mounted) return;
     widget.request!.value = null;
-    if (context.screenWidth < AppBreakpoints.medium) {
-      _pushItem(context, r.item, teamStatus: r.teamStatus);
-      return;
-    }
-    _teamStatus = r.teamStatus;
-    _requestCount++;
-    // Opened for this item: Back leaves Settings (no default pane behind it).
-    if (fresh) {
-      setState(() => _selectedKey = r.item);
-    } else {
-      _select(r.item, force: true);
-    }
+    _pushItem(context, r.item, teamStatus: r.teamStatus);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isWideScreen = context.screenWidth >= AppBreakpoints.medium;
-
-    if (!isWideScreen) {
+    // UX3: the phone keeps its list exactly; PC and tablet get the hub.
+    if (context.screenWidth < AppBreakpoints.medium && AppLayout.isPhone(context)) {
       return _buildMobileLayout(context);
     }
-    return _buildDesktopLayout(context);
+    return _buildHub(context);
   }
 
   // Unchanged from before this rewrite - full drill-down list, every
@@ -345,179 +323,142 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // Master-detail: a persistent sidebar of the same section groups
-  // and items as the mobile list, but tapping a navigable one swaps
-  // the content pane in-place instead of pushing a whole new screen -
-  // no navigation stack to climb back out of just to check a
-  // different setting next. Dialog/bottom-sheet items (App Info,
-  // Language) keep working exactly as they do on mobile - they're
-  // small, modal-appropriate content, not worth dedicating a whole pane
-  // to. (HUB1: Help & Support left Settings for the profile menu.)
-  Widget _buildDesktopLayout(BuildContext context) {
+  // UX3 (owner, 2026-11-21): on PC and tablet Settings is one hub page: the
+  // shared page header, then the groups (their titles as SectionLabels) of
+  // bordered flat rows (icon, title, the trailing value some rows have, a
+  // chevron), two columns from 900 of the content, else one. A row opens its
+  // page inside the content above the hub (Back returns here, then Home;
+  // Settings stays highlighted in the sidebar); the dialog and sheet rows
+  // open them as before. The role gates are the phone list's and LAY7's.
+  // (Before UX3: a 300 px section list beside a pane, or a plain list.)
+  Widget _buildHub(BuildContext context) {
     final uiSettings = Provider.of<UiSettingsProvider>(context);
     final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
+    final l10n = context.l10n;
+    void open(Widget page) => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
 
-    // Whatever's genuinely first in the sidebar for this role -
-    // Subscription for an Admin (top of the list), Notifications for
-    // an Assistant (who never sees the Subscription section at all).
-    _selectedKey ??= isAdmin ? 'subscription' : 'notifications';
+    final groups = <(String, List<_HubRow>)>[
+      if (isAdmin) ...[
+        (l10n.subscription_title, [
+          _HubRow('subscription', AppIcons.subscription.outlined, l10n.settings_subscriptionBilling,
+              () => open(SubscriptionScreen(firestore: widget.firestore, auth: widget.auth))),
+        ]),
+        (l10n.expenseGroup_business, [
+          for (final item in _businessItems(context)) _HubRow(item.key, item.icon, item.label, () => _pushItem(context, item.key)),
+        ]),
+      ],
+      (l10n.settings_accountData, [
+        if (isAdmin) _HubRow('trash', AppIcons.trash.outlined, l10n.activityType_trash, () => open(TrashScreen(firestore: widget.firestore))),
+        if (isAdmin)
+          _HubRow('export', AppIcons.export.outlined, l10n.settings_exportData, () => open(ExportDataScreen(firestore: widget.firestore))),
+        _HubRow('manage_account', Icons.manage_accounts_outlined, l10n.account_title,
+            () => open(ManageAccountScreen(firestore: widget.firestore, auth: widget.auth))),
+      ]),
+      (l10n.settings_general, [
+        // LAY7: an assistant's notification opens Team Members above the hub.
+        _HubRow('notifications', Icons.notifications_none, l10n.common_notifications,
+            () => open(NotificationsScreen(
+                  openPlace: (page, place) async => place == AppDestination.settings
+                      ? _pushItem(context, SettingsRequest.team)
+                      : Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page)),
+                ))),
+        _HubRow('printer', AppIcons.printer.outlined, l10n.printer_title, () => open(const PrinterSettingsScreen())),
+        _HubRow('app_info', Icons.info_outline, l10n.settings_appInfo, () => _showAppInfoDialog(context)),
+      ]),
+      (l10n.settings_preferences, [
+        _HubRow('ui_settings', Icons.color_lens_outlined, l10n.uiSettings_title, () => showUiSettingsDialog(context),
+            trailing: l10n.settings_themeLayout),
+        // Not a real choice: no picker to open.
+        _HubRow('currency', AppIcons.currency.outlined, l10n.settings_currency, () {}, trailing: AppDefaults.currencySymbol),
+        _HubRow('language', Icons.language_outlined, l10n.settings_languageBoth, () => showLanguagePicker(context, uiSettings),
+            trailing: AppDefaults.languageNames[uiSettings.languageCode]),
+      ]),
+    ];
 
-    final currentLanguageName = AppDefaults.languageNames[uiSettings.languageCode];
-
-    return PopScope(
-      canPop: _history.isEmpty,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && _history.isNotEmpty) setState(() => _selectedKey = _history.removeLast());
-      },
-      child: Scaffold(
-        backgroundColor: context.colors.background,
-        body: Row(
-          children: [
-            SizedBox(
-              width: 300,
-              child: Container(
-                color: context.colors.surface,
-                child: Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(AppSpacing.s20, AppSpacing.s24, AppSpacing.s20, AppSpacing.s16),
-                      child: Text(
-                        context.l10n.settings_title,
-                        style: TextStyle(
-                          fontWeight: AppFontWeight.bold,
-                          fontSize: AppFontSize.f22,
-                          color: context.colors.primary,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: ListView(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
-                        children: [
-                          if (isAdmin) ...[
-                            _buildSectionTitle(context.l10n.subscription_title),
-                            const SizedBox(height: AppSpacing.s4),
-                            _buildSidebarItem(
-                              icon: AppIcons.subscription.outlined,
-                              label: context.l10n.settings_subscriptionBilling,
-                              navigateKey: 'subscription',
-                            ),
-                            const SizedBox(height: AppSpacing.s16),
-                            // LAY7: the Business items, panes like the others.
-                            _buildSectionTitle(context.l10n.expenseGroup_business),
-                            const SizedBox(height: AppSpacing.s4),
-                            for (final item in _businessItems(context))
-                              _buildSidebarItem(icon: item.icon, label: item.label, navigateKey: item.key),
-                            const SizedBox(height: AppSpacing.s16),
-                          ],
-                          _buildSectionTitle(context.l10n.settings_accountData),
-                          const SizedBox(height: AppSpacing.s4),
-                          if (isAdmin)
-                            _buildSidebarItem(
-                              icon: AppIcons.trash.outlined,
-                              label: context.l10n.activityType_trash,
-                              navigateKey: 'trash',
-                            ),
-                          if (isAdmin)
-                            _buildSidebarItem(
-                              icon: AppIcons.export.outlined,
-                              label: context.l10n.settings_exportData,
-                              navigateKey: 'export',
-                            ),
-                          _buildSidebarItem(
-                            icon: Icons.manage_accounts_outlined,
-                            label: context.l10n.account_title,
-                            navigateKey: 'manage_account',
-                          ),
-                          const SizedBox(height: AppSpacing.s16),
-                          _buildSectionTitle(context.l10n.settings_general),
-                          const SizedBox(height: AppSpacing.s4),
-                          _buildSidebarItem(
-                            icon: Icons.notifications_none,
-                            label: context.l10n.common_notifications,
-                            navigateKey: 'notifications',
-                          ),
-                          _buildSidebarItem(
-                            icon: AppIcons.printer.outlined,
-                            label: context.l10n.printer_title,
-                            navigateKey: 'printer',
-                          ),
-                          _buildSidebarItem(
-                            icon: Icons.info_outline,
-                            label: context.l10n.settings_appInfo,
-                            onTapDialog: () => _showAppInfoDialog(context),
-                          ),
-                          const SizedBox(height: AppSpacing.s16),
-                          _buildSectionTitle(context.l10n.settings_preferences),
-                          const SizedBox(height: AppSpacing.s4),
-                          _buildSidebarItem(
-                            icon: Icons.color_lens_outlined,
-                            label: context.l10n.uiSettings_title,
-                            trailingText: context.l10n.settings_themeLayout,
-                            onTapDialog: () => showUiSettingsDialog(context),
-                          ),
-                          _buildSidebarItem(
-                            icon: AppIcons.currency.outlined,
-                            label: context.l10n.settings_currency,
-                            trailingText: AppDefaults.currencySymbol,
-                            onTapDialog: () {}, // not a real choice - no picker to open
-                          ),
-                          _buildSidebarItem(
-                            icon: Icons.language_outlined,
-                            label: context.l10n.settings_languageBoth,
-                            trailingText: currentLanguageName,
-                            onTapDialog: () => showLanguagePicker(context, uiSettings),
-                          ),
-                          const SizedBox(height: AppSpacing.s20),
-                        ],
-                      ),
-                    ),
-                  ],
+    return Scaffold(
+      backgroundColor: context.colors.background,
+      appBar: PageHeader(title: l10n.settings_title),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth >= AppBreakpoints.medium ? 2 : 1;
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(PolishMetrics.pagePadding, 0, PolishMetrics.pagePadding, PolishMetrics.pagePadding),
+            children: [
+              for (final (title, rows) in groups) ...[
+                SectionLabel(
+                  title,
+                  padding: const EdgeInsets.only(
+                      top: PolishMetrics.sectionLabelPaddingTop, bottom: PolishMetrics.sectionLabelPaddingBottom),
+                ),
+                for (var i = 0; i < rows.length; i += columns) ...[
+                  if (i > 0) const SizedBox(height: PolishMetrics.gapInGroup),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var j = i; j < i + columns; j++) ...[
+                        if (j > i) const SizedBox(width: PolishMetrics.gapInGroup),
+                        Expanded(child: j < rows.length ? _buildHubRow(rows[j]) : const SizedBox.shrink()),
+                      ],
+                    ],
+                  ),
+                ],
+              ],
+              const SizedBox(height: _footerGap),
+              Center(
+                child: Text(
+                  l10n.settings_versionLine(AppInfo.name, l10n.common_versionWithBuild(AppInfo.version, AppInfo.buildStamp)),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textHint),
                 ),
               ),
-            ),
-            const VerticalDivider(width: 1),
-            Expanded(
-              // LAY7 (#23): a pane is not a page; its AppBar shows no back arrow.
-              child: SettingsPaneScope(child: _buildContentPane(isAdmin)),
-            ),
-          ],
-        ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildContentPane(bool isAdmin) {
-    switch (_selectedKey) {
-      case 'subscription':
-        return isAdmin ? SubscriptionScreen(firestore: widget.firestore, auth: widget.auth) : _buildEmptyPane();
-      case 'notifications':
-        // LAY7: an assistant's notification shows the Team pane here; the
-        // others push inside the content, as before.
-        return NotificationsScreen(
-          openPlace: (page, place) async => place == AppDestination.settings
-              ? _select(SettingsRequest.team)
-              : Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page)),
-        );
-      case 'printer':
-        return const PrinterSettingsScreen();
-      case 'trash':
-        return isAdmin ? TrashScreen(firestore: widget.firestore) : _buildEmptyPane();
-      case 'export':
-        return isAdmin ? ExportDataScreen(firestore: widget.firestore) : _buildEmptyPane();
-      case 'manage_account':
-        return ManageAccountScreen(firestore: widget.firestore, auth: widget.auth);
-      case 'business_profile' || 'business_hours' || 'facilities' || 'team' || 'activity_log':
-        return isAdmin
-            ? _paneWidth(KeyedSubtree(
-                key: ValueKey('$_selectedKey-$_requestCount'),
-                child: _itemScreen(_selectedKey!, teamStatus: _teamStatus),
-              ))
-            : _buildEmptyPane();
-      default:
-        return _buildEmptyPane();
-    }
+  /// UX3: a hub row: a flat surface with a hairline border, at least a tap
+  /// target high. The title wraps rather than being cut short.
+  Widget _buildHubRow(_HubRow row) {
+    final colors = context.colors;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(PolishMetrics.cardRadius),
+      side: BorderSide(color: colors.border, width: PolishMetrics.hairline),
+    );
+    return Material(
+      key: ValueKey('settingsHub-${row.key}'),
+      color: colors.surface,
+      shape: shape,
+      child: InkWell(
+        customBorder: shape,
+        onTap: row.onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: AppSizes.minTapTarget),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: PolishMetrics.cardPadding, vertical: AppSpacing.s12),
+            child: Row(
+              children: [
+                Icon(row.icon, color: colors.primary, size: AppIconSize.i20),
+                const SizedBox(width: AppSpacing.s12),
+                Expanded(
+                  child: Text(
+                    row.label,
+                    style: TextStyle(color: colors.textPrimary, fontSize: AppFontSize.f14, fontWeight: AppFontWeight.medium),
+                  ),
+                ),
+                if (row.trailing != null) ...[
+                  const SizedBox(width: AppSpacing.s8),
+                  Text(row.trailing!, style: TextStyle(color: colors.textMuted, fontSize: AppFontSize.f13)),
+                ],
+                const SizedBox(width: AppSpacing.s4),
+                Icon(Icons.chevron_right_rounded, color: colors.textHint, size: AppIconSize.i20),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   /// LAY7: the Business items (PC and tablet only), all admin-only (a
@@ -534,7 +475,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         (key: 'activity_log', icon: AppIcons.activityLog.outlined, label: context.l10n.export_activityLog),
       ];
 
-  /// The screen of a Business item, as a pane or pushed (tablet list).
+  /// The screen of a Business item.
   Widget _itemScreen(String key, {String? teamStatus}) => switch (key) {
         'business_profile' => BusinessProfileScreen(firestore: widget.firestore),
         'business_hours' => BusinessHoursScreen(firestore: widget.firestore),
@@ -543,109 +484,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _ => ActivityLogScreen(firestore: widget.firestore, auth: widget.auth),
       };
 
-  /// Tablet list (content under 900): the item pushed inside the content;
-  /// Back returns to the list.
+  /// The item pushed inside the content (above the hub); Back returns to
+  /// Settings.
   void _pushItem(BuildContext context, String key, {String? teamStatus}) =>
       Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => _itemScreen(key, teamStatus: teamStatus)));
 
-  /// LAY7: the new panes measure the pane, not the content (never below the
-  /// phone breakpoint, as the shell does): Team's details panel needs 1100
-  /// and a pane never has it, so a member's details open as its sheet.
-  Widget _paneWidth(Widget child) => LayoutBuilder(
-        builder: (context, constraints) {
-          final mq = MediaQuery.of(context);
-          return MediaQuery(
-            data: mq.copyWith(size: Size(math.max(constraints.maxWidth, AppBreakpoints.compact), mq.size.height)),
-            child: child,
-          );
-        },
-      );
-
-  /// LAY7 (6): the panes chosen before, newest last. Back shows the previous
-  /// one, then leaves Settings (Home).
-  final List<String> _history = [];
-
-  void _select(String key, {bool force = false}) {
-    if (key == _selectedKey && !force) return;
-    if (!force) _teamStatus = null;
-    setState(() {
-      if (key == _selectedKey) return;
-      if (_selectedKey != null) _history.add(_selectedKey!);
-      _selectedKey = key;
-    });
-  }
-
-  Widget _buildEmptyPane() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(AppIcons.settings.outlined, size: AppIconSize.i56, color: context.colors.border),
-          const SizedBox(height: AppSpacing.s12),
-          Text(
-            context.l10n.settings_selectPane,
-            style: TextStyle(color: context.colors.textHint, fontSize: AppFontSize.f14),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Sidebar row - visually distinct from _buildSettingsItem below:
-  // no chevron (nothing here "navigates away"), instead a selected-
-  // state tint for whichever navigable item is currently shown in
-  // the content pane. Dialog items (onTapDialog set) never show a
-  // selected state, since they don't change the pane at all.
-  Widget _buildSidebarItem({
-    required IconData icon,
-    required String label,
-    String? trailingText,
-    String? navigateKey,
-    VoidCallback? onTapDialog,
-  }) {
-    final isSelected = navigateKey != null && _selectedKey == navigateKey;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s2),
-      child: Material(
-        color: isSelected ? context.colors.primary.withValues(alpha: AppAlpha.a10) : Colors.transparent,
-        borderRadius: BorderRadius.circular(AppRadius.r8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppRadius.r8),
-          onTap: navigateKey != null
-              ? () => _select(navigateKey)
-              : onTapDialog,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12, vertical: AppSpacing.s10),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  size: AppIconSize.i20,
-                  color: isSelected ? context.colors.primary : context.colors.textSecondary,
-                ),
-                const SizedBox(width: AppSpacing.s12),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: AppFontSize.f13_5,
-                      fontWeight: isSelected ? AppFontWeight.semibold : AppFontWeight.medium,
-                      color: isSelected ? context.colors.primary : context.colors.textPrimary,
-                    ),
-                  ),
-                ),
-                if (trailingText != null)
-                  Text(
-                    trailingText,
-                    style: TextStyle(fontSize: AppFontSize.f11_5, color: context.colors.textMuted),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   // --- Dynamic Bottom Sheets for Data Scalability ---
 
@@ -823,4 +666,14 @@ void showLanguagePicker(BuildContext context, UiSettingsProvider uiSettings) {
       );
     },
   );
+}
+
+/// UX3: one row of the Settings hub.
+class _HubRow {
+  final String key;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final String? trailing;
+  const _HubRow(this.key, this.icon, this.label, this.onTap, {this.trailing});
 }
