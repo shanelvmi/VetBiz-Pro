@@ -12,20 +12,20 @@ rows the app keeps.
 |---|---|---|---|
 | Sales | cursor get, 25/page, newest 25 live (`CursorPaginatedListController`) | ListPageBar | ok |
 | Services | cursor get, 25/page, newest 25 live | ListPageBar | ok |
-| Clients | cursor get, 25/page; **plus the whole `clients` collection streamed live** (`listenToClients`, also started by `facility_activation`) | ListPageBar | unbounded read (scalability risk) |
+| Clients | cursor get, 25/page; **plus the whole `clients` collection streamed live** (`listenToClients`, also started by `facility_activation`) | ListPageBar | unbounded read (scalability risk). **PAGE2 / BE1** |
 | Debtors | cursor get, 25/page (`debtorsListController`); rides the same whole-clients stream for lookups | ListPageBar | ok (risk shared with Clients) |
-| Payments | one get per date range of `payments` + other-income `transactions`, **no limit**; a name search ignores the date range | all rows (ListView) | unbounded read (scalability risk) |
-| Transactions | newest 25 live, then "Load more" 25 at a time, kept in memory; type filter and search run only on loaded rows | all loaded rows + Load more button | add pager |
-| Products | **whole `products` collection streamed live** (`ProductProvider`), paged in memory (`ProductCatalogService`, 12) | own numbered pager, 12 fixed | unbounded read (scalability risk); add pager (ListPageBar) |
-| Stock Store | same products stream, paged in memory (12) | own numbered pager, 12 fixed | unbounded read (scalability risk); add pager |
+| Payments | **PAGE1:** cursor pages over payments + other income merged (`ledgerPager`, at most 2 x (pageSize + 1) a page); range Total and period cards by `sum`/`count` aggregates | ListPageBar | **fixed (PAGE1)**; name search still spans every date (as before) |
+| Transactions | **PAGE1:** cursor pages, pageSize + 1 (`transactionsListController`); type and date range in the query; search = description prefix, every date; the live 25 is the phone's only | ListPageBar | **fixed (PAGE1)** |
+| Products | **whole `products` collection streamed live** (`ProductProvider`), paged in memory (`ProductCatalogService`, 12) | own numbered pager, 12 fixed | unbounded read (scalability risk); add pager (ListPageBar). **PAGE2 / BE1** |
+| Stock Store | same products stream, paged in memory (12) | own numbered pager, 12 fixed | unbounded read (scalability risk); add pager. **PAGE2 / BE1** |
 | Stock Alerts | computed from the same products stream | ListPageBar (UX1b) | ok (risk is the products stream) |
 | Sales archive | cursor get, 30/page, appended | ListPageBar over loaded rows (10/25/50); next page fetches | ok |
 | Services archive | cursor get, 30/page, appended | ListPageBar over loaded rows | ok |
-| Activity Log | stream, `limit(500)` (`ledgerQueryCap`); assistants: two merged streams of 500 | all rows (ListView), no pager | add pager |
-| Notifications | stream of newest 200, "Load older" 100 at a time | own pager (10/25/50) + Load older | add pager (swap to ListPageBar) |
-| Trash | stream of the whole trash collection, no limit | all rows (ListView) | unbounded read (scalability risk) |
+| Activity Log | **PAGE1:** cursor pages inside the retention window, pageSize + 1 (assistant: userId + targetUserId merged, an entry once); the phone keeps its streams | ListPageBar | **fixed (PAGE1)**; category filter off until its indexes (docs/PAGE1_INDEXES.md); search over the page shown (said in the hint) |
+| Notifications | **PAGE1:** the full page's own feed watches the newest pageSize + 1 live (bell and badge: their own 50); Next fetches older by cursor, pageSize + 1 | ListPageBar, no Load older | **fixed (PAGE1)**; filters work over the loaded pages (Next keeps loading older); unread first on page 1 only; the phone keeps 200 + Load older |
+| Trash | **PAGE1:** cursor pages per kind, pageSize + 1; the expiring banner is one `count()` | ListPageBar | **fixed (PAGE1)**; no counts on the kind chips |
 | Team Members | gets of the facility's members | own pager (10/25/50) | ok (bounded) |
-| Facilities | the person's facilities; **each card reads all its clients and all its products** for its figures | cards, no pager | ok as a list; card figures are an unbounded read (scalability risk) |
+| Facilities | the person's facilities; **each card reads all its clients and all its products** for its figures | cards, no pager | ok as a list; card figures are an unbounded read (scalability risk). **PAGE2 / BE1** |
 | Past Reports | cursor get, 25/page | all loaded + Load more button | ok (bounded by use); add pager optional |
 | Subscription history | stream, `limit(200)` | own pager (10/25/50) | ok |
 | Subscription page (recent) | stream, `limit(5)` | 5 rows + View all | ok |
@@ -84,3 +84,33 @@ Order of work this suggests (owner to decide; none started):
    pager; Facilities card figures from the daily summaries or `count()`
    instead of full reads; the whole-collection Clients and Products streams
    (largest change, needs a design of its own).
+
+## PAGE1 (2026-11-23): the five server-paged lists
+
+Transactions, Payments, Activity Log, Notifications and Trash page on the
+server on PC/tablet with the shared `ListPageBar` (10/25/50, default 25,
+"Showing a to b", no total count). One pager: `CursorPaginatedListController`
+(pageSize + 1 per page, `CursorPage.fromDocs`; visited pages cached, so
+Previous reads nothing; a filter, the search or the page size starts at page
+1) and `PagedListBody` (skeleton, the page dimmed while Next loads, the error
+with Retry). Two-source lists (Payments; an assistant's Activity Log) use
+`fetchMergedPage`: one cursor per source, at most 2 x (pageSize + 1) reads a
+page (owner-approved). The phone keeps its infinite scroll and its queries.
+
+Reads on open with 120 records (`test/page1_read_cost_test.dart`; extras:
+the app's setup, Transactions' daily totals, Payments' 8 aggregates and day
+snapshot, the Activity Log's facility and tidy-up, my notification state, the
+Trash banner's count):
+
+| Screen | Before PAGE1 | After | Next |
+|---|---|---|---|
+| Transactions | 30 | 31 | 26 |
+| Payments | 523 | 62 | 42 (merged) |
+| Activity Log | 242 | 28 | 26 |
+| Trash | 121 | 28 | 26 |
+| Notifications | 121 (window 200) | 27 | 25 |
+
+Still open: Clients, Products, Stock Store and the Facilities card figures
+(**PAGE2 / BE1**); the Activity Log category filter waits for the indexes in
+`docs/PAGE1_INDEXES.md`; the Debtors and Payments outstanding card still ride
+the whole `debts`/`clients` streams.

@@ -132,3 +132,9 @@ registry. Line numbers at LAY2 (8).
 |---|---|---|---|
 | 37 | ~~facility_picker_screen.dart, the cards at 768 in Kiswahili (UI1 known case)~~ | The staff-and-status row overflowed by 37 px | FIXED UX9: the redesigned card wraps that row (ui1_picker_test skip lifted, ux9_picker_test) |
 | 38 | ~~facility_picker_screen.dart, the Default card's ⋮ menu~~ | Opened an empty menu (its only item hidden on the default) | FIXED UX9: no ⋮ on the Default card |
+
+## Found in PAGE1
+
+| # | Where | What | Why it waits |
+|---|---|---|---|
+| 39 | ~~paged_list_body.dart, Payments at content 952 with the details inline, Kiswahili 1.3~~ | With the new page bar under the list, the cards and toolbar wrapped above left the table 104 px for a 113 px header: overflow 9 px | FIXED PAGE1: below PagedListMetrics.crampedBelow the page keeps minBodyHeight and scrolls with its bar (lay6b_shell_ledgers_test) |
