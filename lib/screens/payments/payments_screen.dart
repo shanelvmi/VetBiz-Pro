@@ -11,8 +11,6 @@ import '../../widgets/payment_method_selector.dart';
 import '../../models/sale.dart';
 import '../../models/service.dart';
 import '../../models/ledger_entry.dart';
-import '../../services/snapshot_ledger_controller.dart';
-import '../../widgets/firestore_error_view.dart';
 import '../../widgets/details_layout.dart';
 import '../../widgets/shell/page_header.dart';
 import '../../widgets/toolbar_layout.dart';
@@ -33,6 +31,7 @@ import '../../config/app_links.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/phone_list/phone_filter_sheet.dart';
 import '../../widgets/phone_list/phone_list_scaffold.dart';
+import '../../widgets/paged_list_body.dart';
 import '../../widgets/phone_list/phone_quick_chips.dart';
 import '../../widgets/phone_list/phone_summary_sheet.dart';
 import '../../widgets/phone_list/record_tile.dart';
@@ -80,6 +79,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   DateTime _rangeEnd = AppClock.now();
 
   final Map<String, String> _userNames = {};
+  final Set<String> _userNamesTried = {};
   Timer? _searchDebounce;
   // Periodically checks (never a live listener) whether new ledger
   // entries have landed since the current session's snapshot moment,
@@ -151,11 +151,17 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
       _rangeChip = 'Today';
     }
 
-    _openLedgerSession();
-    _newRecordsCheckTimer = Timer.periodic(
-      AppTimeouts.newRecordsPoll,
-      (_) => Provider.of<PaymentProvider>(context, listen: false).ledgerController.checkForNewEntries(),
-    );
+    // PAGE1: the ledger opens in didChangeDependencies, once the layout is
+    // known (the phone's whole-range ledger or the PC/tablet pages).
+    _newRecordsCheckTimer = Timer.periodic(AppTimeouts.newRecordsPoll, (_) {
+      final provider = Provider.of<PaymentProvider>(context, listen: false);
+      if (_isPhoneLayout == true) {
+        provider.ledgerController.checkForNewEntries();
+      } else {
+        provider.ledgerPager.checkForNewRecords();
+      }
+    });
+    _paymentProvider.ledgerPager.addListener(_onPagerChanged);
     if (widget.initialClientId == null) {
       final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
       if (facilityId != null) {
@@ -165,8 +171,54 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     }
   }
 
+  // PAGE1: which ledger is open (null: none yet).
+  bool? _isPhoneLayout;
+  Object? _pagerSignature;
+  late final PaymentProvider _paymentProvider = Provider.of<PaymentProvider>(context, listen: false);
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final isPhone = AppLayout.isPhone(context);
+    if (isPhone == _isPhoneLayout) return;
+    final first = _isPhoneLayout == null;
+    _isPhoneLayout = isPhone;
+    // The first open runs now, as initState's did (nothing listens yet);
+    // a later switch (the window resized) after this frame.
+    if (first) {
+      _openLedgerSession();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _openLedgerSession();
+      });
+    }
+  }
+
+  // PAGE1: the recorded-by names of each new page.
+  void _onPagerChanged() {
+    final pager = _paymentProvider.ledgerPager;
+    if (!pager.isLoading && pager.items.isNotEmpty) _loadUserNames(pager.items);
+  }
+
+  // PAGE1: the toolbar's Total covers the whole range and filters (an
+  // aggregate), never only the page shown.
+  double? _rangeTotal;
+  int _rangeTotalRequest = 0;
+
+  Future<void> _loadRangeTotal() async {
+    final request = ++_rangeTotalRequest;
+    setState(() => _rangeTotal = null);
+    try {
+      final (total, _) = await _paymentProvider.ledgerPagerTotal();
+      if (mounted && request == _rangeTotalRequest) setState(() => _rangeTotal = total);
+    } catch (e) {
+      debugPrint('Error loading the payments range total: $e');
+    }
+  }
+
   @override
   void dispose() {
+    _paymentProvider.ledgerPager.removeListener(_onPagerChanged);
     _searchController.dispose();
     _searchDebounce?.cancel();
     _newRecordsCheckTimer?.cancel();
@@ -199,6 +251,24 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     if (facilityId == null) return;
 
     final provider = Provider.of<PaymentProvider>(context, listen: false);
+    if (_isPhoneLayout == false) {
+      // PAGE1: PC/tablet: server pages (back to page 1 when a filter, the
+      // search or the range changed) and the range's total.
+      final pagerSignature = provider.updateLedgerPagerFilters(
+        facilityId: facilityId,
+        searchTerm: _searchQuery,
+        typeFilter: _typeTabs.firstWhere((t) => t.$1 == _selectedTypeFilter).$2,
+        methodFilter: _selectedMethodFilter,
+        initialClientId: widget.initialClientId,
+        rangeStart: _rangeStart,
+        rangeEnd: _rangeEnd,
+      );
+      final changed = forceRefresh || !provider.ledgerPager.hasOpenSession || _pagerSignature != pagerSignature;
+      _pagerSignature = pagerSignature;
+      if (changed) unawaited(_loadRangeTotal());
+      await provider.ledgerPager.openSession(pagerSignature, forceRefresh: forceRefresh);
+      return;
+    }
     final signature = provider.updateLedgerFilters(
       facilityId: facilityId,
       searchTerm: _searchQuery,
@@ -221,9 +291,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     final uniqueIds = entries
         .map((e) => e.paidById)
         .whereType<String>()
-        .where((id) => id.isNotEmpty && !_userNames.containsKey(id))
+        .where((id) => id.isNotEmpty && !_userNames.containsKey(id) && !_userNamesTried.contains(id))
         .toSet();
     if (uniqueIds.isEmpty) return;
+    // PAGE1: asked once per person, found or not (a page change must not
+    // read a nameless user again).
+    _userNamesTried.addAll(uniqueIds);
 
     try {
       final futures = uniqueIds.map((id) => _db.collection(Collections.users).doc(id).get());
@@ -236,6 +309,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         }
       });
     } catch (e) {
+      _userNamesTried.removeAll(uniqueIds);
       debugPrint('Error loading payer names: $e');
     }
   }
@@ -328,19 +402,18 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   }
 
 
+  // PAGE1: one sum/count aggregate per period (single-field range, no
+  // index), not every payment of the period downloaded to add up here.
   Future<(double, int)> _fetchPaymentsSum(String facilityId, DateTime start, DateTime end) async {
-    final snap = await _db
+    final agg = await _db
         .collection(Collections.facilities)
         .doc(facilityId)
         .collection(Collections.payments)
         .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
         .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(end))
+        .aggregate(sum('amount'), count())
         .get();
-    double sum = 0;
-    for (final doc in snap.docs) {
-      sum += (doc.data()['amount'] as num?)?.toDouble() ?? 0.0;
-    }
-    return (sum, snap.docs.length);
+    return (agg.getSum('amount') ?? 0.0, agg.count ?? 0);
   }
 
   Future<void> _loadMetrics() async {
@@ -437,7 +510,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   }
 
   /// "N new entries available - Refresh", above the list (both layouts).
-  Widget _buildNewEntriesBanner(SnapshotLedgerController<LedgerEntry> controller, {EdgeInsets? margin}) {
+  Widget _buildNewEntriesBanner(int count, VoidCallback onRefresh, {EdgeInsets? margin}) {
     return Container(
       width: double.infinity,
       margin: margin,
@@ -449,12 +522,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           const SizedBox(width: AppSpacing.s8),
           Expanded(
             child: Text(
-              context.l10n.payments_newEntries(controller.newEntriesAvailable),
+              context.l10n.payments_newEntries(count),
               style: TextStyle(fontSize: AppFontSize.f13, color: context.colors.primary),
             ),
           ),
           TextButton(
-            onPressed: () => controller.refreshSession(),
+            onPressed: onRefresh,
             child: Text(context.l10n.common_refresh),
           ),
         ],
@@ -492,70 +565,67 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
         label: context.l10n.payments_detailsTitle,
         onClose: () => setState(() => _selectedEntry = null),
         details: _selectedEntry == null ? null : _buildDetailsPanel(_selectedEntry!),
+        // PAGE1: the cards, the banner and the toolbar stay; the list is one
+        // server page at a time (PagedListBody, the page bar under it).
         list: ListenableBuilder(
-              listenable: paymentProvider.ledgerController,
+              listenable: paymentProvider.ledgerPager,
               builder: (context, _) {
-                final controller = paymentProvider.ledgerController;
-                final filtered = controller.entries;
-                final total = filtered.fold<double>(0.0, (runningTotal, e) => runningTotal + e.amount);
-
-                if (controller.error != null && filtered.isEmpty) {
-                  return Center(child: FirestoreErrorView(error: controller.error));
-                }
-
-                return controller.isLoading && filtered.isEmpty
-                    ? Center(child: CircularProgressIndicator(color: context.colors.primary))
-                    : Padding(
-                        padding: const EdgeInsets.all(AppSpacing.s16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (widget.initialClientId == null) ...[
-                              _buildMetricsRow(),
-                              const SizedBox(height: AppSpacing.s16),
+                final pager = paymentProvider.ledgerPager;
+                return Padding(
+                  padding: const EdgeInsets.all(AppSpacing.s16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (widget.initialClientId == null) ...[
+                        _buildMetricsRow(),
+                        const SizedBox(height: AppSpacing.s16),
+                      ],
+                      if (pager.newRecordsAvailable > 0)
+                        _buildNewEntriesBanner(pager.newRecordsAvailable, () => _openLedgerSession(forceRefresh: true),
+                            margin: const EdgeInsets.only(bottom: AppSpacing.s12)),
+                      _buildToolbarRow(_rangeTotal),
+                      const SizedBox(height: AppSpacing.s16),
+                      Expanded(
+                        child: PagedListBody<LedgerEntry>(
+                          controller: pager,
+                          barEmptyText: context.l10n.payments_emptyPeriod,
+                          empty: Center(
+                            child: Text(context.l10n.payments_emptyPeriod, style: TextStyle(color: context.colors.textMuted)),
+                          ),
+                          list: (page) => Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
+                                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
+                                child: Row(
+                                  children: [
+                                    _headerCell(context.l10n.payments_colDateTime, flex: 3),
+                                    _headerCell(context.l10n.payments_payer, flex: 2),
+                                    _headerCell(context.l10n.payments_source, flex: 2),
+                                    _headerCell(context.l10n.payments_reference, flex: 2),
+                                    _headerCell(context.l10n.common_method, flex: 2),
+                                    _headerCell(context.l10n.common_amount, flex: 2),
+                                    _headerCell(context.l10n.payments_recordedBy, flex: 2),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                // UX2 (owner, 2026-11-21): one row per payment with its
+                                // date and time in the Date column, as the other lists;
+                                // no day header rows or day totals (those are in
+                                // Reports). The order is the ledger's, newest first.
+                                child: ListView(
+                                  children: [for (final e in page) _buildEntryTile(e)],
+                                ),
+                              ),
                             ],
-                            if (controller.newEntriesAvailable > 0)
-                              _buildNewEntriesBanner(controller, margin: const EdgeInsets.only(bottom: AppSpacing.s12)),
-                            _buildToolbarRow(total),
-                            const SizedBox(height: AppSpacing.s16),
-                            Expanded(
-                              child: filtered.isEmpty
-                                  ? Center(
-                                      child: Text(context.l10n.payments_emptyPeriod, style: TextStyle(color: context.colors.textMuted)),
-                                    )
-                                  : Column(
-                                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16, vertical: AppSpacing.s12),
-                                          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: context.colors.textHint.withValues(alpha: AppAlpha.a20)))),
-                                          child: Row(
-                                            children: [
-                                              _headerCell(context.l10n.payments_colDateTime, flex: 3),
-                                              _headerCell(context.l10n.payments_payer, flex: 2),
-                                              _headerCell(context.l10n.payments_source, flex: 2),
-                                              _headerCell(context.l10n.payments_reference, flex: 2),
-                                              _headerCell(context.l10n.common_method, flex: 2),
-                                              _headerCell(context.l10n.common_amount, flex: 2),
-                                              _headerCell(context.l10n.payments_recordedBy, flex: 2),
-                                            ],
-                                          ),
-                                        ),
-                                        Expanded(
-                                          // UX2 (owner, 2026-11-21): one row per payment with its
-                                          // date and time in the Date column, as the other lists;
-                                          // no day header rows or day totals (those are in
-                                          // Reports). The order is the ledger's, newest first.
-                                          child: ListView(
-                                            children: [for (final e in filtered) _buildEntryTile(e)],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                            ),
-                          ],
+                          ),
                         ),
-                      );
+                      ),
+                    ],
+                  ),
+                );
               },
             ),
       ),
@@ -768,7 +838,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     );
   }
 
-  Widget _buildToolbarRow(double total) {
+  Widget _buildToolbarRow(double? total) {
     final hasActiveFilters = _selectedTypeFilter != 'All' || _selectedMethodFilter != null;
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.r10),
@@ -848,6 +918,8 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               child: Text(context.l10n.common_clear, style: const TextStyle(fontSize: AppFontSize.f13)),
             ),
         ],
+        // PAGE1: null while the range total (an aggregate) loads.
+        if (total != null)
         Text(
           context.l10n.common_totalValue(Money.format(total)),
           style: TextStyle(fontSize: AppFontSize.f13, fontWeight: AppFontWeight.bold, color: context.colors.primary),
@@ -1097,7 +1169,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               ? null
               : l10n.phoneList_paymentsSummaryLine(entries.length, Money.format(total)),
           onSummary: () => _showSummary(total),
-          banner: controller.newEntriesAvailable > 0 ? _buildNewEntriesBanner(controller) : null,
+          banner: controller.newEntriesAvailable > 0 ? _buildNewEntriesBanner(controller.newEntriesAvailable, controller.refreshSession) : null,
           items: entries,
           idOf: (e) => e.sortId,
           dateOf: (e) => e.timestamp,
