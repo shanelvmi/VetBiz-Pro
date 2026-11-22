@@ -26,6 +26,8 @@ import '../../l10n/l10n.dart';
 import '../../widgets/password_field_guard.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/shell/page_header.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/page_card.dart';
 import '../../widgets/phone_form/sheet_or_dialog.dart';
 
 class ManageAccountScreen extends StatefulWidget {
@@ -546,11 +548,91 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
       deleteAccountSubtitle = context.l10n.account_deleteHint;
     }
 
+    // The four actions, one ListTile each: the phone shows each in its own
+    // card inside the Danger Zone box (as before); PC and tablet group them
+    // by purpose in the card template (UX6). Same callbacks, same gates.
+    final logoutAllTile = ListTile(
+      leading: Icon(Icons.devices_other, color: context.colors.primary),
+      title: Text(context.l10n.account_logoutAll),
+      subtitle: Text(context.l10n.account_logoutAllHint),
+      onTap: inputDisabled ? null : _logoutOfAllDevices,
+      trailing: _isLoggingOutAll
+          ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: context.colors.primary,
+              ),
+            )
+          : null,
+    );
+    final wipeTile = ListTile(
+      leading: _isWipingData
+          ? SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2, color: dangerColor),
+            )
+          : Icon(Icons.phonelink_erase, color: context.colors.primary),
+      title: Text(context.l10n.account_wipeAll),
+      subtitle: Text(
+          _isWipingData
+              ? context.l10n.account_wipeInProgress
+              : context.l10n.account_wipeHint),
+      onTap: inputDisabled ? null : _wipeAllData,
+    );
+    final deactivateTile = ListTile(
+      leading: const Icon(Icons.pause_circle_outline),
+      title: Text(context.l10n.account_deactivateTitle),
+      subtitle: Text(context.l10n.account_deactivateHint),
+      onTap: inputDisabled ? null : _deactivateAccount,
+    );
+    final deleteTile = ListTile(
+      enabled: !(inputDisabled || deleteAccountBlocked),
+      leading: const Icon(Icons.delete_forever),
+      title: Text(context.l10n.account_deleteTitle),
+      subtitle: Text(deleteAccountSubtitle),
+      onTap: (inputDisabled || deleteAccountBlocked) ? null : _deleteAccount,
+    );
+    final isAdmin = Provider.of<UserRoleProvider>(context).isAdmin;
+
+    // UX6: PC and tablet, the card template, grouped by purpose: sign-in,
+    // the business data (admins), then the Danger Zone (deactivate, delete).
+    if (!AppLayout.isPhone(context)) {
+      return Scaffold(
+        backgroundColor: context.colors.background,
+        appBar: PageHeader(title: context.l10n.account_title),
+        body: PageCardList(
+          children: [
+            PageCard(key: const ValueKey('account-card-signin'), title: context.l10n.account_groupSignIn, padding: null, child: logoutAllTile),
+            if (isAdmin)
+              PageCard(key: const ValueKey('account-card-data'), title: context.l10n.account_groupBusinessData, padding: null, child: wipeTile),
+            PageCard(
+              key: const ValueKey('account-card-danger'),
+              title: context.l10n.account_dangerZone,
+              padding: null,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(PolishMetrics.cardPadding, AppSpacing.s12, PolishMetrics.cardPadding, AppSpacing.s4),
+                    child: Text(context.l10n.account_dangerHint, style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+                  ),
+                  deactivateTile,
+                  Divider(height: PolishMetrics.hairline, color: context.colors.divider),
+                  deleteTile,
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: !AppLayout.isPhone(context)
-          ? PageHeader(title: context.l10n.account_title)
-          : AppBar(
+      appBar: AppBar(
         title: Text(context.l10n.account_title),
         backgroundColor: context.colors.primary,
         foregroundColor: context.colors.onPrimary,
@@ -590,63 +672,23 @@ class _ManageAccountScreenState extends State<ManageAccountScreen> {
                 const SizedBox(height: AppSpacing.s12),
                 Card(
             elevation: AppElevation.e2,
-            child: ListTile(
-              leading: Icon(Icons.devices_other, color: context.colors.primary),
-              title: Text(context.l10n.account_logoutAll),
-              subtitle: Text(context.l10n.account_logoutAllHint),
-              onTap: inputDisabled ? null : _logoutOfAllDevices,
-              trailing: _isLoggingOutAll
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: context.colors.primary,
-                      ),
-                    )
-                  : null,
-            ),
+            child: logoutAllTile,
           ),
           const SizedBox(height: AppSpacing.s12),
-          if (Provider.of<UserRoleProvider>(context).isAdmin)
+          if (isAdmin)
           Card(
             elevation: AppElevation.e2,
-            child: ListTile(
-              leading: _isWipingData
-                  ? SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: dangerColor),
-                    )
-                  : Icon(Icons.phonelink_erase, color: context.colors.primary),
-              title: Text(context.l10n.account_wipeAll),
-              subtitle: Text(
-                  _isWipingData
-                      ? context.l10n.account_wipeInProgress
-                      : context.l10n.account_wipeHint),
-              onTap: inputDisabled ? null : _wipeAllData,
-            ),
+            child: wipeTile,
           ),
           const SizedBox(height: AppSpacing.s12),
           Card(
             elevation: AppElevation.e2,
-            child: ListTile(
-              leading: const Icon(Icons.pause_circle_outline),
-              title: Text(context.l10n.account_deactivateTitle),
-              subtitle: Text(context.l10n.account_deactivateHint),
-              onTap: inputDisabled ? null : _deactivateAccount,
-            ),
+            child: deactivateTile,
           ),
           const SizedBox(height: AppSpacing.s12),
           Card(
             elevation: AppElevation.e2,
-            child: ListTile(
-              enabled: !(inputDisabled || deleteAccountBlocked),
-              leading: const Icon(Icons.delete_forever),
-              title: Text(context.l10n.account_deleteTitle),
-              subtitle: Text(deleteAccountSubtitle),
-              onTap: (inputDisabled || deleteAccountBlocked) ? null : _deleteAccount,
-            ),
+            child: deleteTile,
           ),
               ],
             ),
