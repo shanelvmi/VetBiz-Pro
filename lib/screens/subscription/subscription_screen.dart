@@ -36,6 +36,8 @@ import '../../config/app_info.dart';
 import '../../widgets/app_sheet.dart';
 import '../../theme/app_layout.dart';
 import '../../widgets/shell/page_header.dart';
+import '../../widgets/shell/app_shell.dart';
+import '../../navigation/app_destinations.dart';
 import '../../widgets/phone_form/form_action_bar.dart';
 import '../../widgets/phone_form/phone_discard_scope.dart';
 import '../../utils/app_clock.dart';
@@ -800,13 +802,19 @@ class _SubmissionHistoryState extends State<_SubmissionHistory> {
   }
 }
 
-/// The one entry point for opening Subscription - same reasoning and
-/// threshold as showActivityLog: a full-screen push on mobile (no
-/// spare room for an overlay), a large, centered, dismissable modal
-/// on desktop/tablet-width screens, so it stays visually consistent
-/// with the rest of the "modern desktop" screens rather than the
-/// last one still doing an abrupt full-screen navigation.
+/// The one entry point for opening Subscription: a full-screen push on
+/// mobile (no spare room for an overlay). It was a large, centred modal on
+/// desktop/tablet widths until UX7, which made the page full width there.
 Future<void> showSubscriptionScreen(BuildContext context) async {
+  // UX7 (owner): on PC and tablet Subscription is always the full page,
+  // never the modal: inside the shell's content (Settings highlighted) when
+  // opened from it, else pushed full screen. The phone opens it as before.
+  if (!AppLayout.isPhone(context)) {
+    final shell = AppShellState.maybeOf(context);
+    if (shell != null) return shell.openInContent(const SubscriptionScreen(), highlight: AppDestination.settings);
+    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SubscriptionScreen()));
+    return;
+  }
   await showAdaptiveForm(
     context,
     barrierLabel: context.l10n.subscription_title,

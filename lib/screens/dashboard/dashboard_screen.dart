@@ -1198,6 +1198,13 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                         sidebar: (selected, onSelect) =>
                             _buildDrawerContent(rail: !isLargeScreen, selected: selected, onSelect: onSelect),
                         topBar: _buildTopBar(context, rail: !isLargeScreen),
+                        // UX7: the subscription pill in the layout, under the top bar and
+                        // above the page (it floated at top 56 over the top bar and the
+                        // page header).
+                        banner: ColoredBox(
+                          color: context.colors.background,
+                          child: Center(child: _buildSubscriptionBanner(context)),
+                        ),
                         pageFor: _shellPageFor,
                         onOpenFullScreen: _openDestination,
                         // Home is refreshed on the way back only where the registry says.
@@ -1524,12 +1531,6 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                             ),
                       ),
                     ),
-                Positioned(
-                      top: 56,
-                      left: 0,
-                      right: 0,
-                      child: Center(child: _buildSubscriptionBanner(context)),
-                    ),
                   ],
                 ),
               ),
@@ -1701,6 +1702,8 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
           ? const SizedBox.shrink(key: ValueKey('sub-banner-hidden'))
           : Container(
               key: const ValueKey('sub-banner-shown'),
+              // UX7: its own room in the layout flow (AppShell.banner).
+              margin: const EdgeInsets.symmetric(vertical: AppSpacing.s8),
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s8),
               decoration: BoxDecoration(
                 // POL2: the calm trial on the plain surface (not the warning
@@ -1727,7 +1730,7 @@ class _DashboardScreenState extends State<DashboardScreen> with WidgetsBindingOb
                   if (isAdmin) ...[
                     const SizedBox(width: AppSpacing.s16),
                     GestureDetector(
-                      onTap: () => showSubscriptionScreen(context),
+                      onTap: _openSubscription,
                       child: Text(
                         isInTrialInfo ? l.subscription_viewPlans : l.subscription_renew,
                         style: TextStyle(
@@ -2770,6 +2773,13 @@ Widget _buildDrawerContent({
     shell.select(AppDestination.settings);
     _settingsRequest.value = request;
     return true;
+  }
+
+  /// UX7: Subscription on PC/tablet is always the full page in the shell
+  /// (Settings highlighted, Back to the hub), never the modal; with no shell
+  /// (a phone) it opens as before.
+  void _openSubscription() {
+    if (!_openSettingsItem(const SettingsRequest(SettingsRequest.subscription))) showSubscriptionScreen(context);
   }
 
   Future<void> Function(Widget page)? _openInShellAsSettings() {

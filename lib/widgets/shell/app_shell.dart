@@ -35,6 +35,7 @@ class AppShell extends StatefulWidget {
     super.key,
     required this.sidebar,
     required this.topBar,
+    this.banner,
     required this.home,
     required this.pageFor,
     required this.onOpenFullScreen,
@@ -43,6 +44,10 @@ class AppShell extends StatefulWidget {
 
   final ShellSidebarBuilder sidebar;
   final Widget topBar;
+
+  /// UX7: shown under [topBar], above the content, in the layout flow (the
+  /// subscription pill); its own height, none when it shows nothing.
+  final Widget? banner;
   final Widget home;
 
   /// The screen of a destination that lives in the shell, or null for one
@@ -140,6 +145,7 @@ class AppShellState extends State<AppShell> {
           child: Column(
             children: [
               widget.topBar,
+              if (widget.banner != null) widget.banner!,
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) => MediaQuery(
