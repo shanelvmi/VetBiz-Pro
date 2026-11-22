@@ -8,6 +8,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../services/auth_service.dart';
 import '../services/membership_service.dart';
 import '../utils/facility_activation.dart';
+import '../utils/facility_landing.dart';
 import '../utils/facility_display.dart';
 import '../services/facility_codes.dart';
 import '../utils/facility_code_generator.dart';
@@ -626,7 +627,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           detail: L10n.current.register_verifyEmailSent,
         );
 
-        if (facilitiesWithId.length == 1) {
+        if (facilityLandingFor(facilitiesWithId.length) == FacilityLanding.straightIn) {
           final selected = facilitiesWithId.first;
           await activateFacilityAndGoToDashboard(
             context: context,

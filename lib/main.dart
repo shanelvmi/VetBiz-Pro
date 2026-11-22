@@ -13,6 +13,7 @@ import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/facilities/facility_picker_screen.dart';
 import 'screens/platform_admin/platform_admin_home_screen.dart';
 import 'utils/facility_activation.dart';
+import 'utils/facility_landing.dart';
 import 'utils/facility_display.dart';
 import 'utils/activity_signal.dart';
 import 'utils/presence_heartbeat.dart';
@@ -500,7 +501,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         return const VetBizLoadingPage();
       }
 
-      if (facilities.isEmpty) {
+      if (facilityLandingFor(facilities.length) == FacilityLanding.none) {
         // A Platform Admin with no facilities of their own (the
         // deliberate setup - a dedicated account, no shops registered
         // under it) has nowhere else to land, since the Platform Admin
@@ -522,7 +523,7 @@ class _AppEntryPointState extends State<AppEntryPoint> {
         return _NoFacilityScreen(role: role, notice: notice);
       }
 
-      if (facilities.length == 1) {
+      if (facilityLandingFor(facilities.length) == FacilityLanding.straightIn) {
         // Straight to Dashboard - no intermediate screen, no second
         // fetch. This is the common case for every Assistant (always
         // exactly one facility) and the majority of Admins too.
