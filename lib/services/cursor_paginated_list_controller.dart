@@ -14,7 +14,28 @@ class CursorPage<T> {
   // means this was the last page, even if lastDocument is non-null.
   final bool hasMore;
 
-  const CursorPage({required this.items, required this.lastDocument, required this.hasMore});
+  // PAGE1: where the next page starts when a page is not one query's
+  // documents (a merged list keeps one cursor per source, MergedCursor);
+  // null for the ordinary one-query pages, which use lastDocument.
+  final Object? cursor;
+
+  const CursorPage({required this.items, required this.lastDocument, required this.hasMore, this.cursor});
+
+  /// PAGE1: one page from a query run with limit(pageSize + 1): the extra
+  /// document only says a next page exists (no empty fetch at the end, no
+  /// count query), and is not shown or used as the cursor.
+  static CursorPage<T> fromDocs<T>(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+    int pageSize,
+    T Function(QueryDocumentSnapshot<Map<String, dynamic>> doc) map,
+  ) {
+    final kept = docs.length > pageSize ? docs.sublist(0, pageSize) : docs;
+    return CursorPage(
+      items: kept.map(map).toList(),
+      lastDocument: kept.isEmpty ? null : kept.last,
+      hasMore: docs.length > pageSize,
+    );
+  }
 }
 
 /// Reusable pagination for any Firestore-backed list that keeps growing
@@ -53,7 +74,18 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
     required this.fetchPage,
     this.countCreatedAfter,
     int pageSize = AppLimits.pageSize,
-  }) : _pageSize = pageSize;
+  })  : fetchPageAfter = null,
+        _pageSize = pageSize;
+
+  /// PAGE1: pages whose cursor is not one document (a merged list,
+  /// fetchMergedPage): each fetch gets the previous page's [CursorPage.cursor].
+  CursorPaginatedListController.after({
+    required Future<CursorPage<T>> Function({required DateTime snapshotAt, required int pageSize, Object? after})
+        this.fetchPageAfter,
+    this.countCreatedAfter,
+    int pageSize = AppLimits.pageSize,
+  })  : fetchPage = null,
+        _pageSize = pageSize;
 
   /// Runs one Firestore query for a page: applies the caller's own
   /// filter/search/sort conditions, the given snapshotAt boundary
@@ -66,7 +98,10 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
     required DateTime snapshotAt,
     required int pageSize,
     DocumentSnapshot<Map<String, dynamic>>? startAfterDocument,
-  }) fetchPage;
+  })? fetchPage;
+
+  final Future<CursorPage<T>> Function({required DateTime snapshotAt, required int pageSize, Object? after})?
+      fetchPageAfter;
 
   /// Optional - a cheap, count()-only query (no documents downloaded)
   /// for how many matching records were created after the given
@@ -150,7 +185,7 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
     _currentPageIndex = -1;
     _newRecordsAvailable = 0;
     _error = null;
-    await _fetchAndAppendPage(startAfterDocument: null);
+    await _fetchAndAppendPage(previous: null);
   }
 
   /// Explicit "start over from now" - what the "N new records
@@ -183,7 +218,7 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    await _fetchAndAppendPage(startAfterDocument: _pages[_currentPageIndex].lastDocument);
+    await _fetchAndAppendPage(previous: _pages[_currentPageIndex]);
   }
 
   /// Free - never re-fetches, since every page reached this session
@@ -194,7 +229,17 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _fetchAndAppendPage({required DocumentSnapshot<Map<String, dynamic>>? startAfterDocument}) async {
+  /// PAGE1: after an error, the fetch that failed again: the first page
+  /// when none came back, else the next one (Previous never fetches).
+  Future<void> retry() async {
+    if (_pages.isEmpty) {
+      await refreshSession();
+    } else {
+      await goToNextPage();
+    }
+  }
+
+  Future<void> _fetchAndAppendPage({required CursorPage<T>? previous}) async {
     final snapshotAt = _snapshotAt;
     if (snapshotAt == null) return;
 
@@ -203,7 +248,10 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final page = await fetchPage(snapshotAt: snapshotAt, pageSize: _pageSize, startAfterDocument: startAfterDocument);
+      final after = fetchPageAfter;
+      final page = after != null
+          ? await after(snapshotAt: snapshotAt, pageSize: _pageSize, after: previous?.cursor)
+          : await fetchPage!(snapshotAt: snapshotAt, pageSize: _pageSize, startAfterDocument: previous?.lastDocument);
       _pages.add(page);
       _currentPageIndex = _pages.length - 1;
     } catch (e) {
