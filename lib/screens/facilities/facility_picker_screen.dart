@@ -5,11 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../utils/facility_activation.dart';
 import '../../utils/force_logout.dart';
-import '../../constants/facility_types.dart';
-import '../../widgets/facility_type_tag.dart';
+import '../../widgets/facility_pick_card.dart';
 import '../../widgets/initials_avatar.dart';
-import '../../widgets/reveal/reveal_image.dart';
-import '../../widgets/vetbiz_loading_indicator.dart';
+import '../../widgets/reveal/skeleton_box.dart';
 import '../../data/collections.dart';
 import '../../data/facility_status.dart';
 import '../../data/fields.dart';
@@ -18,6 +16,7 @@ import '../../data/user_role.dart';
 import '../../config/app_info.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
+import '../../theme/polish_metrics.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_motion.dart';
 import '../../theme/app_layout.dart';
@@ -25,7 +24,8 @@ import '../../l10n/l10n.dart';
 
 /// Only ever shown for an Admin managing more than one facility - the
 /// single-facility case (every Assistant, and most Admins) never
-/// reaches this at all, going straight to Dashboard instead.
+/// reaches this at all, going straight to Dashboard instead
+/// (facilityLandingFor, lib/utils/facility_landing.dart).
 ///
 /// Unlike main.dart's own login decision (deliberately lean - a single
 /// extra fetch there was a past source of unreliable logins), this
@@ -35,13 +35,23 @@ import '../../l10n/l10n.dart';
 /// this screen is only ever reached for the smaller subset of
 /// multi-facility Admins, well after the time-critical login decision
 /// has already been made.
+///
+/// UX9: flat cards in a centred grid (two side by side, three or more in
+/// auto columns, one column on a phone), the whole card opening its
+/// facility. No search or filter, unless there are more than
+/// [FacilityPickerMetrics.searchAbove] facilities (a plain search box then).
 class FacilityPickerScreen extends StatefulWidget {
   /// The facilities as the user document lists them, or the in-app maps: read
   /// through FacilityEntry (FX1), so an odd or web-shaped value never throws.
   final List<Object?> facilities;
   final String? role;
 
-  const FacilityPickerScreen({super.key, required this.facilities, this.role});
+  /// Tests pass a fake Firestore and the signed-in uid; the app passes
+  /// neither (the default instance and FirebaseAuth's current user).
+  final FirebaseFirestore? firestore;
+  final String? uid;
+
+  const FacilityPickerScreen({super.key, required this.facilities, this.role, this.firestore, this.uid});
 
   @override
   State<FacilityPickerScreen> createState() => _FacilityPickerScreenState();
@@ -54,7 +64,6 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   final Map<String, int> _staffCountByFacility = {};
   String? _defaultFacilityId;
   String _searchQuery = '';
-  String? _typeFilter;
   String _currentUserName = '';
   String? _currentUserAvatarUrl;
 
@@ -66,8 +75,8 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
 
   Future<void> _loadEnrichedData() async {
     try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      final firestore = FirebaseFirestore.instance;
+      final uid = widget.uid ?? FirebaseAuth.instance.currentUser?.uid;
+      final firestore = widget.firestore ?? FirebaseFirestore.instance;
 
       // Facility details (address, status, logoUrl) - one get per
       // facility, run in parallel rather than one at a time.
@@ -119,29 +128,29 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   }
 
   Future<void> _setAsDefault(String facilityId) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = widget.uid ?? FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-    await FirebaseFirestore.instance.collection(Collections.users).doc(uid).update({'defaultFacilityId': facilityId});
+    await (widget.firestore ?? FirebaseFirestore.instance)
+        .collection(Collections.users)
+        .doc(uid)
+        .update({'defaultFacilityId': facilityId});
     if (mounted) setState(() => _defaultFacilityId = facilityId);
   }
 
-  List<FacilityEntry> get _filteredFacilities {
+  /// UX9: search exists only above [FacilityPickerMetrics.searchAbove]
+  /// facilities; with fewer, every facility shows.
+  bool get _hasSearch => _entries.length > FacilityPickerMetrics.searchAbove;
+
+  List<FacilityEntry> get _shownFacilities {
+    final q = _searchQuery.trim().toLowerCase();
+    if (!_hasSearch || q.isEmpty) return _entries;
     return _entries.where((f) {
       final name = (f.name ?? '').toLowerCase();
       // The type as shown (an Other facility's own words, RW2b2) is what a
-      // search matches.
+      // search matches; the location too, as the field's hint says.
       final type = context.l10n.facilityTypeDisplay(f.type, f.typeDetail).toLowerCase();
-      final details = _detailsByFacility[f.id];
-      final address = (FacilityEntry.safeString(details?['address']) ?? '').toLowerCase();
-
-      if (_typeFilter != null && f.type != _typeFilter) return false;
-
-      if (_searchQuery.trim().isNotEmpty) {
-        final q = _searchQuery.trim().toLowerCase();
-        if (!name.contains(q) && !type.contains(q) && !address.contains(q)) return false;
-      }
-
-      return true;
+      final address = (FacilityEntry.safeString(_detailsByFacility[f.id]?['address']) ?? '').toLowerCase();
+      return name.contains(q) || type.contains(q) || address.contains(q);
     }).toList();
   }
 
@@ -149,45 +158,55 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.colors.surfaceMuted,
-      body: AnimatedSwitcher(
-        duration: AppMotion.normal,
-        switchInCurve: Curves.easeOut,
-        switchOutCurve: Curves.easeIn,
-        transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
-        child: _isLoading
-            ? const VetBizLoadingPage(key: ValueKey('loading'))
-            : Column(
-                key: const ValueKey('content'),
-                children: [
-                _buildHeader(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      // PH8b: the 16 px gutter on a phone, so the card keeps its own
-                      // padding at 360 (24 on a tablet or computer, as before).
-                      padding: EdgeInsets.all(_phone ? AppSpacing.s16 : AppSpacing.s24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildHero(),
-                          const SizedBox(height: AppSpacing.s24),
-                          _buildSearchAndFilter(),
-                          const SizedBox(height: AppSpacing.s20),
-                          _buildFacilityGrid(),
-                          const SizedBox(height: AppSpacing.s24),
+      body: Column(
+        children: [
+          _buildHeader(),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Padding(
+                // PH8b: the 16 px gutter on a phone (24 on a tablet or computer).
+                padding: EdgeInsets.all(_phone ? AppSpacing.s16 : AppSpacing.s24),
+                child: Center(
+                  // UX9: never wider than the content column, centred.
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: FacilityPickerMetrics.maxContentWidth),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHero(),
+                        const SizedBox(height: AppSpacing.s24),
+                        if (_hasSearch) ...[
+                          _buildSearch(),
+                          const SizedBox(height: AppSpacing.s16),
                         ],
-                      ),
+                        // UX9: one skeleton set in the cards' shape until the
+                        // details arrive, then the cards (no spinner).
+                        AnimatedSwitcher(
+                          duration: AppMotion.normal,
+                          switchInCurve: Curves.easeOut,
+                          switchOutCurve: Curves.easeIn,
+                          child: _isLoading
+                              ? SkeletonPulse(
+                                  key: const ValueKey('loading'),
+                                  child: _grid([for (final _ in _entries) const FacilityPickCardSkeleton()]),
+                                )
+                              : KeyedSubtree(key: const ValueKey('content'), child: _buildFacilityGrid()),
+                        ),
+                        const SizedBox(height: AppSpacing.s24),
+                      ],
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
+          ),
+        ],
       ),
     );
   }
 
-  // PH8b: the phone fixes (the gutter, 12 px text, a 48 px menu, the row
-  // that wraps); tablets and computers keep today's picker.
+  // PH8b: the phone fixes (the gutter, a 48 px account menu); UX9 keeps
+  // them, the cards now one shared design at every width.
   bool get _phone => AppLayout.isPhone(context);
 
   // At least 48 x 48 on a phone; untouched elsewhere.
@@ -267,266 +286,121 @@ class _FacilityPickerScreenState extends State<FacilityPickerScreen> {
     );
   }
 
-  // UI1: the page header centred at every width: the store icon in its circle
-  // above, then the title and its subtitle. The decorative icons that sat at
-  // the right on wider screens (a tractor, a rabbit and a paw) are gone.
-  Widget _buildHero() {
-    return SizedBox(
-      // The page's full width, so the header is centred on the page.
-      width: double.infinity,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.s14),
-            decoration: BoxDecoration(
-              color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.storefront_outlined, color: context.colors.primary, size: AppIconSize.i24),
-          ),
-          const SizedBox(height: AppSpacing.s12),
-          Text(context.l10n.facilityPicker_title,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.primary)),
-          const SizedBox(height: AppSpacing.s6),
-          Text(
-            context.l10n.facilityPicker_intro,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: context.colors.textMuted, fontSize: AppFontSize.f13_5),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildSearchAndFilter() {
-    return Row(
+  // UX9: the page header centred at every width: "Welcome back, <name>"
+  // (only when the profile has a name), then the title and its subtitle.
+  // UI1's store icon in its accent circle is gone: on this page only the
+  // Default card carries the accent.
+  Widget _buildHero() {
+    final l10n = context.l10n;
+    return Column(
       children: [
-        Expanded(
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: context.l10n.facilityPicker_searchHint,
-              prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
-              filled: true,
-              fillColor: context.colors.surface,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.r10), borderSide: BorderSide.none),
-            ),
-            onChanged: (value) => setState(() => _searchQuery = value),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.s8),
-        PopupMenuButton<String?>(
-          initialValue: _typeFilter,
-          onSelected: (value) => setState(() => _typeFilter = value),
-          itemBuilder: (context) => [
-            PopupMenuItem(value: null, child: Text(context.l10n.facilityPicker_allTypes)),
-            // Shows the label; filters on the stored type.
-            ...kFacilityTypes.map((t) => PopupMenuItem(value: t, child: Text(context.l10n.facilityTypeLabel(t)))),
-          ],
-          child: _phoneTapTarget(Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s14, vertical: AppSpacing.s12),
-            decoration: BoxDecoration(color: context.colors.surface, borderRadius: BorderRadius.circular(AppRadius.r10)),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.filter_list, size: AppIconSize.i18),
-                const SizedBox(width: AppSpacing.s6),
-                Text(_typeFilter == null ? context.l10n.facilityPicker_filter : context.l10n.facilityTypeLabel(_typeFilter!), style: const TextStyle(fontSize: AppFontSize.f13)),
-                const Icon(Icons.expand_more, size: AppIconSize.i18),
-              ],
-            ),
-          )),
+        if (_currentUserName.isNotEmpty) ...[
+          Text(l10n.facilityPicker_welcomeBack(_currentUserName),
+              key: const ValueKey('facilityPicker-welcome'),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: context.colors.textSecondary, fontSize: AppFontSize.f14, fontWeight: AppFontWeight.semibold)),
+          const SizedBox(height: AppSpacing.s4),
+        ],
+        Text(l10n.facilityPicker_title,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f24, color: context.colors.textPrimary)),
+        const SizedBox(height: AppSpacing.s6),
+        Text(
+          l10n.facilityPicker_intro,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: context.colors.textSecondary, fontSize: AppFontSize.f13_5),
         ),
       ],
     );
   }
 
-  Widget _buildFacilityGrid() {
-    final filtered = _filteredFacilities;
+  // UX9: only with more than FacilityPickerMetrics.searchAbove facilities.
+  Widget _buildSearch() {
+    return TextField(
+      key: const ValueKey('facilityPicker-search'),
+      decoration: InputDecoration(
+        hintText: context.l10n.facilityPicker_searchHint,
+        prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.s12, horizontal: AppSpacing.s12),
+        filled: true,
+        fillColor: context.colors.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.r10),
+          borderSide: BorderSide(color: context.colors.border, width: PolishMetrics.hairline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.r10),
+          borderSide: BorderSide(color: context.colors.border, width: PolishMetrics.hairline),
+        ),
+      ),
+      onChanged: (value) => setState(() => _searchQuery = value),
+    );
+  }
+
+  /// How many columns [count] cards take in [width]: one on a phone; two
+  /// facilities side by side; three or more as many columns as fit at
+  /// [FacilityPickerMetrics.minCardWidth], never more than there are cards.
+  int _columnsFor(int count, double width) {
+    if (_phone || count <= 1) return 1;
+    const gap = FacilityPickerMetrics.gridGap;
+    final fit = ((width + gap) / (FacilityPickerMetrics.minCardWidth + gap)).floor();
+    if (count == 2) return fit >= 2 ? 2 : 1;
+    return fit.clamp(1, count);
+  }
+
+  /// [cards] in equal columns, left to right, rows top to bottom.
+  Widget _grid(List<Widget> cards) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        const idealCardWidth = 360.0;
-        final maxColumnsForWidth = (constraints.maxWidth / idealCardWidth).floor().clamp(1, 4);
-        // Never more columns than there are cards to fill them - with
-        // only 2 facilities, this keeps them as 2 wide columns rather
-        // than 2 narrow ones sitting centered inside a 4-column layout.
-        final columns = filtered.isEmpty ? maxColumnsForWidth : maxColumnsForWidth.clamp(1, filtered.length);
+        const gap = FacilityPickerMetrics.gridGap;
+        final columns = _columnsFor(cards.length, constraints.maxWidth);
+        // Floored, so rounding never pushes the last card of a row down.
+        final cardWidth = ((constraints.maxWidth - (columns - 1) * gap) / columns).floorToDouble();
         return Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          alignment: WrapAlignment.center,
-          children: [
-            for (final facility in filtered)
-              SizedBox(
-                width: (constraints.maxWidth - (columns - 1) * 16) / columns,
-                child: _buildFacilityCard(facility),
-              ),
-          ],
+          spacing: gap,
+          runSpacing: gap,
+          children: [for (final card in cards) SizedBox(width: cardWidth, child: card)],
         );
       },
     );
   }
 
-  Widget _buildFacilityCard(FacilityEntry facility) {
-    final facilityId = facility.id!; // listFrom keeps only entries with an id
-    final name = facility.name ?? context.l10n.facilityPicker_unnamedFacility;
-    final type = facility.type ?? '';
-    final details = _detailsByFacility[facilityId];
-    final logoUrl = FacilityEntry.safeString(details?['logoUrl']);
-    final address = FacilityEntry.safeString(details?['address']);
-    final status = FacilityEntry.safeString(details?[Fields.status]) ?? FacilityStatus.active.key;
-    final staffCount = _staffCountByFacility[facilityId] ?? 0;
-    final isDefault = facilityId == _defaultFacilityId;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDefault ? context.colors.primary.withValues(alpha: AppAlpha.a05) : context.colors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.r14),
-        border: Border.all(color: isDefault ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a20), width: isDefault ? 2 : 1),
-      ),
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.s14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadius.r10),
-                      child: SizedBox(
-                        width: 56,
-                        height: 56,
-                        child: logoUrl != null && logoUrl.isNotEmpty
-                            ? RevealImage.fill(
-                                url: logoUrl,
-                                fit: BoxFit.cover,
-                                placeholder: Container(
-                                    color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                                    child: Icon(Icons.storefront_outlined, color: context.colors.primary)))
-                            : Container(
-                                color: context.colors.primary.withValues(alpha: AppAlpha.a10),
-                                child: Icon(Icons.storefront_outlined, color: context.colors.primary)),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.s12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(name, style: const TextStyle(fontWeight: AppFontWeight.bold, fontSize: AppFontSize.f15), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          const SizedBox(height: AppSpacing.s4),
-                          FacilityTypeTag(type: type, typeDetail: facility.typeDetail),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.s10),
-                Row(
-                  children: [
-                    Icon(Icons.location_on_outlined, size: AppIconSize.i14, color: context.colors.textHint),
-                    const SizedBox(width: AppSpacing.s4),
-                    Expanded(
-                      child: Text(
-                        (address != null && address.isNotEmpty) ? address : context.l10n.facilityPicker_locationNotSet,
-                        style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.s6),
-                _staffAndStatus(staffCount, status),
-                const SizedBox(height: AppSpacing.s12),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 150,
-                      child: isDefault
-                          ? ElevatedButton.icon(
-                              onPressed: () => activateFacilityAndGoToDashboard(context: context, facility: facility.toMap(), role: widget.role),
-                              icon: const Icon(Icons.arrow_forward, size: AppIconSize.i16),
-                              label: Text(context.l10n.facilityPicker_openFacility),
-                              style: ElevatedButton.styleFrom(backgroundColor: context.colors.primary, foregroundColor: context.colors.onPrimary),
-                            )
-                          : OutlinedButton.icon(
-                              onPressed: () => activateFacilityAndGoToDashboard(context: context, facility: facility.toMap(), role: widget.role),
-                              icon: const Icon(Icons.arrow_forward, size: AppIconSize.i16),
-                              label: Text(context.l10n.facilityPicker_openFacility),
-                              style: OutlinedButton.styleFrom(foregroundColor: context.colors.primary),
-                            ),
-                    ),
-                    const Spacer(),
-                    PopupMenuButton<String>(
-                      onSelected: (value) {
-                        if (value == 'default') _setAsDefault(facilityId);
-                      },
-                      itemBuilder: (context) => [
-                        if (!isDefault) PopupMenuItem(value: 'default', child: Text(context.l10n.facilityPicker_setAsDefault)),
-                      ],
-                      child: _phoneTapTarget(Container(
-                        padding: const EdgeInsets.all(AppSpacing.s10),
-                        decoration: BoxDecoration(border: Border.all(color: context.colors.textHint.withValues(alpha: AppAlpha.a30)), borderRadius: BorderRadius.circular(AppRadius.r8)),
-                        child: const Icon(Icons.more_vert, size: AppIconSize.i16),
-                      )),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (isDefault)
-            Positioned(
-              top: 10,
-              right: 10,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s8, vertical: AppSpacing.s3),
-                decoration: BoxDecoration(color: context.colors.primary, borderRadius: BorderRadius.circular(AppRadius.r10)),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.star, size: AppIconSize.i12, color: context.colors.onPrimary),
-                    SizedBox(width: AppSpacing.s3),
-                    Text(context.l10n.facilityPicker_default, style: TextStyle(color: context.colors.onPrimary, fontSize: AppFontSize.f10, fontWeight: AppFontWeight.bold)),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  // The staff count and the status. On a phone the two pairs wrap onto a
-  // second line when the words are long (Kiswahili overflowed by up to 77 px
-  // at 360); elsewhere today's single row.
-  Widget _staffAndStatus(int staffCount, String status) {
-    final staff = [
-      Icon(Icons.people_outline, size: AppIconSize.i14, color: context.colors.textHint),
-      const SizedBox(width: AppSpacing.s4),
-      Text(context.l10n.facilityPicker_staffCount(staffCount), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
-    ];
-    final state = [
-      Container(width: 6, height: 6, decoration: BoxDecoration(color: FacilityStatus.fromKey(status) == FacilityStatus.active ? context.colors.success : context.colors.textHint, shape: BoxShape.circle)),
-      const SizedBox(width: AppSpacing.s4),
-      Text(context.l10n.facilityStatusLabel(status), style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textMuted)),
-    ];
-    if (_phone) {
-      return Wrap(
-        spacing: AppSpacing.s12,
-        runSpacing: AppSpacing.s4,
-        children: [
-          Row(mainAxisSize: MainAxisSize.min, children: staff),
-          Row(mainAxisSize: MainAxisSize.min, children: state),
-        ],
+  Widget _buildFacilityGrid() {
+    final shown = _shownFacilities;
+    if (shown.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.s24),
+        child: Text(
+          _entries.isEmpty ? context.l10n.facilities_noneFound : context.l10n.clients_noMatches,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: context.colors.textSecondary, fontSize: AppFontSize.f14),
+        ),
       );
     }
-    return Row(children: [...staff, const SizedBox(width: AppSpacing.s12), ...state]);
+    return _grid([for (final f in shown) _buildFacilityCard(f)]);
+  }
+
+  Widget _buildFacilityCard(FacilityEntry facility) {
+    final facilityId = facility.id!; // listFrom keeps only entries with an id
+    final details = _detailsByFacility[facilityId];
+    final isDefault = facilityId == _defaultFacilityId;
+    return FacilityPickCard(
+      key: ValueKey('facilityPickCard-$facilityId'),
+      name: facility.name ?? context.l10n.facilityPicker_unnamedFacility,
+      type: facility.type ?? '',
+      typeDetail: facility.typeDetail,
+      logoUrl: FacilityEntry.safeString(details?['logoUrl']),
+      address: FacilityEntry.safeString(details?['address']),
+      status: FacilityEntry.safeString(details?[Fields.status]) ?? FacilityStatus.active.key,
+      staffCount: _staffCountByFacility[facilityId] ?? 0,
+      isDefault: isDefault,
+      onOpen: () => activateFacilityAndGoToDashboard(context: context, facility: facility.toMap(), role: widget.role),
+      // The ⋮ menu's one action; the Default card has none, so no menu.
+      onSetDefault: isDefault ? null : () => _setAsDefault(facilityId),
+    );
   }
 }
