@@ -35,6 +35,10 @@ class CountingFirestore implements FirebaseFirestore {
   /// PH7b: while set, a document get fails (View Reports' error state).
   bool failDocGets = false;
 
+  /// UX8: while set, every document get waits for it (Business Pulse loading
+  /// after the charts have drawn).
+  Completer<void>? holdDocGets;
+
   void resetCounts() {
     reads = 0;
     gets = 0;
@@ -189,6 +193,7 @@ class _Doc implements DocumentReference<Map<String, dynamic>> {
   Future<DocumentSnapshot<Map<String, dynamic>>> get([GetOptions? options]) async {
     db.gets++;
     if (db.failDocGets) throw FirebaseException(plugin: 'cloud_firestore', code: 'unavailable');
+    await db.holdDocGets?.future;
     final snap = await d.get();
     db.reads++;
     return snap;

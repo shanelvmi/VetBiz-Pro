@@ -20,12 +20,12 @@ import '../../config/app_date_format.dart';
 import '../../theme/app_text.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
-import '../../theme/app_motion.dart';
 import '../../theme/polish_metrics.dart';
 import '../../ui/feedback/friendly_error.dart';
 import '../../ui/polish/chart_palette.dart';
 import '../../l10n/l10n.dart';
 import '../../widgets/app_sheet.dart';
+import '../../widgets/reveal/skeleton_box.dart';
 import '../../utils/app_clock.dart';
 
 /// A simple insights view - a 14-day sales trend and your top 5
@@ -41,7 +41,23 @@ class InsightsScreen extends StatefulWidget {
 
   @override
   State<InsightsScreen> createState() => _InsightsScreenState();
+
+  /// UX8: forgets the Business Pulse kept in memory (tests start cold).
+  @visibleForTesting
+  static void forgetLastPulse() => _InsightsScreenState._lastPulse.clear();
 }
+
+/// UX8: what one Business Pulse read gave (see _lastPulse).
+typedef _PulseValues = ({
+  KpiTrend sales,
+  KpiTrend services,
+  KpiTrend outstanding,
+  double todayActivity,
+  double todaySalesShare,
+  double recentAvg,
+  double weeklyRatio,
+  bool enoughWeek,
+});
 
 class _InsightsScreenState extends State<InsightsScreen> {
   /// POL2: the cards' hairline border, drawn outside the edge so each card
@@ -73,9 +89,30 @@ class _InsightsScreenState extends State<InsightsScreen> {
   double _weeklySalesRatio = 1.0;
   bool _hasEnoughWeekData = false;
 
+  // UX8: the last Business Pulse read, per facility, kept for the session
+  // (memory only). A return visit shows it at once while the same reads
+  // refresh it, instead of a skeleton.
+  static final _lastPulse = <String, _PulseValues>{};
+
+  void _restorePulse() {
+    final facilityId = Provider.of<FacilityProvider>(context, listen: false).selectedFacilityId;
+    final last = facilityId == null ? null : _lastPulse[facilityId];
+    if (last == null) return;
+    _salesPulseTrend = last.sales;
+    _serviceRevenuePulseTrend = last.services;
+    _outstandingPulseTrend = last.outstanding;
+    _todayActivity = last.todayActivity;
+    _todaySalesShare = last.todaySalesShare;
+    _recentAvgDailyActivity = last.recentAvg;
+    _weeklySalesRatio = last.weeklyRatio;
+    _hasEnoughWeekData = last.enoughWeek;
+    _isPulseLoading = false;
+  }
+
   @override
   void initState() {
     super.initState();
+    _restorePulse();
     _loadInsights();
     _loadBusinessPulse();
   }
@@ -195,26 +232,30 @@ class _InsightsScreenState extends State<InsightsScreen> {
 
     try {
       final summaryService = DashboardSummaryService(firestore: widget.firestore);
-      final results = await Future.wait([
-        summaryService.getDashboardTotals(facilityId: facilityId, start: today, end: now),
-        summaryService.getDashboardTotals(facilityId: facilityId, start: yesterday, end: yesterday),
-        summaryService.getDashboardTotals(facilityId: facilityId, start: recentStart, end: recentEnd),
-        summaryService.getDashboardTotals(facilityId: facilityId, start: startOfThisWeek, end: now),
-        summaryService.getDashboardTotals(
-            facilityId: facilityId, start: startOfLastWeek, end: lastWeekComparableEnd),
-      ]);
-      final todayTotals = results[0];
-      final yesterdayTotals = results[1];
-      final recentTotals = results[2];
-      final thisWeekTotals = results[3];
-      final lastWeekComparableTotals = results[4];
-
-      final yesterdaySnapshotDoc = await (widget.firestore ?? FirebaseFirestore.instance)
+      // UX8: yesterday's snapshot is read alongside the totals (it waited for
+      // all twenty of their queries before). The same reads, no new ones.
+      final snapshotRead = (widget.firestore ?? FirebaseFirestore.instance)
           .collection(Collections.facilities)
           .doc(facilityId)
           .collection(Collections.dailySnapshots)
           .doc(_dateKey(yesterday))
           .get();
+      final (results, yesterdaySnapshotDoc) = await (
+        Future.wait([
+          summaryService.getDashboardTotals(facilityId: facilityId, start: today, end: now),
+          summaryService.getDashboardTotals(facilityId: facilityId, start: yesterday, end: yesterday),
+          summaryService.getDashboardTotals(facilityId: facilityId, start: recentStart, end: recentEnd),
+          summaryService.getDashboardTotals(facilityId: facilityId, start: startOfThisWeek, end: now),
+          summaryService.getDashboardTotals(
+              facilityId: facilityId, start: startOfLastWeek, end: lastWeekComparableEnd),
+        ]),
+        snapshotRead,
+      ).wait;
+      final todayTotals = results[0];
+      final yesterdayTotals = results[1];
+      final recentTotals = results[2];
+      final thisWeekTotals = results[3];
+      final lastWeekComparableTotals = results[4];
       final yesterdaySnapshot = yesterdaySnapshotDoc.data();
 
       if (!mounted) return;
@@ -264,6 +305,16 @@ class _InsightsScreenState extends State<InsightsScreen> {
         _weeklySalesRatio = weeklySalesRatio;
         _hasEnoughWeekData = hasEnoughWeekData;
         _isPulseLoading = false;
+        _lastPulse[facilityId] = (
+          sales: _salesPulseTrend!,
+          services: _serviceRevenuePulseTrend!,
+          outstanding: _outstandingPulseTrend!,
+          todayActivity: todayActivity,
+          todaySalesShare: todaySalesShare,
+          recentAvg: recentAvgDailyActivity,
+          weeklyRatio: weeklySalesRatio,
+          enoughWeek: hasEnoughWeekData,
+        );
       });
     } catch (e) {
       debugPrint('Error loading Business Pulse: $e');
@@ -346,33 +397,29 @@ class _InsightsScreenState extends State<InsightsScreen> {
     return l.insights_outstandingImproving;
   }
 
+  // UX8: one card shape whether loading or not, so nothing moves when the
+  // figures land: while loading, the real title and skeleton bars over the
+  // headline and the sentence, each laid out from what the card says before
+  // any figure (the quiet day's words, same style), never a spinner. A day
+  // whose words wrap differently can still change the height by a line.
   Widget _buildBusinessPulseCard() {
-    return AnimatedSwitcher(
-      duration: AppMotion.normal,
-      switchInCurve: Curves.easeOut,
-      switchOutCurve: Curves.easeIn,
-      transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: child),
-      child: _isPulseLoading
-          ? Container(
-              key: const ValueKey('pulse-loading'),
-              padding: const EdgeInsets.all(AppSpacing.s20),
-              decoration: BoxDecoration(
-                color: context.colors.surface,
-                borderRadius: BorderRadius.circular(AppRadius.r16),
-                border: _hairline,
-              ),
-              child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            )
-          : _buildBusinessPulseContent(),
-    );
+    if (_isPulseLoading) return _buildBusinessPulseContent(loading: true);
+    return _buildBusinessPulseContent();
   }
 
-  Widget _buildBusinessPulseContent() {
-    final metrics = _pulseMetrics();
-    if (metrics.isEmpty) return const SizedBox.shrink(key: ValueKey('pulse-empty'));
-
-    return Container(
-      key: const ValueKey('pulse-content'),
+  Widget _buildBusinessPulseContent({bool loading = false}) {
+    if (!loading && _pulseMetrics().isEmpty) return const SizedBox.shrink(key: ValueKey('pulse-empty'));
+    final l = context.l10n;
+    final headlineStyle = TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold);
+    final sentenceStyle = TextStyle(color: context.colors.textSecondary, fontSize: AppFontSize.f13, height: 1.4);
+    final headline = loading
+        ? SkeletonOf(child: Text(_pulseHeadline(), style: headlineStyle))
+        : Text(_pulseHeadline(), key: const ValueKey('pulse-headline'), style: headlineStyle);
+    final sentence = loading
+        ? SkeletonOf(child: Text(_pulseSentence(), style: sentenceStyle))
+        : Text(_pulseSentence(), style: sentenceStyle);
+    final card = Container(
+      key: ValueKey(loading ? 'pulse-loading' : 'pulse-content'),
       padding: const EdgeInsets.all(AppSpacing.s20),
       // POL2 (owner rule 4): a flat surface with a hairline border, no
       // gradient or glow. The pulse shows no live state: its read is the
@@ -396,21 +443,19 @@ class _InsightsScreenState extends State<InsightsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(context.l10n.insights_businessPulse,
+                Text(l.insights_businessPulse,
                     style: TextStyle(color: context.colors.textSecondary, fontSize: AppFontSize.f13, fontWeight: AppFontWeight.semibold)),
                 const SizedBox(height: AppSpacing.s4),
-                Text(_pulseHeadline(),
-                    key: const ValueKey('pulse-headline'),
-                    style: TextStyle(color: context.colors.textPrimary, fontSize: AppFontSize.f18, fontWeight: AppFontWeight.bold)),
+                headline,
                 const SizedBox(height: AppSpacing.s6),
-                Text(_pulseSentence(),
-                    style: TextStyle(color: context.colors.textSecondary, fontSize: AppFontSize.f13, height: 1.4)),
+                sentence,
               ],
             ),
           ),
         ],
       ),
     );
+    return loading ? SkeletonPulse(child: card) : card;
   }
 
   @override
