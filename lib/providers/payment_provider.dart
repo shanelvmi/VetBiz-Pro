@@ -5,6 +5,8 @@ import '../models/payment.dart';
 import '../models/ledger_entry.dart';
 import '../services/record_changes.dart';
 import '../services/snapshot_ledger_controller.dart';
+import '../services/cursor_paginated_list_controller.dart';
+import '../services/merged_cursor.dart';
 import 'sale_provider.dart';
 import 'service_provider.dart';
 import '../config/payment_methods.dart';
@@ -22,11 +24,23 @@ class PaymentProvider with ChangeNotifier {
       fetchLedger: _fetchLedger,
       countNewEntries: _countNewLedgerEntries,
     );
+    ledgerPager = CursorPaginatedListController<LedgerEntry>.after(
+      fetchPageAfter: _fetchLedgerPage,
+      countCreatedAfter: ({required after}) {
+        final start = _pagerRangeStart;
+        final end = _pagerRangeEnd;
+        if (start == null || end == null) return Future.value(0);
+        return _countNewLedgerEntries(after: after, rangeStart: start, rangeEnd: end);
+      },
+    );
     // The ledger lists other income from transactions, fetched once
     // (BUG-1): it starts over when one goes to Trash or comes back. Sales
     // and services do not touch it: their payments stay counted.
     _recordChanges = RecordChanges.listen({Collections.transactions}, (facilityId) {
-      if (facilityId == _ledgerFacilityId) unawaited(ledgerController.refreshSession());
+      if (facilityId == _ledgerFacilityId) {
+        unawaited(ledgerController.refreshSession());
+        unawaited(ledgerPager.refreshSession());
+      }
     });
   }
 
@@ -207,19 +221,7 @@ class PaymentProvider with ChangeNotifier {
       }
 
       final txSnap = await txQuery.get();
-      for (final doc in txSnap.docs) {
-        final data = doc.data();
-        entries.add(LedgerEntry(
-          type: 'other_income',
-          amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-          timestamp: (data['date'] as Timestamp?)?.toDate() ?? AppClock.now(),
-          description: (data['description'] as String?)?.isNotEmpty == true
-              ? data['description'] as String
-              : 'Other income',
-          paymentMethod: data['paymentMethod'] as String?,
-          sortId: doc.id,
-        ));
-      }
+      entries.addAll(txSnap.docs.map(_otherIncomeDocToEntry));
     }
 
     // Deterministic - timestamp DESC, then sortId DESC as a tie-breaker
@@ -281,6 +283,151 @@ class PaymentProvider with ChangeNotifier {
 
     return total;
   }
+
+  // ==================== Payments screen, PC/tablet: server pages (PAGE1) ====================
+  //
+  // The same ledger as above (payments plus other income, the same filters
+  // and the same rules about search and one client's history), one page at
+  // a time: each source reads pageSize + 1 after its own cursor and the two
+  // are merged newest first (fetchMergedPage, at most 2 x (pageSize + 1)
+  // reads a page). The phone keeps ledgerController.
+
+  late final CursorPaginatedListController<LedgerEntry> ledgerPager;
+
+  DateTime? _pagerRangeStart;
+  DateTime? _pagerRangeEnd;
+
+  /// Records the filters and the range for [ledgerPager]; the returned
+  /// signature changes (back to page 1) when any of them does.
+  Object updateLedgerPagerFilters({
+    required String facilityId,
+    required String searchTerm,
+    required String? typeFilter,
+    required String? methodFilter,
+    required String? initialClientId,
+    required DateTime rangeStart,
+    required DateTime rangeEnd,
+  }) {
+    final q = updateLedgerFilters(
+      facilityId: facilityId,
+      searchTerm: searchTerm,
+      typeFilter: typeFilter,
+      methodFilter: methodFilter,
+      initialClientId: initialClientId,
+    );
+    _pagerRangeStart = rangeStart;
+    _pagerRangeEnd = rangeEnd;
+    return (q, rangeStart, rangeEnd);
+  }
+
+  /// The queries behind a page (and behind [ledgerPagerTotal]): newest
+  /// first inside the range, or by name for a name search (every date, one
+  /// source: other income has no client). [ordered] false leaves the order
+  /// out (an aggregate needs none).
+  List<MergedSource<LedgerEntry>> _ledgerPagerSources(DateTime snapshotAt, {bool ordered = true}) {
+    final facilityId = _ledgerFacilityId;
+    final rangeStart = _pagerRangeStart;
+    final rangeEnd = _pagerRangeEnd;
+    if (facilityId == null || rangeStart == null || rangeEnd == null) return const [];
+    final q = _ledgerQuery;
+    final effectiveEnd = rangeEnd.isBefore(snapshotAt) ? rangeEnd : snapshotAt;
+    final facilityRef = _firestore.collection(Collections.facilities).doc(facilityId);
+    final includeOtherIncome =
+        q.initialClientId == null && q.searchTerm.isEmpty && (q.typeFilter == null || q.typeFilter == 'other_income');
+    final includePayments = q.typeFilter == null || q.typeFilter != 'other_income';
+
+    final sources = <MergedSource<LedgerEntry>>[];
+    if (includePayments) {
+      Query<Map<String, dynamic>> query = facilityRef.collection(Collections.payments);
+      if (q.initialClientId != null) query = query.where('clientId', isEqualTo: q.initialClientId);
+      if (q.typeFilter != null) query = query.where('source', isEqualTo: q.typeFilter);
+      if (q.methodFilter != null) query = whereShownMethod(query, q.methodFilter!);
+      if (q.initialClientId == null && q.searchTerm.isNotEmpty) {
+        query = query
+            .where('clientNameLower', isGreaterThanOrEqualTo: q.searchTerm)
+            .where('clientNameLower', isLessThan: '${q.searchTerm}');
+        if (ordered) query = query.orderBy('clientNameLower').orderBy(FieldPath.documentId);
+      } else {
+        query = query
+            .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(rangeStart))
+            .where('timestamp', isLessThanOrEqualTo: Timestamp.fromDate(effectiveEnd));
+        if (ordered) query = query.orderBy('timestamp', descending: true).orderBy(FieldPath.documentId, descending: true);
+      }
+      sources.add(MergedSource(query, _paymentDocToEntry));
+    }
+    if (includeOtherIncome) {
+      Query<Map<String, dynamic>> query = facilityRef
+          .collection(Collections.transactions)
+          .where('type', isEqualTo: 'other income')
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(rangeStart))
+          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(effectiveEnd));
+      if (q.methodFilter != null) query = whereShownMethod(query, q.methodFilter!);
+      if (ordered) query = query.orderBy('date', descending: true).orderBy(FieldPath.documentId, descending: true);
+      sources.add(MergedSource(query, _otherIncomeDocToEntry));
+    }
+    return sources;
+  }
+
+  LedgerEntry _otherIncomeDocToEntry(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = doc.data();
+    return LedgerEntry(
+      type: 'other_income',
+      amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+      timestamp: (data['date'] as Timestamp?)?.toDate() ?? AppClock.now(),
+      description: (data['description'] as String?)?.isNotEmpty == true ? data['description'] as String : 'Other income',
+      paymentMethod: data['paymentMethod'] as String?,
+      sortId: doc.id,
+    );
+  }
+
+  Future<CursorPage<LedgerEntry>> _fetchLedgerPage({required DateTime snapshotAt, required int pageSize, Object? after}) async {
+    final sources = _ledgerPagerSources(snapshotAt);
+    if (sources.isEmpty) return const CursorPage(items: [], lastDocument: null, hasMore: false);
+    final page = await fetchMergedPage<LedgerEntry>(
+      sources: sources,
+      pageSize: pageSize,
+      after: after,
+      // Newest first, the document id breaking ties (as the queries do).
+      compare: (a, b) {
+        final byTime = b.timestamp.compareTo(a.timestamp);
+        return byTime != 0 ? byTime : b.sortId.compareTo(a.sortId);
+      },
+    );
+    final q = _ledgerQuery;
+    // One client's history, searched further: a refinement of the page
+    // shown (as _fetchLedger; a clientNameLower query would drop entries
+    // saved without a name). Documented in PAGE1 as page-only.
+    if (q.initialClientId != null && q.searchTerm.isNotEmpty) {
+      return CursorPage(
+        items: page.items
+            .where((e) => (e.clientName ?? '').toLowerCase().contains(q.searchTerm) || e.description.toLowerCase().contains(q.searchTerm))
+            .toList(),
+        lastDocument: null,
+        hasMore: page.hasMore,
+        cursor: page.cursor,
+      );
+    }
+    return page;
+  }
+
+  /// PAGE1: the total and the count of everything the pager's filters and
+  /// range match (not the page shown): one sum/count aggregate per source,
+  /// no documents read. Indexes are the ones the page's queries already use.
+  Future<(double, int)> ledgerPagerTotal() async {
+    final sources = _ledgerPagerSources(_pagerSnapshotOrNow(), ordered: false);
+    final results = await Future.wait([
+      for (final s in sources) s.query.aggregate(sum('amount'), count()).get(),
+    ]);
+    var total = 0.0;
+    var n = 0;
+    for (final r in results) {
+      total += r.getSum('amount') ?? 0;
+      n += r.count ?? 0;
+    }
+    return (total, n);
+  }
+
+  DateTime _pagerSnapshotOrNow() => ledgerPager.snapshotAt ?? AppClock.now();
 
   /// Listen to all payments for a facility
   void listenToPayments(String facilityId) {
@@ -528,6 +675,7 @@ class PaymentProvider with ChangeNotifier {
     _payments = [];
     _ledgerFacilityId = null;
     ledgerController.disposeSession();
+    ledgerPager.disposeSession();
     notifyListeners();
   }
 
