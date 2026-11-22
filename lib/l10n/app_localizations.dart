@@ -5222,6 +5222,18 @@ abstract class AppLocalizations {
   /// **'Generate & Export Data'**
   String get export_generate;
 
+  /// UX6: Export (PC/tablet), the title of the card holding the date range and the file format, above the data cards.
+  ///
+  /// In en, this message translates to:
+  /// **'Date range and file format'**
+  String get export_groupOptions;
+
+  /// UX6: Export (PC/tablet), the title above the cards of the data that can be exported, each with its Export button.
+  ///
+  /// In en, this message translates to:
+  /// **'Data to export'**
+  String get export_groupDatasets;
+
   /// Confirmation title.
   ///
   /// In en, this message translates to:
@@ -5407,6 +5419,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'These actions affect your account and business data. Review carefully before proceeding.'**
   String get account_dangerHint;
+
+  /// UX6: Manage Account (PC/tablet), the title of the card with Sign Out of All Devices.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in and devices'**
+  String get account_groupSignIn;
+
+  /// UX6: Manage Account (PC/tablet, admins), the title of the card with Wipe All Business Data.
+  ///
+  /// In en, this message translates to:
+  /// **'Business data'**
+  String get account_groupBusinessData;
 
   /// Manage Account item.
   ///

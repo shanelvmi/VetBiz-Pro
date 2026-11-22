@@ -2936,6 +2936,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get export_generate => 'Generate & Export Data';
 
   @override
+  String get export_groupOptions => 'Date range and file format';
+
+  @override
+  String get export_groupDatasets => 'Data to export';
+
+  @override
   String get account_logoutAllTitle => 'Sign Out of All Devices?';
 
   @override
@@ -3042,6 +3048,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get account_dangerHint =>
       'These actions affect your account and business data. Review carefully before proceeding.';
+
+  @override
+  String get account_groupSignIn => 'Sign-in and devices';
+
+  @override
+  String get account_groupBusinessData => 'Business data';
 
   @override
   String get account_logoutAll => 'Sign Out of All Devices';

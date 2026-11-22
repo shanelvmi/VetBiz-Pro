@@ -2953,6 +2953,12 @@ class AppLocalizationsSw extends AppLocalizations {
   String get export_generate => 'Tengeneza na Hamisha Data';
 
   @override
+  String get export_groupOptions => 'Kipindi na muundo wa faili';
+
+  @override
+  String get export_groupDatasets => 'Data ya kuhamisha';
+
+  @override
   String get account_logoutAllTitle => 'Toka Kwenye Vifaa Vyote?';
 
   @override
@@ -3059,6 +3065,12 @@ class AppLocalizationsSw extends AppLocalizations {
   @override
   String get account_dangerHint =>
       'Vitendo hivi vinaathiri akaunti yako na data ya biashara. Kagua kwa makini kabla ya kuendelea.';
+
+  @override
+  String get account_groupSignIn => 'Kuingia na vifaa';
+
+  @override
+  String get account_groupBusinessData => 'Data ya biashara';
 
   @override
   String get account_logoutAll => 'Toka Kwenye Vifaa Vyote';

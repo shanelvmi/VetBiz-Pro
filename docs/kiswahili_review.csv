@@ -857,6 +857,8 @@ export_csvHint,"Universal, simple text - opens in Excel, Sheets, or any editor",
 export_pickRangeFirst,Select a date range above before exporting.,Chagua kipindi hapo juu kabla ya kuhamisha.,Under the export button with no dates chosen.,draft
 export_pickRangeWarning,Select a date range before exporting,Chagua kipindi kabla ya kuhamisha,Message when exporting with no dates chosen.,draft
 export_generate,Generate & Export Data,Tengeneza na Hamisha Data,Export button.,draft
+export_groupOptions,Date range and file format,Kipindi na muundo wa faili,"UX6: Export (PC/tablet), the title of the card holding the date range and the file format, above the data cards.",draft
+export_groupDatasets,Data to export,Data ya kuhamisha,"UX6: Export (PC/tablet), the title above the cards of the data that can be exported, each with its Export button.",draft
 account_logoutAllTitle,Sign Out of All Devices?,Toka Kwenye Vifaa Vyote?,Confirmation title.,draft
 account_logoutAllBody,"This will clear active sessions and sign you out on all other phones, tablets, or computers currently signed into your account.","Hii itafuta vipindi vilivyo hai na kukutoa kwenye simu, tableti au kompyuta nyingine zote zilizoingia kwenye akaunti yako.",Confirmation text.,draft
 account_logoutEverywhere,Sign Out Everywhere,Toka Kila Mahali,Confirm button.,draft
@@ -888,6 +890,8 @@ account_deleteOwnedFirst,Delete all facilities you own in View Facilities first.
 account_deleteHint,Permanently delete your account. This action cannot be undone.,Futa akaunti yako kabisa. Kitendo hiki hakiwezi kutenduliwa.,Delete Account item.,draft
 account_dangerZone,Danger Zone,Eneo la Hatari,Section heading.,draft
 account_dangerHint,These actions affect your account and business data. Review carefully before proceeding.,Vitendo hivi vinaathiri akaunti yako na data ya biashara. Kagua kwa makini kabla ya kuendelea.,Under Danger Zone.,draft
+account_groupSignIn,Sign-in and devices,Kuingia na vifaa,"UX6: Manage Account (PC/tablet), the title of the card with Sign Out of All Devices.",draft
+account_groupBusinessData,Business data,Data ya biashara,"UX6: Manage Account (PC/tablet, admins), the title of the card with Wipe All Business Data.",draft
 account_logoutAll,Sign Out of All Devices,Toka Kwenye Vifaa Vyote,Manage Account item.,draft
 account_logoutAllHint,Disconnect your active profile session from all other active platforms.,Tenganisha kipindi chako kutoka kwenye vifaa vingine vyote.,Under Sign Out of All Devices.,draft
 account_wipeAll,Wipe All Business Data,Futa Data Yote ya Biashara,Manage Account item.,draft
