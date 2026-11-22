@@ -14,6 +14,8 @@ import '../../theme/app_dimens.dart';
 import '../../theme/theme_context.dart';
 import 'trash_actions.dart';
 import 'trash_phone.dart';
+import '../../theme/polish_metrics.dart';
+import '../../ui/polish/page_card.dart';
 
 class TrashScreen extends StatefulWidget {
   // Null: the app's own Firestore and signed-in person. Tests pass fakes
@@ -93,22 +95,18 @@ class _TrashScreenState extends State<TrashScreen> with SingleTickerProviderStat
       ),
       body: facilityId == null
           ? Center(child: Text(context.l10n.common_noFacilityDot))
-          : Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 700),
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    for (final kind in trashKinds)
-                      _TrashList(
-                        facilityId: facilityId,
-                        firestore: firestore,
-                        currentUserInfo: currentUserInfo,
-                        kind: kind,
-                      ),
-                  ],
-                ),
-              ),
+          // UX6: the full content width (it was a 700 px centred column).
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                for (final kind in trashKinds)
+                  _TrashList(
+                    facilityId: facilityId,
+                    firestore: firestore,
+                    currentUserInfo: currentUserInfo,
+                    kind: kind,
+                  ),
+              ],
             ),
     );
   }
@@ -193,12 +191,15 @@ class _TrashListState extends State<_TrashList> {
           return remaining != null && remaining <= trashWarningThresholdDays;
         }).length;
 
-        return Column(
+        // UX6: the PC/tablet card template: the full width, one flat card
+        // holding a table (Name, Date, actions at the right), as the other
+        // tables. Restore and Delete Forever are the same calls as before.
+        return PageCardList(
           children: [
             if (soonToExpireCount > 0)
               Container(
                 width: double.infinity,
-                margin: const EdgeInsets.fromLTRB(AppSpacing.s4, AppSpacing.s4, AppSpacing.s4, 0),
+                margin: const EdgeInsets.only(top: PolishMetrics.gapBetweenGroups),
                 padding: const EdgeInsets.all(AppSpacing.s10),
                 decoration: BoxDecoration(
                   color: context.colors.warning.withValues(alpha: AppAlpha.a10),
@@ -218,63 +219,93 @@ class _TrashListState extends State<_TrashList> {
                   ],
                 ),
               ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(AppSpacing.s12),
-                itemCount: docs.length,
-                itemBuilder: (context, index) {
-                  final doc = docs[index];
-                  final data = doc.data() as Map<String, dynamic>;
-                  final name = widget.kind.titleOf(data);
-                  final deletedAt = data['deletedAt'] is Timestamp
-                      ? (data['deletedAt'] as Timestamp).toDate()
-                      : null;
-                  final deletedBy = (data['deletedBy'] as String?) ?? context.l10n.common_unknown;
-                  final (expiryText, expiryColor) = trashExpiry(context, deletedAt);
-
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: AppSpacing.s8),
-                    child: ListTile(
-                      title: Text(name, style: const TextStyle(fontWeight: AppFontWeight.semibold)),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            deletedAt != null
-                                ? context.l10n.trash_deletedByOn(deletedBy, AppDateFormat.dateTime24.format(deletedAt))
-                                : context.l10n.trash_deletedBy(deletedBy),
-                            style: const TextStyle(fontSize: AppFontSize.f12),
-                          ),
-                          if (expiryText.isNotEmpty)
-                            Text(
-                              expiryText,
-                              style: TextStyle(fontSize: AppFontSize.f11_5, color: expiryColor, fontWeight: AppFontWeight.semibold),
-                            ),
-                        ],
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.restore, color: context.colors.primary),
-                            tooltip: context.l10n.common_restore,
-                            onPressed: () => _restore(doc.id, data),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete_forever, color: context.colors.dangerAccent),
-                            tooltip: context.l10n.trash_deleteForever,
-                            onPressed: () => _deleteForever(context, doc.id, name),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+            const SizedBox(height: PolishMetrics.gapBetweenGroups),
+            PageCard(
+              padding: null,
+              child: Column(
+                children: [
+                  _headerRow(context),
+                  for (final doc in docs) ...[
+                    Divider(height: PolishMetrics.hairline, thickness: PolishMetrics.hairline, color: context.colors.divider),
+                    _row(context, doc),
+                  ],
+                ],
               ),
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _headerCell(BuildContext context, String label) => Text(
+        label,
+        style: TextStyle(fontSize: AppFontSize.f12, fontWeight: AppFontWeight.semibold, color: context.colors.textSecondary),
+      );
+
+  Widget _headerRow(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: PolishMetrics.cardPadding, vertical: AppSpacing.s10),
+        child: Row(
+          children: [
+            Expanded(flex: 5, child: _headerCell(context, context.l10n.common_name)),
+            const SizedBox(width: AppSpacing.s12),
+            Expanded(flex: 3, child: _headerCell(context, context.l10n.common_date)),
+            const SizedBox(width: AppSpacing.s12),
+            _headerCell(context, context.l10n.common_actions),
+          ],
+        ),
+      );
+
+  Widget _row(BuildContext context, QueryDocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    final name = widget.kind.titleOf(data);
+    final deletedAt = data['deletedAt'] is Timestamp ? (data['deletedAt'] as Timestamp).toDate() : null;
+    final deletedBy = (data['deletedBy'] as String?) ?? context.l10n.common_unknown;
+    final (expiryText, expiryColor) = trashExpiry(context, deletedAt);
+    return Padding(
+      key: ValueKey('trash-row-${doc.id}'),
+      padding: const EdgeInsets.symmetric(horizontal: PolishMetrics.cardPadding, vertical: AppSpacing.s8),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(fontWeight: AppFontWeight.semibold)),
+                Text(context.l10n.trash_deletedBy(deletedBy),
+                    style: TextStyle(fontSize: AppFontSize.f12, color: context.colors.textSecondary)),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.s12),
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(deletedAt != null ? AppDateFormat.dateTime24.format(deletedAt) : '-',
+                    style: const TextStyle(fontSize: AppFontSize.f13)),
+                if (expiryText.isNotEmpty)
+                  Text(expiryText, style: TextStyle(fontSize: AppFontSize.f12, color: expiryColor, fontWeight: AppFontWeight.semibold)),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.s12),
+          TextButton.icon(
+            key: ValueKey('trash-restore-${doc.id}'),
+            onPressed: () => _restore(doc.id, data),
+            icon: const Icon(Icons.restore, size: AppIconSize.i18),
+            label: Text(context.l10n.common_restore),
+            style: TextButton.styleFrom(minimumSize: const Size(0, AppSizes.minTapTarget)),
+          ),
+          IconButton(
+            icon: Icon(Icons.delete_forever, color: context.colors.dangerAccent),
+            tooltip: context.l10n.trash_deleteForever,
+            onPressed: () => _deleteForever(context, doc.id, name),
+          ),
+        ],
+      ),
     );
   }
 }
