@@ -48,12 +48,11 @@ void main() {
     expect(find.textContaining('Recorded sale to Walk-in'), findsOneWidget);
   });
 
-  ph5TestWidgets('a type chip shows what the tablet\'s chip shows', (tester) async {
-    await pumpActivity(tester, size: const Size(1024, 768), modal: true);
-    await tester.tap(find.textContaining('Sales').first);
-    await ph5Settle(tester);
-    final tablet = _shown(tester, [..._sales, 'Added product', 'Restored', 'Approved', 'Recorded payment']);
-    expect(tablet, _sales);
+  // PAGE1: the tablet has no category chips any more (the filter waits for
+  // its indexes, docs/PAGE1_INDEXES.md); the phone's chip shows what the
+  // tablet's chip showed.
+  ph5TestWidgets('a type chip shows the Sales entries, as the tablet\'s chip did', (tester) async {
+    const tablet = _sales;
 
     await pumpActivity(tester, size: _phone);
     final chip = find.widgetWithText(ChoiceChip, 'Sales · 2');
@@ -103,7 +102,9 @@ void main() {
     await pumpActivity(tester, size: const Size(1024, 768), modal: true, fs: wide);
     final phone = CountingFirestore();
     await pumpActivity(tester, size: _phone, fs: phone);
-    expect(phone.listens, wide.listens);
-    expect(phone.gets, wide.gets);
+    // PAGE1: the tablet pages by cursor now (only the app's role listener
+    // stays live); the phone opens what both opened before PAGE1.
+    expect((phone.listens, phone.gets), (3, 2));
+    expect(wide.listens, lessThanOrEqualTo(1));
   });
 }
