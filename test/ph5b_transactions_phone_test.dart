@@ -94,7 +94,8 @@ void main() {
 
   ph5TestWidgets('the summary line and a Summary sheet with the four figures, as on the tablet', (tester) async {
     await _open(tester, size: _wide);
-    for (final v in [Money.format(70000), Money.format(180000), Money.format(-110000), '4 transactions']) {
+    // PAGE1: the tablet no longer shows a count of the rows loaded (one page).
+    for (final v in [Money.format(70000), Money.format(180000), Money.format(-110000)]) {
       expect(find.text(v), findsOneWidget, reason: v);
     }
 

@@ -156,6 +156,11 @@ void main() {
           final c = _colors(tester, TransactionScreen);
           final texts = _texts(tester, screen).toList();
           expect(texts, contains(AppDateFormat.dateTime12.format(ph5When(0, minutes: 9))), reason: where);
+          // PAGE1: the page bar under the list leaves less room at text 1.3
+          // in Kiswahili; yesterday's row is scrolled to, then read too.
+          await tester.scrollUntilVisible(find.textContaining(RegExp(r"^[+][^0-9]*6,000$")), 80,
+              scrollable: find.descendant(of: screen, matching: find.byType(Scrollable)).last);
+          texts.addAll(_texts(tester, screen));
           expect(texts.where((t) => t.startsWith('Total: ') || t.startsWith('Jumla')), isEmpty, reason: 'no day totals');
           expect(texts.any((t) => t.startsWith('+') && t.contains('6,000')), isTrue, reason: 'income keeps +');
           expect(texts.any((t) => t.startsWith('-') && t.contains('3,000')), isTrue, reason: 'expense keeps -');
