@@ -181,9 +181,16 @@ void main() {
       expect(find.byType(TextField), findsOneWidget, reason: 'search');
       expect(find.byType(DropdownButton<String>), findsOneWidget, reason: 'the status filter');
       expect(find.byIcon(Icons.calendar_today_outlined), findsOneWidget, reason: 'the date filter');
-      for (final a in ['Mark all read', 'Remove read ones', 'Select']) {
-        expect(find.widgetWithText(OutlinedButton, a), findsOneWidget, reason: a);
+      // UX6: Mark all read in the page header; Remove read ones and Select
+      // behind its "more" menu.
+      expect(find.widgetWithText(OutlinedButton, 'Mark all read'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('notifications-wide-more')));
+      await tester.pumpAndSettle();
+      for (final a in ['Remove read ones', 'Select']) {
+        expect(find.widgetWithText(PopupMenuItem<VoidCallback>, a), findsOneWidget, reason: a);
       }
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
       for (final i in c.items) {
         expect(find.byKey(ValueKey('notification-more-${i.id}')), findsOneWidget, reason: 'each row keeps its menu');
       }

@@ -11,6 +11,7 @@ import '../../providers/user_role_provider.dart';
 import '../../utils/notification_seen_tracker.dart';
 import '../../models/notification_model.dart';
 import '../../widgets/announcement_message.dart';
+import '../../widgets/list_page_bar.dart';
 import '../../widgets/announcement_poster.dart';
 import '../../widgets/updates_parts.dart';
 import '../../data/announcement_fields.dart';
@@ -351,7 +352,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       // the shared page header, title left, back arrow (pushed). The phone
       // keeps the bar below.
       appBar: !_phone
-          ? PageHeader(title: context.l10n.common_notifications, subtitle: context.l10n.notifications_subtitle)
+          ? PageHeader(
+              title: context.l10n.common_notifications,
+              subtitle: context.l10n.notifications_subtitle,
+              actions: _isLoading || _error != null ? const [] : _buildWideHeaderActions(),
+            )
           : AppBar(
         backgroundColor: context.colors.surface,
         foregroundColor: context.colors.textPrimary,
@@ -459,7 +464,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final header = [
       Padding(
         padding: const EdgeInsets.only(top: PolishMetrics.gapInGroup),
-        child: _buildFilterRow(counts, totalUnread, all.length),
+        // UX6: left-aligned on PC and tablet (it sat centred in the column);
+        // the phone's row already spans the width (All and Unread pinned).
+        child: _phone
+            ? _buildFilterRow(counts, totalUnread, all.length)
+            : SizedBox(width: double.infinity, child: _buildFilterRow(counts, totalUnread, all.length)),
       ),
       // UI1 (the owner's correction): a phone has no search and no date or
       // status filter, only the chips; selection mode keeps its Remove
@@ -476,7 +485,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ? _buildNoMatches()
             : _buildResults(pageItems);
     final showPager = all.isNotEmpty || (_feed?.canLoadOlder ?? false);
-    final pager = _buildPaginationBar(total: total, page: page, totalPages: totalPages);
+    // UX6: PC and tablet use the shared ListPageBar (its spacing ends the
+    // "notifications10 per page" run-together); the phone keeps its bar.
+    final pager = _phone
+        ? _buildPaginationBar(total: total, page: page, totalPages: totalPages)
+        : _buildListPageBar(total: total, page: page, totalPages: totalPages, shown: pageItems.length);
 
     // Phone width: the whole page scrolls as one. With the cards, filters
     // and actions fixed on top, a phone had room for one row or less.
@@ -663,10 +676,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   if (reset != null) ...[const SizedBox(width: AppSpacing.s10), reset],
                 ],
               ),
-            // Wide screens only (UI1): a phone's actions are in the app bar's
-            // menu, and selection mode's are drawn without the filters.
-            const SizedBox(height: AppSpacing.s10),
-            _buildHeaderActions(),
+            // UX6: the wide actions moved into the page header (Mark all read,
+            // the "more" menu; while selecting, Remove selected and Cancel), so
+            // the row that held them is gone. A phone's are in its app bar menu.
           ],
         );
       },
@@ -711,6 +723,62 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 _items.any((i) => i.canRemove) ? () => setState(() => _selecting = true) : null),
           ];
     return Wrap(alignment: WrapAlignment.end, spacing: AppSpacing.s8, runSpacing: AppSpacing.s8, children: children);
+  }
+
+  /// UX6: the wide page header's actions: Mark all read, then Remove read
+  /// ones and Select behind a "more" menu; while selecting, Remove selected
+  /// and Cancel. Enabled exactly as [_buildHeaderActions] enables them.
+  List<Widget> _buildWideHeaderActions() {
+    final l = context.l10n;
+    final feed = _feed;
+    if (_selecting) {
+      return [
+        OutlinedButton.icon(
+          key: const ValueKey('notifications-remove-selected'),
+          onPressed: _selected.isEmpty ? null : _removeSelected,
+          icon: const Icon(Icons.delete_outline, size: AppIconSize.i16),
+          label: Text(l.notifications_removeSelected),
+          style: OutlinedButton.styleFrom(minimumSize: const Size(0, kMinInteractiveDimension)),
+        ),
+        const SizedBox(width: AppSpacing.s8),
+        TextButton(
+          onPressed: () => setState(() {
+            _selecting = false;
+            _selected.clear();
+          }),
+          style: TextButton.styleFrom(minimumSize: const Size(0, kMinInteractiveDimension)),
+          child: Text(l.common_cancel),
+        ),
+      ];
+    }
+    return [
+      OutlinedButton.icon(
+        key: const ValueKey('notifications-mark-all-read'),
+        onPressed: (feed?.hasUnread ?? false) ? _markAllAsRead : null,
+        icon: const Icon(Icons.done_all, size: AppIconSize.i16),
+        label: Text(l.notifications_markAllRead),
+        style: OutlinedButton.styleFrom(minimumSize: const Size(0, kMinInteractiveDimension)),
+      ),
+      const SizedBox(width: AppSpacing.s4),
+      PopupMenuButton<VoidCallback>(
+        key: const ValueKey('notifications-wide-more'),
+        tooltip: l.common_moreActions,
+        icon: const Icon(Icons.more_horiz),
+        onSelected: (action) => action(),
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            enabled: feed?.readRemovable.isNotEmpty ?? false,
+            value: _removeReadOnes,
+            child: Text(l.notifications_removeReadOnes),
+          ),
+          PopupMenuItem(
+            enabled: _items.any((i) => i.canRemove),
+            value: () => setState(() => _selecting = true),
+            child: Text(l.notifications_select),
+          ),
+        ],
+      ),
+    ];
   }
 
   // PH8a-fix: the same three actions as [_buildHeaderActions], enabled the
@@ -1163,6 +1231,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   // ==================== PAGINATION ====================
+
+  /// UX6: the wide footer. The same paging over the same loaded list (the
+  /// live window, then older pages on request): the same page sizes, the
+  /// same range sentence, and Load older beside the range when there is more.
+  Widget _buildListPageBar({required int total, required int page, required int totalPages, required int shown}) {
+    final start = total == 0 ? 0 : (page - 1) * _pageSize + 1;
+    final end = start == 0 ? 0 : start + shown - 1;
+    return ListPageBar(
+      key: const ValueKey('notifications-page-bar'),
+      emptyText: context.l10n.notifications_empty,
+      itemCount: shown,
+      pageSize: _pageSize,
+      currentPage: page,
+      hasPreviousPage: page > 1,
+      hasNextPage: page < totalPages,
+      isLoading: false,
+      rangeText: context.l10n.notifications_showingRange(start, end, total),
+      extra: (_feed?.canLoadOlder ?? false)
+          ? TextButton.icon(
+              onPressed: _feed!.isLoadingOlder ? null : () => _run(_feed!.loadOlder),
+              icon: const Icon(Icons.history, size: AppIconSize.i16),
+              label: Text(context.l10n.notifications_loadOlder),
+            )
+          : null,
+      onPageSize: (size) => setState(() {
+        _pageSize = size;
+        _currentPage = 1;
+      }),
+      onPrevious: () => setState(() => _currentPage = page - 1),
+      onNext: () => setState(() => _currentPage = page + 1),
+    );
+  }
 
   Widget _buildPaginationBar({required int total, required int page, required int totalPages}) {
     final start = total == 0 ? 0 : (page - 1) * _pageSize + 1;

@@ -26,6 +26,7 @@ class ListPageBar extends StatelessWidget {
     required this.onNext,
     this.rangeText,
     this.pageText,
+    this.extra,
   });
 
   /// Shown when the page holds nothing.
@@ -45,6 +46,10 @@ class ListPageBar extends StatelessWidget {
   /// "Page n", as before.
   final String? rangeText;
   final String? pageText;
+
+  /// UX6: an extra control between the range and the page controls (the
+  /// Notifications page's Load older); null: nothing, as before.
+  final Widget? extra;
 
   /// The page sizes offered (as the screens offered them).
   static const pageSizes = [10, 25, 50];
@@ -69,6 +74,7 @@ class ListPageBar extends StatelessWidget {
             itemCount == 0 ? emptyText : rangeText ?? context.l10n.common_showingRange(pageStart, pageEnd),
             style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
           ),
+          if (extra != null) extra!,
           // The controls wrap too (the page size above the arrows) on the
           // narrowest list at large text.
           Wrap(
