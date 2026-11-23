@@ -16,7 +16,25 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../config/app_limits.dart';
 import '../config/app_ranges.dart';
+import '../config/app_defaults.dart';
 import '../utils/app_clock.dart';
+
+/// PAGE2: the phoneKey prefix a Clients search means, or null when the text
+/// is not a phone number (it then searches names). Digits only after
+/// removing spaces, + and -; the leading 00, 255 or 0 goes, as phoneKey
+/// drops them (0712 finds 712345678). Null when nothing is left to match.
+String? clientPhoneSearchPrefix(String text) {
+  final t = text.trim();
+  if (t.isEmpty || !RegExp(r'^[0-9+\-\s]+$').hasMatch(t)) return null;
+  var digits = t.replaceAll(RegExp(r'\D'), '');
+  if (digits.startsWith('00')) digits = digits.substring(2);
+  if (digits.startsWith(AppDefaults.countryCallingCode)) {
+    digits = digits.substring(AppDefaults.countryCallingCode.length);
+  } else if (digits.startsWith('0')) {
+    digits = digits.substring(1);
+  }
+  return digits.isEmpty ? null : digits;
+}
 
 /// An existing client that looks like the one being saved - see
 /// [ClientProvider.findSimilarClient].
@@ -86,6 +104,7 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   bool get hasLoaded => _hasLoaded;
 
   StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _clientsSubscription;
+  String? _listeningFacilityId;
   late final StreamSubscription<RecordChange> _recordChanges;
 
   /// Real-time listening to ALL clients for a facility - kept unbounded
@@ -94,6 +113,11 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   /// whichever page of clients has been paginated in so far.
   void listenToClients(String facilityId) {
     debugPrint('ClientProvider.listenToClients called with facilityId: $facilityId');
+    // PAGE2: already listening to this facility (facility activation started
+    // it): nothing to do. Cancelling and listening again read every client a
+    // second time each time the Clients screen opened.
+    if (_clientsSubscription != null && _listeningFacilityId == facilityId) return;
+    _listeningFacilityId = facilityId;
     _clientsSubscription?.cancel();
     _hasLoaded = false;
     if (facilityId.isEmpty) return;
@@ -121,6 +145,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   /// Clear all clients
   void clear() {
     _clients.clear();
+    // The listener itself is left as it was; the next listenToClients
+    // starts afresh (as before PAGE2).
+    _listeningFacilityId = null;
     _hasLoaded = false;
     // The list pages too: an open session would otherwise be reused as it
     // was when the screen opens again (its filters don't name the facility).
@@ -303,30 +330,44 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   // reliable, monotonic field for a stable cursor, the same reason
   // ServiceProvider's equivalent section uses serviceDate rather than
   // a field someone can freely edit after the fact.
+  //
+  // PAGE2 (owner decision): on PC/tablet (byName) the list is ordered by
+  // name instead, A to Z, a cursor of (name, document id) and pages of
+  // pageSize + 1 (CursorPage.fromDocs). An edited name can move a client
+  // between pages while someone browses; accepted for a list people scan
+  // alphabetically. `name` is on every client, so nobody drops out of the
+  // list (nameLower is missing on clients older than it until the Settings
+  // backfill runs). The order is Firestore's, so case-sensitive: a name typed
+  // in lower case sorts after the capitalised ones. The phone keeps the
+  // newest-first list above, unchanged.
 
   /// searchTerm reuses the exact same nameLower prefix-match
   /// searchClientsByName already used - see SaleProvider's identical
   /// field for why a search term can't combine with the snapshot
   /// boundary in the same query (Firestore's one-range-filter-per-query
   /// limit), and why that's an accepted, deliberate trade-off here too.
-  ({String searchTerm, String typeFilter, String statusFilter}) _clientsListQuery =
-      (searchTerm: '', typeFilter: 'All', statusFilter: 'All');
+  ({String searchTerm, String typeFilter, String statusFilter, bool byName}) _clientsListQuery =
+      (searchTerm: '', typeFilter: 'All', statusFilter: 'All', byName: false);
 
   late final CursorPaginatedListController<Client> clientsListController;
 
   String? _clientsListFacilityId;
 
-  ({String searchTerm, String typeFilter, String statusFilter}) updateClientsListFilters({
+  /// [byName]: the PC/tablet list (PAGE2): A to Z, pageSize + 1 a page, and
+  /// a search on name or phone; false: the phone's newest-first list.
+  ({String searchTerm, String typeFilter, String statusFilter, bool byName}) updateClientsListFilters({
     required String facilityId,
     required String searchTerm,
     required String typeFilter,
     required String statusFilter,
+    bool byName = false,
   }) {
     _clientsListFacilityId = facilityId;
     _clientsListQuery = (
       searchTerm: searchTerm.trim().toLowerCase(),
       typeFilter: typeFilter,
       statusFilter: statusFilter,
+      byName: byName,
     );
     return _clientsListQuery;
   }
@@ -353,6 +394,8 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       query = query.where(Fields.status, isEqualTo: q.statusFilter);
     }
 
+    if (q.byName) return _fetchClientsByName(query, q.searchTerm, pageSize, startAfterDocument);
+
     if (hasSearch) {
       query = query
           .where('nameLower', isGreaterThanOrEqualTo: q.searchTerm)
@@ -376,6 +419,41 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
       lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
       hasMore: snapshot.docs.length >= pageSize,
     );
+  }
+
+  /// PAGE2: the PC/tablet page. A search that looks like a phone number (only
+  /// digits, spaces, + and -) is a prefix of phoneKey; anything else a prefix
+  /// of nameLower (case-insensitive). Both fields are written on every save;
+  /// a client older than them is found only after the Settings backfill
+  /// (rebuildSearchIndex, owner-run). Indexes: docs/PAGE2_INDEXES.md.
+  Future<CursorPage<Client>> _fetchClientsByName(
+    Query<Map<String, dynamic>> filtered,
+    String searchTerm,
+    int pageSize,
+    DocumentSnapshot<Map<String, dynamic>>? startAfterDocument,
+  ) async {
+    var query = filtered;
+    final phonePrefix = clientPhoneSearchPrefix(searchTerm);
+    if (phonePrefix != null) {
+      query = query
+          .where('phoneKey', isGreaterThanOrEqualTo: phonePrefix)
+          .where('phoneKey', isLessThan: '$phonePrefix\uf8ff')
+          .orderBy('phoneKey');
+    } else if (searchTerm.isNotEmpty) {
+      query = query
+          .where('nameLower', isGreaterThanOrEqualTo: searchTerm)
+          .where('nameLower', isLessThan: '$searchTerm\uf8ff')
+          .orderBy('nameLower');
+    } else {
+      query = query.orderBy('name');
+    }
+    // No explicit orderBy(documentId): Firestore already breaks ties by
+    // __name__ ascending (the indexes end with it) and startAfterDocument
+    // uses it, so the cursor is exact. (The test fake misorders an explicit
+    // one after a string field: "Client 19" came before "Client 00".)
+    if (startAfterDocument != null) query = query.startAfterDocument(startAfterDocument);
+    final snapshot = await query.limit(pageSize + 1).get();
+    return CursorPage.fromDocs(snapshot.docs, pageSize, (d) => Client.fromMap(d.id, d.data()));
   }
 
   Future<int> _countNewClients({required DateTime after}) async {
