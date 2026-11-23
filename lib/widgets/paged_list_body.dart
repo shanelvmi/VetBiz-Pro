@@ -13,7 +13,8 @@ import 'phone_list/phone_list_skeleton.dart';
 ///
 /// While the first page of a session loads: the skeleton rows (no spinner).
 /// While Next loads: the page already shown stays, dimmed, so the list never
-/// flashes empty. A failed fetch: the error text with Retry (the same fetch
+/// flashes empty. PAGE2: the same while a new search or filter loads (the
+/// rows it replaces, dimmed). A failed fetch: the error text with Retry (the same fetch
 /// again). Nothing on the page: [empty].
 class PagedListBody<T> extends StatelessWidget {
   const PagedListBody({
@@ -49,6 +50,17 @@ class PagedListBody<T> extends StatelessWidget {
                   OutlinedButton(onPressed: controller.retry, child: Text(context.l10n.common_retry)),
                 ],
               ),
+            ),
+          );
+        } else if (controller.isLoading && items.isEmpty && controller.previousItems.isNotEmpty) {
+          // PAGE2: a new search or filter is loading: the rows it replaces stay,
+          // dimmed, until its first page arrives (the skeleton is for the
+          // first load only).
+          body = IgnorePointer(
+            child: Opacity(
+              key: const ValueKey('pagedList-previous'),
+              opacity: AppAlpha.a50,
+              child: list(controller.previousItems),
             ),
           );
         } else if ((controller.isLoading || !controller.hasOpenSession) && items.isEmpty) {

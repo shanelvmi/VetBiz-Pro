@@ -132,6 +132,19 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
   final List<CursorPage<T>> _pages = [];
   int _currentPageIndex = -1; // -1 = no session open yet
 
+  // PAGE2: which session a fetch belongs to. A new session (a new search
+  // text, a filter, the page size) moves it on; a fetch that answers after
+  // that is from an older session and is dropped, so a slow old search can
+  // never overwrite the results for newer text.
+  int _session = 0;
+
+  // PAGE2: the page shown when the current session started, kept until the
+  // new session's first page arrives (or fails), so a PC/tablet list can show
+  // it dimmed instead of flashing to a skeleton for every search keystroke.
+  // [items] stays empty meanwhile, as before (the phone list is unchanged).
+  List<T> _previousItems = const [];
+  List<T> get previousItems => _previousItems;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -181,6 +194,8 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
 
     _querySignature = querySignature;
     _snapshotAt = AppClock.now();
+    _session++;
+    if (items.isNotEmpty) _previousItems = items;
     _pages.clear();
     _currentPageIndex = -1;
     _newRecordsAvailable = 0;
@@ -243,6 +258,7 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
     final snapshotAt = _snapshotAt;
     if (snapshotAt == null) return;
 
+    final session = _session;
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -252,13 +268,21 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
       final page = after != null
           ? await after(snapshotAt: snapshotAt, pageSize: _pageSize, after: previous?.cursor)
           : await fetchPage!(snapshotAt: snapshotAt, pageSize: _pageSize, startAfterDocument: previous?.lastDocument);
+      // PAGE2: a newer session started while this one was waiting: its
+      // answer is stale (the newer fetch owns the loading state too).
+      if (session != _session) return;
       _pages.add(page);
       _currentPageIndex = _pages.length - 1;
+      _previousItems = const [];
     } catch (e) {
+      if (session != _session) return;
       _error = 'Could not load this page: $e';
+      _previousItems = const [];
     } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (session == _session) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -280,6 +304,10 @@ class CursorPaginatedListController<T> extends ChangeNotifier {
   }
 
   void disposeSession() {
+    // PAGE2: a fetch still on its way belongs to the session that ends here.
+    _session++;
+    _isLoading = false;
+    _previousItems = const [];
     _pages.clear();
     _currentPageIndex = -1;
     _querySignature = null;
