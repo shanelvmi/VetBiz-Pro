@@ -153,6 +153,10 @@ class AppTimeouts {
   /// List search boxes (sales, services, clients, debtors, payments).
   static const Duration searchDebounce = Duration(milliseconds: 400);
 
+  /// PAGE2: the PC/tablet search boxes moved onto server pages or the shared
+  /// catalogue (Clients, Products, Stock Store).
+  static const Duration pagedSearchDebounce = Duration(milliseconds: 300);
+
   /// Client search inside the sale and service forms.
   static const Duration clientPickerDebounce = Duration(milliseconds: 300);
 

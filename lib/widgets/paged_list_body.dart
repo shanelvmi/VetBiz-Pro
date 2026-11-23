@@ -23,6 +23,7 @@ class PagedListBody<T> extends StatelessWidget {
     required this.empty,
     required this.barEmptyText,
     required this.list,
+    this.errorView,
   });
 
   final CursorPaginatedListController<T> controller;
@@ -31,6 +32,10 @@ class PagedListBody<T> extends StatelessWidget {
 
   /// The rows of the page shown.
   final Widget Function(List<T> items) list;
+
+  /// PAGE2: a screen's own error text (Clients: the create-index button);
+  /// null: FirestoreErrorView. Retry is under it either way.
+  final Widget Function(Object error)? errorView;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +51,7 @@ class PagedListBody<T> extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  FirestoreErrorView(error: controller.error),
+                  errorView?.call(controller.error!) ?? FirestoreErrorView(error: controller.error),
                   OutlinedButton(onPressed: controller.retry, child: Text(context.l10n.common_retry)),
                 ],
               ),

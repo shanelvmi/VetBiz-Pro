@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -38,7 +38,7 @@ import '../../widgets/phone_list/record_tile.dart';
 import '../../widgets/printable_theme.dart';
 import '../../widgets/details_layout.dart';
 import '../../widgets/shell/page_header.dart';
-import '../../widgets/list_page_bar.dart';
+import '../../widgets/paged_list_body.dart';
 import '../../widgets/toolbar_layout.dart';
 import '../../utils/app_clock.dart';
 import '../../ui/polish/app_status.dart';
@@ -63,6 +63,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
   static const List<String> _clientTypes = ['All', ...kClientTypes];
 
   String _searchQuery = '';
+  // PAGE2: the text the shown results are for (the session's), so "No
+  // clients match" names what was searched, not what is still being typed.
+  String _appliedQuery = '';
+  // PAGE2: whether the open session is the PC/tablet one (A to Z, pageSize +
+  // 1); a resize across the phone width opens the other kind.
+  bool? _openedByName;
   final TextEditingController _searchController = TextEditingController();
   Timer? _searchDebounce;
   // Periodically checks (never a live listener) whether new clients
@@ -113,11 +119,15 @@ class _ClientsScreenState extends State<ClientsScreen> {
     final facilityId = _facilityId;
     if (facilityId == null) return;
     final provider = Provider.of<ClientProvider>(context, listen: false);
+    final byName = !AppLayout.isPhone(context);
+    _openedByName = byName;
+    _appliedQuery = _searchQuery;
     final signature = provider.updateClientsListFilters(
       facilityId: facilityId,
       searchTerm: _searchQuery,
       typeFilter: _selectedType,
       statusFilter: _statusFilter,
+      byName: byName,
     );
     provider.clientsListController.openSession(signature, forceRefresh: forceRefresh);
   }
@@ -134,7 +144,16 @@ class _ClientsScreenState extends State<ClientsScreen> {
   void _onSearchChanged(String value) {
     setState(() => _searchQuery = value.trim());
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(AppTimeouts.searchDebounce, _openClientsListSession);
+    // PAGE2: 300 ms on PC/tablet; the phone keeps its 400.
+    _searchDebounce = Timer(
+        AppLayout.isPhone(context) ? AppTimeouts.searchDebounce : AppTimeouts.pagedSearchDebounce,
+        _openClientsListSession);
+  }
+
+  void _clearSearch() {
+    if (_searchController.text.isEmpty) return;
+    _searchController.clear();
+    _onSearchChanged('');
   }
 
   void _onTypeSelected(String type) {
@@ -222,10 +241,14 @@ class _ClientsScreenState extends State<ClientsScreen> {
     // LAY6a (#14): search and filters on one line while they fit, else the
     // search on its own line and the filters under it (ToolbarLayout).
     return ToolbarLayout(
-      search: TextField(
+      // PAGE2: Escape clears the search, as the clear button does.
+      search: CallbackShortcuts(
+          bindings: {const SingleActivator(LogicalKeyboardKey.escape): _clearSearch},
+          child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: context.l10n.clients_searchHint,
+              // PAGE2: what the server search finds (name or phone).
+              hintText: context.l10n.debtors_debtorSearchHint,
               hintStyle: const TextStyle(fontSize: AppFontSize.f13),
               prefixIcon: const Icon(Icons.search, size: AppIconSize.i20),
               filled: true,
@@ -238,14 +261,12 @@ class _ClientsScreenState extends State<ClientsScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: AppIconSize.i18),
-                      onPressed: () {
-                        _searchController.clear();
-                        _onSearchChanged('');
-                      },
+                      onPressed: _clearSearch,
                     ),
             ),
             onChanged: _onSearchChanged,
           ),
+      ),
       filters: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s10),
@@ -659,7 +680,14 @@ class _ClientsScreenState extends State<ClientsScreen> {
   @override
   Widget build(BuildContext context) {
     // PH5b: phones get the standard phone list (docs/design/phone_list_pattern.md).
-    if (AppLayout.isPhone(context)) return _buildPhone();
+    final isPhone = AppLayout.isPhone(context);
+    if (_openedByName != null && _openedByName == isPhone) {
+      // PAGE2: the window crossed the phone width: open the other list.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _openedByName == AppLayout.isPhone(context)) _openClientsListSession();
+      });
+    }
+    if (isPhone) return _buildPhone();
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: _buildAppBar(),
@@ -673,8 +701,6 @@ class _ClientsScreenState extends State<ClientsScreen> {
         details: _selectedClient == null ? null : _buildDetailsPanel(_selectedClient!),
         list: Consumer<ClientProvider>(
         builder: (context, provider, _) {
-          final isSearching = _searchQuery.isNotEmpty;
-
           return Column(
             children: [
               Padding(
@@ -685,56 +711,32 @@ class _ClientsScreenState extends State<ClientsScreen> {
                 padding: const EdgeInsets.all(AppSpacing.s16),
                 child: _buildToolbarRow(),
               ),
-              if (isSearching)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(AppSpacing.s16, 0, AppSpacing.s16, AppSpacing.s8),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      context.l10n.clients_searchingNote,
-                      style: TextStyle(fontSize: AppFontSize.f11, color: context.colors.textHint, fontStyle: FontStyle.italic),
-                    ),
-                  ),
-                ),
               Expanded(
                 child: ListenableBuilder(
                   listenable: provider.clientsListController,
                   builder: (context, _) {
                     final controller = provider.clientsListController;
-                    final clients = controller.items;
                     return Column(
                       children: [
                         if (controller.newRecordsAvailable > 0) _buildNewRecordsBanner(controller),
+                        // PAGE2: the shared paged body (skeleton on the first
+                        // load, the replaced rows dimmed while a search loads,
+                        // the error with Retry) and ListPageBar under it.
                         Expanded(
-                          child: controller.error != null
-                              ? Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(AppSpacing.s24),
-                                    child: _buildErrorMessage(controller.error!),
-                                  ),
-                                )
-                              : controller.isLoading && clients.isEmpty
-                                  ? Center(child: CircularProgressIndicator(color: context.colors.primary))
-                                  : clients.isEmpty
-                                      ? Center(
-                                          child: Text(
-                                            isSearching ? context.l10n.clients_emptySearch(_searchQuery) : context.l10n.clients_empty,
-                                          ),
-                                        )
-                                      : _buildClientsTable(clients),
-                        ),
-                        // LAY6a (#13): the shared page bar; it wraps on a narrow list.
-                        ListPageBar(
-                          emptyText: context.l10n.clients_none,
-                          itemCount: controller.items.length,
-                          pageSize: controller.pageSize,
-                          currentPage: controller.currentPage,
-                          hasPreviousPage: controller.hasPreviousPage,
-                          hasNextPage: controller.hasNextPage,
-                          isLoading: controller.isLoading,
-                          onPageSize: controller.setPageSize,
-                          onPrevious: controller.goToPreviousPage,
-                          onNext: controller.goToNextPage,
+                          child: PagedListBody<Client>(
+                            controller: controller,
+                            barEmptyText: context.l10n.clients_none,
+                            empty: Center(
+                              child: Text(
+                                _appliedQuery.isNotEmpty ? context.l10n.clients_emptySearch(_appliedQuery) : context.l10n.clients_empty,
+                              ),
+                            ),
+                            errorView: (error) => Padding(
+                              padding: const EdgeInsets.all(AppSpacing.s24),
+                              child: _buildErrorMessage(error),
+                            ),
+                            list: _buildClientsTable,
+                          ),
                         ),
                       ],
                     );

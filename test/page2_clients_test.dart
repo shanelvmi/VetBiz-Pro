@@ -25,9 +25,6 @@ import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 import 'helpers/test_clock.dart';
 
-// Committed skipped until the provider and the screen land (PAGE2 (3), (4)).
-const _pending = true;
-
 const _wide = Size(1600, 900);
 const _page = AppLimits.pageSize + 1;
 
@@ -95,7 +92,7 @@ void main() {
     await page1Previous(tester);
     expect(db.reads, 0, reason: 'Previous shows the kept page');
     expect(page1Range(tester), 'Showing 26 to 50');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('page size goes back to page 1', (tester) async {
     await _open(tester);
@@ -103,7 +100,7 @@ void main() {
     await page1PageSize(tester, 10);
     expect(page1BarWidget(tester).currentPage, 1);
     expect(page1Range(tester), 'Showing 1 to 10');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('a filter change goes back to page 1 and filters on the server', (tester) async {
     await _open(tester);
@@ -114,13 +111,13 @@ void main() {
     await _setFilter(tester, 0, 'Vet');
     // Inactive (i % 5 == 0) and Vet (i % 3 == 0): 00, 15, 30, 45.
     expect(page1Range(tester), 'Showing 1 to 4');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('empty: the empty text; no Next', (tester) async {
     await _open(tester, count: 0);
     expect(find.text('No clients found'), findsOneWidget);
     expect(page1NextEnabled(tester), isFalse);
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('an error shows the message and Retry; Retry loads the page', (tester) async {
     final db = CountingFirestore()..failGets = true;
@@ -130,7 +127,7 @@ void main() {
     await tester.tap(find.text('Retry'));
     await ph5Settle(tester);
     expect(page1Range(tester), 'Showing 1 to 25');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('the skeleton on the first load, no spinner', (tester) async {
     final db = CountingFirestore()..holdGets = Completer<void>();
@@ -141,7 +138,7 @@ void main() {
     db.holdGets = null;
     await ph5Settle(tester);
     expect(page1Range(tester), 'Showing 1 to 25');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('search by name on the server, any case; the no-results text names the search', (tester) async {
     await _open(tester);
@@ -151,7 +148,7 @@ void main() {
     expect(find.text('Client 50'), findsOneWidget);
     await _type(tester, 'zawadi');
     expect(find.text('No clients match "zawadi"'), findsOneWidget);
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('search by phone: any common way of typing it', (tester) async {
     await _open(tester);
@@ -160,7 +157,7 @@ void main() {
     expect(find.text('Client 57'), findsOneWidget);
     await _type(tester, '+255 712 000 04');
     expect(page1Range(tester), 'Showing 1 to 10', reason: 'Client 40 to 49');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('the clear button and Escape clear the search', (tester) async {
     await _open(tester);
@@ -176,7 +173,7 @@ void main() {
     await ph5Settle(tester);
     expect(find.text('Client 00'), findsOneWidget);
     expect(page1Range(tester), 'Showing 1 to 25');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('typing 5 letters quickly runs one query', (tester) async {
     final db = await _open(tester);
@@ -189,7 +186,7 @@ void main() {
     await ph5Settle(tester);
     expect(db.gets, 1);
     expect(page1Range(tester), 'Showing 1 to 25');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('a slow first search does not replace a faster second one; the rows stay dimmed meanwhile', (tester) async {
     final db = await _open(tester);
@@ -210,7 +207,7 @@ void main() {
     expect(find.text('Client 20'), findsOneWidget);
     expect(find.text('Client 10'), findsNothing, reason: 'the stale answer for "client 1" is dropped');
     expect(page1Range(tester), 'Showing 1 to 10');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('reads on open: one page (pageSize + 1) beyond the whole-clients listener', (tester) async {
     const many = 120;
@@ -223,7 +220,7 @@ void main() {
     db.resetCounts();
     await page1Next(tester);
     expect(db.reads, lessThanOrEqualTo(_page));
-  }, skip: _pending);
+  });
 
   test('listenToClients for the facility already listened to opens nothing and reads nothing more', () async {
     final db = CountingFirestore();
@@ -238,7 +235,7 @@ void main() {
     expect(first, 30);
     expect(db.reads, 30, reason: 'before PAGE2 the screen read every client again');
     provider.dispose();
-  }, skip: _pending);
+  });
 
   test('the phone-search prefix: the common ways a number is typed', () {
     expect(clientPhoneSearchPrefix('0712 345'), '712345');
@@ -249,7 +246,7 @@ void main() {
     expect(clientPhoneSearchPrefix('Amina'), isNull);
     expect(clientPhoneSearchPrefix('0'), isNull);
     expect(clientPhoneSearchPrefix(''), isNull);
-  }, skip: _pending);
+  });
 
   for (final size in page1Widths) {
     for (final (look, scale) in const [(MatrixLook.light, 1.0), (MatrixLook.light, 1.3), (MatrixLook.kiswahili, 1.3)]) {
@@ -257,7 +254,7 @@ void main() {
         await _open(tester, size: size, look: look, textScale: scale);
         expect(tester.takeException(), isNull);
         expect(page1BarWidget(tester).itemCount, 25);
-      }, skip: _pending);
+      });
     }
   }
 }
