@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../widgets/shell/page_header.dart';
 import '../../services/activity_log_retention.dart';
@@ -12,6 +13,7 @@ import '../../theme/activity_type_style.dart';
 import '../../theme/theme_context.dart';
 import '../../theme/app_dimens.dart';
 import '../../theme/app_text.dart';
+import '../../theme/app_motion.dart';
 import '../../ui/feedback/app_feedback.dart';
 import '../../data/activity_type.dart';
 import '../../data/collections.dart';
@@ -64,6 +66,22 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   // search box - to the left of the days filter, not tucked behind an
   // expandable AppBar icon.
   final TextEditingController _searchController = TextEditingController();
+
+  // Drives the action-chip row's horizontal scroll - a plain
+  // SingleChildScrollView supports click-drag on desktop by default,
+  // but nothing maps mouse-wheel/trackpad scrolling to it, and there's
+  // no visible affordance telling anyone drag-to-scroll is even
+  // possible. This controller lets both be added explicitly.
+  final ScrollController _chipScrollController = ScrollController();
+
+  // One key per chip (keyed by its filter value: 'All' or an action
+  // type), so tapping a chip that's only partially visible near the
+  // edge can be scrolled fully into view on its own - rather than
+  // requiring the user to figure out how to scroll at all first.
+  final Map<String, GlobalKey> _chipKeys = {};
+
+  GlobalKey _keyFor(String filterValue) =>
+      _chipKeys.putIfAbsent(filterValue, () => GlobalKey());
 
   FacilityProvider? _facilityProvider;
 
@@ -118,6 +136,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   void dispose() {
     _facilityProvider?.removeListener(_onFacilityChange);
     _searchController.dispose();
+    _chipScrollController.dispose();
     _pager.dispose();
     super.dispose();
   }
@@ -136,6 +155,12 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       _window = null;
       _pagerOpenFor = null;
       _pager.disposeSession();
+      // PAGE1b: another facility is another opening: its own counts, and the
+      // category queries are tried again.
+      _counts = null;
+      _countsFor = null;
+      _countsFailed = false;
+      _categoryUnavailable = false;
     });
   }
 
@@ -244,36 +269,142 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   /// PAGE1: PC/tablet pages. An admin: one query. An assistant: the same two
   /// questions as the streams (what they did, what is about them), merged
   /// by fetchMergedPage, an entry in both shown once.
+  ///
+  /// PAGE1b: a category is a where clause on every one of those queries
+  /// (indexes: docs/PAGE1_INDEXES.md). If its index is missing or still
+  /// building (failed-precondition), page 1 falls back to All in the same
+  /// fetch and the chips give way to the note until the tab is opened
+  /// again: never an error screen, never a filter of the loaded rows.
   late final CursorPaginatedListController<LogDoc> _pager = CursorPaginatedListController<LogDoc>.after(
     fetchPageAfter: ({required snapshotAt, required pageSize, after}) async {
       final w = _window;
       if (w == null) return const CursorPage(items: [], lastDocument: null, hasMore: false);
-      final logs = _db.collection(Collections.facilities).doc(w.facilityId).collection(Collections.activityLogs);
-      // Firestore orders ties by document name in the same direction as the
-      // last orderBy, which is what [compare] below assumes.
-      Query<Map<String, dynamic>> paged(Query<Map<String, dynamic>> q) => _windowed(q, w.retentionDays);
-      final queries = w.isAdmin
-          ? [paged(logs)]
-          : [paged(logs.where(Fields.userId, isEqualTo: _uid)), paged(logs.where('targetUserId', isEqualTo: _uid))];
-      return fetchMergedPage<LogDoc>(
-        sources: [for (final q in queries) MergedSource(q, (d) => d)],
-        pageSize: pageSize,
-        after: after,
-        compare: (a, b) {
-          final ta = a.data()['timestamp'];
-          final tb = b.data()['timestamp'];
-          final byTime = (tb is Timestamp && ta is Timestamp) ? tb.compareTo(ta) : 0;
-          return byTime != 0 ? byTime : b.id.compareTo(a.id);
-        },
-        key: (d) => d.id,
-      );
+      final category = _serverCategory;
+      Future<CursorPage<LogDoc>> fetch(String category) => fetchMergedPage<LogDoc>(
+            sources: [
+              for (final q in _scopeQueries(w, category)) MergedSource(_windowed(q, w.retentionDays), (d) => d),
+            ],
+            pageSize: pageSize,
+            after: after,
+            // Firestore orders ties by document name in the same direction as
+            // the last orderBy, which is what this assumes.
+            compare: (a, b) {
+              final ta = a.data()['timestamp'];
+              final tb = b.data()['timestamp'];
+              final byTime = (tb is Timestamp && ta is Timestamp) ? tb.compareTo(ta) : 0;
+              return byTime != 0 ? byTime : b.id.compareTo(a.id);
+            },
+            key: (d) => d.id,
+          );
+      try {
+        return await fetch(category);
+      } on FirebaseException catch (e) {
+        if (category == _allFilter || !_isMissingIndex(e)) rethrow;
+        _markCategoryUnavailable();
+        if (after == null) {
+          // Page 1: All, in this same fetch (the session now shows All).
+          _pagerOpenFor = (w, _uid, _allFilter);
+          return fetch(_allFilter);
+        }
+        // A later page's cursor belongs to the category: build() opens All.
+        return const CursorPage(items: [], lastDocument: null, hasMore: false);
+      }
     },
   );
+
+  // PAGE1b: the chips' filter value for All (the same as the phone's).
+  static const String _allFilter = 'All';
+
+  // PAGE1b: the categories the server can filter on: every type the app
+  // writes. Old 'Sale' entries are asked for under Sales. Types nothing
+  // writes any more ('clients', 'settings', 'admin') show under All only.
+  static final List<String> _categories = [
+    for (final t in ActivityType.values)
+      if (t != ActivityType.sale) t.key,
+  ];
+
+  // PAGE1b: the category filter is off for this opening of the tab (its
+  // index is not deployed yet, or still building). Tried again only when
+  // the tab is opened again (a new State) or the facility changes.
+  bool _categoryUnavailable = false;
+
+  // PAGE1b: the chip numbers, one count() per category over the window;
+  // null while loading, or if they could not be read (chips, no numbers).
+  ({int all, Map<String, int> byCategory})? _counts;
+  Object? _countsFor;
+  bool _countsFailed = false;
+
+  String get _serverCategory => _categoryUnavailable ? _allFilter : selectedFilter;
+
+  static bool _isMissingIndex(Object e) => e is FirebaseException && e.code == 'failed-precondition';
+
+  void _markCategoryUnavailable() {
+    if (_categoryUnavailable) return;
+    _categoryUnavailable = true;
+    selectedFilter = _allFilter;
+    if (mounted) setState(() {});
+  }
+
+  /// PAGE1b: the queries a list or a count asks, before the window: an
+  /// admin the whole log, an assistant what they did and what is about
+  /// them; each narrowed to [category] unless it is All.
+  List<Query<Map<String, dynamic>>> _scopeQueries(
+      ({String facilityId, int retentionDays, bool isAdmin}) w, String category) {
+    final logs = _db.collection(Collections.facilities).doc(w.facilityId).collection(Collections.activityLogs);
+    final scope = w.isAdmin
+        ? <Query<Map<String, dynamic>>>[logs]
+        : [logs.where(Fields.userId, isEqualTo: _uid), logs.where('targetUserId', isEqualTo: _uid)];
+    if (category == _allFilter) return scope;
+    final stored = category == ActivityType.sales.key ? [ActivityType.sales.key, ActivityType.sale.key] : [category];
+    return [
+      for (final q in scope)
+        stored.length == 1 ? q.where('actionType', isEqualTo: stored.single) : q.where('actionType', whereIn: stored),
+    ];
+  }
+
+  /// PAGE1b: one count() per category (and All) over the window, once per
+  /// window (a new retention window counts again). All and the first
+  /// category are asked first: if the category index is missing, the filter
+  /// is off and nothing more is asked; otherwise the rest together. An
+  /// assistant's number adds their two questions.
+  Future<void> _loadCounts() async {
+    final w = _window;
+    if (w == null || _categoryUnavailable) return;
+    final key = (w, _uid);
+    if (_countsFor == key) return;
+    _countsFor = key;
+    _counts = null;
+    _countsFailed = false;
+    Future<int> countOf(String category) async {
+      final snaps = await Future.wait([
+        for (final q in _scopeQueries(w, category)) _windowed(q, w.retentionDays).count().get(),
+      ]);
+      return snaps.fold<int>(0, (total, s) => total + (s.count ?? 0));
+    }
+
+    try {
+      final first = await Future.wait([countOf(_allFilter), countOf(_categories.first)]);
+      final rest = await Future.wait([for (final c in _categories.skip(1)) countOf(c)]);
+      if (!mounted || _countsFor != key) return;
+      setState(() => _counts = (all: first[0], byCategory: {
+            _categories.first: first[1],
+            for (var i = 1; i < _categories.length; i++) _categories[i]: rest[i - 1],
+          }));
+    } catch (e) {
+      if (!mounted || _countsFor != key) return;
+      if (_isMissingIndex(e)) {
+        _markCategoryUnavailable();
+      } else {
+        debugPrint('Could not count activity log categories: $e');
+        setState(() => _countsFailed = true);
+      }
+    }
+  }
 
   void _openPager({bool forceRefresh = false}) {
     final w = _window;
     if (w == null || _phoneLayout) return;
-    _pager.openSession((w, _uid), forceRefresh: forceRefresh);
+    _pager.openSession((w, _uid, _serverCategory), forceRefresh: forceRefresh);
   }
 
   void _buildLiveStreams() {
@@ -462,7 +593,8 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
   bool _matchesSearch(LogDoc doc) =>
       (doc.data()['description'] ?? '').toString().toLowerCase().contains(searchQuery.toLowerCase());
 
-  // PAGE1: where the category chips were (PC/tablet).
+  // PAGE1: where the category chips were (PC/tablet). PAGE1b: shown only
+  // while the category queries' index is missing.
   Widget _buildCategoryUnavailable() {
     return Container(
       key: const ValueKey('activity-categoryUnavailable'),
@@ -541,10 +673,17 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
       return _buildPhone(facilityId, isAdmin: isAdmin);
     }
     final w = _window;
-    if (w != null && _pagerOpenFor != (w, _uid)) {
-      _pagerOpenFor = (w, _uid);
+    // PAGE1b: the category is part of the session, so choosing one starts at
+    // page 1.
+    if (w != null && _pagerOpenFor != (w, _uid, _serverCategory)) {
+      _pagerOpenFor = (w, _uid, _serverCategory);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _openPager();
+      });
+    }
+    if (w != null && !_categoryUnavailable && _countsFor != (w, _uid)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadCounts();
       });
     }
 
@@ -556,11 +695,11 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
           // One unified summary that's also the filter - see
           // _buildActionSummary for the full reasoning.
           if (!isAdmin) _buildScopeNote(),
-          // PAGE1: the category chips counted and filtered the whole window
-          // from an unbounded stream. Filtering by category on the server
-          // needs indexes not deployed yet (docs/PAGE1_INDEXES.md), so the
-          // filter is off here with a short note, never a filter of one page.
-          _buildCategoryUnavailable(),
+          // PAGE1b: the chips filter on the server, their numbers are count()
+          // aggregates. Without the index (not deployed, or still building)
+          // the note stands in their place and All keeps working; never a
+          // filter of one page.
+          if (_categoryUnavailable) _buildCategoryUnavailable() else _buildActionSummary(),
 
           Padding(
             padding: const EdgeInsets.fromLTRB(PolishMetrics.pagePadding, 0, PolishMetrics.pagePadding, AppSpacing.s8),
@@ -723,6 +862,112 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
               )
             : null,
       );
+  }
+
+  // A single thin line - just the numbers, no card, no gradient, no
+  // padding-heavy container. Previously this was a large gradient
+  // card sitting above the filters, above the list - between it and
+  // two dropdowns and a search field, real data didn't start until
+  // well down the screen. This is meant to read as a subtitle to the
+  // list, not compete with it.
+  // Merges what were two separate rows (a stats line, then a chip
+  // row) into one - each chip is both a count and a filter, so
+  // tapping "Products · 8" both shows you the number and narrows the
+  // list to it. Only ever shows action types that actually have at
+  // least one log - a facility that's never had, say, Debtors activity
+  // doesn't get a useless "Debtors · 0" chip cluttering the row.
+  // PAGE1b: choosing a chip asks the server again, from page 1.
+  void _selectFilterAndScrollIntoView(String filterValue) {
+    setState(() => selectedFilter = filterValue);
+    final key = _chipKeys[filterValue];
+    final targetContext = key?.currentContext;
+    if (targetContext != null) {
+      Scrollable.ensureVisible(
+        targetContext,
+        duration: AppMotion.normal,
+        curve: Curves.easeOut,
+        alignment: 0.5,
+      );
+    }
+  }
+
+  // PAGE1b: the chip row PAGE1 removed, its numbers now from [_counts]
+  // (count() aggregates) instead of a stream of the whole window. While
+  // the numbers load nothing shows (as before); if they cannot be read,
+  // every category shows without a number rather than blocking the filter.
+  Widget _buildActionSummary() {
+    final counts = _counts;
+    if (counts == null && !_countsFailed) return const SizedBox.shrink();
+
+    final List<String> types;
+    if (counts == null) {
+      types = List.of(_categories);
+    } else {
+      // Most-active types first - the most useful ordering for an
+      // at-a-glance summary that's also a filter.
+      types = [for (final c in _categories) if ((counts.byCategory[c] ?? 0) > 0) c]
+        ..sort((a, b) => counts.byCategory[b]!.compareTo(counts.byCategory[a]!));
+    }
+    // The chosen chip stays, even if its number is 0.
+    if (selectedFilter != _allFilter && !types.contains(selectedFilter)) types.add(selectedFilter);
+
+    Widget chip(String value, String label, int? count) => Padding(
+          padding: const EdgeInsets.only(right: AppSpacing.s8),
+          child: ChoiceChip(
+            key: _keyFor(value),
+            label: Text(count == null ? label : context.l10n.activity_filterChip(label, count)),
+            selected: selectedFilter == value,
+            onSelected: (_) => _selectFilterAndScrollIntoView(value),
+            selectedColor: context.colors.accent,
+            labelStyle: selectedFilter == value ? TextStyle(color: context.colors.onAccentChip) : null,
+            checkmarkColor: context.colors.onAccentChip,
+          ),
+        );
+
+    return Container(
+      key: const ValueKey('activity-categoryChips'),
+      // UX7: left-aligned in the page's toolbar, on the page itself (it was
+      // centred on a primary tint).
+      margin: const EdgeInsets.fromLTRB(PolishMetrics.pagePadding, AppSpacing.s10, PolishMetrics.pagePadding, AppSpacing.s6),
+      child: SizedBox(
+        height: AppSizes.minTapTarget,
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Listener(
+            // Maps mouse-wheel/trackpad scrolling (which arrives
+            // as a vertical delta) onto this row's horizontal
+            // scroll - without this, scrolling over the chips with
+            // a wheel or trackpad does nothing at all, since this
+            // view only scrolls horizontally by default.
+            onPointerSignal: (event) {
+              if (event is PointerScrollEvent && _chipScrollController.hasClients) {
+                final target = _chipScrollController.offset + event.scrollDelta.dy;
+                _chipScrollController.jumpTo(
+                  target.clamp(0.0, _chipScrollController.position.maxScrollExtent),
+                );
+              }
+            },
+            child: Scrollbar(
+              controller: _chipScrollController,
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                controller: _chipScrollController,
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    chip(_allFilter, context.l10n.common_all, counts?.all),
+                    // Shows the label; the chip filters on the stored type.
+                    for (final type in types)
+                      chip(type, context.l10n.activityTypeLabel(type), counts?.byCategory[type]),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   // Said plainly, so a short log isn't mistaken for a broken one.
