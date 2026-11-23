@@ -13,6 +13,7 @@ import '../data/collections.dart';
 import '../data/fields.dart';
 import '../data/activity_type.dart';
 import '../utils/app_clock.dart';
+import '../config/app_limits.dart';
 
 class ProductProvider with ChangeNotifier {
   // Tests pass an in-memory Firestore (E4d-2 captures Add Product and Add
@@ -106,12 +107,24 @@ class ProductProvider with ChangeNotifier {
         );
       _loaded = true;
       _listenError = null;
+      _warnIfCatalogueLarge(_products.length);
       notifyListeners();
     }, onError: (e) {
       debugPrint('❌ ProductProvider listen error: $e');
       _listenError = e;
       notifyListeners();
     });
+  }
+
+  // PAGE2: the soft guard, once a session (clear() starts a new one).
+  bool _warnedLarge = false;
+
+  void _warnIfCatalogueLarge(int count) {
+    if (_warnedLarge || count <= AppLimits.productCatalogueSoftLimit) return;
+    _warnedLarge = true;
+    debugPrint('ProductProvider: $count products, above the soft limit of '
+        '${AppLimits.productCatalogueSoftLimit}; time to move product search and paging '
+        'to the server (docs/PAGING_AUDIT.md).');
   }
 
   /// PH7a: starts the live listener again after it failed (a phone list's
@@ -1328,6 +1341,7 @@ class ProductProvider with ChangeNotifier {
   /// CLEAR (logout / switch facility)
   /// -------------------------------
   void clear() {
+    _warnedLarge = false;
     _subscription?.cancel();
     _subscription = null;
     _facilityId = null;

@@ -24,7 +24,7 @@ import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// Committed skipped until the catalogue and the screens land (PAGE2 (6), (8)).
+// Committed skipped until the catalogue and the screens land (PAGE2 (8)); the catalogue tests run from (6).
 const _pending = true;
 
 const _wide = Size(1600, 900);
@@ -86,7 +86,7 @@ void main() {
     await tester.runAsync(() => facilityCollection(db.inner, Collections.products).doc('p1').update({'sellableQty': 39}));
     await ph5Settle(tester);
     expect(db.reads, 1);
-  }, skip: _pending);
+  });
 
   test('one listener per facility; clear releases it; the next facility gets its own', () async {
     final db = CountingFirestore();
@@ -104,7 +104,7 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 20));
     expect(db.listeners, 1);
     provider.dispose();
-  }, skip: _pending);
+  });
 
   test('Stock Alerts numbers from the shared catalogue match a one-time read of the same products', () async {
     final db = CountingFirestore();
@@ -127,7 +127,7 @@ void main() {
     expect(shared[StockAlertKind.lowStock], isNotNull, reason: 'the seed has low-stock products');
     live.dispose();
     once.dispose();
-  }, skip: _pending);
+  });
 
   // Through Browse Products (the phone sheet), as ph6_add_sale_phone_test does:
   // the inline suggestion list on a wide Add Sale trips Flutter's ListTile
@@ -146,7 +146,7 @@ void main() {
     expect(find.text('Ivermectin 1%'), findsNothing);
     expect(db.reads, 0);
     expect(db.gets, 0);
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('Products PC/tablet: ListPageBar, 25 a page, Next and Previous over the catalogue', (tester) async {
     final (db, _) = await _openProducts(tester, products: _many(60));
@@ -209,7 +209,7 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 200));
     expect(logs.where((l) => l.contains('soft limit')).length, 1);
     provider.dispose();
-  }, skip: _pending);
+  });
 
   for (final size in page1Widths) {
     for (final (look, scale) in const [(MatrixLook.light, 1.0), (MatrixLook.light, 1.3), (MatrixLook.kiswahili, 1.3)]) {

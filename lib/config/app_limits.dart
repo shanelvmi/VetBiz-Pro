@@ -20,6 +20,11 @@ class AppLimits {
   /// Product catalogue grid (product_catalog_service.dart).
   static const int productCatalogPageSize = 12;
 
+  /// PAGE2: above this many products the shared in-memory catalogue logs a
+  /// warning once a session (debugPrint, no UI): the trigger to move product
+  /// search and paging onto the server (docs/PAGING_AUDIT.md).
+  static const int productCatalogueSoftLimit = 5000;
+
   /// Upper bound on activity-log reads (activity_log_screen, and each
   /// clean-up pass in activity_log_retention).
   static const int ledgerQueryCap = 500;

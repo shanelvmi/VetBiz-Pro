@@ -16,7 +16,6 @@ import '../screens/dashboard/dashboard_screen.dart';
 import '../config/app_timeouts.dart';
 import '../services/active_facility_memory.dart';
 import '../l10n/l10n.dart';
-import '../theme/app_layout.dart';
 import '../theme/app_motion.dart';
 import '../data/fields.dart';
 import '../widgets/vetbiz_loading_indicator.dart';
@@ -85,14 +84,14 @@ Future<void> activateFacilityAndGoToDashboard({
   // home's Needs attention strip hears a sale's stock change without
   // Products or Stock Store being opened first (they used to be one get,
   // live only once one of those screens had opened). Its first answer reads
-  // what the get read; afterwards only changed products. Tablets and
-  // computers keep the one get. resetAllUserProviders above (and on every
+  // what the get read; afterwards only changed products.
+  // PAGE2: tablets and computers too (they kept one get, and opening Products
+  // or Stock Store then started the listener, reading every product a second
+  // time). One listener a session is the shared catalogue Products, Stock
+  // Store, Stock Alerts and Add Sale all read; their listenToProducts finds
+  // it open and does nothing. resetAllUserProviders above (and on every
   // sign-out) cancels it through ProductProvider.clear.
-  if (AppLayout.isPhone(context)) {
-    productProvider.listenToProducts(facility[Fields.facilityId]);
-  } else {
-    productProvider.fetchProducts(facility[Fields.facilityId]);
-  }
+  productProvider.listenToProducts(facility[Fields.facilityId]);
   saleProvider.init(facility[Fields.facilityId]);
   clientProvider.listenToClients(facility[Fields.facilityId]);
   serviceProvider.listenToServices(facility[Fields.facilityId]);

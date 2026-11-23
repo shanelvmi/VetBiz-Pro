@@ -2,7 +2,8 @@
 // facility's products used to be one get at activation, live only once
 // Products or Stock Store had opened, so the phone home's strip could go
 // stale. On phones (AppLayout.isPhone) that get is now a live listener whose
-// first answer costs the same reads; tablets and computers keep the get.
+// first answer costs the same reads; tablets and computers kept the get
+// until PAGE2, which gave them the same listener (the shared catalogue).
 //
 // The activation, the sign-out and the providers are the real ones; the
 // products go through the counting fake (helpers/counting_firestore.dart),
@@ -169,12 +170,16 @@ void main() {
       expect(db.reads, 3, reason: 'one read per product, as the one-time get');
     });
 
-    testWidgets('a tablet or a computer: today\'s one get, no listener', (tester) async {
+    // PAGE2 (owner decision): tablets and computers listen too, one listener
+    // a session (the shared catalogue); its first answer reads what the get
+    // read. Opening Products or Stock Store then reads nothing more
+    // (page2_catalogue_test).
+    testWidgets('a tablet or a computer: one listener, the same reads as the get it replaces', (tester) async {
       final (db, products) = await _app(tester, _tablet);
       await _open(tester);
       expect(products.products, hasLength(3));
-      expect(db.listeners, 0);
-      expect(db.gets, 1);
+      expect(db.listeners, 1);
+      expect(db.gets, 0);
       expect(db.reads, 3);
     });
 
@@ -189,12 +194,14 @@ void main() {
       expect(db.reads, 1, reason: 'only the changed product is read');
     });
 
-    testWidgets('a tablet: unchanged, the strip\'s products are today\'s one get', (tester) async {
+    testWidgets('a tablet (PAGE2): live too, a stock change updates the strip for one read', (tester) async {
       final (db, _) = await _app(tester, _tablet);
       await _open(tester);
       expect(_stockCount(tester), 1);
+      db.resetCounts();
       await _sellAmoxicillinDown(tester, db);
-      expect(_stockCount(tester), 1);
+      expect(_stockCount(tester), 2);
+      expect(db.reads, 1, reason: 'only the changed product is read');
     });
 
     testWidgets('a phone: signing out cancels the listener', (tester) async {
