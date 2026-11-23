@@ -5,6 +5,7 @@
 // After PH8a the wide screens still match, and the claim saved on a wide
 // window and on a phone is the same.
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vetbiz_pro/config/money.dart';
@@ -52,11 +53,21 @@ Future<void> seedSubscription(FirebaseFirestore fs, {bool pending = false}) asyn
   if (pending) await claims.doc('s3').set(claim('pending', 9));
 }
 
+/// The ids [seedSubscription] gives its claims.
+const seededClaimIds = {'s1', 's2', 's3'};
+
 /// The claims saved, oldest first, without the seeded ones.
+///
+/// PAGE1b: the seeded ones are left out by their exact ids. It used to drop
+/// every id starting with 's', but a saved claim's id is a random auto-id:
+/// about 1 run in 62 the new claim's id starts with 's' and it was dropped,
+/// so the test read no claim although the screen had saved it ('the claim
+/// saved at 1200' at the end of PAGE1, 'at 390' at the end of PAGE1b: both
+/// 'Actual: []' after the reference had cleared). Not a timing problem.
 Future<List<Map<String, dynamic>>> savedClaims(WidgetTester tester, FirebaseFirestore fs) async =>
     (await tester.runAsync(() async {
       final docs = (await facilityCollection(fs, Collections.paymentSubmissions).get()).docs;
-      return [for (final d in docs) if (!d.id.startsWith('s')) d.data()];
+      return [for (final d in docs) if (!seededClaimIds.contains(d.id)) d.data()];
     }))!;
 
 void main() {
@@ -113,4 +124,17 @@ void main() {
       expectSameSaved('subscription', await savedClaims(tester, app.fs));
     });
   }
+
+  // PAGE1b: a saved claim whose auto-id starts with 's' is still read.
+  testWidgets('savedClaims leaves out only the seeded claims, whatever the new id', (tester) async {
+    final fs = FakeFirebaseFirestore();
+    await tester.runAsync(() async {
+      await seedSubscription(fs, pending: true);
+      final claims = facilityCollection(fs, Collections.paymentSubmissions);
+      await claims.doc('sQ3xYz0aBcDeFgHiJkLm').set({'reference': 'starts with s'});
+      await claims.doc('Ab3xYz0aBcDeFgHiJkLm').set({'reference': 'starts with A'});
+    });
+    final kept = [for (final c in await savedClaims(tester, fs)) c['reference']];
+    expect(kept, unorderedEquals(['starts with s', 'starts with A']));
+  });
 }
