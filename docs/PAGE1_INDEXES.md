@@ -1,9 +1,22 @@
-# PAGE1: composite indexes needed (not deployed)
+# PAGE1: composite indexes needed
+
+**PAGE1b: the three indexes below are now in `firestore.indexes.json` (added,
+not deployed).** Deploy with:
+
+```
+firebase deploy --only firestore:indexes
+```
+
+Firestore then builds them; on a log this size that usually takes a few
+minutes, longer for a big collection (the console's Indexes tab shows
+"Building" until they are ready). The app is safe to push before or during
+that: while a category query is refused (`failed-precondition`), the PC/tablet
+Activity Log shows "Filter by category: not available yet" in place of the
+chips, All keeps working, and it asks again only when the tab is opened again.
 
 PAGE1 did not edit `firestore.indexes.json`. Every query PAGE1 runs uses an
-index that already exists, except the one filter below, which is **off** on
-PC/tablet until these are deployed. Owner deploys (`firebase deploy --only
-firestore:indexes`), then the filter can be turned back on as a server query.
+index that already exists, except the one filter below, which PAGE1 turned
+**off** on PC/tablet. PAGE1b turned it back on as server queries.
 
 ## Activity Log: category filter (and its counts)
 

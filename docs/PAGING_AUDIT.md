@@ -21,7 +21,7 @@ rows the app keeps.
 | Stock Alerts | computed from the same products stream | ListPageBar (UX1b) | ok (risk is the products stream) |
 | Sales archive | cursor get, 30/page, appended | ListPageBar over loaded rows (10/25/50); next page fetches | ok |
 | Services archive | cursor get, 30/page, appended | ListPageBar over loaded rows | ok |
-| Activity Log | **PAGE1:** cursor pages inside the retention window, pageSize + 1 (assistant: userId + targetUserId merged, an entry once); the phone keeps its streams | ListPageBar | **fixed (PAGE1)**; category filter off until its indexes (docs/PAGE1_INDEXES.md); search over the page shown (said in the hint) |
+| Activity Log | **PAGE1:** cursor pages inside the retention window, pageSize + 1 (assistant: userId + targetUserId merged, an entry once); the phone keeps its streams | ListPageBar | **fixed (PAGE1)**; PAGE1b: category chips back as server queries (a where clause on the paged query, both assistant questions; numbers by one count() per category), the note while the indexes are missing (docs/PAGE1_INDEXES.md); search over the page shown (said in the hint) |
 | Notifications | **PAGE1:** the full page's own feed watches the newest pageSize + 1 live (bell and badge: their own 50); Next fetches older by cursor, pageSize + 1 | ListPageBar, no Load older | **fixed (PAGE1)**; filters work over the loaded pages (Next keeps loading older); unread first on page 1 only; the phone keeps 200 + Load older |
 | Trash | **PAGE1:** cursor pages per kind, pageSize + 1; the expiring banner is one `count()` | ListPageBar | **fixed (PAGE1)**; no counts on the kind chips |
 | Team Members | gets of the facility's members | own pager (10/25/50) | ok (bounded) |
@@ -111,6 +111,20 @@ Trash banner's count):
 | Notifications | 121 (window 200) | 27 | 25 |
 
 Still open: Clients, Products, Stock Store and the Facilities card figures
-(**PAGE2 / BE1**); the Activity Log category filter waits for the indexes in
-`docs/PAGE1_INDEXES.md`; the Debtors and Payments outstanding card still ride
+(**PAGE2 / BE1**); the Debtors and Payments outstanding card still ride
 the whole `debts`/`clients` streams.
+
+**PAGE1b (Activity Log category filter).** The chips are back on PC/tablet as
+server queries: a category is `actionType ==` (Sales: `in ['Sales', 'Sale']`)
+on the paged query, an assistant's two questions both; choosing one starts at
+page 1. The numbers are one `count()` per category over the retention window
+(All + 9 categories; an assistant adds their two questions, as the app never
+logs an entry both by and about the same person), loaded once per window. All
+and the first category are counted first; if the index is missing
+(`failed-precondition`), the note replaces the chips and nothing more is
+asked until the tab is opened again. Reads at 120 records
+(`page1_read_cost_test`, `page1b_activity_category_test`): open admin 38
+(was 28: + 10 counts), assistant 68; choosing a category one page (at most
+pageSize + 1, 2 x for an assistant); index missing on open 29 (the refused
+count bills nothing). Types nothing writes any more (`clients`, `settings`,
+`admin`) show under All only.
