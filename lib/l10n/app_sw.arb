@@ -794,6 +794,8 @@
   "@products_restoreFailed": {"x-review":"draft"},
   "products_noMatches": "Hakuna bidhaa zinazolingana na vichujio vyako",
   "@products_noMatches": {"x-review":"draft"},
+  "catalogue_emptySearch": "Hakuna bidhaa zinazolingana na \"{query}\"",
+  "@catalogue_emptySearch": {"x-review":"draft"},
   "products_restockShelf": "Jaza Rafu",
   "@products_restockShelf": {"x-review":"draft"},
   "products_stock": "Stoo",

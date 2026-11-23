@@ -1297,6 +1297,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get products_noMatches => 'No products match your filters';
 
   @override
+  String catalogue_emptySearch(String query) {
+    return 'No products match \"$query\"';
+  }
+
+  @override
   String get products_restockShelf => 'Restock Shelf';
 
   @override

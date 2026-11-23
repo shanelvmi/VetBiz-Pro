@@ -396,6 +396,7 @@
   "products_restored": ["Bidhaa imerejeshwa","Message after Undo restores a product.","draft"],
   "products_restoreFailed": ["Imeshindwa kurejesha bidhaa","Message when restoring a product failed.","draft"],
   "products_noMatches": ["Hakuna bidhaa zinazolingana na vichujio vyako","Product list: filters hide everything.","draft"],
+  "catalogue_emptySearch": ["Hakuna bidhaa zinazolingana na \"{query}\"","Products and Stock Store when the search finds nothing.","draft"],
   "products_restockShelf": ["Jaza Rafu","Badge: the shelf needs restocking from the store.","draft"],
   "products_stock": ["Stoo","Product card label: quantity in the store.","draft"],
   "products_price": ["Bei","Product card label: selling price.","draft"],

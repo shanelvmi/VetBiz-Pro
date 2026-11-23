@@ -2480,6 +2480,12 @@ abstract class AppLocalizations {
   /// **'No products match your filters'**
   String get products_noMatches;
 
+  /// Products and Stock Store when the search finds nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No products match \"{query}\"'**
+  String catalogue_emptySearch(String query);
+
   /// Badge: the shelf needs restocking from the store.
   ///
   /// In en, this message translates to:

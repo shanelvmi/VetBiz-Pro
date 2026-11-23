@@ -794,6 +794,8 @@
   "@products_restoreFailed": {"description":"Message when restoring a product failed."},
   "products_noMatches": "No products match your filters",
   "@products_noMatches": {"description":"Product list: filters hide everything."},
+  "catalogue_emptySearch": "No products match \"{query}\"",
+  "@catalogue_emptySearch": {"description":"Products and Stock Store when the search finds nothing.","placeholders":{"query":{"type":"String"}}},
   "products_restockShelf": "Restock Shelf",
   "@products_restockShelf": {"description":"Badge: the shelf needs restocking from the store."},
   "products_stock": "Stock",

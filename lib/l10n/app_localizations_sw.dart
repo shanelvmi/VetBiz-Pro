@@ -1303,6 +1303,11 @@ class AppLocalizationsSw extends AppLocalizations {
       'Hakuna bidhaa zinazolingana na vichujio vyako';
 
   @override
+  String catalogue_emptySearch(String query) {
+    return 'Hakuna bidhaa zinazolingana na \"$query\"';
+  }
+
+  @override
   String get products_restockShelf => 'Jaza Rafu';
 
   @override
