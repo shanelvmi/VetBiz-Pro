@@ -21,6 +21,15 @@ class CountingFirestore implements FirebaseFirestore {
   /// PH5a: while set, every query get fails (a list's error state).
   bool failGets = false;
 
+  /// PAGE1b: while set, a query (get or count) filtered on actionType fails
+  /// with failed-precondition, as Firestore does while its composite index is
+  /// not deployed or still building. Counted in [gets], never in [reads].
+  bool failActionTypeQueries = false;
+
+  /// PAGE1b: while set, every count() fails with another error (unavailable):
+  /// the numbers cannot be read.
+  bool failCounts = false;
+
   /// PH5a: while set, every query get waits for it (a list's loading state).
   Completer<void>? holdGets;
 
@@ -97,10 +106,13 @@ class CountingFirestore implements FirebaseFirestore {
 }
 
 class _Query implements Query<Map<String, dynamic>> {
-  _Query(this.db, this.q);
+  _Query(this.db, this.q, [this.byActionType = false]);
 
   final CountingFirestore db;
   final Query<Map<String, dynamic>> q;
+
+  // PAGE1b: this query filters on actionType (the category indexes).
+  final bool byActionType;
 
   @override
   Query<Map<String, dynamic>> where(Object field,
@@ -128,24 +140,28 @@ class _Query implements Query<Map<String, dynamic>> {
               arrayContainsAny: arrayContainsAny,
               whereIn: whereIn,
               whereNotIn: whereNotIn,
-              isNull: isNull));
+              isNull: isNull),
+          byActionType || field == 'actionType');
 
   @override
   Query<Map<String, dynamic>> orderBy(Object field, {bool descending = false}) =>
-      _Query(db, q.orderBy(field, descending: descending));
+      _Query(db, q.orderBy(field, descending: descending), byActionType);
 
   @override
-  Query<Map<String, dynamic>> limit(int limit) => _Query(db, q.limit(limit));
+  Query<Map<String, dynamic>> limit(int limit) => _Query(db, q.limit(limit), byActionType);
 
   // PH7b: Past Reports pages with a cursor and counts with an aggregate (one
   // get, billed as one read).
   @override
   Query<Map<String, dynamic>> startAfterDocument(DocumentSnapshot documentSnapshot) =>
-      _Query(db, q.startAfterDocument(documentSnapshot));
+      _Query(db, q.startAfterDocument(documentSnapshot), byActionType);
 
   @override
   AggregateQuery count() {
     db.gets++;
+    // PAGE1b: a missing index fails the query; a refused query bills nothing.
+    if (byActionType && db.failActionTypeQueries) return _FailingCount(_missingIndex());
+    if (db.failCounts) return _FailingCount(FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'));
     db.reads++;
     return q.count();
   }
@@ -170,7 +186,13 @@ class _Query implements Query<Map<String, dynamic>> {
   }
 
   @override
-  Future<QuerySnapshot<Map<String, dynamic>>> get([GetOptions? options]) => db._get(q);
+  Future<QuerySnapshot<Map<String, dynamic>>> get([GetOptions? options]) async {
+    if (byActionType && db.failActionTypeQueries) {
+      db.gets++;
+      throw _missingIndex();
+    }
+    return db._get(q);
+  }
 
   @override
   Stream<QuerySnapshot<Map<String, dynamic>>> snapshots(
@@ -231,6 +253,23 @@ class _Doc implements DocumentReference<Map<String, dynamic>> {
 
   @override
   String get path => d.path;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+// PAGE1b: what Firestore throws for a query whose composite index is missing
+// or still building.
+FirebaseException _missingIndex() => FirebaseException(
+    plugin: 'cloud_firestore', code: 'failed-precondition', message: 'The query requires an index.');
+
+class _FailingCount implements AggregateQuery {
+  _FailingCount(this.error);
+
+  final FirebaseException error;
+
+  @override
+  Future<AggregateQuerySnapshot> get({AggregateSource source = AggregateSource.server}) async => throw error;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
