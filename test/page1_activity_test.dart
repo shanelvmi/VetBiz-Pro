@@ -1,9 +1,9 @@
 // PAGE1: the Activity Log on PC/tablet pages on the server inside the
 // retention window (no 500-row stream, no whole-window stream for chips).
 // An assistant's two questions (what they did, what is about them) are
-// merged by cursor, an entry in both shown once. The category filter is off
-// with a note (its indexes: docs/PAGE1_INDEXES.md); the search says it looks
-// at this page. The phone keeps its streams (ph8a_activity_phone_test).
+// merged by cursor, an entry in both shown once. PAGE1b: the category chips
+// are server queries (page1b_activity_category_test); the search says it
+// looks at this page. The phone keeps its streams (ph8a_activity_phone_test).
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -91,11 +91,13 @@ void main() {
     expect(page1Range(tester), 'Showing 1 to 10');
   });
 
-  ph5TestWidgets('the category filter is off with a note; the search says it looks at this page', (tester) async {
+  // PAGE1b: the chips are back as server queries (page1b_activity_category_test);
+  // the note only shows while their index is missing.
+  ph5TestWidgets('the category chips (server queries); the search says it looks at this page', (tester) async {
     await _open(tester);
-    expect(find.byKey(const ValueKey('activity-categoryUnavailable')), findsOneWidget);
-    expect(find.text('Filter by category: not available yet'), findsOneWidget);
-    expect(find.byType(ChoiceChip), findsNothing);
+    expect(find.byKey(const ValueKey('activity-categoryUnavailable')), findsNothing);
+    expect(find.byKey(const ValueKey('activity-categoryChips')), findsOneWidget);
+    expect(find.byType(ChoiceChip), findsNWidgets(2), reason: 'All and Sales');
     await tester.enterText(find.byType(TextField), 'Entry 1');
     await ph5Settle(tester);
     Finder row(String t) => find.descendant(of: find.byKey(const ValueKey('activity-table')), matching: find.text(t));
@@ -138,7 +140,8 @@ void main() {
     expect(db.listeners, lessThanOrEqualTo(1), reason: 'only the app\'s role listener');
     // ignore: avoid_print
     print('PAGE1 Activity open (listeners, gets, reads): (${db.listeners}, ${db.gets}, ${db.reads})');
-    expect(db.reads, lessThanOrEqualTo(26 + 1 + 1 + 2));
+    // PAGE1b: + one count() for All and each of the 9 categories (the chips).
+    expect(db.reads, lessThanOrEqualTo(26 + 1 + 1 + 2 + 10));
   });
 
   for (final size in page1Widths) {

@@ -8,7 +8,8 @@
 // - all: the app's own setup reads (the signed-in user, the facility).
 // - Transactions: the cards' daily totals (one document per day in range).
 // - Payments: 6 card aggregates, 2 range-total aggregates, 1 day snapshot.
-// - Activity Log: the facility (retention) and the admin's expired tidy-up.
+// - Activity Log: the facility (retention), the admin's expired tidy-up, and
+//   (PAGE1b) one count() for All and each of the 9 categories (the chips).
 // - Notifications: my state document.
 // - Trash: one count() for the expiring banner.
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -86,7 +87,7 @@ void main() {
       }
     });
     await _openAndNext(tester, db, (fs) => ActivityLogScreen(isModal: true, firestore: fs, auth: Ph8Auth()),
-        openMax: _page + 1 + 2, nextMax: _page, name: 'Activity Log');
+        openMax: _page + 1 + 2 + 10, nextMax: _page, name: 'Activity Log');
   });
 
   ph5TestWidgets('Trash', (tester) async {
