@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../../models/product.dart';
@@ -7,6 +10,9 @@ import '../../providers/facility_provider.dart';
 import '../../providers/user_role_provider.dart';
 import '../../widgets/product_catalog_side_panel.dart';
 import '../../widgets/shell/page_header.dart';
+import '../../widgets/list_page_bar.dart';
+import '../../config/app_limits.dart';
+import '../../config/app_timeouts.dart';
 import '../../navigation/app_destinations.dart';
 import '../../widgets/product_thumbnail.dart';
 import '../../services/product_catalog_service.dart';
@@ -59,6 +65,12 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
   // controls at all.
   ProductCatalogQuery _query = const ProductCatalogQuery(pageSize: kProductCatalogDefaultPageSize);
 
+  // PAGE2: PC/tablet pages the shared catalogue with ListPageBar (10/25/50,
+  // default 25); the phone keeps _query.pageSize for its scroll steps.
+  int _widePageSize = AppLimits.pageSize;
+  // PAGE2: the PC/tablet search applies 300 ms after typing stops.
+  Timer? _searchDebounce;
+
   // PH7a (phones): how many pages the list shows (R10: every page reached
   // so far); back to one whenever the query changes.
   int _phonePages = 1;
@@ -77,6 +89,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -347,7 +360,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     final visibleProductCount = baseProducts.length;
 
     final result = ProductCatalogService.run(
-      query: _query,
+      query: _query.copyWith(pageSize: _widePageSize),
       allProducts: allProducts,
       belongsOnThisScreen: belongsOnThisScreen,
       isDepleted: productIsDepleted,
@@ -424,7 +437,12 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                       Icon(Icons.inventory_2, size: AppIconSize.i64, color: context.colors.textDisabled),
                       const SizedBox(height: AppSpacing.s16),
                       Text(
-                        noFiltersActive ? context.l10n.store_empty : context.l10n.products_noMatches,
+                        noFiltersActive
+                            ? context.l10n.store_empty
+                            // PAGE2: a search names what was searched.
+                            : _query.searchQuery.isNotEmpty
+                                ? context.l10n.catalogue_emptySearch(_query.searchQuery)
+                                : context.l10n.products_noMatches,
                         style: TextStyle(fontSize: AppFontSize.f18, color: context.colors.textMuted),
                       ),
                     ],
@@ -436,11 +454,12 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   child: _isGridView ? _buildProductsGrid(result.items) : _buildProductsListView(result.items),
                 ),
         ),
-        if (result.needsPaginationControls)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.s16, AppSpacing.s8, AppSpacing.s16, AppSpacing.s12),
-            child: _buildPaginationControls(result),
-          ),
+        // PAGE2: the shared page bar (the catalogue is in memory, so the
+        // range can say the total).
+        Padding(
+          padding: const EdgeInsets.fromLTRB(AppSpacing.s16, 0, AppSpacing.s16, 0),
+          child: _buildPageBar(result),
+        ),
       ],
     );
 
@@ -684,6 +703,45 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     );
   }
 
+  void _onWideSearchChanged(String value) {
+    setState(() {}); // the clear button
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(AppTimeouts.pagedSearchDebounce, () {
+      if (mounted) setState(() => _query = _query.copyWith(searchQuery: value.trim(), page: 1));
+    });
+  }
+
+  void _clearWideSearch() {
+    _searchDebounce?.cancel();
+    if (_searchController.text.isEmpty && _query.searchQuery.isEmpty) return;
+    setState(() {
+      _searchController.clear();
+      _query = _query.copyWith(searchQuery: '', page: 1);
+    });
+  }
+
+  Widget _buildPageBar(ProductCatalogResult result) {
+    final start = (result.currentPage - 1) * _widePageSize + 1;
+    final end = start + result.items.length - 1;
+    return ListPageBar(
+      emptyText: context.l10n.products_noMatches,
+      rangeText: result.items.isEmpty ? null : context.l10n.products_showingRange(result.totalCount, start, end),
+      itemCount: result.items.length,
+      pageSize: _widePageSize,
+      currentPage: result.currentPage,
+      hasPreviousPage: result.currentPage > 1,
+      hasNextPage: result.currentPage < result.totalPages,
+      isLoading: false,
+      showLoadingSpinner: false,
+      onPageSize: (size) => setState(() {
+        _widePageSize = size;
+        _query = _query.copyWith(page: 1);
+      }),
+      onPrevious: () => setState(() => _query = _query.copyWith(page: result.currentPage - 1)),
+      onNext: () => setState(() => _query = _query.copyWith(page: result.currentPage + 1)),
+    );
+  }
+
   Widget _buildToolbar() {
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(AppRadius.r10),
@@ -692,7 +750,10 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     return Row(
       children: [
         Expanded(
-          child: TextField(
+          // PAGE2: Escape clears the search, as the clear button does.
+          child: CallbackShortcuts(
+            bindings: {const SingleActivator(LogicalKeyboardKey.escape): _clearWideSearch},
+            child: TextField(
             controller: _searchController,
             decoration: InputDecoration(
               hintText: context.l10n.store_searchHint,
@@ -708,13 +769,11 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
                   ? null
                   : IconButton(
                       icon: const Icon(Icons.clear, size: AppIconSize.i18),
-                      onPressed: () => setState(() {
-                        _searchController.clear();
-                        _query = _query.copyWith(searchQuery: '', page: 1);
-                      }),
+                      onPressed: _clearWideSearch,
                     ),
             ),
-            onChanged: (val) => setState(() => _query = _query.copyWith(searchQuery: val.trim(), page: 1)),
+            onChanged: _onWideSearchChanged,
+          ),
           ),
         ),
         const SizedBox(width: AppSpacing.s10),
@@ -785,85 +844,7 @@ class _StockStoreScreenState extends State<StockStoreScreen> {
     );
   }
 
-  Widget _buildPaginationControls(ProductCatalogResult result) {
-    final pageSize = _query.pageSize ?? kProductCatalogDefaultPageSize;
-    final start = (result.currentPage - 1) * pageSize + 1;
-    final end = (start + result.items.length - 1).clamp(start, result.totalCount);
 
-    const windowSize = 5;
-    int windowStart = (result.currentPage - windowSize ~/ 2).clamp(1, result.totalPages);
-    int windowEnd = (windowStart + windowSize - 1).clamp(1, result.totalPages);
-    windowStart = (windowEnd - windowSize + 1).clamp(1, result.totalPages);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          context.l10n.products_showingRange(result.totalCount, start, end),
-          style: TextStyle(fontSize: AppFontSize.f12_5, color: context.colors.textMuted),
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _pageButton(
-              child: const Icon(Icons.chevron_left, size: AppIconSize.i18),
-              onTap: result.currentPage > 1
-                  ? () => setState(() => _query = _query.copyWith(page: result.currentPage - 1))
-                  : null,
-            ),
-            for (int i = windowStart; i <= windowEnd; i++)
-              _pageButton(
-                child: Text('$i'),
-                isSelected: i == result.currentPage,
-                onTap: () => setState(() => _query = _query.copyWith(page: i)),
-              ),
-            _pageButton(
-              child: const Icon(Icons.chevron_right, size: AppIconSize.i18),
-              onTap: result.currentPage < result.totalPages
-                  ? () => setState(() => _query = _query.copyWith(page: result.currentPage + 1))
-                  : null,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _pageButton({required Widget child, VoidCallback? onTap, bool isSelected = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(left: AppSpacing.s6),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppRadius.r8),
-        child: Container(
-          width: 34,
-          height: 34,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? context.colors.primary : context.colors.background,
-            borderRadius: BorderRadius.circular(AppRadius.r8),
-            border: Border.all(color: isSelected ? context.colors.primary : context.colors.textHint.withValues(alpha: AppAlpha.a30)),
-          ),
-          child: DefaultTextStyle(
-            style: TextStyle(
-              color: onTap == null
-                  ? context.colors.textDisabled
-                  : (isSelected ? context.colors.onPrimary : context.colors.textPrimary),
-              fontSize: AppFontSize.f13,
-              fontWeight: AppFontWeight.semibold,
-            ),
-            child: IconTheme(
-              data: IconThemeData(
-                  color: onTap == null
-                      ? context.colors.textDisabled
-                      : (isSelected ? context.colors.onPrimary : context.colors.textPrimary)),
-              child: child,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _labelValue(String label, String value, {Color? valueColor}) {
     return Column(

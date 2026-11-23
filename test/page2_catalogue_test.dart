@@ -24,9 +24,6 @@ import 'helpers/ph7a_seed.dart';
 import 'helpers/phone_list_harness.dart';
 import 'helpers/screen_size_matrix.dart';
 
-// Committed skipped until the catalogue and the screens land (PAGE2 (8)); the catalogue tests run from (6).
-const _pending = true;
-
 const _wide = Size(1600, 900);
 
 /// [count] in-stock products "Product 000".. (on the shelf and in the store).
@@ -162,7 +159,7 @@ void main() {
     await page1PageSize(tester, 10);
     expect(page1Range(tester), 'Showing 1 to 10 of 60 products');
     expect(db.reads, 0, reason: 'paging is in memory');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('Products search: waits for the typing to stop, names the text when nothing matches, Escape clears',
       (tester) async {
@@ -180,7 +177,7 @@ void main() {
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await ph5Settle(tester);
     expect(page1Range(tester), 'Showing 1 to 25 of 60 products');
-  }, skip: _pending);
+  });
 
   ph5TestWidgets('Stock Store PC/tablet: ListPageBar and the same search', (tester) async {
     final (_, app) = await _openProducts(tester, products: _many(30));
@@ -190,7 +187,7 @@ void main() {
     expect(page1Range(tester), 'Showing 1 to 10 of 10 products');
     await _search(tester, StockStoreScreen, 'zebra');
     expect(find.text('No products match "zebra"'), findsOneWidget);
-  }, skip: _pending);
+  });
 
   test('the soft guard: above 5000 products it warns once a session', () async {
     final logs = <String>[];
@@ -221,7 +218,7 @@ void main() {
         await _push(tester, app, const StockStoreScreen());
         expect(tester.takeException(), isNull);
         expect(page1BarWidget(tester).itemCount, 25);
-      }, skip: _pending);
+      });
     }
   }
 }
