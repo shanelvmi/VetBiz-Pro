@@ -424,8 +424,9 @@ class ClientProvider with ChangeNotifier, PaginatedStreamLoader<Client> {
   /// PAGE2: the PC/tablet page. A search that looks like a phone number (only
   /// digits, spaces, + and -) is a prefix of phoneKey; anything else a prefix
   /// of nameLower (case-insensitive). Both fields are written on every save;
-  /// a client older than them is found only after the Settings backfill
-  /// (rebuildSearchIndex, owner-run). Indexes: docs/PAGE2_INDEXES.md.
+  /// a client older than them is found only after the backfill
+  /// (rebuildSearchIndex; no screen opens its dialog yet, see
+  /// docs/PAGE2_SEARCH_PROPOSAL.md). Indexes: docs/PAGE2_INDEXES.md.
   Future<CursorPage<Client>> _fetchClientsByName(
     Query<Map<String, dynamic>> filtered,
     String searchTerm,

@@ -7,6 +7,14 @@ Format: file, line, value, what it seems to be for.
 
 For step 2R. Each needs before/after screenshots first; the owner's leanings are noted, not decided.
 
+### Raised in PAGE2 (Clients, Products, Stock Store; English kept as it was)
+
+- **`clients_searchingNote` is no longer shown.** "Searching by name (across all types)" sat under the PC/tablet search; the search now finds a name or a phone and keeps the type filter, so the note would be wrong. Nothing else uses the key (it stays in the ARB). Reword and bring back, or retire it?
+- **The phone's Clients hint promises more than it finds.** `clients_searchHint` "Search by name, phone, address..." stays on the phone, whose search (unchanged) matches the start of the name only. PC/tablet now uses "Search by name or phone" (`debtors_debtorSearchHint`, identical English reused). Give the phone the same hint (and the phone search the phone prefix)?
+- **A to Z is Firestore's order, so case-sensitive.** The PC/tablet Clients list orders by `name` as typed: "alice" comes after "Zawadi". Ordering by `nameLower` would fix it but hide clients without that field until the backfill runs. Order by `nameLower` after the backfill?
+- **The search backfill cannot be run from the app.** `showRebuildSearchIndexDialog` (`lib/screens/settings/rebuild_search_index_dialog.dart`) exists but no screen opens it, so clients older than `nameLower`/`phoneKey` stay unfindable by search. Add it to Settings (admin only)? (docs/PAGE2_SEARCH_PROPOSAL.md)
+- **Add Sale on a computer: the inline product suggestions trip a Flutter debug assertion** ("ListTile background color or ink splashes may be invisible": a ListTile inside a coloured DecoratedBox, `_buildProductSuggestionsOverlay`, `lib/screens/sales/add_sale_screen.dart`). Present before PAGE2 (debug only; release builds do not assert); hover and splash do not show on those rows. Wrap each row in its own Material?
+
 ### Raised in step 2D, batch D6
 
 - **Alpha 0.95**, `lib/screens/products/add_edit_product_screen.dart` (the brand-green category and type picker dialogs' background, x2): 0.1 above `a85`, no step. Kept as is (owner, after D6); listed for 2R.

@@ -12,13 +12,13 @@ rows the app keeps.
 |---|---|---|---|
 | Sales | cursor get, 25/page, newest 25 live (`CursorPaginatedListController`) | ListPageBar | ok |
 | Services | cursor get, 25/page, newest 25 live | ListPageBar | ok |
-| Clients | cursor get, 25/page; **plus the whole `clients` collection streamed live** (`listenToClients`, also started by `facility_activation`) | ListPageBar | unbounded read (scalability risk). **PAGE2 / BE1** |
+| Clients | **PAGE2:** cursor pages A to Z by name, pageSize + 1 (`byName`); type and status in the query; server search: name prefix (`nameLower`), phone prefix (`phoneKey`); the screen reuses the whole-clients listener instead of restarting it | ListPageBar | **fixed (PAGE2)** for the list; the whole `clients` stream started by `facility_activation` stays (Dashboard counts, Sales/Services lookups, the Clients cards): **BE1**. Search misses clients older than `nameLower` until the backfill runs (docs/PAGE2_SEARCH_PROPOSAL.md) |
 | Debtors | cursor get, 25/page (`debtorsListController`); rides the same whole-clients stream for lookups | ListPageBar | ok (risk shared with Clients) |
 | Payments | **PAGE1:** cursor pages over payments + other income merged (`ledgerPager`, at most 2 x (pageSize + 1) a page); range Total and period cards by `sum`/`count` aggregates | ListPageBar | **fixed (PAGE1)**; name search still spans every date (as before) |
 | Transactions | **PAGE1:** cursor pages, pageSize + 1 (`transactionsListController`); type and date range in the query; search = description prefix, every date; the live 25 is the phone's only | ListPageBar | **fixed (PAGE1)** |
-| Products | **whole `products` collection streamed live** (`ProductProvider`), paged in memory (`ProductCatalogService`, 12) | own numbered pager, 12 fixed | unbounded read (scalability risk); add pager (ListPageBar). **PAGE2 / BE1** |
-| Stock Store | same products stream, paged in memory (12) | own numbered pager, 12 fixed | unbounded read (scalability risk); add pager. **PAGE2 / BE1** |
-| Stock Alerts | computed from the same products stream | ListPageBar (UX1b) | ok (risk is the products stream) |
+| Products | **PAGE2:** the shared catalogue: one `products` listener a session, started by facility activation on every device (PC/tablet did a get, then a second full read when Products opened); paged and searched in memory (300 ms debounce) | ListPageBar 10/25/50, default 25 | **fixed (PAGE2)** within the documented limit: the catalogue is held whole in memory; above 5,000 products `ProductProvider` logs a warning once a session, **the trigger to move product search and paging to the server** |
+| Stock Store | **PAGE2:** the same shared catalogue (no read of its own), paged and searched in memory | ListPageBar 10/25/50, default 25 | **fixed (PAGE2)**, same limit as Products |
+| Stock Alerts | computed from the shared catalogue (PAGE2: live on PC/tablet too) | ListPageBar (UX1b) | ok (same limit as Products) |
 | Sales archive | cursor get, 30/page, appended | ListPageBar over loaded rows (10/25/50); next page fetches | ok |
 | Services archive | cursor get, 30/page, appended | ListPageBar over loaded rows | ok |
 | Activity Log | **PAGE1:** cursor pages inside the retention window, pageSize + 1 (assistant: userId + targetUserId merged, an entry once); the phone keeps its streams | ListPageBar | **fixed (PAGE1)**; PAGE1b: category chips back as server queries (a where clause on the paged query, both assistant questions; numbers by one count() per category), the note while the indexes are missing (docs/PAGE1_INDEXES.md); search over the page shown (said in the hint) |
@@ -128,3 +128,42 @@ asked until the tab is opened again. Reads at 120 records
 pageSize + 1, 2 x for an assistant); index missing on open 29 (the refused
 count bills nothing). Types nothing writes any more (`clients`, `settings`,
 `admin`) show under All only.
+
+## PAGE2 (2026-11-23): Clients, Products, Stock Store
+
+**Clients (PC/tablet).** `ClientProvider` `byName` sessions over the shared
+pager: A to Z by `name` (a cursor of name and document id), pageSize + 1 a
+page, Previous from the kept pages, no total count; the type and status
+filters in the query; search on the server, a name prefix on `nameLower` or
+a phone prefix on `phoneKey` (both written on every save; no new field). The
+search waits 300 ms, a slow old answer is dropped (the pager's session
+number) and the rows shown stay dimmed until the new ones arrive. Indexes:
+docs/PAGE2_INDEXES.md. The phone keeps its newest-first list and query.
+
+Reads, 120 clients (`test/page2_clients_test.dart`):
+
+| | Before PAGE2 (from the code) | After |
+|---|---|---|
+| Open, app (activation already listening) | 120 (the screen cancelled and restarted the whole-clients listener) + 25 | 26 (pageSize + 1); the listener is reused |
+| Open, test harness (no activation: the screen starts the listener) | 120 + 25 + setup | 120 + 26 + 1 setup = 147 |
+| Next | 25 | 26 |
+| Previous | 0 | 0 |
+
+**Products / Stock Store / Stock Alerts / Add Sale.** One `products` listener a
+session (`ProductProvider`, released by `clear()` on sign-out and facility
+change). PC/tablet, N products:
+
+| | Before PAGE2 | After |
+|---|---|---|
+| Facility activation | get: N | listener: N |
+| Products opens | listener started: N | 0 |
+| Stock Store, Stock Alerts, Add Sale open | 0 (Stock Alerts and Add Sale not live until Products had opened) | 0 (live) |
+| A product changes | 1 (once the listener runs) | 1 |
+| Listeners open | 1 after Products | 1 from activation |
+
+Remaining limit: the catalogue is read whole once a session and held in
+memory. The soft guard (`AppLimits.productCatalogueSoftLimit`, 5,000) logs a
+warning once a session; that is the trigger for server-side product search.
+
+**Facilities** card figures stay **BE1** (unchanged). The whole-clients stream
+behind the Dashboard and the Clients cards stays **BE1**.
